@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentChain } from '@/config/chains';
+import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 
 export default async function Landing({
   params,
@@ -29,16 +30,14 @@ export default async function Landing({
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <Button size="lg" disabled className="sm:min-w-[180px]">
-            {t('landing.hero.cta_connect')}
-          </Button>
+          <ConnectWalletButton variant="landing" />
           <Button size="lg" variant="outline" disabled className="sm:min-w-[180px]">
             {t('landing.hero.cta_docs')}
           </Button>
         </div>
 
         <div className="pt-12 text-xs text-muted-foreground font-mono tracking-wider">
-          {chain.name} · v0.1 · Day 1 scaffold
+          {chain.name} · v0.2 · Day 2 · wallet connect
         </div>
       </div>
     </main>

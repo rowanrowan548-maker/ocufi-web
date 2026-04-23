@@ -21,6 +21,17 @@
     },
     "status": "Product under construction — launching soon"
   },
+  "wallet": {
+    "connect": "Connect Wallet",
+    "connecting": "Connecting…",
+    "connected": "Connected",
+    "disconnect": "Disconnect",
+    "balance": "Balance",
+    "address": "Address",
+    "copyAddress": "Copy address",
+    "copied": "Copied",
+    "viewExplorer": "View on Solscan"
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",

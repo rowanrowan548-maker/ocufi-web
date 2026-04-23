@@ -4,6 +4,8 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { routing } from '@/i18n/routing';
+import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
+import { SiteHeader } from '@/components/layout/site-header';
 import '../globals.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
@@ -38,7 +40,10 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <SolanaWalletProvider>
+            <SiteHeader />
+            {children}
+          </SolanaWalletProvider>
         </NextIntlClientProvider>
       </body>
     </html>

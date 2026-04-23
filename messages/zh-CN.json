@@ -21,6 +21,17 @@
     },
     "status": "产品正在搭建中,即将上线"
   },
+  "wallet": {
+    "connect": "连接钱包",
+    "connecting": "连接中…",
+    "connected": "已连接",
+    "disconnect": "断开连接",
+    "balance": "余额",
+    "address": "地址",
+    "copyAddress": "复制地址",
+    "copied": "已复制",
+    "viewExplorer": "在 Solscan 查看"
+  },
   "common": {
     "loading": "加载中…",
     "error": "出错了",
