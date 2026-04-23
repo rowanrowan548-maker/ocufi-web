@@ -6,6 +6,12 @@ import {
   WalletProvider,
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  CoinbaseWalletAdapter,
+  LedgerWalletAdapter,
+} from '@solana/wallet-adapter-wallets';
 import '@solana/wallet-adapter-react-ui/styles.css';
 import { getCurrentChain } from '@/config/chains';
 
@@ -17,9 +23,17 @@ export function SolanaWalletProvider({
   const chain = getCurrentChain();
   const endpoint = useMemo(() => chain.rpcUrl, [chain.rpcUrl]);
 
-  // 空数组:让 wallet-standard 自动发现支持的钱包(Phantom、Solflare、Backpack 等)
-  // V1 预留 walletAdapters 清单在 chainConfig 里,V2 若需要再手动 new adapter 实例
-  const wallets = useMemo(() => [], []);
+  // 显式注册主流 adapter 作为保险。OKX、Backpack 等支持 wallet-standard 的钱包
+  // wallet-adapter-react 会自动发现并追加。
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new CoinbaseWalletAdapter(),
+      new LedgerWalletAdapter(),
+    ],
+    []
+  );
 
   return (
     <ConnectionProvider endpoint={endpoint}>
