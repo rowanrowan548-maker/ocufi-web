@@ -114,25 +114,28 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
 
   // 已连接:主按钮显示地址+余额,下拉菜单管理
   const addr = publicKey.toBase58();
-  const triggerBtn = (
-    <Button
-      size={variant === 'landing' ? 'lg' : 'sm'}
-      variant="outline"
-      className={variant === 'landing' ? 'sm:min-w-[200px]' : undefined}
-    >
-      <Wallet className="mr-2 h-4 w-4" />
-      <span className="font-mono">{shortAddr(addr)}</span>
-      {balance !== null && (
-        <span className="ml-2 font-mono text-xs text-muted-foreground">
-          {balance.toFixed(3)} {chain.nativeSymbol}
-        </span>
-      )}
-    </Button>
-  );
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={triggerBtn} />
+      <DropdownMenuTrigger
+        className={
+          'inline-flex items-center justify-center rounded-md border border-input bg-background ' +
+          'text-foreground hover:bg-accent hover:text-accent-foreground ' +
+          'transition-colors font-medium focus-visible:outline-none ' +
+          'focus-visible:ring-2 focus-visible:ring-ring ' +
+          (variant === 'landing'
+            ? 'h-11 px-5 text-sm sm:min-w-[200px]'
+            : 'h-9 px-3 text-sm')
+        }
+      >
+        <Wallet className="mr-2 h-4 w-4" />
+        <span className="font-mono">{shortAddr(addr)}</span>
+        {balance !== null && (
+          <span className="ml-2 font-mono text-xs text-muted-foreground">
+            {balance.toFixed(3)} {chain.nativeSymbol}
+          </span>
+        )}
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[240px]">
         <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
           {wallet?.adapter.name || t('wallet.connected')}
@@ -155,12 +158,8 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          render={
-            <a
-              href={`${chain.explorer}/account/${addr}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            />
+          onClick={() =>
+            window.open(`${chain.explorer}/account/${addr}`, '_blank', 'noopener,noreferrer')
           }
         >
           <ExternalLink className="mr-2 h-4 w-4" />
