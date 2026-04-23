@@ -36,38 +36,40 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
   const [balance, setBalance] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // 拉 SOL 余额 + 订阅变化
+  // 用 base58 string 依赖,避免 publicKey 对象 ref 不稳定导致 useEffect 风暴
+  const addrStr = publicKey?.toBase58() ?? null;
+
+  // 余额:首次拉 + 30s 轮询。不订阅 WS(公共节点的 WS 经常拒绝;Helius 可靠但轮询也够用)
   useEffect(() => {
-    if (!publicKey) {
+    if (!addrStr) {
       setBalance(null);
       return;
     }
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const fetchBal = async () => {
       try {
-        const lamports = await connection.getBalance(publicKey, 'confirmed');
+        const pk = publicKey!;
+        const lamports = await connection.getBalance(pk, 'confirmed');
         if (!cancelled) setBalance(lamports / LAMPORTS_PER_SOL);
-      } catch (e) {
-        console.error('[balance]', e);
+      } catch (e: unknown) {
+        // RPC 403/429 等不吵:打一次 warn 不走 console.error(错误计数别爆)
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!cancelled) {
+          console.warn('[balance]', msg.slice(0, 200));
+          setBalance(null);
+        }
       }
+      if (!cancelled) timer = setTimeout(fetchBal, 30_000);
     };
     fetchBal();
 
-    // 订阅账户变化,SOL 进出立刻更新
-    const subId = connection.onAccountChange(
-      publicKey,
-      (acc) => {
-        if (!cancelled) setBalance(acc.lamports / LAMPORTS_PER_SOL);
-      },
-      { commitment: 'confirmed' }
-    );
-
     return () => {
       cancelled = true;
-      connection.removeAccountChangeListener(subId).catch(() => {});
+      if (timer) clearTimeout(timer);
     };
-  }, [publicKey, connection]);
+  }, [addrStr, connection, publicKey]);
 
   const handleCopy = useCallback(async () => {
     if (!publicKey) return;
