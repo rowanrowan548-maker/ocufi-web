@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -139,34 +140,36 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[240px]">
-        <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
-          {wallet?.adapter.name || t('wallet.connected')}
-        </DropdownMenuLabel>
-        <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
-          {copied ? (
-            <>
-              <Check className="mr-2 h-4 w-4 text-green-500" />
-              {t('wallet.copied')}
-            </>
-          ) : (
-            <>
-              <Copy className="mr-2 h-4 w-4" />
-              <span className="font-mono text-xs">{shortAddr(addr)}</span>
-              <span className="ml-auto text-xs text-muted-foreground">
-                {t('wallet.copyAddress')}
-              </span>
-            </>
-          )}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={() =>
-            window.open(`${chain.explorer}/account/${addr}`, '_blank', 'noopener,noreferrer')
-          }
-        >
-          <ExternalLink className="mr-2 h-4 w-4" />
-          {t('wallet.viewExplorer')}
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+            {wallet?.adapter.name || t('wallet.connected')}
+          </DropdownMenuLabel>
+          <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
+            {copied ? (
+              <>
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                {t('wallet.copied')}
+              </>
+            ) : (
+              <>
+                <Copy className="mr-2 h-4 w-4" />
+                <span className="font-mono text-xs">{shortAddr(addr)}</span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {t('wallet.copyAddress')}
+                </span>
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() =>
+              window.open(`${chain.explorer}/account/${addr}`, '_blank', 'noopener,noreferrer')
+            }
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            {t('wallet.viewExplorer')}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => disconnect().catch(() => {})}
