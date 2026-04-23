@@ -1,0 +1,33 @@
+{
+  "brand": {
+    "name": "Ocufi",
+    "tagline": "非托管 · 低手续费 · 透明 · 开源的 Solana 交易终端"
+  },
+  "nav": {
+    "home": "首页",
+    "trade": "交易",
+    "portfolio": "持仓",
+    "alerts": "价格提醒",
+    "points": "积分",
+    "settings": "设置",
+    "docs": "文档"
+  },
+  "landing": {
+    "hero": {
+      "title": "Ocufi · 链上交易新选择",
+      "subtitle": "非托管 · 手续费仅 0.2% · 代币安全审查 · 开源可审计",
+      "cta_connect": "连接钱包开始",
+      "cta_docs": "查看文档"
+    },
+    "status": "产品正在搭建中,即将上线"
+  },
+  "common": {
+    "loading": "加载中…",
+    "error": "出错了",
+    "retry": "重试",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "comingSoon": "即将上线"
+  }
+}

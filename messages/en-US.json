@@ -1,0 +1,33 @@
+{
+  "brand": {
+    "name": "Ocufi",
+    "tagline": "Non-custodial · Low-fee · Transparent · Open-source Solana trading terminal"
+  },
+  "nav": {
+    "home": "Home",
+    "trade": "Trade",
+    "portfolio": "Portfolio",
+    "alerts": "Price Alerts",
+    "points": "Points",
+    "settings": "Settings",
+    "docs": "Docs"
+  },
+  "landing": {
+    "hero": {
+      "title": "Ocufi · On-chain trading, reimagined",
+      "subtitle": "Non-custodial · 0.2% fees · Token safety review · Open-source & auditable",
+      "cta_connect": "Connect Wallet",
+      "cta_docs": "Read Docs"
+    },
+    "status": "Product under construction — launching soon"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "comingSoon": "Coming Soon"
+  }
+}
