@@ -147,6 +147,30 @@
       "market": "市价",
       "limit": "限价"
     },
+    "activity": {
+      "activity": "成交活动",
+      "orders": "订单",
+      "holders": "持有者",
+      "risks": "风险明细",
+      "comingSoon": {
+        "activity": {
+          "title": "成交活动",
+          "subtitle": "实时链上买卖记录,即将上线"
+        },
+        "orders": {
+          "title": "订单",
+          "subtitle": "你对这个币的限价单 / DCA,即将上线"
+        },
+        "holders": {
+          "title": "持有者",
+          "subtitle": "暂无持有者数据"
+        }
+      },
+      "noRisks": {
+        "title": "无明显风险",
+        "subtitle": "RugCheck 没有标记任何风险信号"
+      }
+    },
     "buy": {
       "title": "市价买入",
       "subtitle": "用 SOL 购买任意 SPL Token"

@@ -1,4 +1,12 @@
-import { Shield, ShieldCheck, AlertTriangle, AlertOctagon, HelpCircle, CheckCircle2 } from 'lucide-react';
+/**
+ * 风险徽章 · Ocufi 视觉版
+ *
+ * 风格:小 pill,1px 边框 + 半透明色块,无双层 emoji。
+ * verified 单独走主色青绿,其他走对应语义色。
+ */
+import {
+  ShieldCheck, CheckCircle2, AlertTriangle, AlertOctagon, HelpCircle,
+} from 'lucide-react';
 import type { OverallRisk } from '@/lib/token-info';
 
 interface Props {
@@ -9,47 +17,36 @@ interface Props {
 
 const CONFIG: Record<
   OverallRisk,
-  { bg: string; text: string; border: string; Icon: typeof Shield; defaultLabel: string }
+  { color: string; Icon: typeof ShieldCheck; defaultLabel: string }
 > = {
   verified: {
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-600 dark:text-blue-400',
-    border: 'border-blue-500/30',
+    // verified 走 primary 主色青绿(品牌色)
+    color: 'text-primary border-primary/30 bg-primary/10',
     Icon: ShieldCheck,
     defaultLabel: '已验证',
   },
   low: {
-    bg: 'bg-success/10',
-    text: 'text-success',
-    border: 'border-success/30',
+    color: 'text-success border-success/30 bg-success/10',
     Icon: CheckCircle2,
     defaultLabel: '低风险',
   },
   medium: {
-    bg: 'bg-warning/10',
-    text: 'text-warning',
-    border: 'border-warning/30',
+    color: 'text-warning border-warning/30 bg-warning/10',
     Icon: AlertTriangle,
     defaultLabel: '中风险',
   },
   high: {
-    bg: 'bg-orange-500/10',
-    text: 'text-orange-600 dark:text-orange-400',
-    border: 'border-orange-500/30',
+    color: 'text-warning border-warning/40 bg-warning/15',
     Icon: AlertTriangle,
     defaultLabel: '高风险',
   },
   critical: {
-    bg: 'bg-danger/10',
-    text: 'text-danger',
-    border: 'border-danger/30',
+    color: 'text-danger border-danger/30 bg-danger/10',
     Icon: AlertOctagon,
     defaultLabel: '严重风险',
   },
   unknown: {
-    bg: 'bg-muted',
-    text: 'text-muted-foreground',
-    border: 'border-border',
+    color: 'text-muted-foreground border-border bg-muted/40',
     Icon: HelpCircle,
     defaultLabel: '风险未知',
   },
@@ -61,14 +58,12 @@ export function RiskBadge({ level, label, className }: Props) {
   return (
     <div
       className={[
-        'inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium',
-        c.bg,
-        c.text,
-        c.border,
+        'inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium tracking-tight whitespace-nowrap',
+        c.color,
         className ?? '',
       ].join(' ')}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-3 w-3" />
       {label ?? c.defaultLabel}
     </div>
   );

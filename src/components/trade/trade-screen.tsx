@@ -1,16 +1,28 @@
 'use client';
 
 /**
- * 交易页主屏 · gmgn 风整合布局
- * 顶部 combo 选币 → 紧凑 TradingHeader → 主布局(左 K线/安全/持有者 + 右 交易面板)
+ * 交易页主屏 · 整合布局
+ *
+ * 上 : Combo 选币
+ * 中 : TradingHeader(紧凑)
+ * 下 :
+ *   左 :ChartCard(K 线)
+ *        ActivityBoard(活动 / 订单 / 持有者 / 风险 tabs)
+ *   右 :TradeTabs(Buy/Sell × 市价/限价)
+ *        InfoPanel(行情数据)
+ *        SafetyPanel(安全核查)
  */
 import { useEffect, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
-import { TokenDetailView } from '@/components/token/token-detail';
-import { TradeTabs } from './trade-tabs';
 import { TokenSearchCombo } from '@/components/common/token-search-combo';
 import { TradingHeader } from './trading-header';
+import { ChartCard } from './chart-card';
+import { ActivityBoard } from './activity-board';
+import { TradeTabs } from './trade-tabs';
+import { InfoPanel } from './info-panel';
+import { SafetyPanel } from './safety-panel';
+import { fetchTokenDetail, type TokenDetail } from '@/lib/token-info';
 import { SOL_MINT } from '@/lib/preset-tokens';
 
 function isValidMint(s: string): boolean {
@@ -24,6 +36,7 @@ function isValidMint(s: string): boolean {
 
 export function TradeScreen() {
   const [mint, setMint] = useState<string>(SOL_MINT);
+  const [detail, setDetail] = useState<TokenDetail | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -35,30 +48,37 @@ export function TradeScreen() {
     if (typeof window === 'undefined') return;
     if (!isValidMint(mint)) return;
     const url = new URL(window.location.href);
-    if (mint === SOL_MINT) {
-      url.searchParams.delete('mint');
-    } else {
-      url.searchParams.set('mint', mint);
-    }
+    if (mint === SOL_MINT) url.searchParams.delete('mint');
+    else url.searchParams.set('mint', mint);
     window.history.replaceState({}, '', url.toString());
+  }, [mint]);
+
+  // 中央 fetch 一次,所有子组件复用
+  useEffect(() => {
+    setDetail(null);
+    let cancelled = false;
+    fetchTokenDetail(mint).then((d) => {
+      if (!cancelled) setDetail(d);
+    });
+    return () => { cancelled = true; };
   }, [mint]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
-      {/* 顶部 · 代币选择 combo */}
       <TokenSearchCombo value={mint} onSelect={setMint} />
+      <TradingHeader mint={mint} detail={detail} />
 
-      {/* 紧凑代币信息条 · 横排 */}
-      <TradingHeader mint={mint} />
-
-      {/* 主布局 · 左 K线/安全/持有者 + 右 交易面板 */}
       <div className="grid lg:grid-cols-[1fr_400px] gap-4 items-start">
-        <div className="min-w-0">
-          {/* hideHero 让左侧不再有大 hero(已在 TradingHeader 显示) */}
-          <TokenDetailView mint={mint} hideHero />
+        {/* 左:K线 + 活动板 */}
+        <div className="min-w-0 space-y-4">
+          <ChartCard detail={detail} />
+          <ActivityBoard detail={detail} />
         </div>
-        <div className="lg:sticky lg:top-20">
+        {/* 右:交易表单 + 行情 + 安全 */}
+        <div className="space-y-4">
           <TradeTabs mint={mint} compact />
+          <InfoPanel detail={detail} />
+          <SafetyPanel detail={detail} />
         </div>
       </div>
     </div>

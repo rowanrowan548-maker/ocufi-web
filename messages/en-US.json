@@ -147,6 +147,30 @@
       "market": "Market",
       "limit": "Limit"
     },
+    "activity": {
+      "activity": "Activity",
+      "orders": "Orders",
+      "holders": "Holders",
+      "risks": "Risks",
+      "comingSoon": {
+        "activity": {
+          "title": "Activity Feed",
+          "subtitle": "Real-time on-chain swap stream — coming soon"
+        },
+        "orders": {
+          "title": "Your Orders",
+          "subtitle": "Limit / DCA orders for this token — coming soon"
+        },
+        "holders": {
+          "title": "Holders",
+          "subtitle": "No holder data available"
+        }
+      },
+      "noRisks": {
+        "title": "No risks flagged",
+        "subtitle": "RugCheck didn't surface any warning signals"
+      }
+    },
     "buy": {
       "title": "Market Buy",
       "subtitle": "Buy any SPL token with SOL"
