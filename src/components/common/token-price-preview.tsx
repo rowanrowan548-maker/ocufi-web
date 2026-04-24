@@ -92,9 +92,9 @@ export function TokenPricePreview({ mint, debounceMs = 400, showSafetyLink = tru
   const changePositive = change != null && change > 0;
   const changeNegative = change != null && change < 0;
   const changeColor = changePositive
-    ? 'text-green-600 dark:text-green-400'
+    ? 'text-success'
     : changeNegative
-    ? 'text-red-600 dark:text-red-400'
+    ? 'text-danger'
     : 'text-muted-foreground';
   const ChangeIcon = changePositive ? TrendingUp : changeNegative ? TrendingDown : null;
 

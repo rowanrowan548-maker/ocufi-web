@@ -199,8 +199,8 @@ function HistoryRow({
 }
 
 const TYPE_STYLE = {
-  buy: { Icon: ArrowDownToLine, color: 'text-green-600 dark:text-green-400' },
-  sell: { Icon: ArrowUpFromLine, color: 'text-red-600 dark:text-red-400' },
+  buy: { Icon: ArrowDownToLine, color: 'text-success' },
+  sell: { Icon: ArrowUpFromLine, color: 'text-danger' },
   receive: { Icon: ArrowDownLeft, color: 'text-blue-600 dark:text-blue-400' },
   send: { Icon: ArrowUpRight, color: 'text-orange-600 dark:text-orange-400' },
   nft_airdrop: { Icon: Gift, color: 'text-purple-600 dark:text-purple-400' },

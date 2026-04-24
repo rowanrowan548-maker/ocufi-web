@@ -125,9 +125,9 @@ export function AlertsView() {
     <div className="w-full max-w-4xl space-y-6">
       {/* 通知权限条 */}
       {permission !== 'granted' && permission !== 'unsupported' && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-warning/30 bg-amber-500/5">
           <CardContent className="py-4 flex items-center gap-3">
-            <Bell className="h-5 w-5 text-amber-600 flex-shrink-0" />
+            <Bell className="h-5 w-5 text-warning flex-shrink-0" />
             <div className="flex-1 text-sm">
               <div className="font-medium">{t('alerts.permission.title')}</div>
               <div className="text-muted-foreground text-xs mt-0.5">
@@ -271,7 +271,7 @@ export function AlertsView() {
                     </TableCell>
                     <TableCell className="text-xs">
                       {a.triggered ? (
-                        <span className="inline-flex items-center gap-1 text-green-600">
+                        <span className="inline-flex items-center gap-1 text-success">
                           <CheckCircle2 className="h-3 w-3" />
                           {t('alerts.list.triggered')}
                         </span>

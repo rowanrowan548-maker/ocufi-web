@@ -86,33 +86,41 @@ export function TokenDetailView({ mint }: Props) {
       : null;
 
   return (
-    <div className="w-full max-w-4xl space-y-4">
-      {/* ── Hero ── */}
-      <Card>
-        <CardContent className="p-6">
+    <div className="w-full max-w-5xl space-y-4">
+      {/* ── Hero ── gmgn 风:大字价格 + 青绿光晕 */}
+      <Card className="relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-40 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 80% at 0% 0%, oklch(0.88 0.25 155 / 10%), transparent 70%)',
+          }}
+        />
+        <CardContent className="p-6 relative">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-start gap-4">
-              <div className="h-14 w-14 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
+              <div className="h-16 w-16 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-border/40">
                 {detail.logoUri ? (
                   <Image
                     src={detail.logoUri}
                     alt={detail.symbol}
-                    width={56}
-                    height={56}
+                    width={64}
+                    height={64}
                     className="object-cover"
                     unoptimized
                   />
                 ) : (
-                  <span className="text-lg font-bold text-muted-foreground">
+                  <span className="text-xl font-bold text-muted-foreground">
                     {detail.symbol.slice(0, 2).toUpperCase()}
                   </span>
                 )}
               </div>
               <div className="min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <h1 className="text-2xl font-bold">{detail.symbol}</h1>
-                  {detail.name && (
-                    <span className="text-muted-foreground">· {detail.name}</span>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{detail.symbol}</h1>
+                  {detail.name && detail.name !== detail.symbol && (
+                    <span className="text-muted-foreground text-sm">· {detail.name}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1 mt-1">
@@ -125,21 +133,21 @@ export function TokenDetailView({ mint }: Props) {
                     title={t('wallet.copyAddress')}
                   >
                     {copied ? (
-                      <Check className="h-3.5 w-3.5 text-green-500" />
+                      <Check className="h-3.5 w-3.5 text-success" />
                     ) : (
                       <Copy className="h-3.5 w-3.5" />
                     )}
                   </button>
                 </div>
-                <div className="flex items-baseline gap-2 mt-3">
-                  <span className="text-3xl font-bold font-mono">
+                <div className="flex items-baseline gap-3 mt-3">
+                  <span className="text-3xl sm:text-4xl font-bold font-mono tracking-tight">
                     ${fmtPrice(detail.priceUsd)}
                   </span>
                   {detail.priceChange24h !== undefined && (
                     <span
                       className={[
                         'text-sm font-mono font-medium',
-                        detail.priceChange24h >= 0 ? 'text-green-600' : 'text-red-600',
+                        detail.priceChange24h >= 0 ? 'text-success' : 'text-danger',
                       ].join(' ')}
                     >
                       {detail.priceChange24h >= 0 ? '+' : ''}
@@ -156,6 +164,18 @@ export function TokenDetailView({ mint }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── K 线图(嵌入 DexScreener,V1.5 自绘) ── */}
+      {detail.dexUrl && (
+        <Card className="overflow-hidden p-0">
+          <iframe
+            src={`${detail.dexUrl}?embed=1&theme=dark&trades=0&info=0`}
+            className="w-full h-[420px] sm:h-[480px] border-0"
+            title={`${detail.symbol} chart`}
+            loading="lazy"
+          />
+        </Card>
+      )}
 
       {/* ── 两列:核心数据 + 安全核查 ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -274,9 +294,9 @@ export function TokenDetailView({ mint }: Props) {
                 className={[
                   'flex gap-3 p-3 rounded-md text-sm',
                   r.level === 'danger'
-                    ? 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
+                    ? 'bg-danger/10 text-danger border border-danger/20'
                     : r.level === 'warn'
-                    ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border border-yellow-500/20'
+                    ? 'bg-warning/10 text-warning border border-warning/20'
                     : 'bg-muted text-muted-foreground',
                 ].join(' ')}
               >
@@ -430,9 +450,9 @@ function CheckRow({
     CheckStatus,
     { Icon: typeof CheckCircle2; text: string; cls: string }
   > = {
-    pass: { Icon: CheckCircle2, text: passText, cls: 'text-green-600 dark:text-green-400' },
-    warn: { Icon: AlertTriangle, text: warnText ?? passText, cls: 'text-yellow-600 dark:text-yellow-400' },
-    fail: { Icon: XCircle, text: failText, cls: 'text-red-600 dark:text-red-400' },
+    pass: { Icon: CheckCircle2, text: passText, cls: 'text-success' },
+    warn: { Icon: AlertTriangle, text: warnText ?? passText, cls: 'text-warning' },
+    fail: { Icon: XCircle, text: failText, cls: 'text-danger' },
     unknown: { Icon: Clock, text: '—', cls: 'text-muted-foreground' },
   };
   const { Icon, text, cls } = map[status];

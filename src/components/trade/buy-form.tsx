@@ -294,8 +294,8 @@ export function BuyForm() {
           )}
 
           {result && stage === 'done' && (
-            <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 space-y-2 text-sm">
-              <div className="flex gap-2 items-center text-green-600 font-medium">
+            <div className="rounded-lg border border-success/30 bg-green-500/5 p-4 space-y-2 text-sm">
+              <div className="flex gap-2 items-center text-success font-medium">
                 <CheckCircle2 className="h-5 w-5" />
                 {t('trade.result.success')}
               </div>

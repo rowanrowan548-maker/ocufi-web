@@ -183,7 +183,7 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
           <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
             {copied ? (
               <>
-                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <Check className="mr-2 h-4 w-4 text-success" />
                 {t('wallet.copied')}
               </>
             ) : (

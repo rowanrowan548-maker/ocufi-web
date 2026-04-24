@@ -253,7 +253,7 @@ function formatPrice(n: number): string {
 
 function pnlColor(pct: number | null): string {
   if (pct == null) return 'text-muted-foreground';
-  if (pct > 0) return 'text-green-600 dark:text-green-400 font-medium';
-  if (pct < 0) return 'text-red-600 dark:text-red-400 font-medium';
+  if (pct > 0) return 'text-success font-medium';
+  if (pct < 0) return 'text-danger font-medium';
   return 'text-muted-foreground';
 }

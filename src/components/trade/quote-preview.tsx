@@ -62,7 +62,7 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
       </div>
 
       {showSlippageWarn && suggestedBps > currentBps && onApplySlippage && (
-        <div className="flex items-start gap-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700 dark:text-amber-400">
+        <div className="flex items-start gap-2 p-2 rounded-md bg-warning/10 border border-warning/30 text-xs text-amber-700 dark:text-amber-400">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
             {t('trade.preview.slippageWarn', {

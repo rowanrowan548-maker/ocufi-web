@@ -271,8 +271,8 @@ export function LimitForm({ onCreated }: Props) {
             )}
 
             {sig && stage === 'done' && (
-              <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3 space-y-1 text-sm">
-                <div className="flex items-center gap-2 text-green-600 font-medium">
+              <div className="rounded-lg border border-success/30 bg-green-500/5 p-3 space-y-1 text-sm">
+                <div className="flex items-center gap-2 text-success font-medium">
                   <CheckCircle2 className="h-4 w-4" />
                   {t('limit.success')}
                 </div>
