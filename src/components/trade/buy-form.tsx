@@ -19,8 +19,14 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
+
+const SLIPPAGE_OPTIONS = [
+  { value: '50', label: '0.5%' },
+  { value: '100', label: '1%' },
+  { value: '200', label: '2%' },
+  { value: '500', label: '5%' },
+];
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { getCurrentChain } from '@/config/chains';
 import {
@@ -197,19 +203,22 @@ export function BuyForm() {
               value={String(slippageBps)}
               onValueChange={(v) => { setSlippageBps(Number(v)); resetOnInput(); }}
             >
-              <SelectTrigger id="slippage"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="slippage">
+                {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="50">0.5%</SelectItem>
-                <SelectItem value="100">1%</SelectItem>
-                <SelectItem value="200">2%</SelectItem>
-                <SelectItem value="500">5%</SelectItem>
+                {SLIPPAGE_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="gas">{t('trade.fields.gas')}</Label>
             <Select value={gasLevel} onValueChange={(v) => setGasLevel(v as GasLevel)}>
-              <SelectTrigger id="gas"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="gas">
+                {t(`trade.gas.${gasLevel}`)}
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="normal">{t('trade.gas.normal')}</SelectItem>
                 <SelectItem value="fast">{t('trade.gas.fast')}</SelectItem>
