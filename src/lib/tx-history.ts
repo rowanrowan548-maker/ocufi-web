@@ -1,173 +1,153 @@
 /**
- * 从链上拉取钱包最近成交,识别出买入/卖出
+ * 钱包成交历史
  *
- * 流程:
- * 1. getSignaturesForAddress(owner, limit) → 最近 N 笔 signature
- * 2. getParsedTransactions(sigs) 批量拿细节
- * 3. 对每笔交易:
- *    - 比较 signer 在 preBalances / postBalances 的 SOL 变化
- *    - 比较 preTokenBalances / postTokenBalances 里 owner 持有 mint 的 uiAmount 变化
- *    - solDelta < 0 且某 token Δ > 0  → buy
- *    - solDelta > 0 且某 token Δ < 0  → sell
- *    - 其他                            → other(转入/转出/合约交互)
+ * 数据源:Helius Enhanced Transactions API
+ *   GET https://api.helius.xyz/v0/addresses/{owner}/transactions?api-key=XX&limit=30
  *
- * 注意:
- * - WSOL(So11111111111111111111111111111111111111112)不算 token,属 SOL 内部包裹
- * - feeSol 已经算在 solDelta 里(post 减 pre 天然含 fee)
+ * 为什么不用 connection.getParsedTransaction(s):
+ *   - Helius 免费版拒 batch RPC(-32403)
+ *   - 单笔串行 RPC 也容易被限流(-32413)
+ *   - Enhanced API 走独立配额,一次请求拿全部 30 条,直接包含 tokenTransfers/nativeTransfers
+ *
+ * 分类规则:
+ *   - 过滤 owner 参与的 token / SOL 流动
+ *   - SOL out + 某 token in  → buy
+ *   - 某 token out + SOL in   → sell
+ *   - 其他(转入/转出/合约)    → other
  */
-import {
-  Connection,
-  PublicKey,
-  ParsedTransactionWithMeta,
-  TransactionSignature,
-} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { SOL_MINT } from './portfolio';
 
 export type TxType = 'buy' | 'sell' | 'other';
 
 export interface TxRecord {
-  signature: TransactionSignature;
-  blockTime: number | null;      // 秒级 unix
+  signature: string;
+  blockTime: number | null;   // 秒级 unix
   slot: number;
   type: TxType;
-  /** 对 buy/sell:涉及的 SPL mint;other 为空串 */
-  tokenMint: string;
-  /** buy: 收到的 token 数量(正);sell: 卖掉的 token 数量(正) */
-  tokenAmount: number;
-  /** buy: 花掉的 SOL(正);sell: 收到的 SOL(正);含网络费 */
-  solAmount: number;
+  tokenMint: string;          // buy/sell 涉及的 SPL mint;other 可能为空
+  tokenAmount: number;        // buy:收到;sell:卖掉;正数
+  solAmount: number;          // buy:花掉;sell:收到;正数,含 fee
   feeSol: number;
   err: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface HeliusTx {
+  signature: string;
+  timestamp: number;          // 秒
+  slot: number;
+  fee: number;                // lamports
+  type?: string;              // SWAP / TRANSFER / ...
+  transactionError?: unknown;
+  tokenTransfers?: Array<{
+    fromUserAccount?: string | null;
+    toUserAccount?: string | null;
+    mint: string;
+    tokenAmount: number;
+  }>;
+  nativeTransfers?: Array<{
+    fromUserAccount?: string | null;
+    toUserAccount?: string | null;
+    amount: number;            // lamports
+  }>;
+}
+
+/** 从 NEXT_PUBLIC_HELIUS_RPC 的 URL 里抠出 api-key */
+function getHeliusApiKey(): string | null {
+  try {
+    const url = process.env.NEXT_PUBLIC_HELIUS_RPC;
+    if (!url) return null;
+    return new URL(url).searchParams.get('api-key');
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchTxHistory(
-  connection: Connection,
+  _connection: unknown,            // 保留签名兼容 hook
   owner: PublicKey,
   limit = 30
 ): Promise<TxRecord[]> {
-  // 1. 签名列表
-  const sigs = await connection.getSignaturesForAddress(owner, { limit });
-  if (sigs.length === 0) return [];
-
-  // 2. 拉详情:Helius 免费版不支持 batch JSON-RPC(会返 403 -32403),
-  //    所以走单笔 getParsedTransaction + 小并发 + 节流,避免超限
-  const signatures = sigs.map((s) => s.signature);
-  const CONCURRENCY = 3;
-  const STEP_DELAY_MS = 100;
-  const parsed: (ParsedTransactionWithMeta | null)[] = [];
-  for (let i = 0; i < signatures.length; i += CONCURRENCY) {
-    const chunk = signatures.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(
-      chunk.map((sig) =>
-        connection
-          .getParsedTransaction(sig, { maxSupportedTransactionVersion: 0 })
-          .catch((e) => {
-            console.warn('[tx-history] parse failed', sig.slice(0, 8), e);
-            return null;
-          })
-      )
-    );
-    parsed.push(...results);
-    if (i + CONCURRENCY < signatures.length) {
-      await new Promise((r) => setTimeout(r, STEP_DELAY_MS));
-    }
+  const key = getHeliusApiKey();
+  if (!key) {
+    throw new Error('Helius API key 未配置(缺 NEXT_PUBLIC_HELIUS_RPC)');
   }
 
-  // 3. 解析
-  const records: TxRecord[] = [];
   const ownerStr = owner.toBase58();
-  for (let i = 0; i < sigs.length; i++) {
-    const info = sigs[i];
-    const tx = parsed[i];
-    const base = {
-      signature: info.signature,
-      blockTime: info.blockTime ?? null,
-      slot: info.slot,
-      err: !!info.err,
-    };
-    if (!tx || !tx.meta || tx.meta.err) {
-      records.push({
-        ...base,
-        type: 'other',
-        tokenMint: '',
-        tokenAmount: 0,
-        solAmount: 0,
-        feeSol: (tx?.meta?.fee ?? 0) / 1e9,
-        err: true,
-      });
-      continue;
-    }
-    const rec = classifyTx(tx, ownerStr);
-    records.push({ ...base, ...rec });
-  }
+  const url =
+    `https://api.helius.xyz/v0/addresses/${ownerStr}/transactions` +
+    `?api-key=${key}&limit=${limit}`;
 
-  return records;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`Helius Enhanced API ${res.status}: ${await res.text()}`);
+  }
+  const list: HeliusTx[] = await res.json();
+
+  return list.map((tx) => classifyTx(tx, ownerStr));
 }
 
-function classifyTx(
-  tx: ParsedTransactionWithMeta,
-  ownerStr: string
-): Omit<TxRecord, 'signature' | 'blockTime' | 'slot' | 'err'> {
-  const meta = tx.meta!;
-  const keys = tx.transaction.message.accountKeys;
-  const ownerIdx = keys.findIndex((k) => k.pubkey.toBase58() === ownerStr);
-  const feeSol = (meta.fee ?? 0) / 1e9;
+function classifyTx(tx: HeliusTx, ownerStr: string): TxRecord {
+  const feeSol = (tx.fee ?? 0) / 1e9;
 
-  // SOL 变化(含 fee)
+  // 算 owner 的 SOL 净变化(含 fee)
   let solDelta = 0;
-  if (ownerIdx >= 0) {
-    const pre = meta.preBalances[ownerIdx] ?? 0;
-    const post = meta.postBalances[ownerIdx] ?? 0;
-    solDelta = (post - pre) / 1e9;
+  for (const n of tx.nativeTransfers ?? []) {
+    if (n.fromUserAccount === ownerStr) solDelta -= (n.amount ?? 0) / 1e9;
+    if (n.toUserAccount === ownerStr) solDelta += (n.amount ?? 0) / 1e9;
   }
 
-  // token 变化:聚合 owner 持有的每个 mint(跳过 WSOL)
-  const preMap = new Map<string, number>();
-  const postMap = new Map<string, number>();
-  for (const b of meta.preTokenBalances ?? []) {
-    if (b.owner !== ownerStr) continue;
-    if (b.mint === SOL_MINT) continue;
-    preMap.set(b.mint, (preMap.get(b.mint) ?? 0) + Number(b.uiTokenAmount.uiAmount ?? 0));
-  }
-  for (const b of meta.postTokenBalances ?? []) {
-    if (b.owner !== ownerStr) continue;
-    if (b.mint === SOL_MINT) continue;
-    postMap.set(b.mint, (postMap.get(b.mint) ?? 0) + Number(b.uiTokenAmount.uiAmount ?? 0));
-  }
-  const mints = new Set([...preMap.keys(), ...postMap.keys()]);
-  const deltas: Array<{ mint: string; delta: number }> = [];
-  for (const m of mints) {
-    const d = (postMap.get(m) ?? 0) - (preMap.get(m) ?? 0);
-    if (Math.abs(d) > 1e-12) deltas.push({ mint: m, delta: d });
+  // 算 owner 每个 token mint 的净变化(过滤 WSOL)
+  const tokenDeltas = new Map<string, number>();
+  for (const t of tx.tokenTransfers ?? []) {
+    if (!t.mint || t.mint === SOL_MINT) continue;
+    const amt = Number(t.tokenAmount ?? 0);
+    if (t.fromUserAccount === ownerStr) {
+      tokenDeltas.set(t.mint, (tokenDeltas.get(t.mint) ?? 0) - amt);
+    }
+    if (t.toUserAccount === ownerStr) {
+      tokenDeltas.set(t.mint, (tokenDeltas.get(t.mint) ?? 0) + amt);
+    }
   }
 
-  // 取变化绝对值最大的那笔作主角
-  deltas.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-  const main = deltas[0];
+  // 取变化绝对值最大的 mint 作主角
+  const entries = [...tokenDeltas.entries()]
+    .filter(([, d]) => Math.abs(d) > 1e-12)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const main = entries[0];
 
-  if (main && main.delta > 0 && solDelta < -feeSol * 0.5) {
+  const base = {
+    signature: tx.signature,
+    blockTime: tx.timestamp ?? null,
+    slot: tx.slot,
+    feeSol,
+    err: !!tx.transactionError,
+  };
+
+  if (main && main[1] > 0 && solDelta < -feeSol * 0.5) {
     return {
+      ...base,
       type: 'buy',
-      tokenMint: main.mint,
-      tokenAmount: main.delta,
+      tokenMint: main[0],
+      tokenAmount: main[1],
       solAmount: Math.abs(solDelta),
-      feeSol,
     };
   }
-  if (main && main.delta < 0 && solDelta > 0) {
+  if (main && main[1] < 0 && solDelta > 0) {
     return {
+      ...base,
       type: 'sell',
-      tokenMint: main.mint,
-      tokenAmount: Math.abs(main.delta),
+      tokenMint: main[0],
+      tokenAmount: Math.abs(main[1]),
       solAmount: solDelta,
-      feeSol,
     };
   }
   return {
+    ...base,
     type: 'other',
-    tokenMint: main?.mint ?? '',
-    tokenAmount: main ? Math.abs(main.delta) : 0,
+    tokenMint: main?.[0] ?? '',
+    tokenAmount: main ? Math.abs(main[1]) : 0,
     solAmount: Math.abs(solDelta),
-    feeSol,
   };
 }
