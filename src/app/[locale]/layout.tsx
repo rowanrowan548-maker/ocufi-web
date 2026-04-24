@@ -28,8 +28,40 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Ocufi · Solana 交易终端',
-  description: '非托管 · 低手续费 · 透明 · 开源的 Solana 链上交易终端',
+  metadataBase: new URL('https://www.ocufi.io'),
+  title: {
+    default: 'Ocufi · 链上交易,应该回到你手里',
+    template: '%s · Ocufi',
+  },
+  description:
+    '非托管 · 低费 · 透明 · 开源的 Solana 链上交易终端。0.2% 手续费,免费安全审查,代码开源可审计。',
+  keywords: [
+    'Solana', 'DEX', '交易', 'meme', 'Jupiter', '非托管',
+    'on-chain', 'crypto', 'wallet', 'open-source',
+  ],
+  applicationName: 'Ocufi',
+  openGraph: {
+    type: 'website',
+    siteName: 'Ocufi',
+    title: 'Ocufi · 链上交易,应该回到你手里',
+    description:
+      '非托管 · 0.2% 手续费 · 免费安全审查 · 代码开源。Solana 链上交易终端。',
+    url: 'https://www.ocufi.io',
+    locale: 'zh_CN',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@Ocufi_io',
+    creator: '@Ocufi_io',
+    title: 'Ocufi · 链上交易,应该回到你手里',
+    description: 'Lower fees · Transparent pricing · No middleman tax. Solana on-chain.',
+  },
+  robots: { index: true, follow: true },
+};
+
+export const viewport = {
+  themeColor: '#19FB9B',
+  colorScheme: 'dark',
 };
 
 export function generateStaticParams() {
