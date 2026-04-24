@@ -108,6 +108,25 @@
       "rpcForbidden": "RPC node refused the request; refresh and retry"
     }
   },
+  "portfolio": {
+    "page": {
+      "title": "Portfolio",
+      "subtitle": "All SPL tokens in your wallet with live valuation (auto-refreshes every 30s)"
+    },
+    "totalValue": "Total Value (USD)",
+    "walletAddress": "Wallet",
+    "notConnected": "Connect your wallet to see holdings",
+    "empty": "No tokens in your wallet yet",
+    "goTrade": "Go buy something",
+    "viewOnExplorer": "View on Solscan",
+    "autoRefreshHint": "Auto-refreshes every 30s · click 🔄 to refresh manually",
+    "columns": {
+      "token": "Token",
+      "amount": "Amount",
+      "price": "Price",
+      "value": "Value"
+    }
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",

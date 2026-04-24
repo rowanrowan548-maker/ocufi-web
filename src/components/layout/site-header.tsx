@@ -18,6 +18,12 @@ export async function SiteHeader() {
             >
               {t('nav.trade')}
             </Link>
+            <Link
+              href="/portfolio"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t('nav.portfolio')}
+            </Link>
           </nav>
         </div>
         <ConnectWalletButton variant="header" />
