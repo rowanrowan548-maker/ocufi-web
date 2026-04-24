@@ -48,11 +48,26 @@ export function deriveReferralFeeAccount(
   }
 }
 
-/** 按 input mint 决定是否带 feeAccount(未开通 ATA 的 mint 返回 0 bps 保交易成功) */
+/**
+ * 按 input mint 决定是否带 feeAccount
+ *
+ * ⚠️ 再次关闭:本地 simulateTransaction V1 PDA 路径 ✅ 通过,但 OKX 钱包
+ *    preflight 拒签 — 因为 OKX 的安全检查把 Jupiter Referral Program
+ *    REFER4ZgmyYx9c6He5XfaTMiGfdLwRnkV4RPp9t9iF3 视为未白名单 program。
+ *    这是 OKX 钱包风控,不是我们代码 bug。
+ *
+ * 正解(待开发):用 Jupiter /swap-instructions 拿原始指令,自己在前端
+ * 追加一条 SystemProgram.transfer(fee)指令 + swap 指令组装成一个 tx。
+ * 避开 Referral Program 调用,OKX 就不会拦。
+ */
+const FEE_DISABLED = true;
+
 export function resolveFee(inputMint: string): {
   feeAccount?: string;
   platformFeeBps: number;
 } {
+  if (FEE_DISABLED) return { platformFeeBps: 0 };
+
   const main = process.env.NEXT_PUBLIC_JUPITER_FEE_ACCOUNT;
   if (!main) return { platformFeeBps: 0 };
   if (!FEE_SUPPORTED_MINTS.has(inputMint)) return { platformFeeBps: 0 };
