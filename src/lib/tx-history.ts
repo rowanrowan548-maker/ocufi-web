@@ -43,26 +43,33 @@ export interface TxRecord {
 export async function fetchTxHistory(
   connection: Connection,
   owner: PublicKey,
-  limit = 50
+  limit = 30
 ): Promise<TxRecord[]> {
   // 1. 签名列表
   const sigs = await connection.getSignaturesForAddress(owner, { limit });
   if (sigs.length === 0) return [];
 
-  // 2. 批量 parsed(分批,避免 RPC 一次太多)
+  // 2. 拉详情:Helius 免费版不支持 batch JSON-RPC(会返 403 -32403),
+  //    所以走单笔 getParsedTransaction + 小并发 + 节流,避免超限
   const signatures = sigs.map((s) => s.signature);
-  const BATCH = 20;
+  const CONCURRENCY = 3;
+  const STEP_DELAY_MS = 100;
   const parsed: (ParsedTransactionWithMeta | null)[] = [];
-  for (let i = 0; i < signatures.length; i += BATCH) {
-    const batch = signatures.slice(i, i + BATCH);
-    try {
-      const res = await connection.getParsedTransactions(batch, {
-        maxSupportedTransactionVersion: 0,
-      });
-      parsed.push(...res);
-    } catch (e) {
-      console.warn('[tx-history] batch failed:', e);
-      for (let j = 0; j < batch.length; j++) parsed.push(null);
+  for (let i = 0; i < signatures.length; i += CONCURRENCY) {
+    const chunk = signatures.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      chunk.map((sig) =>
+        connection
+          .getParsedTransaction(sig, { maxSupportedTransactionVersion: 0 })
+          .catch((e) => {
+            console.warn('[tx-history] parse failed', sig.slice(0, 8), e);
+            return null;
+          })
+      )
+    );
+    parsed.push(...results);
+    if (i + CONCURRENCY < signatures.length) {
+      await new Promise((r) => setTimeout(r, STEP_DELAY_MS));
     }
   }
 
