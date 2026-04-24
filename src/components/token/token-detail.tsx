@@ -26,9 +26,11 @@ import { track } from '@/lib/analytics';
 
 interface Props {
   mint: string;
+  /** 隐藏 hero(交易页用紧凑 TradingHeader 替代) */
+  hideHero?: boolean;
 }
 
-export function TokenDetailView({ mint }: Props) {
+export function TokenDetailView({ mint, hideHero }: Props) {
   const t = useTranslations();
   const chain = getCurrentChain();
 
@@ -87,6 +89,8 @@ export function TokenDetailView({ mint }: Props) {
 
   return (
     <div className="w-full max-w-5xl space-y-4">
+      {!hideHero && (
+      <>
       {/* ── Hero ── gmgn 风:大字价格 + 青绿光晕 */}
       <Card className="relative overflow-hidden">
         <div
@@ -164,6 +168,8 @@ export function TokenDetailView({ mint }: Props) {
           </div>
         </CardContent>
       </Card>
+      </>
+      )}
 
       {/* ── K 线图(嵌入 DexScreener,V1.5 自绘) ── */}
       {detail.dexUrl && (

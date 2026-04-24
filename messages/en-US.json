@@ -143,6 +143,10 @@
       "buy": "Buy",
       "sell": "Sell"
     },
+    "orderType": {
+      "market": "Market",
+      "limit": "Limit"
+    },
     "buy": {
       "title": "Market Buy",
       "subtitle": "Buy any SPL token with SOL"

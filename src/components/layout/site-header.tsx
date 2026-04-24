@@ -7,10 +7,9 @@ import { MoreMenu } from './more-menu';
 export async function SiteHeader() {
   const t = await getTranslations();
 
-  // 主 nav · 一线功能,直接展示
+  // 主 nav · 一线功能,限价单已整合进交易页
   const mainLinks = [
     { href: '/trade', label: t('nav.trade') },
-    { href: '/limit', label: t('nav.limit') },
     { href: '/portfolio', label: t('nav.portfolio') },
     { href: '/token', label: t('nav.tokenCheck') },
   ];
@@ -20,6 +19,7 @@ export async function SiteHeader() {
     { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
     { href: '/points', label: t('nav.points') },
+    { href: '/limit', label: t('nav.limit') },
     { href: '/faq', label: t('nav.faq') },
     { href: '/settings', label: t('nav.settings') },
   ];

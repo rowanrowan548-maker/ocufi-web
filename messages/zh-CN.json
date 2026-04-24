@@ -143,6 +143,10 @@
       "buy": "买入",
       "sell": "卖出"
     },
+    "orderType": {
+      "market": "市价",
+      "limit": "限价"
+    },
     "buy": {
       "title": "市价买入",
       "subtitle": "用 SOL 购买任意 SPL Token"
