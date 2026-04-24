@@ -34,6 +34,12 @@
     "copied": "Copied",
     "viewExplorer": "View on Solscan"
   },
+  "mobile": {
+    "title": "Open in your wallet's in-app browser",
+    "hint": "Safari / Chrome can't see Phantom / Solflare on mobile. Tap below to relaunch this page inside your wallet app.",
+    "openPhantom": "Open in Phantom",
+    "openSolflare": "Open in Solflare"
+  },
   "trade": {
     "page": {
       "title": "Trade",

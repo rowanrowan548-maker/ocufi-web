@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentChain } from '@/config/chains';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
+import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
 
 export default async function Landing({
   params,
@@ -35,6 +36,8 @@ export default async function Landing({
             {t('landing.hero.cta_docs')}
           </Button>
         </div>
+
+        <MobileDeeplink />
 
         <div className="pt-12 text-xs text-muted-foreground font-mono tracking-wider">
           {chain.name} · v0.2 · Day 2 · wallet connect
