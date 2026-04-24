@@ -3,11 +3,11 @@
 /**
  * 通用代币价格预览
  *
- * 输入 mint 字符串,自动(带 debounce)查 DexScreener 显示:
- *   图标 + symbol + 当前价 + 24h 涨跌 + 流动性
+ * 输入 mint 字符串 → debounce 查 DexScreener → 两行显示:
+ *   第一行:图标 + symbol/name · 当前价(USD) + 24h 涨跌 · 查安全链接
+ *   第二行:市值(MC) · 流动性(Liq) · 24h 成交量(Vol)
  *
- * 嵌在所有"输入 mint 地址"的场景(买 / 卖 / 限价 / 提醒)让用户在下单前
- * 就能看到币的基本面,不用跳到 /token 详情页
+ * 小数价格用压缩零格式(0.0₄8575 = 0.00008575)方便一眼读出量级
  */
 import { useEffect, useRef, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
@@ -19,9 +19,7 @@ import { useTranslations } from 'next-intl';
 
 interface Props {
   mint: string;
-  /** debounce 毫秒,默认 400 */
   debounceMs?: number;
-  /** 是否显示右侧"查安全"小链接,默认 true */
   showSafetyLink?: boolean;
 }
 
@@ -56,18 +54,12 @@ export function TokenPricePreview({ mint, debounceMs = 400, showSafetyLink = tru
     const timer = setTimeout(async () => {
       try {
         const i = await fetchTokenInfo(m);
-        if (reqIdRef.current !== myReqId) return; // 已被更新的输入覆盖
-        if (i) {
-          setInfo(i);
-          setNotFound(false);
-        } else {
-          setInfo(null);
-          setNotFound(true);
-        }
+        if (reqIdRef.current !== myReqId) return;
+        if (i) { setInfo(i); setNotFound(false); }
+        else { setInfo(null); setNotFound(true); }
       } catch {
         if (reqIdRef.current !== myReqId) return;
-        setInfo(null);
-        setNotFound(true);
+        setInfo(null); setNotFound(true);
       } finally {
         if (reqIdRef.current === myReqId) setLoading(false);
       }
@@ -94,7 +86,6 @@ export function TokenPricePreview({ mint, debounceMs = 400, showSafetyLink = tru
       </div>
     );
   }
-
   if (!info) return null;
 
   const change = info.priceChange24h;
@@ -108,67 +99,99 @@ export function TokenPricePreview({ mint, debounceMs = 400, showSafetyLink = tru
   const ChangeIcon = changePositive ? TrendingUp : changeNegative ? TrendingDown : null;
 
   return (
-    <div className="flex items-center gap-3 rounded-md border bg-muted/30 px-3 py-2">
-      {/* 图标 */}
-      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-        {info.logoUri ? (
-          <Image
-            src={info.logoUri}
-            alt={info.symbol}
-            width={32}
-            height={32}
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <span className="text-[10px] font-bold text-muted-foreground">
-            {info.symbol.slice(0, 2).toUpperCase()}
-          </span>
+    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+      <div className="flex items-center gap-3">
+        {/* 图标 */}
+        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+          {info.logoUri ? (
+            <Image
+              src={info.logoUri}
+              alt={info.symbol}
+              width={36}
+              height={36}
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <span className="text-[11px] font-bold text-muted-foreground">
+              {info.symbol.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        {/* symbol + name */}
+        <div className="flex flex-col min-w-0 flex-1">
+          <div className="text-sm font-semibold truncate">{info.symbol}</div>
+          {info.name && info.name !== info.symbol && (
+            <div className="text-xs text-muted-foreground truncate">{info.name}</div>
+          )}
+        </div>
+
+        {/* 价格 + 涨跌 */}
+        <div className="text-right flex-shrink-0">
+          <div className="text-base font-mono font-semibold leading-tight">
+            ${formatUsd(info.priceUsd)}
+          </div>
+          <div className={`text-xs font-mono flex items-center gap-0.5 justify-end ${changeColor}`}>
+            {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
+            {change != null ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '—'}
+          </div>
+        </div>
+
+        {/* 安全链接 */}
+        {showSafetyLink && (
+          <Link
+            href={`/token/${mint.trim()}`}
+            className="flex-shrink-0 inline-flex items-center p-1 text-muted-foreground hover:text-foreground"
+            title={t('trade.viewSafety')}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Link>
         )}
       </div>
 
-      {/* symbol + name */}
-      <div className="flex flex-col min-w-0 flex-shrink">
-        <div className="text-sm font-medium truncate">{info.symbol}</div>
-        <div className="text-xs text-muted-foreground truncate">
-          Liq ${formatCompact(info.liquidityUsd)}
-        </div>
+      {/* 第二行:MC / Liq / Vol */}
+      <div className="flex gap-4 text-xs text-muted-foreground border-t pt-2">
+        <span>
+          <span className="mr-1">MC</span>
+          <span className="font-mono text-foreground">${formatCompact(info.marketCap)}</span>
+        </span>
+        <span>
+          <span className="mr-1">Liq</span>
+          <span className="font-mono text-foreground">${formatCompact(info.liquidityUsd)}</span>
+        </span>
+        {info.volume24h != null && info.volume24h > 0 && (
+          <span>
+            <span className="mr-1">Vol 24h</span>
+            <span className="font-mono text-foreground">${formatCompact(info.volume24h)}</span>
+          </span>
+        )}
       </div>
-
-      {/* 当前价 + 24h 涨跌 */}
-      <div className="ml-auto flex flex-col items-end">
-        <div className="text-sm font-mono font-medium">
-          ${formatPrice(info.priceUsd)}
-        </div>
-        <div className={`text-xs font-mono flex items-center gap-1 ${changeColor}`}>
-          {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
-          {change != null ? `${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '—'}
-        </div>
-      </div>
-
-      {/* 查安全 */}
-      {showSafetyLink && (
-        <Link
-          href={`/token/${mint.trim()}`}
-          className="flex-shrink-0 inline-flex items-center p-1 text-muted-foreground hover:text-foreground"
-          title={t('trade.viewSafety')}
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Link>
-      )}
     </div>
   );
 }
 
-function formatPrice(n: number): string {
-  if (!n) return '—';
-  if (n >= 1) return n.toFixed(4);
+/** USD 价格:大额常规小数,meme 币小价用压缩零格式(0.0₄8575) */
+function formatUsd(n: number): string {
+  if (!n || !Number.isFinite(n) || n <= 0) return '—';
+  if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  if (n >= 0.001) return n.toFixed(4);
   if (n >= 0.0001) return n.toFixed(6);
-  return n.toFixed(9);
+  // 3 个以上前导零 → 压缩
+  const fixed = n.toFixed(20);
+  const match = fixed.match(/^0\.(0+)(\d+)/);
+  if (!match) return n.toPrecision(4);
+  const leadZeros = match[1].length;
+  const rest = match[2].replace(/0+$/, '').slice(0, 4);
+  if (leadZeros < 4) return `0.${match[1]}${rest}`;
+  const subs = '₀₁₂₃₄₅₆₇₈₉';
+  const sub = String(leadZeros).split('').map((d) => subs[Number(d)]).join('');
+  return `0.0${sub}${rest}`;
 }
 
+/** 大额金额:$24.5B / $8.2M / $345K */
 function formatCompact(n: number): string {
-  if (!n) return '0';
+  if (!n || !Number.isFinite(n)) return '0';
   if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
   if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
