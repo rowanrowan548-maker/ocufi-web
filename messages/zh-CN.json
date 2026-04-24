@@ -15,7 +15,8 @@
     "settings": "设置",
     "docs": "文档",
     "tokenCheck": "查币",
-    "faq": "常见问题"
+    "faq": "常见问题",
+    "more": "更多"
   },
   "landing": {
     "badge": "非托管 · 开源",
@@ -35,6 +36,7 @@
     "market": {
       "title": "市场速览",
       "subtitle": "实时链上行情 · 点击查看代币详情",
+      "more": "更多",
       "hot": "热门",
       "meme": "Meme",
       "lst": "流动性质押",

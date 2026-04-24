@@ -15,7 +15,8 @@
     "settings": "Settings",
     "docs": "Docs",
     "tokenCheck": "Token Check",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "more": "More"
   },
   "landing": {
     "badge": "Non-custodial · Open-source",
@@ -35,6 +36,7 @@
     "market": {
       "title": "Market Snapshot",
       "subtitle": "Live on-chain prices — click any token for details",
+      "more": "More",
       "hot": "Hot",
       "meme": "Meme",
       "lst": "Liquid Staking",
