@@ -11,6 +11,7 @@ export async function SiteHeader() {
     { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
     { href: '/token', label: t('nav.tokenCheck') },
+    { href: '/settings', label: t('nav.settings') },
   ];
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur">

@@ -47,14 +47,18 @@ export function isStableToken(mint: string): boolean {
 
 /**
  * 按 token 类型推荐默认滑点(bps)
- *  - 稳定币:50 (0.5%)
- *  - verified 蓝筹:100 (1%)
- *  - 其他(meme / pump):500 (5%)
+ *  - 稳定币:默认 50 (0.5%)
+ *  - verified 蓝筹:默认 100 (1%)
+ *  - 其他(meme / pump):默认 500 (5%)
+ * 读取用户 /settings 自定义值覆盖默认
  *
  * 买入时传 outputMint(要收到的币);卖出时传 inputMint(要卖掉的币)
  */
+import { getSlippageProfile } from './user-settings';
+
 export function recommendedSlippageBps(mint: string): number {
-  if (isStableToken(mint)) return 50;
-  if (isVerifiedToken(mint)) return 100;
-  return 500;
+  const p = getSlippageProfile();
+  if (isStableToken(mint)) return p.stable;
+  if (isVerifiedToken(mint)) return p.verified;
+  return p.meme;
 }

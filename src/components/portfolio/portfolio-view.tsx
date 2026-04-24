@@ -20,6 +20,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { usePortfolio } from '@/hooks/use-portfolio';
+import { useCostBasis } from '@/hooks/use-cost-basis';
 import { getCurrentChain } from '@/config/chains';
 
 export function PortfolioView() {
@@ -28,6 +29,7 @@ export function PortfolioView() {
   const wallet = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
   const { sol, tokens, totalUsd, loading, error, refresh } = usePortfolio();
+  const { costs } = useCostBasis();
 
   // 未连接
   if (!wallet.connected || !wallet.publicKey) {
@@ -102,6 +104,8 @@ export function PortfolioView() {
                 <TableHead>{t('portfolio.columns.token')}</TableHead>
                 <TableHead className="text-right">{t('portfolio.columns.amount')}</TableHead>
                 <TableHead className="text-right">{t('portfolio.columns.price')}</TableHead>
+                <TableHead className="text-right">{t('portfolio.columns.avgCost')}</TableHead>
+                <TableHead className="text-right">{t('portfolio.columns.pnl')}</TableHead>
                 <TableHead className="text-right">{t('portfolio.columns.value')}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
@@ -127,65 +131,85 @@ export function PortfolioView() {
                   <TableCell className="text-right font-mono text-muted-foreground">
                     ${(sol.valueUsd / Math.max(sol.amount, 1e-9)).toFixed(2)}
                   </TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground text-xs">—</TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground text-xs">—</TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     ${formatUsd(sol.valueUsd)}
                   </TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               )}
-              {tokens.map((tok) => (
-                <TableRow key={tok.mint}>
-                  <TableCell>
-                    <Link
-                      href={`/token/${tok.mint}`}
-                      className="flex items-center gap-3 hover:bg-muted/50 -mx-4 -my-2 px-4 py-2 rounded transition-colors"
-                    >
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {tok.logoUri ? (
-                          <Image
-                            src={tok.logoUri}
-                            alt={tok.symbol}
-                            width={32}
-                            height={32}
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="text-xs font-bold text-muted-foreground">
-                            {tok.symbol.slice(0, 2).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{tok.symbol}</div>
-                        <div className="text-xs text-muted-foreground font-mono truncate">
-                          {shortAddr(tok.mint)}
+              {tokens.map((tok) => {
+                const solUsd = sol.amount > 0 ? sol.valueUsd / sol.amount : 0;
+                const cost = costs.get(tok.mint);
+                const avgCostUsd = cost && cost.avgCostSol > 0 && solUsd > 0
+                  ? cost.avgCostSol * solUsd
+                  : null;
+                const pnlPct = avgCostUsd != null && avgCostUsd > 0 && tok.priceUsd > 0
+                  ? ((tok.priceUsd - avgCostUsd) / avgCostUsd) * 100
+                  : null;
+                return (
+                  <TableRow key={tok.mint}>
+                    <TableCell>
+                      <Link
+                        href={`/token/${tok.mint}`}
+                        className="flex items-center gap-3 hover:bg-muted/50 -mx-4 -my-2 px-4 py-2 rounded transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {tok.logoUri ? (
+                            <Image
+                              src={tok.logoUri}
+                              alt={tok.symbol}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-muted-foreground">
+                              {tok.symbol.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatAmount(tok.amount)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-muted-foreground">
-                    {tok.priceUsd > 0 ? `$${formatPrice(tok.priceUsd)}` : '—'}
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-medium">
-                    {tok.valueUsd > 0 ? `$${formatUsd(tok.valueUsd)}` : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      href={`${chain.explorer}/token/${tok.mint}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex p-1 text-muted-foreground hover:text-foreground"
-                      title={t('portfolio.viewOnExplorer')}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{tok.symbol}</div>
+                          <div className="text-xs text-muted-foreground font-mono truncate">
+                            {shortAddr(tok.mint)}
+                          </div>
+                        </div>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatAmount(tok.amount)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-muted-foreground">
+                      {tok.priceUsd > 0 ? `$${formatPrice(tok.priceUsd)}` : '—'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                      {avgCostUsd != null ? `$${formatPrice(avgCostUsd)}` : '—'}
+                    </TableCell>
+                    <TableCell className={`text-right font-mono text-xs ${pnlColor(pnlPct)}`}>
+                      {pnlPct != null
+                        ? `${pnlPct > 0 ? '+' : ''}${pnlPct.toFixed(2)}%`
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-medium">
+                      {tok.valueUsd > 0 ? `$${formatUsd(tok.valueUsd)}` : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <a
+                        href={`${chain.explorer}/token/${tok.mint}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex p-1 text-muted-foreground hover:text-foreground"
+                        title={t('portfolio.viewOnExplorer')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>
@@ -218,4 +242,11 @@ function formatPrice(n: number): string {
   if (n >= 1) return n.toFixed(4);
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+function pnlColor(pct: number | null): string {
+  if (pct == null) return 'text-muted-foreground';
+  if (pct > 0) return 'text-green-600 dark:text-green-400 font-medium';
+  if (pct < 0) return 'text-red-600 dark:text-red-400 font-medium';
+  return 'text-muted-foreground';
 }

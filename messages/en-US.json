@@ -17,16 +17,66 @@
     "tokenCheck": "Token Check"
   },
   "landing": {
+    "badge": "Non-custodial · Open-source",
     "hero": {
-      "title": "Ocufi · On-chain trading, reimagined",
-      "subtitle": "Non-custodial · 0.2% fees · Token safety review · Open-source & auditable",
+      "title": "On-chain trading, made yours",
+      "subtitle": "Non-custodial · 0.2% fees · Every token pre-audited · Fully open-source",
       "cta_connect": "Connect Wallet",
+      "cta_check": "No wallet? Check any token",
       "cta_docs": "Read Docs"
     },
     "status": "Product under construction — launching soon",
     "noWallet": {
       "title": "No wallet? Check any token",
       "hint": "Paste a mint address to see if it's safe to buy"
+    },
+    "features": {
+      "title": "Why Ocufi",
+      "subtitle": "What gmgn / bullx / axiom don't give you — we do",
+      "nonCustodial": {
+        "title": "Non-custodial",
+        "desc": "Your keys stay yours. Ocufi never holds your funds."
+      },
+      "lowFee": {
+        "title": "0.2% fees",
+        "desc": "Half of what the competitors charge — no hidden skim."
+      },
+      "safety": {
+        "title": "Free safety review",
+        "desc": "RugCheck + our whitelist. See LP / mint authority / top holders before you buy."
+      },
+      "openSource": {
+        "title": "Open source",
+        "desc": "Frontend audited on GitHub. No black box, no hidden fees."
+      }
+    },
+    "functions": {
+      "title": "What you can do",
+      "subtitle": "V1 feature set",
+      "trade": {
+        "title": "Market trade",
+        "desc": "Jupiter best-route aggregator"
+      },
+      "limit": {
+        "title": "Limit orders",
+        "desc": "Auto-execute at your target price"
+      },
+      "portfolio": {
+        "title": "Portfolio",
+        "desc": "All SPL balances + live valuation"
+      },
+      "alerts": {
+        "title": "Price alerts",
+        "desc": "Browser notifications on target"
+      },
+      "history": {
+        "title": "History",
+        "desc": "Last 100 tx, auto-classified"
+      },
+      "tokenCheck": {
+        "title": "Token safety check",
+        "desc": "Works without connecting wallet"
+      }
     }
   },
   "wallet": {
@@ -141,6 +191,8 @@
       "token": "Token",
       "amount": "Amount",
       "price": "Price",
+      "avgCost": "Avg Cost",
+      "pnl": "P/L %",
       "value": "Value"
     }
   },
@@ -192,6 +244,35 @@
     "actions": {
       "buy": "Buy now"
     }
+  },
+  "settings": {
+    "page": {
+      "title": "Settings",
+      "subtitle": "Language · Default slippage · About"
+    },
+    "language": {
+      "title": "Language",
+      "desc": "Switch between Chinese / English"
+    },
+    "slippage": {
+      "title": "Default slippage",
+      "desc": "Applied automatically based on token type; you can still override per trade",
+      "stable": "Stablecoins",
+      "stableHint": "USDC / USDT etc. Deepest liquidity, lowest slippage",
+      "verified": "Blue chips",
+      "verifiedHint": "SOL / JUP / BONK / WIF and other verified tokens",
+      "meme": "Meme / pump",
+      "memeHint": "Thin liquidity, volatile — 3%+ recommended"
+    },
+    "about": {
+      "title": "About",
+      "chain": "Chain",
+      "rpc": "RPC endpoint",
+      "version": "Version"
+    },
+    "save": "Save",
+    "saved": "Saved",
+    "reset": "Reset"
   },
   "alerts": {
     "page": {

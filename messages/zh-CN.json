@@ -17,16 +17,66 @@
     "tokenCheck": "查币"
   },
   "landing": {
+    "badge": "非托管 · 开源",
     "hero": {
-      "title": "Ocufi · 链上交易新选择",
-      "subtitle": "非托管 · 手续费仅 0.2% · 代币安全审查 · 开源可审计",
+      "title": "链上交易,应该是你的事",
+      "subtitle": "非托管 · 手续费仅 0.2% · 每笔代币都先做安全审查 · 全代码开源可审计",
       "cta_connect": "连接钱包开始",
+      "cta_check": "不用连钱包,直接查币",
       "cta_docs": "查看文档"
     },
     "status": "产品正在搭建中,即将上线",
     "noWallet": {
       "title": "不用连钱包 · 直接查币",
       "hint": "粘合约地址,一眼看出这币能不能买"
+    },
+    "features": {
+      "title": "为什么选 Ocufi",
+      "subtitle": "和 gmgn / bullx / axiom 比,我们只差一样东西 —— 你",
+      "nonCustodial": {
+        "title": "非托管",
+        "desc": "私钥 100% 在你手里,Ocufi 永远碰不到你的钱"
+      },
+      "lowFee": {
+        "title": "0.2% 手续费",
+        "desc": "对标竞品 0.8%-1%,一次交易省下一半以上"
+      },
+      "safety": {
+        "title": "免费安全审查",
+        "desc": "接 RugCheck + 自建白名单,下单前先看清持仓/LP/铸币权"
+      },
+      "openSource": {
+        "title": "前端开源",
+        "desc": "GitHub 上可审计,没有黑箱逻辑,没有暗抽成"
+      }
+    },
+    "functions": {
+      "title": "你可以用它做什么",
+      "subtitle": "V1 上线功能全景",
+      "trade": {
+        "title": "市价买卖",
+        "desc": "Jupiter 聚合最优路径"
+      },
+      "limit": {
+        "title": "限价单",
+        "desc": "挂单等到价自动成交"
+      },
+      "portfolio": {
+        "title": "持仓",
+        "desc": "所有 SPL 余额 + 实时估值"
+      },
+      "alerts": {
+        "title": "价格提醒",
+        "desc": "到价浏览器弹窗"
+      },
+      "history": {
+        "title": "成交记录",
+        "desc": "链上 100 笔自动识别买卖"
+      },
+      "tokenCheck": {
+        "title": "代币安全审查",
+        "desc": "不用连钱包也能用"
+      }
     }
   },
   "wallet": {
@@ -141,6 +191,8 @@
       "token": "代币",
       "amount": "数量",
       "price": "现价",
+      "avgCost": "成本",
+      "pnl": "盈亏%",
       "value": "市值"
     }
   },
@@ -192,6 +244,35 @@
     "actions": {
       "buy": "立即买入"
     }
+  },
+  "settings": {
+    "page": {
+      "title": "设置",
+      "subtitle": "语言 · 默认滑点 · 关于"
+    },
+    "language": {
+      "title": "语言",
+      "desc": "切换中 / 英文界面"
+    },
+    "slippage": {
+      "title": "默认滑点",
+      "desc": "输入合约后会按 token 类型自动应用,你仍可在下单时临时调",
+      "stable": "稳定币",
+      "stableHint": "USDC / USDT 等,深度最好,滑点可以很低",
+      "verified": "蓝筹代币",
+      "verifiedHint": "SOL / JUP / BONK / WIF 等已验证名单",
+      "meme": "Meme / pump 币",
+      "memeHint": "深度差价格波动大,建议 3%+ 防卡单"
+    },
+    "about": {
+      "title": "关于",
+      "chain": "当前链",
+      "rpc": "RPC 节点",
+      "version": "版本"
+    },
+    "save": "保存",
+    "saved": "已保存",
+    "reset": "恢复默认"
   },
   "alerts": {
     "page": {
