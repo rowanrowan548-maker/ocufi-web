@@ -139,8 +139,8 @@ export function PointsView() {
             </CardContent>
           </Card>
         ) : board && board.items.length > 0 ? (
-          <Card className="overflow-hidden">
-            <Table>
+          <Card className="overflow-x-auto">
+            <Table className="min-w-[420px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">#</TableHead>

@@ -82,8 +82,8 @@ export function HistoryView() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <Table>
+        <Card className="overflow-x-auto">
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('history.columns.time')}</TableHead>

@@ -123,8 +123,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* iOS safe-area(底部 home indicator 不遮挡 sticky footer) */
+    padding-bottom: env(safe-area-inset-bottom);
   }
   html {
     @apply font-sans;
+    /* 手机端字体大小稳定(不在横屏下被系统放大) */
+    -webkit-text-size-adjust: 100%;
   }
 }

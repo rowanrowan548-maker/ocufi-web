@@ -97,15 +97,15 @@ export function PortfolioView() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <Table>
+        <Card className="overflow-x-auto">
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('portfolio.columns.token')}</TableHead>
                 <TableHead className="text-right">{t('portfolio.columns.amount')}</TableHead>
                 <TableHead className="text-right">{t('portfolio.columns.price')}</TableHead>
-                <TableHead className="text-right">{t('portfolio.columns.avgCost')}</TableHead>
-                <TableHead className="text-right">{t('portfolio.columns.pnl')}</TableHead>
+                <TableHead className="text-right hidden md:table-cell">{t('portfolio.columns.avgCost')}</TableHead>
+                <TableHead className="text-right hidden md:table-cell">{t('portfolio.columns.pnl')}</TableHead>
                 <TableHead className="text-right">{t('portfolio.columns.value')}</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
@@ -131,8 +131,8 @@ export function PortfolioView() {
                   <TableCell className="text-right font-mono text-muted-foreground">
                     ${(sol.valueUsd / Math.max(sol.amount, 1e-9)).toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-muted-foreground text-xs">—</TableCell>
-                  <TableCell className="text-right font-mono text-muted-foreground text-xs">—</TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground text-xs hidden md:table-cell">—</TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground text-xs hidden md:table-cell">—</TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     ${formatUsd(sol.valueUsd)}
                   </TableCell>
@@ -185,10 +185,10 @@ export function PortfolioView() {
                     <TableCell className="text-right font-mono text-muted-foreground">
                       {tok.priceUsd > 0 ? `$${formatPrice(tok.priceUsd)}` : '—'}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                    <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell">
                       {avgCostUsd != null ? `$${formatPrice(avgCostUsd)}` : '—'}
                     </TableCell>
-                    <TableCell className={`text-right font-mono text-xs ${pnlColor(pnlPct)}`}>
+                    <TableCell className={`text-right font-mono text-xs hidden md:table-cell ${pnlColor(pnlPct)}`}>
                       {pnlPct != null
                         ? `${pnlPct > 0 ? '+' : ''}${pnlPct.toFixed(2)}%`
                         : '—'}

@@ -142,8 +142,8 @@ export function OrderList({ refreshTick = 0 }: Props) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <Table>
+        <Card className="overflow-x-auto">
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('limit.orders.pair')}</TableHead>

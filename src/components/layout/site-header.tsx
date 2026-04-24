@@ -12,6 +12,7 @@ export async function SiteHeader() {
     { href: '/history', label: t('nav.history') },
     { href: '/points', label: t('nav.points') },
     { href: '/token', label: t('nav.tokenCheck') },
+    { href: '/faq', label: t('nav.faq') },
     { href: '/settings', label: t('nav.settings') },
   ];
   return (

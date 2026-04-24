@@ -239,8 +239,8 @@ export function AlertsView() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="overflow-hidden">
-            <Table>
+          <Card className="overflow-x-auto">
+            <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('alerts.list.token')}</TableHead>
