@@ -34,12 +34,23 @@
   },
   "trade": {
     "page": {
-      "title": "市价买入",
-      "subtitle": "粘合约地址,输入 SOL 数量,Jupiter 自动选最优路线"
+      "title": "交易",
+      "subtitle": "Jupiter 聚合器,自动选最优路线,手续费透明"
+    },
+    "tabs": {
+      "buy": "买入",
+      "sell": "卖出"
     },
     "buy": {
-      "title": "买入",
-      "subtitle": "走 Jupiter 聚合器,最低手续费"
+      "title": "市价买入",
+      "subtitle": "用 SOL 购买任意 SPL Token"
+    },
+    "sell": {
+      "title": "市价卖出",
+      "subtitle": "卖掉你持有的代币换 SOL",
+      "yourBalance": "你的余额",
+      "amount": "卖出数量",
+      "receivedSol": "实际到账"
     },
     "fields": {
       "mint": "代币合约地址 (mint)",
@@ -56,7 +67,9 @@
       "quote": "查询报价",
       "quoting": "查询中…",
       "buy": "确认买入",
+      "sell": "确认卖出",
       "buyAgain": "再买一单",
+      "sellAgain": "再卖一单",
       "signing": "等待签名…",
       "sending": "广播中…",
       "confirming": "链上确认…"
@@ -69,6 +82,11 @@
       "platformFee": "Ocufi 手续费",
       "platformFeeNone": "0(V1 免费)"
     },
+    "confirm": {
+      "buyTitle": "确认买入 {symbol}",
+      "sellTitle": "确认卖出 {symbol}",
+      "notice": "请再次确认下单信息。确认后钱包会弹窗要求签名。"
+    },
     "result": {
       "success": "交易成功",
       "actualReceived": "实际到账",
@@ -79,7 +97,15 @@
     "errors": {
       "invalidMint": "合约地址无效",
       "invalidSol": "SOL 数量必须 > 0",
-      "unconfirmed": "交易未能在规定时间内确认。签名 {sig}"
+      "invalidAmount": "数量必须 > 0",
+      "balanceUnknown": "还在读取你的余额,稍后再试",
+      "insufficientToken": "卖出数量超过你的持仓",
+      "unconfirmed": "交易未能在规定时间内确认。签名 {sig}",
+      "userRejected": "你在钱包里取消了签名",
+      "slippage": "价格滑点超过设置上限,提高滑点或稍后再试",
+      "insufficientFunds": "SOL 余额不足以支付交易或网络费",
+      "noRoute": "Jupiter 找不到交易路径,这个币可能流动性太低",
+      "rpcForbidden": "网络节点拒绝访问,刷新页面重试"
     }
   },
   "common": {

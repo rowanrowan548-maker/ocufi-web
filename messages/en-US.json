@@ -34,12 +34,23 @@
   },
   "trade": {
     "page": {
-      "title": "Market Buy",
-      "subtitle": "Paste a mint, enter SOL amount, best route via Jupiter"
+      "title": "Trade",
+      "subtitle": "Jupiter aggregator · best route · transparent fees"
+    },
+    "tabs": {
+      "buy": "Buy",
+      "sell": "Sell"
     },
     "buy": {
-      "title": "Buy",
-      "subtitle": "Jupiter aggregator, lowest fees"
+      "title": "Market Buy",
+      "subtitle": "Buy any SPL token with SOL"
+    },
+    "sell": {
+      "title": "Market Sell",
+      "subtitle": "Sell a token you hold back to SOL",
+      "yourBalance": "Your balance",
+      "amount": "Amount to sell",
+      "receivedSol": "SOL received"
     },
     "fields": {
       "mint": "Token mint address",
@@ -56,7 +67,9 @@
       "quote": "Get Quote",
       "quoting": "Quoting…",
       "buy": "Confirm Buy",
+      "sell": "Confirm Sell",
       "buyAgain": "Buy Again",
+      "sellAgain": "Sell Again",
       "signing": "Waiting for signature…",
       "sending": "Broadcasting…",
       "confirming": "Confirming on-chain…"
@@ -69,6 +82,11 @@
       "platformFee": "Ocufi fee",
       "platformFeeNone": "0 (V1 free)"
     },
+    "confirm": {
+      "buyTitle": "Confirm buy {symbol}",
+      "sellTitle": "Confirm sell {symbol}",
+      "notice": "Please review the details. After confirming, your wallet will ask for a signature."
+    },
     "result": {
       "success": "Trade successful",
       "actualReceived": "Actually received",
@@ -79,7 +97,15 @@
     "errors": {
       "invalidMint": "Invalid mint address",
       "invalidSol": "SOL amount must be > 0",
-      "unconfirmed": "Transaction not confirmed in time. Signature: {sig}"
+      "invalidAmount": "Amount must be > 0",
+      "balanceUnknown": "Still loading your balance, try again",
+      "insufficientToken": "Amount exceeds your balance",
+      "unconfirmed": "Transaction not confirmed in time. Signature: {sig}",
+      "userRejected": "You rejected the signature in your wallet",
+      "slippage": "Price moved beyond slippage; raise slippage or retry",
+      "insufficientFunds": "SOL balance not enough for trade + fees",
+      "noRoute": "Jupiter found no route; this token may have no liquidity",
+      "rpcForbidden": "RPC node refused the request; refresh and retry"
     }
   },
   "common": {

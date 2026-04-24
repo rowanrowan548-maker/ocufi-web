@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { BuyForm } from '@/components/trade/buy-form';
+import { TradeTabs } from '@/components/trade/trade-tabs';
 
 export default async function TradePage({
   params,
@@ -19,7 +19,7 @@ export default async function TradePage({
           </h1>
           <p className="text-sm text-muted-foreground">{t('trade.page.subtitle')}</p>
         </div>
-        <BuyForm />
+        <TradeTabs />
       </div>
     </main>
   );
