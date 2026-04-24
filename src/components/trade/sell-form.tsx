@@ -26,11 +26,10 @@ import {
   getQuote,
   getSwapTx,
   SOL_MINT,
-  getConfiguredFeeAccount,
-  getConfiguredPlatformFeeBps,
   type JupiterQuote,
   type GasLevel,
 } from '@/lib/jupiter';
+import { resolveFee } from '@/lib/jupiter-referral';
 import { signAndSend, confirmTx, analyzeTx } from '@/lib/trade-tx';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
@@ -126,9 +125,10 @@ export function SellForm() {
     track('swap_quote_requested', { side: 'sell', mint: mint.trim(), tokens: amt });
     try {
       const amountRaw = BigInt(Math.floor(amt * 10 ** balance.decimals));
+      const fee = resolveFee(mint.trim());
       const quote = await getQuote(mint.trim(), SOL_MINT, amountRaw, {
         slippageBps,
-        platformFeeBps: getConfiguredPlatformFeeBps(),
+        platformFeeBps: fee.platformFeeBps,
       });
       const outSol = Number(quote.outAmount) / LAMPORTS_PER_SOL;
       const minSol = Number(quote.otherAmountThreshold) / LAMPORTS_PER_SOL;
@@ -159,10 +159,11 @@ export function SellForm() {
 
     try {
       setStage('signing');
+      const fee = resolveFee(quoteData.quote.inputMint);
       const swap = await getSwapTx(quoteData.quote, {
         userPublicKey: wallet.publicKey.toBase58(),
         gasLevel,
-        feeAccount: getConfiguredFeeAccount(),
+        feeAccount: fee.feeAccount,
       });
 
       setStage('sending');
