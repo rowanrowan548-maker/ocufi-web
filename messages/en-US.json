@@ -21,7 +21,11 @@
       "cta_connect": "Connect Wallet",
       "cta_docs": "Read Docs"
     },
-    "status": "Product under construction — launching soon"
+    "status": "Product under construction — launching soon",
+    "noWallet": {
+      "title": "No wallet? Check any token",
+      "hint": "Paste a mint address to see if it's safe to buy"
+    }
   },
   "wallet": {
     "connect": "Connect Wallet",
