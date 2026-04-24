@@ -66,12 +66,20 @@ export function PointsView() {
 
   return (
     <div className="w-full max-w-3xl space-y-6">
-      {/* 我的积分 */}
-      <Card>
-        <CardHeader className="pb-3">
+      {/* 我的积分 · gmgn 式大数字卡片 */}
+      <Card className="relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-40 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 80% at 100% 0%, oklch(0.88 0.25 155 / 10%), transparent 70%)',
+          }}
+        />
+        <CardHeader className="pb-3 relative">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Award className="h-4 w-4" />
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <Award className="h-3.5 w-3.5" />
               {t('points.myBalance')}
             </CardTitle>
             <Button size="sm" variant="ghost" onClick={refresh} disabled={loading} className="h-8 px-2">
@@ -79,7 +87,7 @@ export function PointsView() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative">
           {!wallet.connected || !wallet.publicKey ? (
             <div className="flex flex-col items-center gap-3 py-4">
               <Wallet className="h-8 w-8 text-muted-foreground" />
@@ -90,18 +98,17 @@ export function PointsView() {
             </div>
           ) : (
             <div>
-              <div className="text-4xl font-bold font-mono">
+              <div className="text-5xl font-bold font-mono text-primary tracking-tight">
                 {me ? me.balance.toLocaleString() : '—'}
               </div>
-              <div className="text-xs text-muted-foreground mt-2">
+              <div className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
                 {me
                   ? t('points.eventCount', { n: me.event_count })
                   : loading
                   ? t('common.loading')
                   : t('points.noRecords')}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1 font-mono">
-                {shortAddr(wallet.publicKey.toBase58())}
+                <span className="text-border">·</span>
+                <span className="font-mono">{shortAddr(wallet.publicKey.toBase58())}</span>
               </div>
             </div>
           )}

@@ -31,6 +31,14 @@
       "title": "不用连钱包 · 直接查币",
       "hint": "粘合约地址,一眼看出这币能不能买"
     },
+    "market": {
+      "title": "市场速览",
+      "subtitle": "实时链上行情 · 点击查看代币详情",
+      "hot": "热门",
+      "meme": "Meme",
+      "lst": "流动性质押",
+      "stables": "稳定币 / L1"
+    },
     "features": {
       "title": "为什么选 Ocufi",
       "subtitle": "和 gmgn / bullx / axiom 比,我们只差一样东西 —— 你",

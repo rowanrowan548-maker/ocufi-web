@@ -50,11 +50,19 @@ export function PortfolioView() {
 
   return (
     <div className="w-full max-w-4xl space-y-4">
-      {/* 总值卡片 */}
-      <Card>
-        <CardHeader className="pb-3">
+      {/* 总值卡片 · gmgn 式大数字 */}
+      <Card className="relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-40 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 80% at 0% 0%, oklch(0.88 0.25 155 / 8%), transparent 70%)',
+          }}
+        />
+        <CardHeader className="pb-3 relative">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {t('portfolio.totalValue')}
             </CardTitle>
             <Button
@@ -68,13 +76,12 @@ export function PortfolioView() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold font-mono">
+        <CardContent className="relative">
+          <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight">
             ${formatUsd(totalUsd)}
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            {t('portfolio.walletAddress')}:{' '}
-            <span className="font-mono">{shortAddr(wallet.publicKey.toBase58())}</span>
+          <div className="text-xs text-muted-foreground mt-2 font-mono">
+            {shortAddr(wallet.publicKey.toBase58())}
           </div>
         </CardContent>
       </Card>

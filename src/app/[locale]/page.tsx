@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { getCurrentChain } from '@/config/chains';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
+import { MarketSnapshot } from '@/components/landing/market-snapshot';
 
 export default async function Landing({
   params,
@@ -38,14 +39,27 @@ export default async function Landing({
 
   return (
     <main className="flex flex-1 flex-col">
-      {/* ───── Hero ───── */}
-      <section className="px-6 pt-12 sm:pt-20 pb-16 sm:pb-24">
+      {/* ═══════ Hero ═══════ */}
+      <section className="relative px-4 sm:px-6 pt-12 sm:pt-24 pb-12 sm:pb-20 overflow-hidden">
+        {/* 背景光晕 */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-60"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.88 0.25 155 / 12%), transparent 70%)',
+          }}
+        />
+
         <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
-          <Badge variant="secondary" className="text-xs tracking-widest">
+          <Badge
+            variant="secondary"
+            className="text-xs tracking-widest bg-primary/10 border border-primary/20 text-primary"
+          >
             {chain.name} · {t('landing.badge')}
           </Badge>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1]">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.05] font-heading">
             {t('landing.hero.title')}
           </h1>
 
@@ -67,11 +81,14 @@ export default async function Landing({
         </div>
       </section>
 
-      {/* ───── 为什么 Ocufi ───── */}
-      <section className="px-6 pb-16 sm:pb-20 border-t">
-        <div className="max-w-5xl mx-auto pt-12 sm:pt-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+      {/* ═══════ Market Snapshot ═══════ */}
+      <MarketSnapshot />
+
+      {/* ═══════ Features ═══════ */}
+      <section className="px-4 sm:px-6 py-14 sm:py-20 border-t border-border/40">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-heading">
               {t('landing.features.title')}
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
@@ -82,12 +99,12 @@ export default async function Landing({
             {features.map(({ Icon, key }) => (
               <div
                 key={key}
-                className="rounded-lg border bg-card p-4 sm:p-5 flex flex-col gap-2"
+                className="group relative rounded-xl border border-border/60 bg-card p-4 sm:p-5 flex flex-col gap-3 hover:border-primary/40 transition-colors"
               >
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Icon className="h-4 w-4 text-primary" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <div className="text-sm font-semibold mt-1">
+                <div className="text-sm font-semibold">
                   {t(`landing.features.${key}.title`)}
                 </div>
                 <div className="text-xs text-muted-foreground leading-relaxed">
@@ -99,11 +116,11 @@ export default async function Landing({
         </div>
       </section>
 
-      {/* ───── 你能做什么 ───── */}
-      <section className="px-6 pb-16 sm:pb-20 border-t">
-        <div className="max-w-5xl mx-auto pt-12 sm:pt-16">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+      {/* ═══════ 能做什么 ═══════ */}
+      <section className="px-4 sm:px-6 py-14 sm:py-20 border-t border-border/40">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-heading">
               {t('landing.functions.title')}
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
@@ -115,10 +132,10 @@ export default async function Landing({
               <Link
                 key={href}
                 href={href}
-                className="group rounded-lg border bg-card p-4 flex items-center gap-3 hover:border-primary/40 hover:bg-card/80 transition"
+                className="group rounded-xl border border-border/60 bg-card p-4 flex items-center gap-3 hover:border-primary/40 hover:bg-card/70 transition"
               >
-                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition" />
+                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
+                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium">
@@ -128,18 +145,18 @@ export default async function Landing({
                     {t(`landing.functions.${key}.desc`)}
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition flex-shrink-0" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ───── Footer ───── */}
-      <footer className="px-6 py-8 border-t mt-auto">
+      {/* ═══════ Footer ═══════ */}
+      <footer className="px-4 sm:px-6 py-8 border-t border-border/40 mt-auto">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-muted-foreground">
           <div className="font-mono">
-            © {new Date().getFullYear()} Ocufi · {chain.name} · v0.3
+            © {new Date().getFullYear()} Ocufi · {chain.name} · v0.4
           </div>
           <div className="flex gap-4">
             <a
@@ -148,7 +165,7 @@ export default async function Landing({
               rel="noopener noreferrer"
               className="hover:text-foreground"
             >
-              Twitter
+              𝕏 Twitter
             </a>
             <a
               href="https://github.com/rowanrowan548-maker/ocufi-web"
@@ -158,6 +175,7 @@ export default async function Landing({
             >
               GitHub
             </a>
+            <Link href="/faq" className="hover:text-foreground">FAQ</Link>
           </div>
         </div>
       </footer>

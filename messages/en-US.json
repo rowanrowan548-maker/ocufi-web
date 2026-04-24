@@ -31,6 +31,14 @@
       "title": "No wallet? Check any token",
       "hint": "Paste a mint address to see if it's safe to buy"
     },
+    "market": {
+      "title": "Market Snapshot",
+      "subtitle": "Live on-chain prices — click any token for details",
+      "hot": "Hot",
+      "meme": "Meme",
+      "lst": "Liquid Staking",
+      "stables": "Stables / L1"
+    },
     "features": {
       "title": "Why Ocufi",
       "subtitle": "What gmgn / bullx / axiom don't give you — we do",
