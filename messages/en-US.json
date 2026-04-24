@@ -245,6 +245,30 @@
       "buy": "Buy now"
     }
   },
+  "points": {
+    "page": {
+      "title": "Points",
+      "subtitle": "Earn points by trading, show up on the leaderboard"
+    },
+    "myBalance": "My Points",
+    "connectToSee": "Connect wallet to see your points",
+    "eventCount": "{n} verified trades",
+    "noRecords": "No points records yet",
+    "apiNotConfigured": "Backend not configured, points unavailable",
+    "rules": {
+      "title": "Rules",
+      "perSwap": "Each successful swap (market/limit) +10 points",
+      "dailyCap": "Cap of 100 points per wallet per day",
+      "dedupe": "Each transaction counts only once"
+    },
+    "leaderboard": {
+      "title": "Leaderboard Top 20",
+      "wallet": "Wallet",
+      "balance": "Points",
+      "totalUsers": "{n} traders",
+      "empty": "Leaderboard is empty — you can be #1"
+    }
+  },
   "settings": {
     "page": {
       "title": "Settings",

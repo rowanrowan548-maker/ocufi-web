@@ -34,6 +34,7 @@ import { signAndSendTx, confirmTx, analyzeTx } from '@/lib/trade-tx';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
+import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
@@ -207,6 +208,9 @@ export function SellForm() {
         tokens: quoteData.tokenAmount,
         signature: sig,
       });
+      if (isApiConfigured() && wallet.publicKey) {
+        claimPoints(wallet.publicKey.toBase58(), sig).catch(() => {});
+      }
     } catch (e: unknown) {
       const reason = humanize(e);
       setErr(mapError(t, reason));

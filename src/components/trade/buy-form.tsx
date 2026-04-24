@@ -34,6 +34,7 @@ import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
 import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
+import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
@@ -183,6 +184,10 @@ export function BuyForm() {
         tokens: actualTokens,
         signature: sig,
       });
+      // 后端在线才上报积分,失败不影响交易
+      if (isApiConfigured() && wallet.publicKey) {
+        claimPoints(wallet.publicKey.toBase58(), sig).catch(() => {});
+      }
     } catch (e: unknown) {
       const reason = humanize(e);
       setErr(mapError(t, reason));

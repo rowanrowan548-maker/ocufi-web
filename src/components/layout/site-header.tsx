@@ -10,6 +10,7 @@ export async function SiteHeader() {
     { href: '/portfolio', label: t('nav.portfolio') },
     { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
+    { href: '/points', label: t('nav.points') },
     { href: '/token', label: t('nav.tokenCheck') },
     { href: '/settings', label: t('nav.settings') },
   ];

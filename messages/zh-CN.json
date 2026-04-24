@@ -245,6 +245,30 @@
       "buy": "立即买入"
     }
   },
+  "points": {
+    "page": {
+      "title": "积分",
+      "subtitle": "交易赚分,榜上露脸"
+    },
+    "myBalance": "我的积分",
+    "connectToSee": "连接钱包查看你的积分",
+    "eventCount": "{n} 笔有效交易",
+    "noRecords": "还没有积分记录",
+    "apiNotConfigured": "后端尚未配置,积分功能不可用",
+    "rules": {
+      "title": "积分规则",
+      "perSwap": "成功交易(买卖/限价单)+10 分",
+      "dailyCap": "每钱包每天最多 100 分",
+      "dedupe": "同一笔交易只记一次"
+    },
+    "leaderboard": {
+      "title": "排行榜 Top 20",
+      "wallet": "钱包",
+      "balance": "积分",
+      "totalUsers": "共 {n} 位参与者",
+      "empty": "排行榜还空着,你可以当第一名"
+    }
+  },
   "settings": {
     "page": {
       "title": "设置",

@@ -55,3 +55,44 @@ export interface ApiTokenPrice {
 export async function fetchPrice(mint: string): Promise<ApiTokenPrice> {
   return apiFetch<ApiTokenPrice>(`/price/${mint}`);
 }
+
+// ─── Day 10 points ───
+
+export interface ClaimResult {
+  ok: boolean;
+  amount_awarded: number;
+  new_balance: number;
+  message: string;
+}
+
+export async function claimPoints(wallet: string, txSignature: string): Promise<ClaimResult> {
+  return apiFetch<ClaimResult>('/points/claim', {
+    method: 'POST',
+    body: JSON.stringify({ wallet, tx_signature: txSignature }),
+  });
+}
+
+export interface PointsMe {
+  wallet: string;
+  balance: number;
+  event_count: number;
+}
+
+export async function fetchPointsMe(wallet: string): Promise<PointsMe> {
+  return apiFetch<PointsMe>(`/points/me?wallet=${wallet}`);
+}
+
+export interface LeaderboardItem {
+  rank: number;
+  wallet_short: string;
+  balance: number;
+}
+
+export interface Leaderboard {
+  items: LeaderboardItem[];
+  total_users: number;
+}
+
+export async function fetchLeaderboard(limit = 20): Promise<Leaderboard> {
+  return apiFetch<Leaderboard>(`/points/leaderboard?limit=${limit}`);
+}

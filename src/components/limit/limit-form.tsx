@@ -36,6 +36,7 @@ import { createTriggerOrder } from '@/lib/jupiter-trigger';
 import { signAndSendTx, confirmTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
+import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 
@@ -155,6 +156,9 @@ export function LimitForm({ onCreated }: Props) {
       setSig(sigStr);
       setStage('done');
       track('limit_order_created', { side, mint: m, signature: sigStr });
+      if (isApiConfigured() && wallet.publicKey) {
+        claimPoints(wallet.publicKey.toBase58(), sigStr).catch(() => {});
+      }
       onCreated?.();
     } catch (e: unknown) {
       const reason = humanize(e);
