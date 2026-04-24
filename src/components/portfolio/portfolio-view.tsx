@@ -136,7 +136,10 @@ export function PortfolioView() {
               {tokens.map((tok) => (
                 <TableRow key={tok.mint}>
                   <TableCell>
-                    <div className="flex items-center gap-3">
+                    <Link
+                      href={`/token/${tok.mint}`}
+                      className="flex items-center gap-3 hover:bg-muted/50 -mx-4 -my-2 px-4 py-2 rounded transition-colors"
+                    >
                       <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                         {tok.logoUri ? (
                           <Image
@@ -159,7 +162,7 @@ export function PortfolioView() {
                           {shortAddr(tok.mint)}
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {formatAmount(tok.amount)}

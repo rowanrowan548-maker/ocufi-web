@@ -10,7 +10,8 @@
     "alerts": "Price Alerts",
     "points": "Points",
     "settings": "Settings",
-    "docs": "Docs"
+    "docs": "Docs",
+    "tokenCheck": "Token Check"
   },
   "landing": {
     "hero": {
@@ -94,6 +95,7 @@
       "networkFee": "Network gas",
       "viewOnExplorer": "View on Solscan"
     },
+    "viewSafety": "📊 Safety check",
     "errors": {
       "invalidMint": "Invalid mint address",
       "invalidSol": "SOL amount must be > 0",
@@ -125,6 +127,53 @@
       "amount": "Amount",
       "price": "Price",
       "value": "Value"
+    }
+  },
+  "token": {
+    "page": {
+      "poweredBy": "Powered by DexScreener + RugCheck"
+    },
+    "search": {
+      "title": "Token Safety Check",
+      "subtitle": "Paste a mint address to see if it's safe to buy",
+      "button": "Check"
+    },
+    "notFound": "Token not found — might be too illiquid or just created",
+    "rugCheckUnavailable": "RugCheck is temporarily unavailable; some safety data may be missing",
+    "marketData": "Market Data",
+    "safetyChecks": "Safety Checks",
+    "marketCap": "Market Cap",
+    "liquidity": "Liquidity",
+    "volume24h": "24h Volume",
+    "buys24h": "24h Buys / Sells",
+    "createdAt": "Created",
+    "mintAuthority": "Mint Authority",
+    "freezeAuthority": "Freeze Authority",
+    "top10Holders": "Top 10 Holders",
+    "lpLocked": "LP Locked",
+    "totalHolders": "Total Holders",
+    "riskDetails": "Risk Details",
+    "topHolders": "Top 10 Holders",
+    "risk": {
+      "low": "✅ Low risk",
+      "medium": "⚠️ Medium risk",
+      "high": "🚨 High risk",
+      "critical": "🚨 Critical risk",
+      "unknown": "❓ Unknown"
+    },
+    "status": {
+      "renounced": "Renounced",
+      "active": "Active ⚠️"
+    },
+    "age": {
+      "minutes": "min ago",
+      "hours": "hrs ago",
+      "days": "days ago",
+      "months": "months ago",
+      "years": "years ago"
+    },
+    "actions": {
+      "buy": "Buy now"
     }
   },
   "common": {

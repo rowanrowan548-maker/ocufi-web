@@ -9,7 +9,8 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useTranslations } from 'next-intl';
-import { Loader2, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { Loader2, AlertCircle, CheckCircle2, ExternalLink, Shield } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -194,6 +195,15 @@ export function BuyForm() {
               onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
               className="font-mono text-sm"
             />
+            {isValidMint(mint.trim()) && (
+              <Link
+                href={`/token/${mint.trim()}`}
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <Shield className="h-3 w-3" />
+                {t('trade.viewSafety')}
+              </Link>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

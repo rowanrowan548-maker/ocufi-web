@@ -10,7 +10,8 @@
     "alerts": "价格提醒",
     "points": "积分",
     "settings": "设置",
-    "docs": "文档"
+    "docs": "文档",
+    "tokenCheck": "查币"
   },
   "landing": {
     "hero": {
@@ -94,6 +95,7 @@
       "networkFee": "网络 Gas",
       "viewOnExplorer": "在 Solscan 查看"
     },
+    "viewSafety": "📊 查看安全信息",
     "errors": {
       "invalidMint": "合约地址无效",
       "invalidSol": "SOL 数量必须 > 0",
@@ -125,6 +127,53 @@
       "amount": "数量",
       "price": "现价",
       "value": "市值"
+    }
+  },
+  "token": {
+    "page": {
+      "poweredBy": "数据源: DexScreener + RugCheck"
+    },
+    "search": {
+      "title": "代币安全查询",
+      "subtitle": "粘合约地址,一眼看出这币能不能买",
+      "button": "查询"
+    },
+    "notFound": "找不到这个代币,可能流动性太低或刚刚创建",
+    "rugCheckUnavailable": "RugCheck 接口暂时不可用,部分安全数据可能缺失",
+    "marketData": "行情数据",
+    "safetyChecks": "安全核查",
+    "marketCap": "市值",
+    "liquidity": "流动性",
+    "volume24h": "24h 成交量",
+    "buys24h": "24h 买 / 卖 笔数",
+    "createdAt": "创建时间",
+    "mintAuthority": "Mint 铸币权",
+    "freezeAuthority": "Freeze 冻结权",
+    "top10Holders": "前 10 持仓占比",
+    "lpLocked": "LP 锁定",
+    "totalHolders": "持有人总数",
+    "riskDetails": "风险明细",
+    "topHolders": "前 10 持有者",
+    "risk": {
+      "low": "✅ 低风险",
+      "medium": "⚠️ 中等风险",
+      "high": "🚨 高风险",
+      "critical": "🚨 严重风险",
+      "unknown": "❓ 风险未知"
+    },
+    "status": {
+      "renounced": "已放弃",
+      "active": "未放弃 ⚠️"
+    },
+    "age": {
+      "minutes": "分钟前",
+      "hours": "小时前",
+      "days": "天前",
+      "months": "个月前",
+      "years": "年前"
+    },
+    "actions": {
+      "buy": "立即买入"
     }
   },
   "common": {

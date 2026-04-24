@@ -24,6 +24,12 @@ export async function SiteHeader() {
             >
               {t('nav.portfolio')}
             </Link>
+            <Link
+              href="/token"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t('nav.tokenCheck')}
+            </Link>
           </nav>
         </div>
         <ConnectWalletButton variant="header" />
