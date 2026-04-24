@@ -36,6 +36,7 @@ import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
+import { TokenPricePreview } from '@/components/common/token-price-preview';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -245,6 +246,7 @@ export function SellForm() {
               onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
               className="font-mono text-sm"
             />
+            <TokenPricePreview mint={mint} />
             {/* 余额显示 */}
             {wallet.connected && mint.trim() && isValidMint(mint.trim()) && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">

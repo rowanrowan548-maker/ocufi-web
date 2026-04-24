@@ -64,9 +64,11 @@ export interface TokenInfo {
   symbol: string;
   name: string;
   priceUsd: number;
-  priceNative: number;      // 以 SOL 计
+  priceNative: number;       // 以 SOL 计
   liquidityUsd: number;
   marketCap: number;
+  priceChange24h?: number;   // 百分比,可能正可能负
+  volume24h?: number;
   logoUri?: string;
 }
 
@@ -103,6 +105,8 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
       priceNative: Number(top.priceNative ?? 0),
       liquidityUsd: Number(top.liquidity?.usd ?? 0),
       marketCap: Number(top.fdv ?? top.marketCap ?? 0),
+      priceChange24h: Number(top.priceChange?.h24 ?? 0) || undefined,
+      volume24h: Number(top.volume?.h24 ?? 0) || undefined,
       logoUri: top.info?.imageUrl,
     };
   } catch (e) {

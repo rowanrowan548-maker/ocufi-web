@@ -37,6 +37,7 @@ import { signAndSendTx, confirmTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { useTokenBalance } from '@/hooks/use-token-balance';
+import { TokenPricePreview } from '@/components/common/token-price-preview';
 
 type Side = 'buy' | 'sell';
 type Stage = 'idle' | 'submitting' | 'signing' | 'confirming' | 'done' | 'error';
@@ -191,15 +192,7 @@ export function LimitForm({ onCreated }: Props) {
                 onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
                 className="font-mono text-sm"
               />
-              {isValidMint(mint.trim()) && (
-                <Link
-                  href={`/token/${mint.trim()}`}
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  <Shield className="h-3 w-3" />
-                  {t('trade.viewSafety')}
-                </Link>
-              )}
+              <TokenPricePreview mint={mint} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -32,7 +32,7 @@ export function HistoryView() {
   const chain = getCurrentChain();
   const wallet = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
-  const { records, loading, error, refresh } = useTxHistory(30);
+  const { records, loading, error, refresh } = useTxHistory(100);
 
   useEffect(() => {
     if (wallet.publicKey) {

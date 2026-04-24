@@ -90,7 +90,7 @@ function getHeliusApiKey(): string | null {
 export async function fetchTxHistory(
   _connection: unknown,            // 保留签名兼容 hook
   owner: PublicKey,
-  limit = 30
+  limit = 100
 ): Promise<TxRecord[]> {
   const key = getHeliusApiKey();
   if (!key) {

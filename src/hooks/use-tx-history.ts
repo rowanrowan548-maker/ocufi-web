@@ -22,7 +22,7 @@ export interface TxHistoryState {
   refresh: () => void;
 }
 
-export function useTxHistory(limit = 30): TxHistoryState {
+export function useTxHistory(limit = 100): TxHistoryState {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
 

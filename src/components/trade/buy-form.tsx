@@ -36,6 +36,7 @@ import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
+import { TokenPricePreview } from '@/components/common/token-price-preview';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -220,15 +221,7 @@ export function BuyForm() {
               onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
               className="font-mono text-sm"
             />
-            {isValidMint(mint.trim()) && (
-              <Link
-                href={`/token/${mint.trim()}`}
-                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                <Shield className="h-3 w-3" />
-                {t('trade.viewSafety')}
-              </Link>
-            )}
+            <TokenPricePreview mint={mint} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
