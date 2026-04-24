@@ -52,13 +52,19 @@ export function deriveReferralFeeAccount(
 /**
  * 综合:按 input mint 决定是否带 feeAccount
  * 返回 { feeAccount, platformFeeBps }
- *   - 命中白名单 + 环境变量有值 → 正常收 10 bps
- *   - 否则                        → 0 bps(不带 feeAccount)
+ *
+ * ⚠️ 紧急关闭:PDA 派生疑似和 Jupiter 实际 accountant 不一致,
+ *    导致 OKX 钱包预模拟失败。需要完整对接 @jup-ag/referral-sdk
+ *    确认 seeds 顺序。在调好之前先 100% 走 0 bps,优先保用户能交易
  */
+const FEE_DISABLED = true;
+
 export function resolveFee(inputMint: string): {
   feeAccount?: string;
   platformFeeBps: number;
 } {
+  if (FEE_DISABLED) return { platformFeeBps: 0 };
+
   const main = process.env.NEXT_PUBLIC_JUPITER_FEE_ACCOUNT;
   if (!main) return { platformFeeBps: 0 };
   if (!FEE_SUPPORTED_MINTS.has(inputMint)) return { platformFeeBps: 0 };
