@@ -40,8 +40,7 @@ export default async function Landing({
   return (
     <main className="flex flex-1 flex-col">
       {/* ═══════ Hero ═══════ */}
-      <section className="relative px-4 sm:px-6 pt-12 sm:pt-24 pb-12 sm:pb-20 overflow-hidden">
-        {/* 背景光晕 */}
+      <section className="relative px-4 sm:px-6 pt-10 sm:pt-16 pb-6 sm:pb-10 overflow-hidden">
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10 opacity-60"
@@ -51,7 +50,7 @@ export default async function Landing({
           }}
         />
 
-        <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
+        <div className="max-w-3xl mx-auto flex flex-col items-center text-center gap-5">
           <Badge
             variant="secondary"
             className="text-xs tracking-widest bg-primary/10 border border-primary/20 text-primary"
@@ -67,7 +66,7 @@ export default async function Landing({
             {t('landing.hero.subtitle')}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-2">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-1">
             <ConnectWalletButton variant="landing" />
             <Link href="/token" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full sm:min-w-[180px]">

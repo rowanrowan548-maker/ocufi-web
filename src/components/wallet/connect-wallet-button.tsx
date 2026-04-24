@@ -5,7 +5,9 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useTranslations } from 'next-intl';
-import { Wallet, LogOut, ExternalLink, Copy, Check, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { Wallet, LogOut, ExternalLink, Copy, Check, Loader2, ArrowRight } from 'lucide-react';
+import { WalletAvatar } from './wallet-avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -123,33 +125,59 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
     );
   }
 
-  // 已连接:主按钮显示地址+余额,下拉菜单管理
+  // 已连接
   const addr = publicKey.toBase58();
+
+  // landing 模式已连接 → 不显示钱包,直接 CTA 去交易
+  if (variant === 'landing') {
+    return (
+      <Link href="/trade" className="w-full sm:w-auto">
+        <Button size="lg" className="w-full sm:min-w-[200px]">
+          {t('landing.hero.cta_start')}
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    );
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className={
-          'inline-flex items-center justify-center rounded-md border border-input bg-background ' +
-          'text-foreground hover:bg-accent hover:text-accent-foreground ' +
+          'inline-flex items-center justify-center gap-2 rounded-md border border-border/60 bg-card ' +
+          'text-foreground hover:bg-accent hover:border-primary/40 ' +
           'transition-colors font-medium focus-visible:outline-none ' +
           'focus-visible:ring-2 focus-visible:ring-ring ' +
-          (variant === 'landing'
-            ? 'h-11 px-5 text-sm sm:min-w-[200px]'
-            : 'h-9 px-3 text-sm')
+          'h-9 pl-2 pr-3 text-sm'
         }
       >
-        <Wallet className="mr-2 h-4 w-4" />
-        <span className="font-mono">{shortAddr(addr)}</span>
+        <WalletAvatar address={addr} size={20} />
+        <span className="font-mono text-xs">{shortAddr(addr)}</span>
         {balance !== null && (
-          <span className="ml-2 font-mono text-xs text-muted-foreground">
+          <span className="font-mono text-xs text-muted-foreground border-l border-border/60 pl-2">
             {balance.toFixed(3)} {chain.nativeSymbol}
           </span>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[240px]">
+      <DropdownMenuContent align="end" className="min-w-[260px]">
+        {/* 头部 · 头像 + 地址 + 余额 */}
+        <div className="flex items-center gap-3 px-3 py-3 border-b border-border/40">
+          <WalletAvatar address={addr} size={36} />
+          <div className="flex-1 min-w-0">
+            <div className="font-mono text-xs truncate">{shortAddr(addr)}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {wallet?.adapter.name || t('wallet.connected')}
+            </div>
+          </div>
+          {balance !== null && (
+            <div className="text-right">
+              <div className="font-mono text-sm font-semibold">{balance.toFixed(3)}</div>
+              <div className="text-[10px] text-muted-foreground">{chain.nativeSymbol}</div>
+            </div>
+          )}
+        </div>
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+          <DropdownMenuLabel className="sr-only">
             {wallet?.adapter.name || t('wallet.connected')}
           </DropdownMenuLabel>
           <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">

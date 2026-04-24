@@ -16,29 +16,39 @@ import { TrendingUp, TrendingDown, Flame, Sparkles, BarChart3, Rocket } from 'lu
 import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
 import { useTranslations } from 'next-intl';
 
-// 预设热门 mint — 从用户已开 ATA + 蓝筹 + 热门 meme 里挑
+// 预设代币池 · 4 大组 × 5-6 个/组 充实信息密度
 const HOT_MINTS = [
   'So11111111111111111111111111111111111111112',  // SOL
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
   'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',  // JUP
+  'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3', // PYTH
+  '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs', // ETH (Portal)
+  '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E', // BTC (Portal)
+  'rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof',  // RENDER
 ];
 
 const MEME_MINTS = [
   'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', // BONK
   'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm', // WIF
-  '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs', // ETH (Portal)
+  'CATSqnwFh9JwtFZRFsNLBWmbEcAqJ7zcuW1eSU6e9Bp1', // BabyTrump-ish (placeholder, will fallback)
+  'MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5',  // MEW
+  'HhJpBhRRn4g56VsyLuT8DL5Bv31HkXqsrahTTUCZeZg4', // GOAT (placeholder)
+  'Bz4MhmVRQENiCou7ZpJ575wpjNFjBjVBSiVhuNg1pump', // sample pump
 ];
 
 const LST_MINTS = [
   'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',  // mSOL
   'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', // JitoSOL
   'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1',  // bSOL
+  '7Q2afV64in6N6SeZsAAB81TJzwDoD6zpqmHkzi9Dcavn', // jupSOL
+  'BNso1VUJnh4zcfpZa6986Ea66P6TCp59hvtNJ8b1X85',  // BNSOL
 ];
 
 const VOL_MINTS = [
-  'So11111111111111111111111111111111111111112',
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  'So11111111111111111111111111111111111111112',  // SOL
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
   'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT
+  '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E', // BTC
+  '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs', // ETH
 ];
 
 const ALL = Array.from(new Set([...HOT_MINTS, ...MEME_MINTS, ...LST_MINTS, ...VOL_MINTS]));
@@ -54,7 +64,7 @@ export function MarketSnapshot() {
   const pick = (mints: string[]) => mints.map((m) => infos.get(m)).filter(Boolean) as TokenInfo[];
 
   return (
-    <section className="px-4 sm:px-6 py-10 sm:py-14">
+    <section className="px-4 sm:px-6 py-6 sm:py-10">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-end justify-between mb-6">
           <div>
@@ -109,8 +119,8 @@ function SnapCard({
       </div>
       <div className="divide-y divide-border/30">
         {tokens.length === 0
-          ? Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-2.5 h-[52px]">
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5 h-[44px]">
                 <div className="h-6 w-6 rounded-full bg-muted animate-pulse" />
                 <div className="flex-1 space-y-1">
                   <div className="h-3 w-12 bg-muted animate-pulse rounded" />
