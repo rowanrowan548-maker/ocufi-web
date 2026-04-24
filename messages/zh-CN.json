@@ -92,7 +92,9 @@
       "minReceive": "最少收到(滑点上限)",
       "priceImpact": "价格冲击",
       "platformFee": "Ocufi 手续费",
-      "platformFeeNone": "0(V1 免费)"
+      "platformFeeNone": "0(V1 免费)",
+      "slippageWarn": "价格冲击 {impact}% 超过当前滑点 {current}%,交易可能失败",
+      "slippageApply": "拉到 {bps}%"
     },
     "confirm": {
       "buyTitle": "确认买入 {symbol}",

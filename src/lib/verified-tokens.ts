@@ -34,3 +34,27 @@ export const VERIFIED_MINTS: Set<string> = new Set([
 export function isVerifiedToken(mint: string): boolean {
   return VERIFIED_MINTS.has(mint);
 }
+
+/** 稳定币集合(用于滑点默认分档,稳定币深度好,0.5% 足够) */
+export const STABLE_MINTS: Set<string> = new Set([
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // USDT
+]);
+
+export function isStableToken(mint: string): boolean {
+  return STABLE_MINTS.has(mint);
+}
+
+/**
+ * 按 token 类型推荐默认滑点(bps)
+ *  - 稳定币:50 (0.5%)
+ *  - verified 蓝筹:100 (1%)
+ *  - 其他(meme / pump):500 (5%)
+ *
+ * 买入时传 outputMint(要收到的币);卖出时传 inputMint(要卖掉的币)
+ */
+export function recommendedSlippageBps(mint: string): number {
+  if (isStableToken(mint)) return 50;
+  if (isVerifiedToken(mint)) return 100;
+  return 500;
+}

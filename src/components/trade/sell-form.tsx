@@ -4,7 +4,7 @@
  * 卖出表单
  * 流程:粘 mint → 读持仓余额 → 输数量 / 点快捷 % 按钮 → 查报价 → 确认弹窗 → 签名 → 成交回报
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -30,6 +30,7 @@ import {
   type GasLevel,
 } from '@/lib/jupiter';
 import { resolveFee } from '@/lib/jupiter-referral';
+import { recommendedSlippageBps } from '@/lib/verified-tokens';
 import { signAndSend, confirmTx, analyzeTx } from '@/lib/trade-tx';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
@@ -40,6 +41,7 @@ import { ConfirmDialog } from './confirm-dialog';
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
 const SLIPPAGE_OPTIONS = [
+  { value: '50', label: '0.5%' },
   { value: '100', label: '1%' },
   { value: '200', label: '2%' },
   { value: '500', label: '5%' },
@@ -71,8 +73,17 @@ export function SellForm() {
 
   const [mint, setMint] = useState('');
   const [tokenAmount, setTokenAmount] = useState('');
-  const [slippageBps, setSlippageBps] = useState(200); // 1000 个 pump 土狗,2% 更合理
+  const [slippageBps, setSlippageBps] = useState(500); // meme 默认 5%,合法 mint 输入后会按推荐值自动调
   const [gasLevel, setGasLevel] = useState<GasLevel>('fast');
+  const slippageTouched = useRef(false);
+
+  // 合法 mint 输入后,按 token 类型应用推荐滑点(稳定币/蓝筹/meme 分档)
+  useEffect(() => {
+    const m = mint.trim();
+    if (slippageTouched.current) return;
+    if (!isValidMint(m)) return;
+    setSlippageBps(recommendedSlippageBps(m));
+  }, [mint]);
 
   const [stage, setStage] = useState<Stage>('idle');
   const [err, setErr] = useState<string | null>(null);
@@ -90,9 +101,16 @@ export function SellForm() {
   };
 
   // 百分比快捷
+  // 100% 全仓卖的坑:前端 balance 和链上实时值可能有微小差(别的 tx 扣了 rent/别的 swap),
+  // 传 Jupiter 构造 tx 时"卖 X 个",链上实际只有 X-ε,OKX 预模拟 insufficient balance 失败。
+  // 所以 100% 时保留 0.1% dust,避免全额卖空触发这个坑
   function setPct(pct: number) {
-    if (balance.amount == null) return;
-    const n = (balance.amount * pct) / 100;
+    if (balance.amount == null || balance.decimals == null) return;
+    let n = (balance.amount * pct) / 100;
+    if (pct === 100) {
+      const dust = balance.amount * 0.001; // 0.1% 保留
+      n = balance.amount - dust;
+    }
     // 限制有效位数,避免科学计数
     setTokenAmount(n >= 1 ? n.toFixed(4) : n.toFixed(9));
     resetOnInput();
@@ -281,7 +299,11 @@ export function SellForm() {
               <Label htmlFor="sell-slippage">{t('trade.fields.slippage')}</Label>
               <Select
                 value={String(slippageBps)}
-                onValueChange={(v) => { setSlippageBps(Number(v)); resetOnInput(); }}
+                onValueChange={(v) => {
+                  setSlippageBps(Number(v));
+                  slippageTouched.current = true;
+                  resetOnInput();
+                }}
               >
                 <SelectTrigger id="sell-slippage">
                   {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
@@ -315,7 +337,17 @@ export function SellForm() {
           )}
 
           {/* 报价预览 */}
-          {previewData && stage !== 'done' && <QuotePreview data={previewData} />}
+          {previewData && stage !== 'done' && (
+            <QuotePreview
+              data={previewData}
+              currentSlippageBps={slippageBps}
+              onApplySlippage={(bps) => {
+                setSlippageBps(bps);
+                slippageTouched.current = true;
+                resetOnInput();
+              }}
+            />
+          )}
 
           {/* 成交结果 */}
           {result && stage === 'done' && (

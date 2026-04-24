@@ -4,7 +4,7 @@
  * 买入表单
  * 流程:mint + SOL → 查询报价 → 预览 → 确认弹窗 → 钱包签名 → 上链 → 成交报告
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -31,6 +31,7 @@ import {
   type GasLevel,
 } from '@/lib/jupiter';
 import { resolveFee } from '@/lib/jupiter-referral';
+import { recommendedSlippageBps } from '@/lib/verified-tokens';
 import { signAndSend, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
@@ -44,6 +45,7 @@ const SLIPPAGE_OPTIONS = [
   { value: '100', label: '1%' },
   { value: '200', label: '2%' },
   { value: '500', label: '5%' },
+  { value: '1000', label: '10%' },
 ];
 
 interface QuoteData {
@@ -72,6 +74,16 @@ export function BuyForm() {
   const [solAmount, setSolAmount] = useState('0.1');
   const [slippageBps, setSlippageBps] = useState(100);
   const [gasLevel, setGasLevel] = useState<GasLevel>('fast');
+  // 用户是否手动调过滑点:调过就别用推荐值覆盖
+  const slippageTouched = useRef(false);
+
+  // 输入合法 mint 时按 token 类型应用推荐滑点(稳定币/蓝筹/meme 分档)
+  useEffect(() => {
+    const m = mint.trim();
+    if (slippageTouched.current) return;
+    if (!isValidMint(m)) return;
+    setSlippageBps(recommendedSlippageBps(m));
+  }, [mint]);
 
   const [stage, setStage] = useState<Stage>('idle');
   const [err, setErr] = useState<string | null>(null);
@@ -234,7 +246,11 @@ export function BuyForm() {
               <Label htmlFor="buy-slippage">{t('trade.fields.slippage')}</Label>
               <Select
                 value={String(slippageBps)}
-                onValueChange={(v) => { setSlippageBps(Number(v)); resetOnInput(); }}
+                onValueChange={(v) => {
+                  setSlippageBps(Number(v));
+                  slippageTouched.current = true;
+                  resetOnInput();
+                }}
               >
                 <SelectTrigger id="buy-slippage">
                   {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
@@ -266,7 +282,17 @@ export function BuyForm() {
             </div>
           )}
 
-          {previewData && stage !== 'done' && <QuotePreview data={previewData} />}
+          {previewData && stage !== 'done' && (
+            <QuotePreview
+              data={previewData}
+              currentSlippageBps={slippageBps}
+              onApplySlippage={(bps) => {
+                setSlippageBps(bps);
+                slippageTouched.current = true;
+                resetOnInput();
+              }}
+            />
+          )}
 
           {result && stage === 'done' && (
             <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 space-y-2 text-sm">

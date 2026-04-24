@@ -92,7 +92,9 @@
       "minReceive": "Minimum (with slippage)",
       "priceImpact": "Price impact",
       "platformFee": "Ocufi fee",
-      "platformFeeNone": "0 (V1 free)"
+      "platformFeeNone": "0 (V1 free)",
+      "slippageWarn": "Price impact {impact}% exceeds your {current}% slippage — trade may fail",
+      "slippageApply": "Raise to {bps}%"
     },
     "confirm": {
       "buyTitle": "Confirm buy {symbol}",
