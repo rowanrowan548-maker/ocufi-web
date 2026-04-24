@@ -25,14 +25,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getCurrentChain } from '@/config/chains';
 import {
   getQuote,
-  getSwapTx,
   SOL_MINT,
   type JupiterQuote,
   type GasLevel,
 } from '@/lib/jupiter';
-import { resolveFee } from '@/lib/jupiter-referral';
 import { recommendedSlippageBps } from '@/lib/verified-tokens';
-import { signAndSend, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
+import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
+import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { QuotePreview, formatAmount } from './quote-preview';
@@ -117,10 +116,9 @@ export function BuyForm() {
     track('swap_quote_requested', { side: 'buy', mint: mint.trim(), sol });
     try {
       const amountRaw = BigInt(Math.round(sol * LAMPORTS_PER_SOL));
-      const fee = resolveFee(SOL_MINT);
+      // 不在 Jupiter 报价里带 platformFeeBps:我们自己组 tx 插 SOL transfer 收 fee
       const quote = await getQuote(SOL_MINT, mint.trim(), amountRaw, {
         slippageBps,
-        platformFeeBps: fee.platformFeeBps,
       });
       const decimals = await getDecimals(connection, mint.trim());
       const outTokens = Number(quote.outAmount) / 10 ** decimals;
@@ -151,15 +149,18 @@ export function BuyForm() {
 
     try {
       setStage('signing');
-      const fee = resolveFee(quoteData.quote.inputMint);
-      const swap = await getSwapTx(quoteData.quote, {
-        userPublicKey: wallet.publicKey.toBase58(),
+      // 自组 tx:在 Jupiter swap 前插一条 SystemProgram.transfer 收 0.1% SOL fee
+      // vault 地址来自 NEXT_PUBLIC_OCUFI_FEE_VAULT env;未配则不插 fee
+      const tx = await buildSwapTxWithFee(
+        connection,
+        quoteData.quote,
+        wallet.publicKey.toBase58(),
         gasLevel,
-        feeAccount: fee.feeAccount,
-      });
+        10
+      );
 
       setStage('sending');
-      const sig = await signAndSend(connection, wallet, swap.swapTransaction);
+      const sig = await signAndSendTx(connection, wallet, tx);
 
       setStage('confirming');
       const confirmed = await confirmTx(connection, sig, 60_000);

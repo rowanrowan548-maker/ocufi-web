@@ -24,14 +24,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getCurrentChain } from '@/config/chains';
 import {
   getQuote,
-  getSwapTx,
   SOL_MINT,
   type JupiterQuote,
   type GasLevel,
 } from '@/lib/jupiter';
-import { resolveFee } from '@/lib/jupiter-referral';
 import { recommendedSlippageBps } from '@/lib/verified-tokens';
-import { signAndSend, confirmTx, analyzeTx } from '@/lib/trade-tx';
+import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
+import { signAndSendTx, confirmTx, analyzeTx } from '@/lib/trade-tx';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
@@ -143,10 +142,9 @@ export function SellForm() {
     track('swap_quote_requested', { side: 'sell', mint: mint.trim(), tokens: amt });
     try {
       const amountRaw = BigInt(Math.floor(amt * 10 ** balance.decimals));
-      const fee = resolveFee(mint.trim());
+      // 卖出 V1 不收 fee(买入端已经收过一次);Day 9 可扩展 swap 后 transfer
       const quote = await getQuote(mint.trim(), SOL_MINT, amountRaw, {
         slippageBps,
-        platformFeeBps: fee.platformFeeBps,
       });
       const outSol = Number(quote.outAmount) / LAMPORTS_PER_SOL;
       const minSol = Number(quote.otherAmountThreshold) / LAMPORTS_PER_SOL;
@@ -177,15 +175,17 @@ export function SellForm() {
 
     try {
       setStage('signing');
-      const fee = resolveFee(quoteData.quote.inputMint);
-      const swap = await getSwapTx(quoteData.quote, {
-        userPublicKey: wallet.publicKey.toBase58(),
+      // 卖出走相同 /swap-instructions 路径,feeBps=0(内部会跳过 fee ix)
+      const tx = await buildSwapTxWithFee(
+        connection,
+        quoteData.quote,
+        wallet.publicKey.toBase58(),
         gasLevel,
-        feeAccount: fee.feeAccount,
-      });
+        0
+      );
 
       setStage('sending');
-      const sig = await signAndSend(connection, wallet, swap.swapTransaction);
+      const sig = await signAndSendTx(connection, wallet, tx);
 
       setStage('confirming');
       const confirmed = await confirmTx(connection, sig, 60_000);

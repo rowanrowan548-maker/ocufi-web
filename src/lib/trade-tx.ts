@@ -23,22 +23,30 @@ export function decodeSwapTx(base64: string): VersionedTransaction {
   return VersionedTransaction.deserialize(raw);
 }
 
-/** 钱包签名 + 广播 + 等上链(返回 signature) */
-export async function signAndSend(
+/** 直接签名 + 广播已构造好的 VersionedTransaction(新路径,配合 swap-with-fee) */
+export async function signAndSendTx(
   connection: Connection,
   wallet: WalletContextState,
-  swapTxBase64: string
+  tx: VersionedTransaction
 ): Promise<TransactionSignature> {
   if (!wallet.signTransaction) {
     throw new Error('钱包不支持 signTransaction');
   }
-  const tx = decodeSwapTx(swapTxBase64);
   const signed = await wallet.signTransaction(tx);
   const sig = await connection.sendRawTransaction(signed.serialize(), {
     skipPreflight: false,
     maxRetries: 3,
   });
   return sig;
+}
+
+/** 钱包签名 + 广播 + 等上链(旧路径,base64 输入) */
+export async function signAndSend(
+  connection: Connection,
+  wallet: WalletContextState,
+  swapTxBase64: string
+): Promise<TransactionSignature> {
+  return signAndSendTx(connection, wallet, decodeSwapTx(swapTxBase64));
 }
 
 /** 等链上确认(默认 60 秒超时) */
