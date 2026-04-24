@@ -84,18 +84,32 @@ export async function cancelTriggerOrder(
   return (await res.json()) as CancelOrderResponse;
 }
 
+/**
+ * Jupiter Trigger API 真实返回字段(来自 /getTriggerOrders 实测):
+ * - makingAmount / takingAmount:**已格式化 ui 字符串**(如 "0.07"、"70000")
+ * - rawMakingAmount / rawTakingAmount:真正的 lamports/原子单位 string
+ * - expiredAt / createdAt:ISO 8601 字符串("2026-04-25T18:26:01Z")
+ * - status:Open / Cancelled / Filled / Expired(首字母大写)
+ * - userPubkey(不是 "maker")
+ */
 export interface TriggerOrder {
-  orderKey: string;          // 订单 PDA 地址(链上唯一)
-  maker: string;
+  userPubkey: string;
+  orderKey: string;
   inputMint: string;
   outputMint: string;
-  makingAmount: string;      // raw
-  takingAmount: string;      // raw
+  makingAmount: string;
+  takingAmount: string;
   remainingMakingAmount: string;
   remainingTakingAmount: string;
-  status: 'active' | 'filled' | 'cancelled' | 'expired';
-  createdAt?: string;
+  rawMakingAmount: string;
+  rawTakingAmount: string;
+  slippageBps?: string;
   expiredAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  status?: 'Open' | 'Cancelled' | 'Filled' | 'Expired' | string;
+  openTx?: string;
+  closeTx?: string;
 }
 
 export interface OrdersResponse {

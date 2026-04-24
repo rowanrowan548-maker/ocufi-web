@@ -12,6 +12,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { VersionedTransaction } from '@solana/web3.js';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
 import { RefreshCw, X, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -27,11 +28,11 @@ import { signAndSendTx, confirmTx } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { SOL_MINT } from '@/lib/jupiter';
+import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
 
 const REFRESH_MS = 30_000;
 
 interface Props {
-  /** 父组件传入的刷新 tick,订单创建后自增触发重新拉取 */
   refreshTick?: number;
 }
 
@@ -42,6 +43,7 @@ export function OrderList({ refreshTick = 0 }: Props) {
   const wallet = useWallet();
 
   const [orders, setOrders] = useState<TriggerOrder[]>([]);
+  const [tokenInfos, setTokenInfos] = useState<Map<string, TokenInfo>>(new Map());
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [cancellingKey, setCancellingKey] = useState<string | null>(null);
@@ -63,9 +65,19 @@ export function OrderList({ refreshTick = 0 }: Props) {
       setLoading(true);
       try {
         const res = await getTriggerOrders(userPk, 'active');
-        if (!cancelled) {
-          setOrders(res.orders);
-          setErr(null);
+        if (cancelled) return;
+        setOrders(res.orders);
+        setErr(null);
+
+        // 补齐 token 符号/图标
+        const mints = new Set<string>();
+        for (const o of res.orders) {
+          if (o.inputMint !== SOL_MINT) mints.add(o.inputMint);
+          if (o.outputMint !== SOL_MINT) mints.add(o.outputMint);
+        }
+        if (mints.size > 0) {
+          const infos = await fetchTokensInfoBatch([...mints]);
+          if (!cancelled) setTokenInfos(infos);
         }
       } catch (e: unknown) {
         if (!cancelled) setErr(e instanceof Error ? e.message : String(e));
@@ -144,24 +156,36 @@ export function OrderList({ refreshTick = 0 }: Props) {
             </TableHeader>
             <TableBody>
               {orders.map((o) => {
-                const { pairLabel, priceLabel, targetMint } = formatPair(o);
+                const v = computeView(o, tokenInfos);
                 return (
                   <TableRow key={o.orderKey}>
                     <TableCell>
                       <Link
-                        href={`/token/${targetMint}`}
-                        className="font-medium text-sm hover:underline"
+                        href={`/token/${v.targetMint}`}
+                        className="flex items-center gap-2 hover:underline"
                       >
-                        {pairLabel}
+                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {v.tokenLogo ? (
+                            <Image
+                              src={v.tokenLogo}
+                              alt={v.tokenSymbol}
+                              width={24}
+                              height={24}
+                              className="object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground">
+                              {v.tokenSymbol.slice(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium">{v.pairLabel}</span>
                       </Link>
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
-                      {formatRaw(o.makingAmount, o.inputMint === SOL_MINT ? 9 : 6)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs">
-                      {formatRaw(o.takingAmount, o.outputMint === SOL_MINT ? 9 : 6)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs">{priceLabel}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{v.makingDisplay}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{v.takingDisplay}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{v.priceDisplay}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">
                       {formatExpiry(o.expiredAt)}
                     </TableCell>
@@ -201,42 +225,67 @@ export function OrderList({ refreshTick = 0 }: Props) {
   );
 }
 
-function formatPair(o: TriggerOrder): {
-  pairLabel: string;
-  priceLabel: string;
+interface OrderView {
+  tokenSymbol: string;
+  tokenLogo?: string;
   targetMint: string;
-} {
-  // 简单规则:一端是 SOL,另一端是"目标 token"
-  const buyingSol = o.outputMint === SOL_MINT;
-  const tokenMint = buyingSol ? o.inputMint : o.outputMint;
-  const tokenSymbol = tokenMint.slice(0, 4) + '…' + tokenMint.slice(-4);
-  const pairLabel = buyingSol ? `${tokenSymbol} → SOL` : `SOL → ${tokenSymbol}`;
-
-  // 价格 = SOL / token(按 9 & 6 精度估算,meme 常见 6 位)
-  const tokenDec = 6; // 粗略:真正要准确需要调 getDecimals,这里只显示参考
-  const making = Number(o.makingAmount) / 10 ** (o.inputMint === SOL_MINT ? 9 : tokenDec);
-  const taking = Number(o.takingAmount) / 10 ** (o.outputMint === SOL_MINT ? 9 : tokenDec);
-  const solPerToken = buyingSol ? taking / making : making / taking;
-  const priceLabel = `${solPerToken.toExponential(3)} SOL`;
-
-  return { pairLabel, priceLabel, targetMint: tokenMint };
+  pairLabel: string;         // "SOL → PUMP" 或 "PUMP → SOL"
+  makingDisplay: string;     // "0.07 SOL" / "70000 PUMP"
+  takingDisplay: string;
+  priceDisplay: string;      // "0.000001 SOL/枚"
 }
 
-function formatRaw(raw: string, decimals: number): string {
-  const n = Number(raw) / 10 ** decimals;
+function computeView(o: TriggerOrder, infos: Map<string, TokenInfo>): OrderView {
+  const buyingSol = o.outputMint === SOL_MINT;
+  const targetMint = buyingSol ? o.inputMint : o.outputMint;
+  const info = infos.get(targetMint);
+  const tokenSymbol = info?.symbol ?? targetMint.slice(0, 4) + '…' + targetMint.slice(-4);
+  const tokenLogo = info?.logoUri;
+  const pairLabel = buyingSol ? `${tokenSymbol} → SOL` : `SOL → ${tokenSymbol}`;
+
+  const makingNum = Number(o.makingAmount);
+  const takingNum = Number(o.takingAmount);
+  const makingIsSol = o.inputMint === SOL_MINT;
+  const takingIsSol = o.outputMint === SOL_MINT;
+  const makingLabel = makingIsSol ? 'SOL' : tokenSymbol;
+  const takingLabel = takingIsSol ? 'SOL' : tokenSymbol;
+
+  // 价格:SOL per 枚 token
+  const tokenAmount = buyingSol ? makingNum : takingNum;
+  const solAmount = buyingSol ? takingNum : makingNum;
+  const solPerToken = tokenAmount > 0 ? solAmount / tokenAmount : 0;
+
+  return {
+    tokenSymbol,
+    tokenLogo,
+    targetMint,
+    pairLabel,
+    makingDisplay: `${fmt(makingNum)} ${makingLabel}`,
+    takingDisplay: `${fmt(takingNum)} ${takingLabel}`,
+    priceDisplay: `${fmt(solPerToken)} SOL`,
+  };
+}
+
+function fmt(n: number): string {
+  if (!Number.isFinite(n)) return '—';
+  if (n === 0) return '0';
   if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   if (n >= 0.0001) return n.toFixed(6);
-  return n.toExponential(2);
+  if (n >= 0.00000001) return n.toFixed(9);
+  // 极小数,用压缩零格式不会出现 "e-x" 的歧义
+  const s = n.toFixed(20).replace(/0+$/, '');
+  return s.length > 12 ? s.slice(0, 12) + '…' : s;
 }
 
 function formatExpiry(expiredAt?: string): string {
   if (!expiredAt) return '—';
-  const ts = Number(expiredAt);
+  const ts = Date.parse(expiredAt);
   if (!ts) return '—';
-  const now = Date.now() / 1000;
-  const diff = ts - now;
-  if (diff <= 0) return 'expired';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return `${Math.floor(diff / 86400)}d`;
+  const diffMs = ts - Date.now();
+  if (diffMs <= 0) return 'expired';
+  const sec = diffMs / 1000;
+  if (sec < 60) return `${Math.floor(sec)}s`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}m`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h`;
+  return `${Math.floor(sec / 86400)}d`;
 }
