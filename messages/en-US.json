@@ -8,6 +8,7 @@
     "trade": "Trade",
     "limit": "Limit Order",
     "portfolio": "Portfolio",
+    "alerts": "Alerts",
     "history": "History",
     "alerts": "Price Alerts",
     "points": "Points",
@@ -190,6 +191,45 @@
     },
     "actions": {
       "buy": "Buy now"
+    }
+  },
+  "alerts": {
+    "page": {
+      "title": "Price Alerts",
+      "subtitle": "Get notified when prices hit your target (browser must be open in V1)"
+    },
+    "permission": {
+      "title": "Enable browser notifications",
+      "hint": "Allow notifications so alerts pop up even with the tab in background",
+      "enable": "Enable",
+      "denied": "Denied earlier — enable it manually in your browser settings",
+      "unsupported": "This browser doesn't support the Notification API"
+    },
+    "form": {
+      "title": "New price alert",
+      "subtitle": "Paste a mint + target price. Get a popup when it hits.",
+      "direction": "Direction",
+      "above": "Rises to ≥",
+      "below": "Falls to ≤",
+      "target": "Target price",
+      "submit": "Create alert"
+    },
+    "list": {
+      "title": "My Alerts",
+      "empty": "No alerts yet",
+      "refreshHint": "Polls every 30s",
+      "token": "Token",
+      "condition": "Trigger",
+      "current": "Now",
+      "status": "Status",
+      "aboveCond": "Rises to ≥ ${price}",
+      "belowCond": "Falls to ≤ ${price}",
+      "active": "Watching",
+      "triggered": "Fired"
+    },
+    "errors": {
+      "invalidTarget": "Target price must be > 0",
+      "tokenNotFound": "Token not found (illiquid or wrong mint?)"
     }
   },
   "limit": {

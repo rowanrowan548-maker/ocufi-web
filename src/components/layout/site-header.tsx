@@ -8,6 +8,7 @@ export async function SiteHeader() {
     { href: '/trade', label: t('nav.trade') },
     { href: '/limit', label: t('nav.limit') },
     { href: '/portfolio', label: t('nav.portfolio') },
+    { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
     { href: '/token', label: t('nav.tokenCheck') },
   ];

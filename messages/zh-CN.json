@@ -8,6 +8,7 @@
     "trade": "交易",
     "limit": "限价单",
     "portfolio": "持仓",
+    "alerts": "价格提醒",
     "history": "成交记录",
     "alerts": "价格提醒",
     "points": "积分",
@@ -190,6 +191,45 @@
     },
     "actions": {
       "buy": "立即买入"
+    }
+  },
+  "alerts": {
+    "page": {
+      "title": "价格提醒",
+      "subtitle": "到价自动弹窗通知 · 浏览器打开着才工作(V1)"
+    },
+    "permission": {
+      "title": "开启浏览器通知",
+      "hint": "点允许,到价时即使 tab 在后台也会弹出通知",
+      "enable": "开启通知",
+      "denied": "你之前拒绝过,请到浏览器设置里手动开启通知权限",
+      "unsupported": "当前浏览器不支持通知 API"
+    },
+    "form": {
+      "title": "新建价格提醒",
+      "subtitle": "输入合约 + 目标价,到价后浏览器弹窗",
+      "direction": "方向",
+      "above": "涨到 ≥",
+      "below": "跌到 ≤",
+      "target": "目标价",
+      "submit": "创建提醒"
+    },
+    "list": {
+      "title": "我的提醒",
+      "empty": "还没有设置任何提醒",
+      "refreshHint": "30 秒自动轮询",
+      "token": "代币",
+      "condition": "触发条件",
+      "current": "当前价",
+      "status": "状态",
+      "aboveCond": "涨到 ≥ ${price}",
+      "belowCond": "跌到 ≤ ${price}",
+      "active": "监听中",
+      "triggered": "已触发"
+    },
+    "errors": {
+      "invalidTarget": "目标价必须 > 0",
+      "tokenNotFound": "找不到这个代币(可能流动性太低或 mint 错误)"
     }
   },
   "limit": {
