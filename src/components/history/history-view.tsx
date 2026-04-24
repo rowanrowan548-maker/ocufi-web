@@ -153,15 +153,26 @@ function HistoryRow({
             </div>
             <span className="text-sm font-medium truncate max-w-[140px]">{r.tokenSymbol}</span>
           </Link>
+        ) : r.solAmount > 0 ? (
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+              ◎
+            </div>
+            <span className="text-sm font-medium">SOL</span>
+          </div>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
       <TableCell className="text-right font-mono text-sm">
-        {r.tokenAmount > 0 ? formatAmount(r.tokenAmount) : '—'}
+        {r.tokenMint && r.tokenAmount > 0
+          ? formatAmount(r.tokenAmount)
+          : !r.tokenMint && r.solAmount > 0
+          ? `${formatAmount(r.solAmount)} SOL`
+          : '—'}
       </TableCell>
-      <TableCell className="text-right font-mono text-sm">
-        {r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
+      <TableCell className="text-right font-mono text-sm text-muted-foreground">
+        {r.tokenMint && r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
       </TableCell>
       <TableCell>
         <a
