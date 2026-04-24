@@ -155,12 +155,14 @@
     "riskDetails": "Risk Details",
     "topHolders": "Top 10 Holders",
     "risk": {
+      "verified": "🛡 Verified",
       "low": "✅ Low risk",
       "medium": "⚠️ Medium risk",
       "high": "🚨 High risk",
       "critical": "🚨 Critical risk",
       "unknown": "❓ Unknown"
     },
+    "verifiedNote": "Blue-chip / stablecoin on verified allowlist. Some 'risk' signals don't apply: e.g., USDC must keep mint authority to issue against reserves — regulatory, not rug.",
     "status": {
       "renounced": "Renounced",
       "active": "Active ⚠️"

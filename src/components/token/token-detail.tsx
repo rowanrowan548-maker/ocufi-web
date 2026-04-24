@@ -239,6 +239,16 @@ export function TokenDetailView({ mint }: Props) {
         </Card>
       </div>
 
+      {/* ── verified 代币说明 ── */}
+      {risk === 'verified' && (
+        <Card className="border-blue-500/30 bg-blue-500/5">
+          <CardContent className="p-4 text-sm flex gap-3">
+            <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="text-muted-foreground">{t('token.verifiedNote')}</div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── 风险明细 ── */}
       {detail.risks.length > 0 && (
         <Card>

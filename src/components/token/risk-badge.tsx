@@ -1,4 +1,4 @@
-import { Shield, AlertTriangle, AlertOctagon, HelpCircle, CheckCircle2 } from 'lucide-react';
+import { Shield, ShieldCheck, AlertTriangle, AlertOctagon, HelpCircle, CheckCircle2 } from 'lucide-react';
 import type { OverallRisk } from '@/lib/token-info';
 
 interface Props {
@@ -11,6 +11,13 @@ const CONFIG: Record<
   OverallRisk,
   { bg: string; text: string; border: string; Icon: typeof Shield; defaultLabel: string }
 > = {
+  verified: {
+    bg: 'bg-blue-500/10',
+    text: 'text-blue-600 dark:text-blue-400',
+    border: 'border-blue-500/30',
+    Icon: ShieldCheck,
+    defaultLabel: '已验证',
+  },
   low: {
     bg: 'bg-green-500/10',
     text: 'text-green-600 dark:text-green-400',

@@ -155,12 +155,14 @@
     "riskDetails": "风险明细",
     "topHolders": "前 10 持有者",
     "risk": {
+      "verified": "🛡 已验证代币",
       "low": "✅ 低风险",
       "medium": "⚠️ 中等风险",
       "high": "🚨 高风险",
       "critical": "🚨 严重风险",
       "unknown": "❓ 风险未知"
     },
+    "verifiedNote": "主流蓝筹/稳定币,已通过人工白名单。例:USDC 必须保留 mint 权限以发行储备,属合规需要,不是跑路风险。",
     "status": {
       "renounced": "已放弃",
       "active": "未放弃 ⚠️"

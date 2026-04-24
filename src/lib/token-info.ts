@@ -13,6 +13,7 @@ import {
   type RugCheckHolder,
   type RugCheckRisk,
 } from './rugcheck';
+import { isVerifiedToken } from './verified-tokens';
 
 export interface TokenDetail {
   mint: string;
@@ -132,9 +133,12 @@ export async function fetchTokenDetail(mint: string): Promise<TokenDetail> {
 }
 
 // ────── 风险综合评级 ──────
-export type OverallRisk = 'low' | 'medium' | 'high' | 'critical' | 'unknown';
+export type OverallRisk = 'verified' | 'low' | 'medium' | 'high' | 'critical' | 'unknown';
 
 export function overallRisk(d: TokenDetail): OverallRisk {
+  // 白名单:主流稳定币/蓝筹,通用规则对它们过严(USDC 必须保留 mint 权限等)
+  if (isVerifiedToken(d.mint)) return 'verified';
+
   if (!d.hasRugCheckData) return 'unknown';
   if (d.rugged) return 'critical';
   const dangers = d.risks.filter((r) => r.level === 'danger').length;
