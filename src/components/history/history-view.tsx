@@ -15,7 +15,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   RefreshCw, Wallet, AlertCircle, ExternalLink,
-  ArrowDownToLine, ArrowUpFromLine, ArrowDownLeft, ArrowUpRight, Minus,
+  ArrowDownToLine, ArrowUpFromLine, ArrowDownLeft, ArrowUpRight, Minus, Gift,
 } from 'lucide-react';
 import { track } from '@/lib/analytics';
 
@@ -130,7 +130,14 @@ function HistoryRow({
         </span>
       </TableCell>
       <TableCell>
-        {r.tokenMint ? (
+        {r.type === 'nft_airdrop' || r.type === 'nft' ? (
+          <div className="flex items-center gap-2 max-w-[220px]">
+            <Gift className="h-4 w-4 text-purple-500 flex-shrink-0" />
+            <span className="text-sm font-medium truncate" title={r.nftName || r.description}>
+              {r.nftName || r.description || t('history.type.nft_airdrop')}
+            </span>
+          </div>
+        ) : r.tokenMint ? (
           <Link
             href={`/token/${r.tokenMint}`}
             className="flex items-center gap-2 hover:underline"
@@ -165,7 +172,9 @@ function HistoryRow({
         )}
       </TableCell>
       <TableCell className="text-right font-mono text-sm">
-        {r.tokenMint && r.tokenAmount > 0
+        {r.type === 'nft_airdrop' || r.type === 'nft'
+          ? '1 NFT'
+          : r.tokenMint && r.tokenAmount > 0
           ? formatAmount(r.tokenAmount)
           : !r.tokenMint && r.solAmount > 0
           ? `${formatAmount(r.solAmount)} SOL`
@@ -194,6 +203,8 @@ const TYPE_STYLE = {
   sell: { Icon: ArrowUpFromLine, color: 'text-red-600 dark:text-red-400' },
   receive: { Icon: ArrowDownLeft, color: 'text-blue-600 dark:text-blue-400' },
   send: { Icon: ArrowUpRight, color: 'text-orange-600 dark:text-orange-400' },
+  nft_airdrop: { Icon: Gift, color: 'text-purple-600 dark:text-purple-400' },
+  nft: { Icon: Gift, color: 'text-purple-600 dark:text-purple-400' },
   other: { Icon: Minus, color: 'text-muted-foreground' },
 } as const;
 

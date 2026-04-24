@@ -18,7 +18,14 @@
 import { PublicKey } from '@solana/web3.js';
 import { SOL_MINT } from './portfolio';
 
-export type TxType = 'buy' | 'sell' | 'receive' | 'send' | 'other';
+export type TxType =
+  | 'buy'
+  | 'sell'
+  | 'receive'
+  | 'send'
+  | 'nft_airdrop'   // cNFT / NFT mint 收到
+  | 'nft'           // 其他 NFT 操作
+  | 'other';
 
 export interface TxRecord {
   signature: string;
@@ -30,15 +37,19 @@ export interface TxRecord {
   solAmount: number;          // buy:花掉;sell:收到;正数,含 fee
   feeSol: number;
   err: boolean;
+  /** Helius 一句话描述(NFT 空投类交易兜底显示这行) */
+  description?: string;
+  /** NFT 元数据(type=nft_airdrop/nft 时有) */
+  nftName?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface HeliusTx {
   signature: string;
   timestamp: number;          // 秒
   slot: number;
   fee: number;                // lamports
-  type?: string;              // SWAP / TRANSFER / ...
+  type?: string;              // SWAP / TRANSFER / COMPRESSED_NFT_MINT / ...
+  description?: string;
   transactionError?: unknown;
   tokenTransfers?: Array<{
     fromUserAccount?: string | null;
@@ -51,6 +62,18 @@ interface HeliusTx {
     toUserAccount?: string | null;
     amount: number;            // lamports
   }>;
+  events?: {
+    compressed?: Array<{
+      newLeafOwner?: string;
+      metadata?: { name?: string; symbol?: string };
+    }>;
+    nft?: {
+      amount?: number;
+      buyer?: string;
+      seller?: string;
+      nfts?: Array<{ mint: string; tokenStandard?: string }>;
+    };
+  };
 }
 
 /** 从 NEXT_PUBLIC_HELIUS_RPC 的 URL 里抠出 api-key */
@@ -90,6 +113,36 @@ export async function fetchTxHistory(
 
 function classifyTx(tx: HeliusTx, ownerStr: string): TxRecord {
   const feeSol = (tx.fee ?? 0) / 1e9;
+  const base = {
+    signature: tx.signature,
+    blockTime: tx.timestamp ?? null,
+    slot: tx.slot,
+    feeSol,
+    err: !!tx.transactionError,
+    description: tx.description,
+  };
+
+  // 压缩 NFT / 普通 NFT 空投(Jupiter Reward 这类):Helius 已分好类,直接用 tx.type
+  const cnft = tx.events?.compressed?.find((c) => c.newLeafOwner === ownerStr);
+  if (cnft || tx.type === 'COMPRESSED_NFT_MINT') {
+    return {
+      ...base,
+      type: 'nft_airdrop',
+      tokenMint: '',
+      tokenAmount: 0,
+      solAmount: 0,
+      nftName: cnft?.metadata?.name,
+    };
+  }
+  if (tx.type && /^NFT_/.test(tx.type)) {
+    return {
+      ...base,
+      type: 'nft',
+      tokenMint: '',
+      tokenAmount: 0,
+      solAmount: 0,
+    };
+  }
 
   // 算 owner 的 SOL 净变化(含 fee)
   let solDelta = 0;
@@ -116,14 +169,6 @@ function classifyTx(tx: HeliusTx, ownerStr: string): TxRecord {
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
   const posTokens = entries.filter(([, d]) => d > 0);
   const negTokens = entries.filter(([, d]) => d < 0);
-
-  const base = {
-    signature: tx.signature,
-    blockTime: tx.timestamp ?? null,
-    slot: tx.slot,
-    feeSol,
-    err: !!tx.transactionError,
-  };
 
   const DUST_SOL = 0.002; // 低于这个数的 SOL 变化当作"没动"(gas/rent 噪声)
 

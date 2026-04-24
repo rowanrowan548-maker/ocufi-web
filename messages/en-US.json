@@ -199,6 +199,8 @@
       "sell": "Sell",
       "receive": "Receive",
       "send": "Send",
+      "nft_airdrop": "NFT Airdrop",
+      "nft": "NFT",
       "other": "Other"
     }
   },

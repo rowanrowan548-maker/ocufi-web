@@ -199,6 +199,8 @@
       "sell": "卖出",
       "receive": "转入",
       "send": "转出",
+      "nft_airdrop": "NFT 空投",
+      "nft": "NFT 操作",
       "other": "其他"
     }
   },
