@@ -197,6 +197,8 @@
     "type": {
       "buy": "Buy",
       "sell": "Sell",
+      "receive": "Receive",
+      "send": "Send",
       "other": "Other"
     }
   },

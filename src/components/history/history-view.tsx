@@ -15,7 +15,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   RefreshCw, Wallet, AlertCircle, ExternalLink,
-  ArrowDownToLine, ArrowUpFromLine, Minus,
+  ArrowDownToLine, ArrowUpFromLine, ArrowDownLeft, ArrowUpRight, Minus,
 } from 'lucide-react';
 import { track } from '@/lib/analytics';
 
@@ -181,6 +181,8 @@ function HistoryRow({
 const TYPE_STYLE = {
   buy: { Icon: ArrowDownToLine, color: 'text-green-600 dark:text-green-400' },
   sell: { Icon: ArrowUpFromLine, color: 'text-red-600 dark:text-red-400' },
+  receive: { Icon: ArrowDownLeft, color: 'text-blue-600 dark:text-blue-400' },
+  send: { Icon: ArrowUpRight, color: 'text-orange-600 dark:text-orange-400' },
   other: { Icon: Minus, color: 'text-muted-foreground' },
 } as const;
 

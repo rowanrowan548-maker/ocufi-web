@@ -18,7 +18,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { SOL_MINT } from './portfolio';
 
-export type TxType = 'buy' | 'sell' | 'other';
+export type TxType = 'buy' | 'sell' | 'receive' | 'send' | 'other';
 
 export interface TxRecord {
   signature: string;
@@ -111,11 +111,11 @@ function classifyTx(tx: HeliusTx, ownerStr: string): TxRecord {
     }
   }
 
-  // 取变化绝对值最大的 mint 作主角
   const entries = [...tokenDeltas.entries()]
     .filter(([, d]) => Math.abs(d) > 1e-12)
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-  const main = entries[0];
+  const posTokens = entries.filter(([, d]) => d > 0);
+  const negTokens = entries.filter(([, d]) => d < 0);
 
   const base = {
     signature: tx.signature,
@@ -125,24 +125,36 @@ function classifyTx(tx: HeliusTx, ownerStr: string): TxRecord {
     err: !!tx.transactionError,
   };
 
-  if (main && main[1] > 0 && solDelta < -feeSol * 0.5) {
-    return {
-      ...base,
-      type: 'buy',
-      tokenMint: main[0],
-      tokenAmount: main[1],
-      solAmount: Math.abs(solDelta),
-    };
+  const DUST_SOL = 0.002; // 低于这个数的 SOL 变化当作"没动"(gas/rent 噪声)
+
+  // 买入:SOL 净流出 + 某 token 净流入
+  if (posTokens.length > 0 && solDelta < -DUST_SOL) {
+    const [mint, amt] = posTokens[0];
+    return { ...base, type: 'buy', tokenMint: mint, tokenAmount: amt, solAmount: Math.abs(solDelta) };
   }
-  if (main && main[1] < 0 && solDelta > 0) {
-    return {
-      ...base,
-      type: 'sell',
-      tokenMint: main[0],
-      tokenAmount: Math.abs(main[1]),
-      solAmount: solDelta,
-    };
+  // 卖出:某 token 净流出 + SOL 净流入
+  if (negTokens.length > 0 && solDelta > DUST_SOL) {
+    const [mint, amt] = negTokens[0];
+    return { ...base, type: 'sell', tokenMint: mint, tokenAmount: Math.abs(amt), solAmount: solDelta };
   }
+  // 转入:SOL 进来(无 token 交互),或 token 进来(无 SOL 流出)
+  if (entries.length === 0 && solDelta > DUST_SOL) {
+    return { ...base, type: 'receive', tokenMint: '', tokenAmount: 0, solAmount: solDelta };
+  }
+  if (posTokens.length > 0 && negTokens.length === 0 && Math.abs(solDelta) <= DUST_SOL) {
+    const [mint, amt] = posTokens[0];
+    return { ...base, type: 'receive', tokenMint: mint, tokenAmount: amt, solAmount: 0 };
+  }
+  // 转出:SOL 出去(无 token 交互),或 token 出去(无 SOL 进来)
+  if (entries.length === 0 && solDelta < -DUST_SOL) {
+    return { ...base, type: 'send', tokenMint: '', tokenAmount: 0, solAmount: Math.abs(solDelta) };
+  }
+  if (negTokens.length > 0 && posTokens.length === 0 && Math.abs(solDelta) <= DUST_SOL) {
+    const [mint, amt] = negTokens[0];
+    return { ...base, type: 'send', tokenMint: mint, tokenAmount: Math.abs(amt), solAmount: 0 };
+  }
+  // 其他(合约交互/关账户/复杂 swap etc):至少把 SOL 差额显示出来
+  const main = entries[0];
   return {
     ...base,
     type: 'other',
