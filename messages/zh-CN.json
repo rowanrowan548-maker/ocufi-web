@@ -132,6 +132,11 @@
       "title": "交易",
       "subtitle": "Jupiter 聚合器,自动选最优路线,手续费透明"
     },
+    "searchPlaceholder": "粘贴代币合约地址 / 从首页代币行情点交易过来",
+    "empty": {
+      "title": "选个代币开始",
+      "subtitle": "上面贴 mint 地址,或回首页从代币行情点🛒进来"
+    },
     "tabs": {
       "buy": "买入",
       "sell": "卖出"

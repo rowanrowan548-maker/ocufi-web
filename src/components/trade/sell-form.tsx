@@ -65,15 +65,24 @@ interface Result {
   feeSol: number;
 }
 
-export function SellForm() {
+interface SellFormProps {
+  mint?: string;
+  compact?: boolean;
+}
+
+export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
   const t = useTranslations();
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const wallet = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
 
-  const [mint, setMint] = useState('');
+  const [mint, setMint] = useState(mintProp ?? '');
   const [tokenAmount, setTokenAmount] = useState('');
+
+  useEffect(() => {
+    if (mintProp != null) setMint(mintProp);
+  }, [mintProp]);
   const [slippageBps, setSlippageBps] = useState(500); // meme 默认 5%,合法 mint 输入后会按推荐值自动调
   const [gasLevel, setGasLevel] = useState<GasLevel>('fast');
   const slippageTouched = useRef(false);
@@ -233,25 +242,31 @@ export function SellForm() {
 
   return (
     <>
-      <Card className="w-full max-w-xl">
-        <CardHeader>
-          <CardTitle>{t('trade.sell.title')}</CardTitle>
-          <CardDescription>{t('trade.sell.subtitle')}</CardDescription>
-        </CardHeader>
+      <Card className={compact ? 'w-full' : 'w-full max-w-xl'}>
+        {!compact && (
+          <CardHeader>
+            <CardTitle>{t('trade.sell.title')}</CardTitle>
+            <CardDescription>{t('trade.sell.subtitle')}</CardDescription>
+          </CardHeader>
+        )}
 
         <CardContent className="space-y-4">
-          {/* mint */}
+          {mintProp == null && (
+            <div className="space-y-2">
+              <Label htmlFor="sell-mint">{t('trade.fields.mint')}</Label>
+              <Input
+                id="sell-mint"
+                placeholder="Token mint address"
+                value={mint}
+                onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
+                className="font-mono text-sm"
+              />
+              <TokenPricePreview mint={mint} />
+            </div>
+          )}
+
+          {/* 余额显示(无论受控与否,只要 mint 合法+连了钱包就显示) */}
           <div className="space-y-2">
-            <Label htmlFor="sell-mint">{t('trade.fields.mint')}</Label>
-            <Input
-              id="sell-mint"
-              placeholder="Token mint address"
-              value={mint}
-              onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
-              className="font-mono text-sm"
-            />
-            <TokenPricePreview mint={mint} />
-            {/* 余额显示 */}
             {wallet.connected && mint.trim() && isValidMint(mint.trim()) && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
                 <Wallet className="h-3 w-3" />

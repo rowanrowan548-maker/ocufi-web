@@ -132,6 +132,11 @@
       "title": "Trade",
       "subtitle": "Jupiter aggregator · best route · transparent fees"
     },
+    "searchPlaceholder": "Paste a token mint or click 🛒 on the home page",
+    "empty": {
+      "title": "Pick a token to start",
+      "subtitle": "Paste a mint above, or hit 🛒 on a token row from the home page"
+    },
     "tabs": {
       "buy": "Buy",
       "sell": "Sell"

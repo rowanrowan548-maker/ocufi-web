@@ -64,15 +64,27 @@ interface Result {
   solSpent: number;
 }
 
-export function BuyForm() {
+interface BuyFormProps {
+  /** 受控 mint:上层(如 trade-screen)传入则隐藏内部 mint 输入框 */
+  mint?: string;
+  /** 紧凑模式:去掉 max-width,把 form 撑满父容器 */
+  compact?: boolean;
+}
+
+export function BuyForm({ mint: mintProp, compact }: BuyFormProps = {}) {
   const t = useTranslations();
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const wallet = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
 
-  const [mint, setMint] = useState('');
+  const [mint, setMint] = useState(mintProp ?? '');
   const [solAmount, setSolAmount] = useState('0.1');
+
+  // 受控:外部 mint 变化同步进来
+  useEffect(() => {
+    if (mintProp != null) setMint(mintProp);
+  }, [mintProp]);
 
   // 支持 ?mint=X 从首页代币行情表 / 任意链接预填(client only)
   useEffect(() => {
@@ -217,24 +229,29 @@ export function BuyForm() {
 
   return (
     <>
-      <Card className="w-full max-w-xl">
-        <CardHeader>
-          <CardTitle>{t('trade.buy.title')}</CardTitle>
-          <CardDescription>{t('trade.buy.subtitle')}</CardDescription>
-        </CardHeader>
+      <Card className={compact ? 'w-full' : 'w-full max-w-xl'}>
+        {!compact && (
+          <CardHeader>
+            <CardTitle>{t('trade.buy.title')}</CardTitle>
+            <CardDescription>{t('trade.buy.subtitle')}</CardDescription>
+          </CardHeader>
+        )}
 
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="buy-mint">{t('trade.fields.mint')}</Label>
-            <Input
-              id="buy-mint"
-              placeholder="Token mint address"
-              value={mint}
-              onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
-              className="font-mono text-sm"
-            />
-            <TokenPricePreview mint={mint} />
-          </div>
+          {/* 受控时(trade-screen 顶部已有搜索)隐藏自己的 mint 输入 */}
+          {mintProp == null && (
+            <div className="space-y-2">
+              <Label htmlFor="buy-mint">{t('trade.fields.mint')}</Label>
+              <Input
+                id="buy-mint"
+                placeholder="Token mint address"
+                value={mint}
+                onChange={(e) => { setMint(e.target.value); resetOnInput(); }}
+                className="font-mono text-sm"
+              />
+              <TokenPricePreview mint={mint} />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-2">
