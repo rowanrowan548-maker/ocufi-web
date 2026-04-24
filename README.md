@@ -39,6 +39,11 @@ pnpm dev                     # http://localhost:3000
 
 V1 两周发布 · V2 扩展英文 / 多链 / TG Bot · 见产品策划书(内部文档)
 
+## 里程碑
+
+- 🎉 **首笔链上买入** · 2026-04-24
+  [`54yNodhmd9gJ15AaS2h6W1QTaVGrEHoDbDqmFMbRuoVWHZ63WFBdfys6HmPvwBtndUQKv8VU5KAmxvEmGRuxuuEo`](https://solscan.io/tx/54yNodhmd9gJ15AaS2h6W1QTaVGrEHoDbDqmFMbRuoVWHZ63WFBdfys6HmPvwBtndUQKv8VU5KAmxvEmGRuxuuEo)
+
 ## License
 
 MIT(V1 发布时正式公开;目前 private 开发中)
