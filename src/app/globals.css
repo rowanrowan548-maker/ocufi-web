@@ -4,12 +4,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════
+   Ocufi Design System v1
+   色 青绿 #19FB9B · 字 Space Grotesk + Inter + JetBrains Mono
+   ═══════════════════════════════════════════════════════════════ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +44,12 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Ocufi 语义色 */
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  /* 半径 */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,6 +59,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ─── Light mode 保留但不默认用(html 挂了 .dark 强制) ─── */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -55,66 +67,87 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.84 0.23 155);        /* #19FB9B 青绿 */
+  --primary-foreground: oklch(0.145 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.65 0.22 25);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --ring: oklch(0.84 0.23 155 / 50%);
+  --success: oklch(0.84 0.23 155);
+  --danger: oklch(0.65 0.22 25);
+  --warning: oklch(0.78 0.17 80);
+  --info: oklch(0.73 0.16 245);
+  --chart-1: oklch(0.84 0.23 155);
+  --chart-2: oklch(0.73 0.16 245);
+  --chart-3: oklch(0.78 0.17 80);
+  --chart-4: oklch(0.65 0.22 25);
+  --chart-5: oklch(0.55 0 0);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.84 0.23 155);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.84 0.23 155);
 }
 
+/* ─── Dark mode · Ocufi 主视觉 ─── */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  /* 结构层 */
+  --background: oklch(0.145 0.005 240);      /* #0A0B0D 极深黑 */
+  --foreground: oklch(0.985 0 0);            /* #FAFAFA */
+  --card: oklch(0.185 0.008 240);            /* #13151A 卡片 */
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.22 0.01 240);           /* #1B1E26 弹层 */
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+
+  /* 品牌主色 · 青绿 #19FB9B */
+  --primary: oklch(0.88 0.25 155);
+  --primary-foreground: oklch(0.145 0 0);    /* 绿底黑字最清楚 */
+
+  --secondary: oklch(0.26 0.008 240);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.26 0.008 240);
+  --muted-foreground: oklch(0.65 0.01 240);  /* #8B8D94 次要文字 */
+  --accent: oklch(0.26 0.008 240);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
+
+  /* 语义色 */
+  --success: oklch(0.88 0.25 155);           /* 涨绿(== primary) */
+  --danger: oklch(0.65 0.23 25);             /* 跌红 #EF4444 */
+  --destructive: oklch(0.65 0.23 25);
+  --warning: oklch(0.78 0.17 80);            /* #FFB020 */
+  --info: oklch(0.73 0.17 245);              /* #60A5FA */
+
+  /* 线 + 输入 */
+  --border: oklch(1 0 0 / 10%);              /* ~ #2A2E3A */
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.88 0.25 155 / 50%);        /* focus 环用青绿 */
+
+  /* 图表(暂不重要) */
+  --chart-1: oklch(0.88 0.25 155);
+  --chart-2: oklch(0.73 0.17 245);
+  --chart-3: oklch(0.78 0.17 80);
+  --chart-4: oklch(0.65 0.23 25);
+  --chart-5: oklch(0.55 0 0);
+
+  /* Sidebar(shadcn 保留) */
+  --sidebar: oklch(0.185 0.008 240);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-primary: oklch(0.88 0.25 155);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.26 0.008 240);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.88 0.25 155);
 }
 
 @layer base {
@@ -123,12 +156,23 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* iOS safe-area(底部 home indicator 不遮挡 sticky footer) */
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
     padding-bottom: env(safe-area-inset-bottom);
+    /* 细腻微颗粒感(深色不平的小纹理,避免纯色过死板) */
+    background-image:
+      radial-gradient(circle at 30% 0%, oklch(0.88 0.25 155 / 6%) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, oklch(0.73 0.17 245 / 4%) 0%, transparent 50%);
+    background-attachment: fixed;
   }
   html {
-    @apply font-sans;
-    /* 手机端字体大小稳定(不在横屏下被系统放大) */
     -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), var(--font-sans), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .font-mono, [class*="font-mono"] {
+    font-family: var(--font-mono), ui-monospace, Menlo, Monaco, monospace;
+    font-feature-settings: "tnum" 1, "cv02" 1;
   }
 }

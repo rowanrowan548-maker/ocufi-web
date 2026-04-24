@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
+import { Logo } from '@/components/brand/logo';
 
 export async function SiteHeader() {
   const t = await getTranslations();
@@ -19,8 +20,8 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="text-lg">Ocufi</span>
+          <Link href="/" className="flex items-center gap-2">
+            <Logo variant="full" size={22} />
           </Link>
           <nav className="hidden sm:flex items-center gap-4 text-sm">
             {navLinks.map((l) => (
