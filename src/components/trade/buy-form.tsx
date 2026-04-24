@@ -34,6 +34,7 @@ import {
 } from '@/lib/jupiter';
 import { signAndSend, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
+import { track } from '@/lib/analytics';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 
@@ -102,6 +103,7 @@ export function BuyForm() {
     }
 
     setStage('quoting');
+    track('swap_quote_requested', { side: 'buy', mint: mint.trim(), sol });
     try {
       const amountRaw = BigInt(Math.round(sol * LAMPORTS_PER_SOL));
       const quote = await getQuote(SOL_MINT, mint.trim(), amountRaw, {
@@ -159,9 +161,18 @@ export function BuyForm() {
 
       setResult({ signature: sig, actualTokens, feeSol, solSpent });
       setStage('done');
+      track('swap_success', {
+        side: 'buy',
+        mint: mint.trim(),
+        sol: solSpent,
+        tokens: actualTokens,
+        signature: sig,
+      });
     } catch (e: unknown) {
-      setErr(mapError(t, humanize(e)));
+      const reason = humanize(e);
+      setErr(mapError(t, reason));
       setStage('error');
+      track('swap_failure', { side: 'buy', mint: mint.trim(), reason });
     }
   }
 

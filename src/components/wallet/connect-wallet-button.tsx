@@ -17,6 +17,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { getCurrentChain } from '@/config/chains';
+import { track } from '@/lib/analytics';
 
 function shortAddr(addr: string) {
   return addr.slice(0, 4) + '…' + addr.slice(-4);
@@ -39,6 +40,13 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
 
   // 用 base58 string 依赖,避免 publicKey 对象 ref 不稳定导致 useEffect 风暴
   const addrStr = publicKey?.toBase58() ?? null;
+
+  // 钱包连接成功事件(addrStr 从 null → 有值时触发一次)
+  useEffect(() => {
+    if (addrStr) {
+      track('wallet_connect', { wallet: addrStr, adapter: wallet?.adapter.name ?? 'unknown' });
+    }
+  }, [addrStr, wallet]);
 
   // 余额:首次拉 + 30s 轮询。不订阅 WS(公共节点的 WS 经常拒绝;Helius 可靠但轮询也够用)
   useEffect(() => {
@@ -172,7 +180,10 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => disconnect().catch(() => {})}
+          onClick={() => {
+            track('wallet_disconnect', { wallet: addr });
+            disconnect().catch(() => {});
+          }}
           className="cursor-pointer text-destructive focus:text-destructive"
         >
           <LogOut className="mr-2 h-4 w-4" />

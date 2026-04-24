@@ -22,6 +22,7 @@ import {
 } from '@/lib/token-info';
 import { getCurrentChain } from '@/config/chains';
 import { RiskBadge } from './risk-badge';
+import { track } from '@/lib/analytics';
 
 interface Props {
   mint: string;
@@ -38,7 +39,15 @@ export function TokenDetailView({ mint }: Props) {
   useEffect(() => {
     setLoading(true);
     let cancelled = false;
-    fetchTokenDetail(mint).then((d) => { if (!cancelled) setDetail(d); }).finally(() => {
+    fetchTokenDetail(mint).then((d) => {
+      if (cancelled) return;
+      setDetail(d);
+      track('token_safety_view', {
+        mint,
+        symbol: d?.symbol,
+        risk: d ? overallRisk(d) : 'unknown',
+      });
+    }).finally(() => {
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };

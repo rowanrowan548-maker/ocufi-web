@@ -25,6 +25,12 @@ export async function SiteHeader() {
               {t('nav.portfolio')}
             </Link>
             <Link
+              href="/history"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t('nav.history')}
+            </Link>
+            <Link
               href="/token"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >

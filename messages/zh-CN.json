@@ -7,6 +7,7 @@
     "home": "首页",
     "trade": "交易",
     "portfolio": "持仓",
+    "history": "成交记录",
     "alerts": "价格提醒",
     "points": "积分",
     "settings": "设置",
@@ -176,6 +177,27 @@
     },
     "actions": {
       "buy": "立即买入"
+    }
+  },
+  "history": {
+    "page": {
+      "title": "成交记录",
+      "subtitle": "钱包最近 50 笔交易,自动识别买入/卖出"
+    },
+    "notConnected": "连接钱包才能看到成交记录",
+    "empty": "还没有成交记录",
+    "countHint": "共 {n} 笔",
+    "columns": {
+      "time": "时间",
+      "type": "类型",
+      "token": "代币",
+      "tokenAmount": "代币数量",
+      "solAmount": "SOL"
+    },
+    "type": {
+      "buy": "买入",
+      "sell": "卖出",
+      "other": "其他"
     }
   },
   "common": {

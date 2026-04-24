@@ -1,0 +1,203 @@
+'use client';
+
+/**
+ * 成交历史页 UI
+ * 未连接钱包 → 提示连接
+ * 加载中     → 骨架提示
+ * 空数据     → 空状态
+ * 有数据     → 表格:时间 / 类型 / 代币 / 数量 / SOL / Solscan
+ */
+import { useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  RefreshCw, Wallet, AlertCircle, ExternalLink,
+  ArrowDownToLine, ArrowUpFromLine, Minus,
+} from 'lucide-react';
+import { track } from '@/lib/analytics';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
+import { getCurrentChain } from '@/config/chains';
+
+export function HistoryView() {
+  const t = useTranslations();
+  const chain = getCurrentChain();
+  const wallet = useWallet();
+  const { setVisible: openWalletModal } = useWalletModal();
+  const { records, loading, error, refresh } = useTxHistory(50);
+
+  useEffect(() => {
+    if (wallet.publicKey) {
+      track('history_view', { wallet: wallet.publicKey.toBase58() });
+    }
+  }, [wallet.publicKey]);
+
+  if (!wallet.connected || !wallet.publicKey) {
+    return (
+      <Card className="w-full max-w-2xl">
+        <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <Wallet className="h-12 w-12 text-muted-foreground" />
+          <p className="text-muted-foreground">{t('history.notConnected')}</p>
+          <Button onClick={() => openWalletModal(true)}>
+            {t('wallet.connect')}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-5xl space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {t('history.countHint', { n: records.length })}
+        </p>
+        <Button size="sm" variant="ghost" onClick={refresh} disabled={loading} className="h-8 px-2">
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
+      {error && (
+        <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span className="break-all">{error}</span>
+        </div>
+      )}
+
+      {!loading && records.length === 0 && !error ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+            <p className="text-muted-foreground">{t('history.empty')}</p>
+            <Link href="/trade">
+              <Button>{t('portfolio.goTrade')}</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('history.columns.time')}</TableHead>
+                <TableHead>{t('history.columns.type')}</TableHead>
+                <TableHead>{t('history.columns.token')}</TableHead>
+                <TableHead className="text-right">{t('history.columns.tokenAmount')}</TableHead>
+                <TableHead className="text-right">{t('history.columns.solAmount')}</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {records.map((r) => (
+                <HistoryRow key={r.signature} r={r} explorer={chain.explorer} t={t} />
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function HistoryRow({
+  r,
+  explorer,
+  t,
+}: {
+  r: EnrichedTxRecord;
+  explorer: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const typeLabel = t(`history.type.${r.type}`);
+  const { Icon, color } = TYPE_STYLE[r.type];
+
+  return (
+    <TableRow className={r.err ? 'opacity-50' : ''}>
+      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+        {formatTime(r.blockTime)}
+      </TableCell>
+      <TableCell>
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${color}`}>
+          <Icon className="h-3.5 w-3.5" />
+          {typeLabel}
+        </span>
+      </TableCell>
+      <TableCell>
+        {r.tokenMint ? (
+          <Link
+            href={`/token/${r.tokenMint}`}
+            className="flex items-center gap-2 hover:underline"
+          >
+            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+              {r.tokenLogo ? (
+                <Image
+                  src={r.tokenLogo}
+                  alt={r.tokenSymbol}
+                  width={24}
+                  height={24}
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-[10px] font-bold text-muted-foreground">
+                  {r.tokenSymbol.slice(0, 2).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <span className="text-sm font-medium truncate max-w-[140px]">{r.tokenSymbol}</span>
+          </Link>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell className="text-right font-mono text-sm">
+        {r.tokenAmount > 0 ? formatAmount(r.tokenAmount) : '—'}
+      </TableCell>
+      <TableCell className="text-right font-mono text-sm">
+        {r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
+      </TableCell>
+      <TableCell>
+        <a
+          href={`${explorer}/tx/${r.signature}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex p-1 text-muted-foreground hover:text-foreground"
+          title="Solscan"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+const TYPE_STYLE = {
+  buy: { Icon: ArrowDownToLine, color: 'text-green-600 dark:text-green-400' },
+  sell: { Icon: ArrowUpFromLine, color: 'text-red-600 dark:text-red-400' },
+  other: { Icon: Minus, color: 'text-muted-foreground' },
+} as const;
+
+function formatTime(blockTime: number | null): string {
+  if (!blockTime) return '—';
+  const d = new Date(blockTime * 1000);
+  const now = Date.now();
+  const diffSec = (now - d.getTime()) / 1000;
+  if (diffSec < 60) return `${Math.floor(diffSec)}s`;
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h`;
+  if (diffSec < 86400 * 7) return `${Math.floor(diffSec / 86400)}d`;
+  return d.toLocaleDateString();
+}
+
+function formatAmount(n: number): string {
+  if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  if (n >= 0.0001) return n.toFixed(6);
+  return n.toFixed(9);
+}

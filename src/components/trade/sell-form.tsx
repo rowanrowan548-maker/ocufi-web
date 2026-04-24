@@ -34,6 +34,7 @@ import {
 import { signAndSend, confirmTx, analyzeTx } from '@/lib/trade-tx';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
+import { track } from '@/lib/analytics';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 
@@ -122,6 +123,7 @@ export function SellForm() {
     }
 
     setStage('quoting');
+    track('swap_quote_requested', { side: 'sell', mint: mint.trim(), tokens: amt });
     try {
       const amountRaw = BigInt(Math.floor(amt * 10 ** balance.decimals));
       const quote = await getQuote(mint.trim(), SOL_MINT, amountRaw, {
@@ -178,9 +180,18 @@ export function SellForm() {
 
       setResult({ signature: sig, actualSol, feeSol });
       setStage('done');
+      track('swap_success', {
+        side: 'sell',
+        mint: mint.trim(),
+        sol: actualSol,
+        tokens: quoteData.tokenAmount,
+        signature: sig,
+      });
     } catch (e: unknown) {
-      setErr(mapError(t, humanize(e)));
+      const reason = humanize(e);
+      setErr(mapError(t, reason));
       setStage('error');
+      track('swap_failure', { side: 'sell', mint: mint.trim(), reason });
     }
   }
 
