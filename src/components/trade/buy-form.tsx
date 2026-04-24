@@ -73,6 +73,13 @@ export function BuyForm() {
 
   const [mint, setMint] = useState('');
   const [solAmount, setSolAmount] = useState('0.1');
+
+  // 支持 ?mint=X 从首页代币行情表 / 任意链接预填(client only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const m = new URLSearchParams(window.location.search).get('mint');
+    if (m && m.length >= 32) setMint(m);
+  }, []);
   const [slippageBps, setSlippageBps] = useState(100);
   const [gasLevel, setGasLevel] = useState<GasLevel>('fast');
   // 用户是否手动调过滑点:调过就别用推荐值覆盖

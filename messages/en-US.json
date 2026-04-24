@@ -42,6 +42,25 @@
       "lst": "Liquid Staking",
       "stables": "Stables / L1"
     },
+    "tokenList": {
+      "title": "Token Markets",
+      "subtitle": "Sorted by market cap · click action to trade",
+      "tabs": {
+        "all": "All",
+        "blue": "Blue Chip",
+        "meme": "Meme",
+        "lst": "LST",
+        "stable": "Stables"
+      },
+      "cols": {
+        "name": "Name",
+        "price": "Price",
+        "change": "24h",
+        "volume": "24h Vol",
+        "mcap": "Market Cap",
+        "action": "Action"
+      }
+    },
     "features": {
       "title": "Why Ocufi",
       "subtitle": "What gmgn / bullx / axiom don't give you — we do",

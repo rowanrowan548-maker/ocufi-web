@@ -10,6 +10,7 @@ import { getCurrentChain } from '@/config/chains';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
 import { MarketSnapshot } from '@/components/landing/market-snapshot';
+import { TokenList } from '@/components/landing/token-list';
 
 export default async function Landing({
   params,
@@ -82,6 +83,9 @@ export default async function Landing({
 
       {/* ═══════ Market Snapshot ═══════ */}
       <MarketSnapshot />
+
+      {/* ═══════ Token List · 币安风行情主表 ═══════ */}
+      <TokenList />
 
       {/* ═══════ Features ═══════ */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 border-t border-border/40">

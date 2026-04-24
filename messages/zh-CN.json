@@ -42,6 +42,25 @@
       "lst": "流动性质押",
       "stables": "稳定币 / L1"
     },
+    "tokenList": {
+      "title": "代币行情",
+      "subtitle": "按市值排序 · 点击操作直接交易",
+      "tabs": {
+        "all": "全部",
+        "blue": "蓝筹",
+        "meme": "Meme",
+        "lst": "LST",
+        "stable": "稳定币"
+      },
+      "cols": {
+        "name": "名称",
+        "price": "价格",
+        "change": "24h 涨跌",
+        "volume": "24h 成交量",
+        "mcap": "市值",
+        "action": "操作"
+      }
+    },
     "features": {
       "title": "为什么选 Ocufi",
       "subtitle": "和 gmgn / bullx / axiom 比,我们只差一样东西 —— 你",
