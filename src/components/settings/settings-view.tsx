@@ -23,6 +23,7 @@ import {
   type SlippageProfile,
 } from '@/lib/user-settings';
 import { routing } from '@/i18n/routing';
+import { isApiConfigured, pingHealth } from '@/lib/api-client';
 
 const SLIPPAGE_OPTIONS = [
   { value: '30', label: '0.3%' },
@@ -42,10 +43,20 @@ export function SettingsView({ locale }: { locale: string }) {
 
   const [slippage, setSlippage] = useState<SlippageProfile>(DEFAULT_SLIPPAGE);
   const [saved, setSaved] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'ok' | 'down' | 'unconfigured'>(
+    isApiConfigured() ? 'checking' : 'unconfigured'
+  );
 
   useEffect(() => {
     const s = loadSettings();
     if (s.customSlippage) setSlippage(s.customSlippage);
+  }, []);
+
+  useEffect(() => {
+    if (!isApiConfigured()) return;
+    pingHealth()
+      .then((r) => setApiStatus(r.status === 'ok' ? 'ok' : 'down'))
+      .catch(() => setApiStatus('down'));
   }, []);
 
   function handleSave() {
@@ -147,6 +158,18 @@ export function SettingsView({ locale }: { locale: string }) {
             mono
           />
           <InfoRow label={t('settings.about.version')} value="v0.3" />
+          <InfoRow
+            label={t('settings.about.api')}
+            value={
+              apiStatus === 'ok'
+                ? '● ' + t('settings.about.apiOk')
+                : apiStatus === 'down'
+                ? '✗ ' + t('settings.about.apiDown')
+                : apiStatus === 'checking'
+                ? t('settings.about.apiChecking')
+                : t('settings.about.apiUnconfigured')
+            }
+          />
           <div className="flex gap-4 pt-3 border-t">
             <a
               href="https://github.com/rowanrowan548-maker/ocufi-web"

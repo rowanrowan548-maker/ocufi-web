@@ -268,7 +268,12 @@
       "title": "关于",
       "chain": "当前链",
       "rpc": "RPC 节点",
-      "version": "版本"
+      "version": "版本",
+      "api": "后端 API",
+      "apiOk": "在线",
+      "apiDown": "不可达",
+      "apiChecking": "检测中…",
+      "apiUnconfigured": "未配置"
     },
     "save": "保存",
     "saved": "已保存",

@@ -268,7 +268,12 @@
       "title": "About",
       "chain": "Chain",
       "rpc": "RPC endpoint",
-      "version": "Version"
+      "version": "Version",
+      "api": "Backend API",
+      "apiOk": "online",
+      "apiDown": "unreachable",
+      "apiChecking": "checking…",
+      "apiUnconfigured": "not configured"
     },
     "save": "Save",
     "saved": "Saved",
