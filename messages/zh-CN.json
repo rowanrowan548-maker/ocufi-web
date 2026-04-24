@@ -278,6 +278,10 @@
       "title": "语言",
       "desc": "切换中 / 英文界面"
     },
+    "email": {
+      "title": "邮箱(预留)",
+      "desc": "先存着,Day 12+ 接入真实邮件发送(价格提醒 / 订单成交提醒等)"
+    },
     "slippage": {
       "title": "默认滑点",
       "desc": "输入合约后会按 token 类型自动应用,你仍可在下单时临时调",
@@ -318,19 +322,26 @@
     "form": {
       "title": "新建价格提醒",
       "subtitle": "输入合约 + 目标价,到价后浏览器弹窗",
+      "subtitleBackend": "后端 7x24 监控,到价后前端打开即收到通知",
       "direction": "方向",
       "above": "涨到 ≥",
       "below": "跌到 ≤",
       "target": "目标价",
       "submit": "创建提醒"
     },
+    "connectToUse": "连接钱包后才能管理你的提醒",
+    "notif": {
+      "hit": "当前 ${price} · 点击查看详情"
+    },
     "list": {
       "title": "我的提醒",
       "empty": "还没有设置任何提醒",
       "refreshHint": "30 秒自动轮询",
+      "backendHint": "后端 60 秒一次,前端 20 秒同步",
       "token": "代币",
       "condition": "触发条件",
       "current": "当前价",
+      "triggerPrice": "触发时价格",
       "status": "状态",
       "aboveCond": "涨到 ≥ ${price}",
       "belowCond": "跌到 ≤ ${price}",

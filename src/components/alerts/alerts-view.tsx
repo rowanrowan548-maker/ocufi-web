@@ -1,15 +1,16 @@
 'use client';
 
 /**
- * 价格提醒页主 UI:新建表单 + 列表
+ * 价格提醒页(Day 11 后端版)
  */
 import { useEffect, useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
 import { PublicKey } from '@solana/web3.js';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
-  Bell, BellOff, AlertCircle, Trash2, CheckCircle2, Loader2, Shield,
+  Bell, BellOff, AlertCircle, Trash2, CheckCircle2, Loader2, Wallet,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -23,21 +24,26 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  addAlert, removeAlert, getNotifPermission, requestNotifPermission,
-  type AlertDirection, type NotifPermission,
+  getNotifPermission, requestNotifPermission,
+  type NotifPermission,
 } from '@/lib/alerts';
 import { fetchTokenInfo } from '@/lib/portfolio';
+import {
+  createAlert, deleteAlert, isApiConfigured,
+} from '@/lib/api-client';
 import { usePriceAlerts } from '@/hooks/use-price-alerts';
 import { track } from '@/lib/analytics';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 
 export function AlertsView() {
   const t = useTranslations();
-  const { alerts, prices, loading, refresh } = usePriceAlerts();
+  const { publicKey, connected } = useWallet();
+  const { setVisible: openWalletModal } = useWalletModal();
+  const { alerts, loading, error, refresh } = usePriceAlerts();
   const [permission, setPermission] = useState<NotifPermission>('default');
 
   const [mint, setMint] = useState('');
-  const [direction, setDirection] = useState<AlertDirection>('above');
+  const [direction, setDirection] = useState<'above' | 'below'>('above');
   const [targetUsd, setTargetUsd] = useState('');
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -53,16 +59,14 @@ export function AlertsView() {
 
   async function submit() {
     setSubmitErr(null);
+    if (!publicKey) {
+      openWalletModal(true);
+      return;
+    }
     const m = mint.trim();
-    if (!isValidMint(m)) {
-      setSubmitErr(t('trade.errors.invalidMint'));
-      return;
-    }
+    if (!isValidMint(m)) { setSubmitErr(t('trade.errors.invalidMint')); return; }
     const target = Number(targetUsd);
-    if (!target || target <= 0) {
-      setSubmitErr(t('alerts.errors.invalidTarget'));
-      return;
-    }
+    if (!target || target <= 0) { setSubmitErr(t('alerts.errors.invalidTarget')); return; }
 
     setSubmitting(true);
     try {
@@ -71,13 +75,7 @@ export function AlertsView() {
         setSubmitErr(t('alerts.errors.tokenNotFound'));
         return;
       }
-      addAlert({
-        mint: m,
-        symbol: info.symbol,
-        direction,
-        targetUsd: target,
-        createdPriceUsd: info.priceUsd,
-      });
+      await createAlert(publicKey.toBase58(), m, info.symbol, direction, target);
       track('price_alert_created', { mint: m, direction, targetUsd: target });
       setMint('');
       setTargetUsd('');
@@ -89,14 +87,43 @@ export function AlertsView() {
     }
   }
 
-  function handleDelete(id: string) {
-    removeAlert(id);
-    refresh();
+  async function handleDelete(id: number) {
+    if (!publicKey) return;
+    try {
+      await deleteAlert(publicKey.toBase58(), id);
+      track('price_alert_deleted', { id });
+      refresh();
+    } catch (e: unknown) {
+      setSubmitErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  if (!isApiConfigured()) {
+    return (
+      <Card className="max-w-xl">
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          {t('points.apiNotConfigured')}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 未连钱包
+  if (!connected || !publicKey) {
+    return (
+      <Card className="max-w-xl">
+        <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <Wallet className="h-12 w-12 text-muted-foreground" />
+          <p className="text-muted-foreground">{t('alerts.connectToUse')}</p>
+          <Button onClick={() => openWalletModal(true)}>{t('wallet.connect')}</Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <div className="w-full max-w-4xl space-y-6">
-      {/* 通知权限条幅 */}
+      {/* 通知权限条 */}
       {permission !== 'granted' && permission !== 'unsupported' && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="py-4 flex items-center gap-3">
@@ -126,11 +153,11 @@ export function AlertsView() {
         </Card>
       )}
 
-      {/* 新建表单 */}
+      {/* 新建 */}
       <Card>
         <CardHeader>
           <CardTitle>{t('alerts.form.title')}</CardTitle>
-          <CardDescription>{t('alerts.form.subtitle')}</CardDescription>
+          <CardDescription>{t('alerts.form.subtitleBackend')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -150,7 +177,7 @@ export function AlertsView() {
               <Label htmlFor="alert-dir">{t('alerts.form.direction')}</Label>
               <Select
                 value={direction}
-                onValueChange={(v) => { if (v) setDirection(v as AlertDirection); }}
+                onValueChange={(v) => { if (v) setDirection(v as 'above' | 'below'); }}
               >
                 <SelectTrigger id="alert-dir">
                   {direction === 'above' ? t('alerts.form.above') : t('alerts.form.below')}
@@ -196,10 +223,16 @@ export function AlertsView() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{t('alerts.list.title')}</h2>
           <div className="text-xs text-muted-foreground">
-            {loading ? t('common.loading') : t('alerts.list.refreshHint')}
+            {loading ? t('common.loading') : t('alerts.list.backendHint')}
           </div>
         </div>
-        {alerts.length === 0 ? (
+        {error && (
+          <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+            <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <span className="break-all">{error}</span>
+          </div>
+        )}
+        {alerts.length === 0 && !loading ? (
           <Card>
             <CardContent className="py-10 text-center text-sm text-muted-foreground">
               {t('alerts.list.empty')}
@@ -212,58 +245,55 @@ export function AlertsView() {
                 <TableRow>
                   <TableHead>{t('alerts.list.token')}</TableHead>
                   <TableHead>{t('alerts.list.condition')}</TableHead>
-                  <TableHead className="text-right">{t('alerts.list.current')}</TableHead>
+                  <TableHead className="text-right">{t('alerts.list.triggerPrice')}</TableHead>
                   <TableHead>{t('alerts.list.status')}</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {alerts.map((a) => {
-                  const cur = prices.get(a.mint);
-                  return (
-                    <TableRow key={a.id} className={a.triggered ? 'opacity-60' : ''}>
-                      <TableCell>
-                        <Link
-                          href={`/token/${a.mint}`}
-                          className="flex items-center gap-2 hover:underline"
-                        >
-                          <span className="text-sm font-medium">{a.symbol}</span>
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {a.direction === 'above'
-                          ? t('alerts.list.aboveCond', { price: a.targetUsd })
-                          : t('alerts.list.belowCond', { price: a.targetUsd })}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-xs">
-                        {cur != null ? `$${formatPrice(cur)}` : '—'}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {a.triggered ? (
-                          <span className="inline-flex items-center gap-1 text-green-600">
-                            <CheckCircle2 className="h-3 w-3" />
-                            {t('alerts.list.triggered')}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            <Bell className="h-3 w-3" />
-                            {t('alerts.list.active')}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(a.id)}
-                          className="h-7 px-2 text-destructive"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {alerts.map((a) => (
+                  <TableRow key={a.id} className={a.triggered ? 'opacity-70' : ''}>
+                    <TableCell>
+                      <Link
+                        href={`/token/${a.mint}`}
+                        className="flex items-center gap-2 hover:underline"
+                      >
+                        <span className="text-sm font-medium">{a.symbol || a.mint.slice(0, 6)}</span>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {a.direction === 'above'
+                        ? t('alerts.list.aboveCond', { price: a.target_usd })
+                        : t('alerts.list.belowCond', { price: a.target_usd })}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {a.triggered_price_usd != null ? `$${formatPrice(a.triggered_price_usd)}` : '—'}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {a.triggered ? (
+                        <span className="inline-flex items-center gap-1 text-green-600">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {t('alerts.list.triggered')}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Bell className="h-3 w-3" />
+                          {t('alerts.list.active')}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(a.id)}
+                        className="h-7 px-2 text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </Card>

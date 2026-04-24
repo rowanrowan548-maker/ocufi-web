@@ -1,53 +1,43 @@
 'use client';
 
 /**
- * 价格提醒 · 全局轮询 + 触发通知
+ * 价格提醒 hook (Day 11: 迁到后端)
  *
- * - 每 30s 拉一次所有 active alert 涉及的 mint 的当前价
- * - 命中阈值 → 浏览器 Notification + markTriggered(不重复提醒)
- *
- * 这个 hook 会在 Provider 里挂一次,全站 tab 共享一份 polling
+ * - 后端 worker 每 60s 轮询价格 + 标记 triggered
+ * - 前端每 20s 拉一次 /alerts?wallet=X,发现新 triggered 未 ack 的就弹通知 + ack
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useTranslations } from 'next-intl';
 import {
-  loadAlerts, markTriggered, shouldFire, fireNotification,
-  type PriceAlert,
-} from '@/lib/alerts';
-import { fetchTokensInfoBatch } from '@/lib/portfolio';
+  listAlerts, ackAlert, isApiConfigured,
+  type ApiPriceAlert,
+} from '@/lib/api-client';
+import { fireNotification } from '@/lib/alerts';
 
-const POLL_MS = 30_000;
+const POLL_MS = 20_000;
 
 export interface AlertsState {
-  alerts: PriceAlert[];
-  prices: Map<string, number>;  // mint → current priceUsd
+  alerts: ApiPriceAlert[];
   loading: boolean;
-  /** 强制重新读取 localStorage + 立即拉一次价(新建/删除后调用) */
+  error: string | null;
   refresh: () => void;
 }
 
 export function usePriceAlerts(): AlertsState {
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [prices, setPrices] = useState<Map<string, number>>(new Map());
+  const t = useTranslations();
+  const { publicKey } = useWallet();
+  const [alerts, setAlerts] = useState<ApiPriceAlert[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const refresh = useCallback(() => setTick((n) => n + 1), []);
 
-  const refresh = useCallback(() => setTick((t) => t + 1), []);
+  const wallet = publicKey?.toBase58() ?? null;
 
-  // 读 localStorage
   useEffect(() => {
-    setAlerts(loadAlerts());
-  }, [tick]);
-
-  const activeMints = useMemo(() => {
-    const set = new Set<string>();
-    for (const a of alerts) if (!a.triggered) set.add(a.mint);
-    return [...set];
-  }, [alerts]);
-
-  // 轮询
-  useEffect(() => {
-    if (activeMints.length === 0) {
-      setPrices(new Map());
+    if (!isApiConfigured() || !wallet) {
+      setAlerts([]);
       return;
     }
     let cancelled = false;
@@ -56,33 +46,26 @@ export function usePriceAlerts(): AlertsState {
     const poll = async () => {
       setLoading(true);
       try {
-        const infos = await fetchTokensInfoBatch(activeMints);
+        const list = await listAlerts(wallet);
         if (cancelled) return;
-        const p = new Map<string, number>();
-        for (const [mint, info] of infos) p.set(mint, info.priceUsd);
-        setPrices(p);
+        setAlerts(list);
+        setError(null);
 
-        // 对每个 active alert 检查是否触发
-        const fresh = loadAlerts();
-        let changed = false;
-        for (const a of fresh) {
-          if (a.triggered) continue;
-          const cur = p.get(a.mint);
-          if (cur == null) continue;
-          if (shouldFire(a, cur)) {
+        // 对每个 triggered && !acknowledged 的弹通知 + ack
+        for (const a of list) {
+          if (a.triggered && !a.acknowledged) {
             const dir = a.direction === 'above' ? '涨到' : '跌到';
+            const cur = a.triggered_price_usd ?? 0;
             fireNotification(
-              `${a.symbol} ${dir} $${a.targetUsd}`,
-              `当前 $${cur.toPrecision(6)} · 点击查看详情`,
-              `${window.location.origin}/token/${a.mint}`
+              `${a.symbol || a.mint.slice(0, 6)} ${dir} $${a.target_usd}`,
+              `${t('alerts.notif.hit', { price: cur.toPrecision(6) })}`,
+              `${typeof window !== 'undefined' ? window.location.origin : ''}/token/${a.mint}`
             );
-            markTriggered(a.id, cur);
-            changed = true;
+            ackAlert(wallet, a.id).catch(() => {});
           }
         }
-        if (changed) setAlerts(loadAlerts());
-      } catch {
-        /* 限速/网络:下轮再试 */
+      } catch (e: unknown) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -94,7 +77,7 @@ export function usePriceAlerts(): AlertsState {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [activeMints.join(',')]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wallet, tick, t]);
 
-  return { alerts, prices, loading, refresh };
+  return { alerts, loading, error, refresh };
 }

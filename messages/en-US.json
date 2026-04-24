@@ -278,6 +278,10 @@
       "title": "Language",
       "desc": "Switch between Chinese / English"
     },
+    "email": {
+      "title": "Email (reserved)",
+      "desc": "Stored only — Day 12+ will wire real email sending for alerts and trade confirmations"
+    },
     "slippage": {
       "title": "Default slippage",
       "desc": "Applied automatically based on token type; you can still override per trade",
@@ -318,19 +322,26 @@
     "form": {
       "title": "New price alert",
       "subtitle": "Paste a mint + target price. Get a popup when it hits.",
+      "subtitleBackend": "Backend monitors 24/7. Open the site to see triggered alerts.",
       "direction": "Direction",
       "above": "Rises to ≥",
       "below": "Falls to ≤",
       "target": "Target price",
       "submit": "Create alert"
     },
+    "connectToUse": "Connect your wallet to manage alerts",
+    "notif": {
+      "hit": "Current ${price} · click to view"
+    },
     "list": {
       "title": "My Alerts",
       "empty": "No alerts yet",
       "refreshHint": "Polls every 30s",
+      "backendHint": "Backend polls every 60s, client syncs every 20s",
       "token": "Token",
       "condition": "Trigger",
       "current": "Now",
+      "triggerPrice": "Fired at",
       "status": "Status",
       "aboveCond": "Rises to ≥ ${price}",
       "belowCond": "Falls to ≤ ${price}",

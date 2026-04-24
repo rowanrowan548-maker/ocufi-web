@@ -96,3 +96,65 @@ export interface Leaderboard {
 export async function fetchLeaderboard(limit = 20): Promise<Leaderboard> {
   return apiFetch<Leaderboard>(`/points/leaderboard?limit=${limit}`);
 }
+
+// ─── Day 11 price alerts ───
+
+export interface ApiPriceAlert {
+  id: number;
+  wallet: string;
+  mint: string;
+  symbol: string;
+  direction: 'above' | 'below';
+  target_usd: number;
+  triggered: boolean;
+  triggered_at: string | null;
+  triggered_price_usd: number | null;
+  acknowledged: boolean;
+  created_at: string;
+}
+
+export async function createAlert(
+  wallet: string,
+  mint: string,
+  symbol: string,
+  direction: 'above' | 'below',
+  targetUsd: number
+): Promise<ApiPriceAlert> {
+  return apiFetch('/alerts', {
+    method: 'POST',
+    body: JSON.stringify({
+      wallet, mint, symbol, direction, target_usd: targetUsd,
+    }),
+  });
+}
+
+export async function listAlerts(wallet: string): Promise<ApiPriceAlert[]> {
+  return apiFetch(`/alerts?wallet=${wallet}`);
+}
+
+export async function deleteAlert(wallet: string, id: number): Promise<void> {
+  await apiFetch(`/alerts/${id}?wallet=${wallet}`, { method: 'DELETE' });
+}
+
+export async function ackAlert(wallet: string, id: number): Promise<void> {
+  await apiFetch(`/alerts/${id}/ack?wallet=${wallet}`, { method: 'POST' });
+}
+
+// ─── Day 11 user settings (email) ───
+
+export interface UserSettingsApi {
+  wallet_address: string;
+  email: string | null;
+  created_at: string | null;
+}
+
+export async function fetchUser(wallet: string): Promise<UserSettingsApi> {
+  return apiFetch(`/user?wallet=${wallet}`);
+}
+
+export async function setUserEmail(wallet: string, email: string): Promise<{ ok: boolean; email?: string | null; error?: string }> {
+  return apiFetch('/user/email', {
+    method: 'POST',
+    body: JSON.stringify({ wallet, email }),
+  });
+}

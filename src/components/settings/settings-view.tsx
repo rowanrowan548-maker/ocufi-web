@@ -23,7 +23,9 @@ import {
   type SlippageProfile,
 } from '@/lib/user-settings';
 import { routing } from '@/i18n/routing';
-import { isApiConfigured, pingHealth } from '@/lib/api-client';
+import { isApiConfigured, pingHealth, fetchUser, setUserEmail } from '@/lib/api-client';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Input } from '@/components/ui/input';
 
 const SLIPPAGE_OPTIONS = [
   { value: '30', label: '0.3%' },
@@ -41,11 +43,15 @@ export function SettingsView({ locale }: { locale: string }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const { publicKey } = useWallet();
   const [slippage, setSlippage] = useState<SlippageProfile>(DEFAULT_SLIPPAGE);
   const [saved, setSaved] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'ok' | 'down' | 'unconfigured'>(
     isApiConfigured() ? 'checking' : 'unconfigured'
   );
+  const [email, setEmail] = useState('');
+  const [emailSaved, setEmailSaved] = useState(false);
+  const [emailErr, setEmailErr] = useState<string | null>(null);
 
   useEffect(() => {
     const s = loadSettings();
@@ -58,6 +64,30 @@ export function SettingsView({ locale }: { locale: string }) {
       .then((r) => setApiStatus(r.status === 'ok' ? 'ok' : 'down'))
       .catch(() => setApiStatus('down'));
   }, []);
+
+  // 从后端拉 email
+  useEffect(() => {
+    if (!isApiConfigured() || !publicKey) return;
+    fetchUser(publicKey.toBase58())
+      .then((u) => setEmail(u.email ?? ''))
+      .catch(() => {});
+  }, [publicKey]);
+
+  async function handleSaveEmail() {
+    if (!publicKey) return;
+    setEmailErr(null);
+    try {
+      const r = await setUserEmail(publicKey.toBase58(), email.trim());
+      if (!r.ok) {
+        setEmailErr(r.error ?? 'failed');
+        return;
+      }
+      setEmailSaved(true);
+      setTimeout(() => setEmailSaved(false), 1500);
+    } catch (e: unknown) {
+      setEmailErr(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   function handleSave() {
     saveSettings({ customSlippage: slippage });
@@ -144,6 +174,35 @@ export function SettingsView({ locale }: { locale: string }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* 邮箱(Day 11 预留,不发) */}
+      {isApiConfigured() && publicKey && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.email.title')}</CardTitle>
+            <CardDescription>{t('settings.email.desc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={handleSaveEmail}>
+                {emailSaved ? (
+                  <><CheckCircle2 className="h-4 w-4 mr-2" />{t('settings.saved')}</>
+                ) : t('settings.save')}
+              </Button>
+            </div>
+            {emailErr && (
+              <div className="text-xs text-destructive">{emailErr}</div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* 关于 */}
       <Card>
