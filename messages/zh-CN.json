@@ -6,6 +6,7 @@
   "nav": {
     "home": "首页",
     "trade": "交易",
+    "limit": "限价单",
     "portfolio": "持仓",
     "history": "成交记录",
     "alerts": "价格提醒",
@@ -189,6 +190,43 @@
     },
     "actions": {
       "buy": "立即买入"
+    }
+  },
+  "limit": {
+    "page": {
+      "title": "限价单",
+      "subtitle": "挂单等目标价 · 达到价格自动成交 · 最小 $5"
+    },
+    "title": "挂一个限价单",
+    "subtitle": "价格到达目标时 Jupiter 自动替你下单",
+    "amountBuy": "花多少 SOL",
+    "amountSell": "卖多少 (数量)",
+    "targetPrice": "目标价",
+    "priceUnit": "每枚代币值多少 SOL",
+    "estimatedBuy": "预计买到",
+    "estimatedSell": "预计收到",
+    "placeBuy": "提交限价买入",
+    "placeSell": "提交限价卖出",
+    "submitting": "下单中…",
+    "success": "限价单已提交",
+    "expiry": {
+      "label": "有效期",
+      "1d": "1 天",
+      "3d": "3 天",
+      "7d": "7 天",
+      "never": "永久"
+    },
+    "errors": {
+      "invalidPrice": "目标价必须 > 0"
+    },
+    "orders": {
+      "title": "我的挂单",
+      "empty": "当前没有挂单",
+      "pair": "交易对",
+      "making": "付出",
+      "taking": "收到",
+      "price": "价格",
+      "expiry": "到期"
     }
   },
   "history": {

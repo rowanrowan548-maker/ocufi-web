@@ -17,7 +17,11 @@ export type AnalyticsEvent =
   | 'swap_success'
   | 'swap_failure'
   | 'token_safety_view'
-  | 'history_view';
+  | 'history_view'
+  | 'limit_order_requested'
+  | 'limit_order_created'
+  | 'limit_order_failed'
+  | 'limit_order_cancelled';
 
 export interface TrackProps {
   [k: string]: string | number | boolean | null | undefined;

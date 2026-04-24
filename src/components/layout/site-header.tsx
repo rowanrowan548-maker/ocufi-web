@@ -6,6 +6,7 @@ export async function SiteHeader() {
   const t = await getTranslations();
   const navLinks = [
     { href: '/trade', label: t('nav.trade') },
+    { href: '/limit', label: t('nav.limit') },
     { href: '/portfolio', label: t('nav.portfolio') },
     { href: '/history', label: t('nav.history') },
     { href: '/token', label: t('nav.tokenCheck') },

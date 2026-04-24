@@ -6,6 +6,7 @@
   "nav": {
     "home": "Home",
     "trade": "Trade",
+    "limit": "Limit Order",
     "portfolio": "Portfolio",
     "history": "History",
     "alerts": "Price Alerts",
@@ -189,6 +190,43 @@
     },
     "actions": {
       "buy": "Buy now"
+    }
+  },
+  "limit": {
+    "page": {
+      "title": "Limit Orders",
+      "subtitle": "Set your target price — Jupiter fills when market hits. $5 min."
+    },
+    "title": "Place a limit order",
+    "subtitle": "Jupiter executes automatically when market reaches your price",
+    "amountBuy": "SOL to spend",
+    "amountSell": "Amount to sell",
+    "targetPrice": "Target price",
+    "priceUnit": "SOL per token",
+    "estimatedBuy": "Tokens you'll get",
+    "estimatedSell": "SOL you'll receive",
+    "placeBuy": "Place limit buy",
+    "placeSell": "Place limit sell",
+    "submitting": "Submitting…",
+    "success": "Limit order submitted",
+    "expiry": {
+      "label": "Expiry",
+      "1d": "1 day",
+      "3d": "3 days",
+      "7d": "7 days",
+      "never": "Never"
+    },
+    "errors": {
+      "invalidPrice": "Target price must be > 0"
+    },
+    "orders": {
+      "title": "My Orders",
+      "empty": "No open orders",
+      "pair": "Pair",
+      "making": "Paying",
+      "taking": "Receiving",
+      "price": "Price",
+      "expiry": "Expiry"
     }
   },
   "history": {
