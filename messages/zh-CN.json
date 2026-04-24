@@ -32,6 +32,56 @@
     "copied": "已复制",
     "viewExplorer": "在 Solscan 查看"
   },
+  "trade": {
+    "page": {
+      "title": "市价买入",
+      "subtitle": "粘合约地址,输入 SOL 数量,Jupiter 自动选最优路线"
+    },
+    "buy": {
+      "title": "买入",
+      "subtitle": "走 Jupiter 聚合器,最低手续费"
+    },
+    "fields": {
+      "mint": "代币合约地址 (mint)",
+      "solAmount": "SOL 数量",
+      "slippage": "滑点",
+      "gas": "优先级"
+    },
+    "gas": {
+      "normal": "普通",
+      "fast": "快速",
+      "turbo": "极速"
+    },
+    "buttons": {
+      "quote": "查询报价",
+      "quoting": "查询中…",
+      "buy": "确认买入",
+      "buyAgain": "再买一单",
+      "signing": "等待签名…",
+      "sending": "广播中…",
+      "confirming": "链上确认…"
+    },
+    "preview": {
+      "pay": "支付",
+      "receive": "预计收到",
+      "minReceive": "最少收到(滑点上限)",
+      "priceImpact": "价格冲击",
+      "platformFee": "Ocufi 手续费",
+      "platformFeeNone": "0(V1 免费)"
+    },
+    "result": {
+      "success": "交易成功",
+      "actualReceived": "实际到账",
+      "solSpent": "实际花费",
+      "networkFee": "网络 Gas",
+      "viewOnExplorer": "在 Solscan 查看"
+    },
+    "errors": {
+      "invalidMint": "合约地址无效",
+      "invalidSol": "SOL 数量必须 > 0",
+      "unconfirmed": "交易未能在规定时间内确认。签名 {sig}"
+    }
+  },
   "common": {
     "loading": "加载中…",
     "error": "出错了",

@@ -32,6 +32,56 @@
     "copied": "Copied",
     "viewExplorer": "View on Solscan"
   },
+  "trade": {
+    "page": {
+      "title": "Market Buy",
+      "subtitle": "Paste a mint, enter SOL amount, best route via Jupiter"
+    },
+    "buy": {
+      "title": "Buy",
+      "subtitle": "Jupiter aggregator, lowest fees"
+    },
+    "fields": {
+      "mint": "Token mint address",
+      "solAmount": "SOL amount",
+      "slippage": "Slippage",
+      "gas": "Priority"
+    },
+    "gas": {
+      "normal": "Normal",
+      "fast": "Fast",
+      "turbo": "Turbo"
+    },
+    "buttons": {
+      "quote": "Get Quote",
+      "quoting": "Quoting…",
+      "buy": "Confirm Buy",
+      "buyAgain": "Buy Again",
+      "signing": "Waiting for signature…",
+      "sending": "Broadcasting…",
+      "confirming": "Confirming on-chain…"
+    },
+    "preview": {
+      "pay": "You pay",
+      "receive": "You receive",
+      "minReceive": "Minimum (with slippage)",
+      "priceImpact": "Price impact",
+      "platformFee": "Ocufi fee",
+      "platformFeeNone": "0 (V1 free)"
+    },
+    "result": {
+      "success": "Trade successful",
+      "actualReceived": "Actually received",
+      "solSpent": "SOL spent",
+      "networkFee": "Network gas",
+      "viewOnExplorer": "View on Solscan"
+    },
+    "errors": {
+      "invalidMint": "Invalid mint address",
+      "invalidSol": "SOL amount must be > 0",
+      "unconfirmed": "Transaction not confirmed in time. Signature: {sig}"
+    }
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",
