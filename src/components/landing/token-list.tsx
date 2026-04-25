@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, TrendingDown, ShoppingCart } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingCart, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -21,10 +21,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
+import { fetchTokensInfoBatch, fetchTokenInfo, type TokenInfo } from '@/lib/portfolio';
 import {
   PRESET_ALL, PRESET_MAJORS, PRESET_MEME, PRESET_STABLE,
 } from '@/lib/preset-tokens';
+import { useFavorites } from '@/lib/favorites';
 
 const ALL = PRESET_ALL;
 
@@ -35,20 +36,38 @@ const GROUPS: Record<string, string[]> = {
   stable: PRESET_STABLE,
 };
 
-type Tab = 'all' | 'major' | 'meme' | 'stable';
+type Tab = 'fav' | 'all' | 'major' | 'meme' | 'stable';
 
 export function TokenList() {
   const t = useTranslations('landing.tokenList');
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('all');
   const [infos, setInfos] = useState<Map<string, TokenInfo>>(new Map());
+  const { favorites, isFavorite, toggle } = useFavorites();
 
   useEffect(() => {
     fetchTokensInfoBatch(ALL).then(setInfos).catch(() => {});
   }, []);
 
+  // 自选里有 PRESET 没收录的 mint,补拉一次
+  useEffect(() => {
+    const missing = favorites.filter((m) => !infos.has(m));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    Promise.all(missing.map((m) => fetchTokenInfo(m))).then((arr) => {
+      if (cancelled) return;
+      setInfos((prev) => {
+        const next = new Map(prev);
+        arr.forEach((info, i) => { if (info) next.set(missing[i], info); });
+        return next;
+      });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [favorites, infos]);
+
   const rows = useMemo(() => {
-    const list = (GROUPS[tab] || ALL)
+    const sourceMints = tab === 'fav' ? favorites : (GROUPS[tab] || ALL);
+    const list = sourceMints
       .map((m) => infos.get(m))
       .filter((t): t is TokenInfo => !!t && !!t.logoUri);
     // 默认按 24h 成交量降序;成交量为空的排到最后,按市值兜底
@@ -72,6 +91,10 @@ export function TokenList() {
           </div>
           <Tabs value={tab} onValueChange={(v) => v && setTab(v as Tab)}>
             <TabsList>
+              <TabsTrigger value="fav">
+                <Star className="h-3 w-3 mr-1" />
+                {t('tabs.fav')}{favorites.length > 0 ? ` ${favorites.length}` : ''}
+              </TabsTrigger>
               <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
               <TabsTrigger value="major">{t('tabs.major')}</TabsTrigger>
               <TabsTrigger value="meme">{t('tabs.meme')}</TabsTrigger>
@@ -84,7 +107,8 @@ export function TokenList() {
           <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40%]">{t('cols.name')}</TableHead>
+                <TableHead className="w-8" />
+                <TableHead>{t('cols.name')}</TableHead>
                 <TableHead className="text-right">{t('cols.price')}</TableHead>
                 <TableHead className="text-right">{t('cols.change')}</TableHead>
                 <TableHead className="text-right hidden md:table-cell">
@@ -98,9 +122,15 @@ export function TokenList() {
             </TableHeader>
             <TableBody>
               {rows.length === 0
-                ? Array.from({ length: 5 }).map((_, i) => (
+                ? tab === 'fav' ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-20 text-center text-muted-foreground text-xs">
+                        {t('emptyFav')}
+                      </TableCell>
+                    </TableRow>
+                  ) : Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={6} className="h-12 text-center text-muted-foreground text-xs">
+                      <TableCell colSpan={7} className="h-12 text-center text-muted-foreground text-xs">
                         ⌛ loading…
                       </TableCell>
                     </TableRow>
@@ -109,6 +139,8 @@ export function TokenList() {
                     <Row
                       key={tok.mint}
                       tok={tok}
+                      starred={isFavorite(tok.mint)}
+                      onToggleStar={() => toggle(tok.mint)}
                       onTrade={() => router.push(`/trade?mint=${tok.mint}`)}
                     />
                   ))}
@@ -120,7 +152,14 @@ export function TokenList() {
   );
 }
 
-function Row({ tok, onTrade }: { tok: TokenInfo; onTrade: () => void }) {
+function Row({
+  tok, starred, onToggleStar, onTrade,
+}: {
+  tok: TokenInfo;
+  starred: boolean;
+  onToggleStar: () => void;
+  onTrade: () => void;
+}) {
   const change = tok.priceChange24h;
   const up = change != null && change > 0;
   const down = change != null && change < 0;
@@ -129,6 +168,20 @@ function Row({ tok, onTrade }: { tok: TokenInfo; onTrade: () => void }) {
 
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
+      <TableCell className="pr-0">
+        <button
+          type="button"
+          onClick={onToggleStar}
+          aria-label={starred ? 'Remove favorite' : 'Add favorite'}
+          className="p-1 hover:bg-muted/40 rounded transition-colors"
+        >
+          <Star
+            className={`h-4 w-4 ${
+              starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'
+            }`}
+          />
+        </button>
+      </TableCell>
       <TableCell>
         <Link href={`/token/${tok.mint}`} className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">

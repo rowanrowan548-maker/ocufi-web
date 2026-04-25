@@ -46,11 +46,13 @@
       "title": "Token Markets",
       "subtitle": "Sorted by 24h volume · click action to trade",
       "tabs": {
+        "fav": "Favorites",
         "all": "All",
         "major": "Majors",
         "meme": "Meme",
         "stable": "Stables"
       },
+      "emptyFav": "No favorites yet — tap the star to add",
       "cols": {
         "name": "Name",
         "price": "Price",
@@ -632,5 +634,96 @@
     "confirm": "Confirm",
     "close": "Close",
     "comingSoon": "Coming Soon"
+  },
+  "legal": {
+    "footer": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "disclaimer": "Disclaimer"
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: 2026-04-25",
+      "s1": {
+        "h": "What we collect",
+        "b": "Ocufi is a non-custodial trading terminal. We never ask for an account, never store your private keys, never store your seed phrase.\n\nThe following pass through our service:\n· Your wallet public key (provided by your browser wallet extension, used to sign tx)\n· Your trade history (public on-chain data, visible to anyone on Solscan)\n· Standard HTTP headers (IP, User-Agent) produced by Vercel / RPC nodes\n· Favorite token mints (stored only in your browser localStorage; our servers never see them)"
+      },
+      "s2": {
+        "h": "What we don't collect",
+        "b": "We do not collect: private keys, seed phrases, email, phone, KYC documents, biometrics, social accounts, device fingerprints.\n\nIf any page claims to be Ocufi but asks for these, it is a phishing site — close it and reach the real product through ocufi.io."
+      },
+      "s3": {
+        "h": "Third-party services",
+        "b": "Jupiter Aggregator (quote + routing), DexScreener (market data), GeckoTerminal (trade feed), RugCheck (token safety), Helius / Solana RPC (on-chain access), Vercel (hosting).\n\nEach has its own privacy policy. We do not actively forward anything beyond public on-chain data to them."
+      },
+      "s4": {
+        "h": "Cookies / local storage",
+        "b": "We use browser localStorage for a few preferences (favorites, slippage profile, locale). These never leave your browser.\n\nWe do not use third-party tracking cookies, do not show ads, do not integrate Google Analytics. The backend API keeps short-lived session logs (max 30 days) for debugging only."
+      },
+      "s5": {
+        "h": "Points system",
+        "b": "When you complete a trade with your wallet, we record points server-side keyed by wallet address (wallet, tx signature, timestamp). This data is used only for the leaderboard (addresses are masked) and is not shared with third parties.\n\nYou can stop using Ocufi any time. There is no \"delete account\" button because we never created an account — only a few public on-chain records associated with your wallet."
+      },
+      "s6": {
+        "h": "Contact",
+        "b": "Questions about this policy? Open a GitHub Issue (github.com/rowanrowan548-maker/ocufi-web) or email support@ocufi.io (placeholder, V2)."
+      }
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "lastUpdated": "Last updated: 2026-04-25",
+      "s1": {
+        "h": "Nature of service",
+        "b": "Ocufi provides an open-source frontend that helps you interact with on-chain DEX aggregators (Jupiter) on Solana. Your funds always remain in your wallet. All transactions are signed by you in your wallet and broadcast on-chain. Ocufi does not custody your funds, does not place orders on your behalf, and cannot reverse confirmed on-chain transactions."
+      },
+      "s2": {
+        "h": "User responsibilities",
+        "b": "You must verify yourself that:\n· The wallet address, trade contents, and contract address are correct\n· The token you are buying is not prohibited in your jurisdiction\n· You understand on-chain transactions are irreversible once broadcast\n· You comply with the tax, AML, and CFT laws of your jurisdiction\n\nOcufi is not responsible for your decisions."
+      },
+      "s3": {
+        "h": "Fees",
+        "b": "Ocufi charges a 0.1% SOL fee on each buy (collected via SystemProgram.transfer to the Ocufi vault before the swap). Sells are free in V1. All fees are transparent and the deployed code is fully auditable on GitHub."
+      },
+      "s4": {
+        "h": "Prohibited use",
+        "b": "Do not use Ocufi for money laundering, fraud, market manipulation, or unauthorized financial activity. Do not scrape our endpoints, DoS our or any third-party APIs, or bypass any safety mechanism. We reserve the right to block IPs or wallet addresses from our frontend on detection."
+      },
+      "s5": {
+        "h": "Limitation of liability",
+        "b": "Ocufi software is provided \"AS IS\" without any warranty. We are not liable for:\n· Token devaluation, liquidity rug pulls, abandoned projects\n· Solana network congestion, RPC outages, failed transactions\n· Third-party API issues (Jupiter, DexScreener, RugCheck, Helius, etc.)\n· Mistyped addresses or phishing attacks\n\nOur maximum aggregate liability for any direct or indirect damage caused by use of this service is zero USD."
+      },
+      "s6": {
+        "h": "Service changes",
+        "b": "We may modify, suspend, or sunset any feature without notice. Significant changes will be announced on-site or via Twitter/TG. Continued use implies acceptance of the latest terms."
+      },
+      "s7": {
+        "h": "Governing law",
+        "b": "Interpretation, validity, and dispute resolution under these terms follow the law of the jurisdiction where the code is hosted. For on-chain disputes, the chain record is authoritative."
+      }
+    },
+    "disclaimer": {
+      "title": "Disclaimer",
+      "lastUpdated": "Last updated: 2026-04-25",
+      "s1": {
+        "h": "Not financial advice",
+        "b": "All prices, liquidity, market cap, risk scores, and holder data shown in Ocufi come from third-party public data sources (DexScreener, RugCheck, GeckoTerminal, Solana RPC). They are presented for information only and **do not constitute investment advice**.\n\nWhether to buy, how much to buy, when to sell — all of this is your decision."
+      },
+      "s2": {
+        "h": "Data may be stale or wrong",
+        "b": "We try to keep data fresh, but third-party APIs may lag, rate-limit, or return wrong data. Always defer to Solscan / your wallet's actual on-chain values.\n\nBefore trading, double-check the contract address — there are too many tokens with the same name; only the contract address is the true identity."
+      },
+      "s3": {
+        "h": "Risk score is a heuristic",
+        "b": "The \"safety check\" score on the token detail page is based on data from RugCheck (mint authority, LP lock %, top-10 concentration, etc.). This is a **rule-based approximation**: it can over-flag legitimate tokens (e.g. USDC keeps freeze authority for compliance) and can miss novel scams. **Passing the check does NOT mean it is safe to invest**."
+      },
+      "s4": {
+        "h": "You may lose your entire principal",
+        "b": "Crypto-asset prices are highly volatile, especially memecoins and newly launched tokens. **Only trade with funds you can afford to lose entirely**.\n\nCommon loss vectors: rug pulls, sharp dumps, slippage, buying scam contracts, private-key theft, malicious approvals, malicious wallet extensions."
+      },
+      "s5": {
+        "h": "Compliance and tax",
+        "b": "You must understand and comply with the cryptocurrency holding, trading, and reporting laws of your jurisdiction. Ocufi makes no compliance determinations or tax calculations on your behalf."
+      }
+    }
   }
 }

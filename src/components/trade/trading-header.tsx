@@ -7,12 +7,13 @@
  */
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Copy, Check, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
+import { Copy, Check, TrendingUp, TrendingDown, ExternalLink, Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { fetchTokenDetail, overallRisk, type TokenDetail } from '@/lib/token-info';
 import { RiskBadge } from '@/components/token/risk-badge';
 import { useTranslations } from 'next-intl';
 import { getCurrentChain } from '@/config/chains';
+import { useFavorites } from '@/lib/favorites';
 
 interface Props {
   mint: string;
@@ -26,6 +27,8 @@ export function TradingHeader({ mint, detail: detailProp }: Props) {
   const [detail, setDetail] = useState<TokenDetail | null>(detailProp ?? null);
   const [loading, setLoading] = useState(!detailProp);
   const [copied, setCopied] = useState(false);
+  const { isFavorite, toggle } = useFavorites();
+  const starred = isFavorite(mint);
 
   useEffect(() => {
     if (detailProp !== undefined) {
@@ -94,6 +97,18 @@ export function TradingHeader({ mint, detail: detailProp }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xl font-bold tracking-tight">{detail.symbol}</span>
+              <button
+                type="button"
+                onClick={() => toggle(mint)}
+                aria-label={starred ? 'Remove favorite' : 'Add favorite'}
+                className="p-1 hover:bg-muted/40 rounded transition-colors"
+              >
+                <Star
+                  className={`h-4 w-4 ${
+                    starred ? 'fill-warning text-warning' : 'text-muted-foreground/50'
+                  }`}
+                />
+              </button>
               <RiskBadge level={risk} label={t(`token.risk.${risk}`)} />
             </div>
             <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">

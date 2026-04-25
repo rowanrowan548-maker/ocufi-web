@@ -11,6 +11,7 @@ import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
 import { MarketSnapshot } from '@/components/landing/market-snapshot';
 import { TokenList } from '@/components/landing/token-list';
+import { PriceTicker } from '@/components/landing/price-ticker';
 
 export default async function Landing({
   params,
@@ -40,6 +41,9 @@ export default async function Landing({
 
   return (
     <main className="flex flex-1 flex-col">
+      {/* ═══════ Price Ticker ═══════ */}
+      <PriceTicker />
+
       {/* ═══════ Hero ═══════ */}
       <section className="relative px-4 sm:px-6 pt-10 sm:pt-16 pb-6 sm:pb-10 overflow-hidden">
         <div
@@ -161,7 +165,7 @@ export default async function Landing({
           <div className="font-mono">
             © {new Date().getFullYear()} Ocufi · {chain.name} · v0.4
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <a
               href="https://x.com/Ocufi_io"
               target="_blank"
@@ -179,6 +183,9 @@ export default async function Landing({
               GitHub
             </a>
             <Link href="/faq" className="hover:text-foreground">FAQ</Link>
+            <Link href="/legal/privacy" className="hover:text-foreground">{t('legal.footer.privacy')}</Link>
+            <Link href="/legal/terms" className="hover:text-foreground">{t('legal.footer.terms')}</Link>
+            <Link href="/legal/disclaimer" className="hover:text-foreground">{t('legal.footer.disclaimer')}</Link>
           </div>
         </div>
       </footer>
