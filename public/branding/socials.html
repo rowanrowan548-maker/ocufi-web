@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ocufi · 社媒物料下载</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 32px;
+      font-family: -apple-system, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #0a0b0d; color: #fafafa; line-height: 1.5;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.02em; }
+    .sub { color: #8b8d94; font-size: 14px; margin: 0 0 28px; }
+
+    .group {
+      margin-bottom: 32px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: #13151a;
+      overflow: hidden;
+    }
+    .group h2 {
+      margin: 0; padding: 16px 20px;
+      font-size: 16px; font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .group .body { padding: 20px; }
+
+    .preview {
+      background:
+        repeating-conic-gradient(rgba(255,255,255,0.04) 0% 25%, transparent 0% 50%) 50% / 20px 20px,
+        #0a0b0d;
+      border-radius: 8px;
+      padding: 24px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      min-height: 200px;
+    }
+    .preview img { max-width: 100%; height: auto; border-radius: 6px; }
+    .preview.avatar img { width: 200px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,0.06); }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    button {
+      background: rgba(25,251,155,0.1);
+      border: 1px solid rgba(25,251,155,0.3);
+      color: #19fb9b;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 150ms;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit;
+    }
+    button:hover { background: rgba(25,251,155,0.18); border-color: rgba(25,251,155,0.5); }
+    button:active { transform: translateY(1px); }
+    button.secondary {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.1);
+      color: #a1a1aa;
+    }
+    button.secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+
+    .meta {
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 11px; color: #71717a;
+      margin-top: 12px;
+    }
+
+    .colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .color {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; overflow: hidden;
+    }
+    .color .swatch { height: 64px; }
+    .color .info { padding: 8px 10px; }
+    .color .name { font-size: 11px; color: #71717a; }
+    .color .hex { font-size: 13px; font-family: ui-monospace, monospace; color: #fafafa; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #19fb9b; color: #0a0b0d;
+      padding: 10px 20px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; opacity: 0; transition: all 200ms;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <h1>Ocufi 社媒物料下载</h1>
+  <p class="sub">点按钮直接下载对应规格的 PNG / SVG。所有图都是 Arc O · 品牌绿 #19FB9B 主题。</p>
+
+  <!-- ─── 头像 ─── -->
+  <div class="group">
+    <h2>📸 头像 · Avatar</h2>
+    <div class="body">
+      <div class="preview avatar">
+        <img src="avatar.svg" alt="avatar" />
+      </div>
+      <div class="actions">
+        <button data-svg="avatar.svg" data-w="400" data-h="400" data-name="ocufi-avatar-400-twitter.png">
+          ⬇ Twitter 400×400 PNG
+        </button>
+        <button data-svg="avatar.svg" data-w="512" data-h="512" data-name="ocufi-avatar-512-tg.png">
+          ⬇ TG / Discord 512×512 PNG
+        </button>
+        <button data-svg="avatar.svg" data-w="1024" data-h="1024" data-name="ocufi-avatar-1024-hd.png">
+          ⬇ 1024×1024 高清 PNG
+        </button>
+        <button class="secondary" onclick="downloadSvg('avatar.svg', 'ocufi-avatar.svg')">
+          ⬇ SVG 矢量原文件
+        </button>
+      </div>
+      <div class="meta">用途:Twitter / TG / Discord / GitHub 头像。任何要求圆形显示的地方都安全(中心安全区 60%)</div>
+    </div>
+  </div>
+
+  <!-- ─── Logo + 字标 ─── -->
+  <div class="group">
+    <h2>🅾️ Logo + Wordmark · 横排锁层</h2>
+    <div class="body">
+      <div class="preview">
+        <img src="lockup.svg" alt="lockup" style="max-width: 480px;" />
+      </div>
+      <div class="actions">
+        <button data-svg="lockup.svg" data-w="600" data-h="200" data-name="ocufi-lockup-600.png">
+          ⬇ 600×200 PNG
+        </button>
+        <button data-svg="lockup.svg" data-w="1200" data-h="400" data-name="ocufi-lockup-1200.png">
+          ⬇ 1200×400 PNG(高清)
+        </button>
+        <button class="secondary" onclick="downloadSvg('lockup.svg', 'ocufi-lockup.svg')">
+          ⬇ SVG 矢量
+        </button>
+      </div>
+      <div class="meta">用途:文档 / 媒体稿件 / 海报里署名;Logo + Ocufi 字标横向锁层</div>
+    </div>
+  </div>
+
+  <!-- ─── Twitter Banner ─── -->
+  <div class="group">
+    <h2>🐦 Twitter / X Banner · 1500×500</h2>
+    <div class="body">
+      <div class="preview">
+        <img src="banner-twitter.svg" alt="twitter banner" />
+      </div>
+      <div class="actions">
+        <button data-svg="banner-twitter.svg" data-w="1500" data-h="500" data-name="ocufi-banner-twitter-1500x500.png">
+          ⬇ 1500×500 PNG(原尺寸)
+        </button>
+        <button data-svg="banner-twitter.svg" data-w="3000" data-h="1000" data-name="ocufi-banner-twitter-3000x1000.png">
+          ⬇ 3000×1000 PNG(2x 高清)
+        </button>
+        <button class="secondary" onclick="downloadSvg('banner-twitter.svg', 'ocufi-banner-twitter.svg')">
+          ⬇ SVG 矢量
+        </button>
+      </div>
+      <div class="meta">用途:Twitter / X 个人主页顶部 banner。安全区:左右各留 100px 不放关键内容(避免被头像挡)</div>
+    </div>
+  </div>
+
+  <!-- ─── TG Banner ─── -->
+  <div class="group">
+    <h2>✈ Telegram Channel Banner · 1280×640</h2>
+    <div class="body">
+      <div class="preview">
+        <img src="banner-tg.svg" alt="tg banner" />
+      </div>
+      <div class="actions">
+        <button data-svg="banner-tg.svg" data-w="1280" data-h="640" data-name="ocufi-banner-tg-1280x640.png">
+          ⬇ 1280×640 PNG(原尺寸)
+        </button>
+        <button data-svg="banner-tg.svg" data-w="2560" data-h="1280" data-name="ocufi-banner-tg-2560x1280.png">
+          ⬇ 2560×1280 PNG(2x 高清)
+        </button>
+        <button class="secondary" onclick="downloadSvg('banner-tg.svg', 'ocufi-banner-tg.svg')">
+          ⬇ SVG 矢量
+        </button>
+      </div>
+      <div class="meta">用途:TG channel / group cover photo。Discord server banner 也可以用</div>
+    </div>
+  </div>
+
+  <!-- ─── 品牌色板 ─── -->
+  <div class="group">
+    <h2>🎨 品牌色板</h2>
+    <div class="body">
+      <div class="colors">
+        <div class="color"><div class="swatch" style="background:#19FB9B"></div><div class="info"><div class="name">Primary · 品牌绿</div><div class="hex">#19FB9B</div></div></div>
+        <div class="color"><div class="swatch" style="background:#0A0B0D"></div><div class="info"><div class="name">Background · 深黑</div><div class="hex">#0A0B0D</div></div></div>
+        <div class="color"><div class="swatch" style="background:#13151A"></div><div class="info"><div class="name">Card · 卡片</div><div class="hex">#13151A</div></div></div>
+        <div class="color"><div class="swatch" style="background:#FAFAFA"></div><div class="info"><div class="name" style="color:#0a0b0d">Foreground · 白</div><div class="hex" style="color:#0a0b0d">#FAFAFA</div></div></div>
+        <div class="color"><div class="swatch" style="background:#8B8D94"></div><div class="info"><div class="name">Muted · 次要文字</div><div class="hex">#8B8D94</div></div></div>
+        <div class="color"><div class="swatch" style="background:#EF4444"></div><div class="info"><div class="name">Danger · 跌</div><div class="hex">#EF4444</div></div></div>
+      </div>
+      <div class="meta" style="margin-top:14px">复制 hex 给设计师 / 直接做关键字标记;主色 + 副色都列在这了</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">下载好了 ✓</div>
+
+  <script>
+    /** SVG → Canvas → PNG 下载 */
+    async function svgToPng(svgUrl, w, h, filename) {
+      const res = await fetch(svgUrl);
+      const svgText = await res.text();
+      // 内联 SVG 数据,避免外链 / CORS 问题
+      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((b) => {
+            if (!b) return reject(new Error('toBlob 失败'));
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(a.href);
+            resolve();
+          }, 'image/png', 0.95);
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    /** SVG 原文件下载 */
+    function downloadSvg(svgUrl, filename) {
+      fetch(svgUrl).then(r => r.blob()).then(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+        showToast();
+      });
+    }
+
+    function showToast() {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    document.querySelectorAll('button[data-svg]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const svg = btn.dataset.svg;
+        const w = +btn.dataset.w;
+        const h = +btn.dataset.h;
+        const name = btn.dataset.name;
+        btn.disabled = true;
+        const orig = btn.textContent;
+        btn.textContent = '生成中…';
+        try {
+          await svgToPng(svg, w, h, name);
+          showToast();
+        } catch (e) {
+          alert('生成失败: ' + e.message);
+        } finally {
+          btn.textContent = orig;
+          btn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

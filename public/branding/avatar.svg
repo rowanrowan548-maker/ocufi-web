@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" aria-label="Ocufi Avatar">
+  <defs>
+    <radialGradient id="brandGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#19FB9B" stop-opacity="0.20"/>
+      <stop offset="60%" stop-color="#19FB9B" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#19FB9B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- 全屏深黑底 -->
+  <rect width="1024" height="1024" fill="#0A0B0D"/>
+  <!-- 中心品牌色光晕 -->
+  <rect width="1024" height="1024" fill="url(#brandGlow)"/>
+  <!-- Arc O · 居中,半径 307(60% 安全区) -->
+  <g transform="translate(512, 512)">
+    <path d="M 0 -307 A 307 307 0 0 1 307 0" stroke="#19FB9B" stroke-width="78" fill="none" stroke-linecap="round"/>
+    <path d="M 0 307 A 307 307 0 0 1 -307 0" stroke="#19FB9B" stroke-width="78" fill="none" stroke-linecap="round"/>
+    <path d="M 307 0 A 307 307 0 0 1 0 307" stroke="#19FB9B" stroke-width="78" fill="none" stroke-linecap="round" opacity="0.3"/>
+    <path d="M -307 0 A 307 307 0 0 1 0 -307" stroke="#19FB9B" stroke-width="78" fill="none" stroke-linecap="round" opacity="0.3"/>
+    <circle cx="0" cy="0" r="61" fill="#19FB9B"/>
+  </g>
+</svg>

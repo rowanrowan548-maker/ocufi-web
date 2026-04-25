@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200" aria-label="Ocufi · Logo + Wordmark">
+  <!-- Arc O 左侧,大小 160 -->
+  <g transform="translate(100, 100)">
+    <path d="M 0 -55 A 55 55 0 0 1 55 0" stroke="#19FB9B" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M 0 55 A 55 55 0 0 1 -55 0" stroke="#19FB9B" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M 55 0 A 55 55 0 0 1 0 55" stroke="#19FB9B" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.3"/>
+    <path d="M -55 0 A 55 55 0 0 1 0 -55" stroke="#19FB9B" stroke-width="14" fill="none" stroke-linecap="round" opacity="0.3"/>
+    <circle cx="0" cy="0" r="11" fill="#19FB9B"/>
+  </g>
+  <!-- Wordmark · Ocufi -->
+  <text x="200" y="135"
+        font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif"
+        font-size="120" font-weight="700" letter-spacing="-3" fill="#FAFAFA">Ocufi</text>
+</svg>
