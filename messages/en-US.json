@@ -790,8 +790,18 @@
     "button": "Share",
     "shareText": "I'm trading on Solana with Ocufi — only 0.1% fee (vs 1% on competitors). Come try 👇",
     "shared": "Shared",
-    "downloadHint": "Card downloaded · Twitter compose opened — paste the image to attach",
-    "failed": "Generation failed, please retry"
+    "downloadHint": "Card downloaded · paste or upload it in the opened window",
+    "downloaded": "Downloaded",
+    "failed": "Generation failed, please retry",
+    "copiedImage": "Image copied to clipboard — paste anywhere",
+    "copyFailed": "Browser can't copy images — use Download instead",
+    "chooseChannel": "Share via",
+    "via": {
+      "twitter": "Twitter / X",
+      "telegram": "Telegram",
+      "copyImage": "Copy image",
+      "download": "Download"
+    }
   },
   "feedback": {
     "label": "Feedback",

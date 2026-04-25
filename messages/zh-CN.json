@@ -805,8 +805,18 @@
     "button": "晒一单",
     "shareText": "我用 Ocufi 在 Solana 上做交易,手续费只要 0.1%(竞品 1%)。来试试 👇",
     "shared": "分享成功",
-    "downloadHint": "卡片已下载到本地 · Twitter 撰写窗口已打开,记得粘贴图片",
-    "failed": "生成失败,稍后再试"
+    "downloadHint": "卡片已下载,在打开的页面里粘贴或上传图片即可",
+    "downloaded": "已下载到本地",
+    "failed": "生成失败,稍后再试",
+    "copiedImage": "图片已复制到剪贴板,粘贴即用",
+    "copyFailed": "浏览器不支持复制图片,改用「下载」",
+    "chooseChannel": "分享到",
+    "via": {
+      "twitter": "Twitter / X",
+      "telegram": "Telegram",
+      "copyImage": "复制图片",
+      "download": "下载到本地"
+    }
   },
   "feedback": {
     "label": "反馈",

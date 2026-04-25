@@ -1,26 +1,34 @@
 /**
  * 交易晒单卡 · 客户端 Canvas 生图
  *
- * 输出 1200×675 PNG(Twitter card 1.91:1)· 品牌色 + 邀请码水印
+ * 输出 1200×675 PNG(Twitter card 1.91:1)
  *
- * 不依赖外部 lib,纯 Canvas API。Logo 跨域加载失败自动跳过(用 symbol 大字代替)
+ * 布局:
+ *   ┌──────────────────────────────────┬──────────────────────────────┐
+ *   │ Brand + BUY/SELL + symbol        │  Token logo(大圆)            │
+ *   │ Amount / SOL / USD               │  24h 价格曲线 + 涨跌%        │
+ *   ├──────────────────────────────────┴──────────────────────────────┤
+ *   │ Powered by Ocufi · 0.2% fee     ocufi.io/?ref=xxxxxx            │
+ *   └─────────────────────────────────────────────────────────────────┘
+ *
+ * 不依赖外部 lib;Logo 跨域失败用 symbol 圆形大字代替
  */
 
 export interface ShareCardData {
   kind: 'buy' | 'sell';
   symbol: string;
-  /** token 数量 */
   amount: number;
-  /** 配对的 SOL 数(买入花的 / 卖出收到的) */
   solAmount: number;
-  /** 折合 USD,可选 */
   usdAmount?: number;
-  /** logo URL,可选(跨域失败会跳过) */
   logoUrl?: string;
-  /** 邀请码,水印用 */
   inviteCode: string;
-  /** 卖出的盈亏 %,可选 */
   pnlPct?: number;
+  /** 当前美元价 + 4 个时点变化 % · 用于右侧 24h 价格曲线 */
+  priceUsd?: number;
+  priceChange24h?: number;
+  priceChange6h?: number;
+  priceChange1h?: number;
+  priceChange5m?: number;
 }
 
 const W = 1200;
@@ -28,11 +36,15 @@ const H = 675;
 
 const COLORS = {
   bg: '#0A0B0D',
+  bg2: '#0F1115',
   accent: '#19FB9B',
+  accentDim: 'rgba(25,251,155,0.15)',
   danger: '#EF4444',
+  dangerDim: 'rgba(239,68,68,0.15)',
   fg: '#fafafa',
   muted: '#a1a1aa',
   dim: '#71717a',
+  grid: 'rgba(255,255,255,0.04)',
 };
 
 export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
@@ -42,126 +54,203 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas 2d context unavailable');
 
-  // 背景
+  // ── 背景:深色 + 微网格 + 左上品牌色径向光 ──
   ctx.fillStyle = COLORS.bg;
   ctx.fillRect(0, 0, W, H);
 
-  // 顶部品牌色径向光
-  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 900);
-  grad.addColorStop(0, 'rgba(25,251,155,0.10)');
+  // 网格
+  ctx.strokeStyle = COLORS.grid;
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, H);
+    ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(W, y + 0.5);
+    ctx.stroke();
+  }
+
+  // 左上品牌径向光
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 700);
+  grad.addColorStop(0, 'rgba(25,251,155,0.13)');
+  grad.addColorStop(0.6, 'rgba(25,251,155,0.04)');
   grad.addColorStop(1, 'rgba(25,251,155,0)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // 角落装饰线
-  ctx.strokeStyle = 'rgba(25,251,155,0.25)';
-  ctx.lineWidth = 1;
+  // 右下副色径向光(轻)
+  const grad2 = ctx.createRadialGradient(W, H, 0, W, H, 600);
+  const isBuy = data.kind === 'buy';
+  grad2.addColorStop(0, isBuy ? 'rgba(25,251,155,0.06)' : 'rgba(239,68,68,0.06)');
+  grad2.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad2;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── 顶部品牌 ──
+  // OCUFI logo wordmark · 加粗 + 字间距
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = 'bold 38px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
+  ctx.fillText('OCUFI', 60, 95);
+
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.fillText('Solana · Non-custodial · 0.2% fee', 60, 122);
+
+  // 顶部 Brand 装饰线
+  ctx.strokeStyle = 'rgba(25,251,155,0.4)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(60, 60);
-  ctx.lineTo(180, 60);
+  ctx.lineTo(220, 60);
   ctx.stroke();
 
-  // 顶部 Ocufi 字标
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 36px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
-  ctx.fillText('OCUFI', 60, 95);
-  ctx.fillStyle = COLORS.muted;
-  ctx.font = '16px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText('Solana · Non-custodial', 60, 120);
-
-  // Buy/Sell 大徽章
-  const isBuy = data.kind === 'buy';
+  // ── 左侧:交易信息 ──
+  // BUY/SELL 大徽章
   const badgeColor = isBuy ? COLORS.accent : COLORS.danger;
   const badgeText = isBuy ? 'BOUGHT' : 'SOLD';
   ctx.fillStyle = badgeColor;
-  roundRect(ctx, 60, 220, 160, 56, 8);
+  roundRect(ctx, 60, 215, 170, 56, 8);
   ctx.fill();
   ctx.fillStyle = COLORS.bg;
   ctx.font = 'bold 26px ui-sans-serif, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(badgeText, 140, 248);
+  ctx.fillText(badgeText, 145, 244);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
 
-  // Token logo(可选 · 跨域失败跳过)
-  let symbolX = 250;
-  if (data.logoUrl) {
-    try {
-      const img = await loadImage(data.logoUrl);
-      const cx = 290, cy = 248, r = 32;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-      ctx.restore();
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      symbolX = 340;
-    } catch { /* logo 加载失败,跳过 */ }
-  }
-
-  // Token symbol 大字
+  // Symbol 大字(在徽章右边)
   ctx.fillStyle = COLORS.fg;
-  ctx.font = 'bold 48px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
+  ctx.font = 'bold 52px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
   const sym = `$${truncate(data.symbol, 12)}`;
-  ctx.fillText(sym, symbolX, 260);
+  ctx.fillText(sym, 250, 257);
 
-  // 数量 + SOL
+  // 数量(symbol 单位)
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '28px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.font = '24px ui-monospace, "SF Mono", Menlo, monospace';
   ctx.fillText(
     `${formatNumber(data.amount)} ${truncate(data.symbol, 10)}`,
     60,
-    360,
+    340,
   );
 
+  // SOL 大字
   ctx.fillStyle = COLORS.fg;
   ctx.font = 'bold 56px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText(`${data.solAmount.toFixed(4)} SOL`, 60, 432);
+  ctx.fillText(`${data.solAmount.toFixed(4)} SOL`, 60, 410);
 
+  // USD
   if (data.usdAmount && data.usdAmount > 0) {
     ctx.fillStyle = COLORS.muted;
     ctx.font = '22px ui-monospace, monospace';
-    ctx.fillText(`≈ $${data.usdAmount.toFixed(2)} USD`, 60, 470);
+    ctx.fillText(`≈ $${data.usdAmount.toFixed(2)} USD`, 60, 446);
   }
 
-  // PnL(卖出 only · 可选)
+  // PnL(卖出且有数据)
   if (data.kind === 'sell' && data.pnlPct != null && Number.isFinite(data.pnlPct)) {
     const pnlColor = data.pnlPct >= 0 ? COLORS.accent : COLORS.danger;
     const sign = data.pnlPct >= 0 ? '+' : '';
     ctx.fillStyle = pnlColor;
     ctx.font = 'bold 64px ui-monospace, monospace';
-    ctx.fillText(`${sign}${data.pnlPct.toFixed(2)}%`, 60, 545);
+    ctx.fillText(`${sign}${data.pnlPct.toFixed(2)}%`, 60, 525);
     ctx.fillStyle = COLORS.muted;
-    ctx.font = '18px ui-sans-serif, sans-serif';
-    ctx.fillText('realized', 60, 570);
+    ctx.font = '16px ui-sans-serif, sans-serif';
+    ctx.fillText('realized P/L', 60, 548);
   }
 
-  // 底部水印
-  // 分隔线
+  // ── 右侧:Logo + 价格曲线 ──
+  const RIGHT_X = 660;
+  const RIGHT_W = W - RIGHT_X - 60;  // 480
+  const LOGO_R = 70;
+  const LOGO_CX = RIGHT_X + RIGHT_W / 2;
+  const LOGO_CY = 230;
+
+  // Logo 圆形容器(光晕)
+  const logoGlow = ctx.createRadialGradient(LOGO_CX, LOGO_CY, LOGO_R, LOGO_CX, LOGO_CY, LOGO_R + 60);
+  logoGlow.addColorStop(0, 'rgba(25,251,155,0.18)');
+  logoGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = logoGlow;
+  ctx.fillRect(RIGHT_X - 40, LOGO_CY - LOGO_R - 80, RIGHT_W + 80, LOGO_R * 2 + 160);
+
+  // 实际 logo
+  let logoOk = false;
+  if (data.logoUrl) {
+    try {
+      const img = await loadImage(data.logoUrl);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(LOGO_CX, LOGO_CY, LOGO_R, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(img, LOGO_CX - LOGO_R, LOGO_CY - LOGO_R, LOGO_R * 2, LOGO_R * 2);
+      ctx.restore();
+      logoOk = true;
+    } catch { /* fallback: 大字 symbol */ }
+  }
+
+  if (!logoOk) {
+    // Fallback:用 symbol 头两位做大字 logo
+    ctx.fillStyle = COLORS.bg2;
+    ctx.beginPath();
+    ctx.arc(LOGO_CX, LOGO_CY, LOGO_R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = COLORS.accent;
+    ctx.font = 'bold 56px ui-sans-serif, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(data.symbol.slice(0, 2).toUpperCase(), LOGO_CX, LOGO_CY);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  // Logo 圆形边框
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(LOGO_CX, LOGO_CY, LOGO_R, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 当前价(logo 下方)
+  if (data.priceUsd && data.priceUsd > 0) {
+    ctx.fillStyle = COLORS.muted;
+    ctx.font = '14px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('CURRENT PRICE', LOGO_CX, LOGO_CY + LOGO_R + 28);
+    ctx.fillStyle = COLORS.fg;
+    ctx.font = 'bold 32px ui-monospace, monospace';
+    ctx.fillText(formatPrice(data.priceUsd), LOGO_CX, LOGO_CY + LOGO_R + 60);
+    ctx.textAlign = 'left';
+  }
+
+  // 24h 涨跌 + sparkline · 卡片底部
+  drawSparkline(ctx, data, {
+    x: RIGHT_X,
+    y: 410,
+    w: RIGHT_W,
+    h: 130,
+  });
+
+  // ── 底部水印 ──
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(60, 600);
-  ctx.lineTo(W - 60, 600);
+  ctx.moveTo(60, 605);
+  ctx.lineTo(W - 60, 605);
   ctx.stroke();
 
   ctx.fillStyle = COLORS.dim;
-  ctx.font = '18px ui-sans-serif, sans-serif';
-  ctx.fillText('Powered by Ocufi · 0.2% fee · open-source', 60, 633);
+  ctx.font = '17px ui-sans-serif, sans-serif';
+  ctx.fillText('Powered by Ocufi · open-source · audit-friendly', 60, 638);
 
   ctx.fillStyle = COLORS.accent;
   ctx.font = 'bold 22px ui-monospace, monospace';
   const inviteUrl = `ocufi.io/?ref=${data.inviteCode}`;
-  // 右下角对齐
   const w = ctx.measureText(inviteUrl).width;
-  ctx.fillText(inviteUrl, W - 60 - w, 633);
+  ctx.fillText(inviteUrl, W - 60 - w, 638);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -172,13 +261,122 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   });
 }
 
+function drawSparkline(
+  ctx: CanvasRenderingContext2D,
+  data: ShareCardData,
+  rect: { x: number; y: number; w: number; h: number },
+) {
+  const { x, y, w, h } = rect;
+  const cur = data.priceUsd ?? 0;
+  if (cur <= 0) return;
+
+  // 5 个锚点:24h/6h/1h/5m/now,不存在的字段当 0(无变化)
+  const points = [
+    priceFromPctChange(cur, data.priceChange24h),
+    priceFromPctChange(cur, data.priceChange6h),
+    priceFromPctChange(cur, data.priceChange1h),
+    priceFromPctChange(cur, data.priceChange5m),
+    cur,
+  ];
+
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || max * 0.005 || 1;
+
+  const padTop = 10, padBot = 32;
+  const xs = points.map((_, i) => x + (i / (points.length - 1)) * w);
+  const ys = points.map((p) => y + padTop + (1 - (p - min) / range) * (h - padTop - padBot));
+
+  // 涨绿跌红
+  const change24h = data.priceChange24h ?? 0;
+  const up = change24h >= 0;
+  const stroke = up ? COLORS.accent : COLORS.danger;
+
+  // 渐变 area 填充
+  const fillGrad = ctx.createLinearGradient(x, y, x, y + h);
+  fillGrad.addColorStop(0, up ? 'rgba(25,251,155,0.35)' : 'rgba(239,68,68,0.35)');
+  fillGrad.addColorStop(1, up ? 'rgba(25,251,155,0)' : 'rgba(239,68,68,0)');
+
+  // 平滑曲线(每两点之间用 quadratic curve 中点法)
+  ctx.beginPath();
+  ctx.moveTo(xs[0], ys[0]);
+  for (let i = 1; i < xs.length; i++) {
+    const mx = (xs[i - 1] + xs[i]) / 2;
+    const my = (ys[i - 1] + ys[i]) / 2;
+    ctx.quadraticCurveTo(xs[i - 1], ys[i - 1], mx, my);
+  }
+  ctx.lineTo(xs[xs.length - 1], ys[ys.length - 1]);
+
+  // area
+  const areaPath = new Path2D();
+  areaPath.moveTo(xs[0], ys[0]);
+  for (let i = 1; i < xs.length; i++) {
+    const mx = (xs[i - 1] + xs[i]) / 2;
+    const my = (ys[i - 1] + ys[i]) / 2;
+    areaPath.quadraticCurveTo(xs[i - 1], ys[i - 1], mx, my);
+  }
+  areaPath.lineTo(xs[xs.length - 1], ys[ys.length - 1]);
+  areaPath.lineTo(x + w, y + h - padBot);
+  areaPath.lineTo(x, y + h - padBot);
+  areaPath.closePath();
+  ctx.fillStyle = fillGrad;
+  ctx.fill(areaPath);
+
+  // line
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // 末点高亮
+  const lastX = xs[xs.length - 1];
+  const lastY = ys[ys.length - 1];
+  ctx.fillStyle = stroke;
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 底部时间标记 + 24h 涨跌大字
+  ctx.fillStyle = COLORS.dim;
+  ctx.font = '13px ui-monospace, monospace';
+  ctx.fillText('-24h', x, y + h - 10);
+  ctx.textAlign = 'right';
+  ctx.fillText('NOW', x + w, y + h - 10);
+  ctx.textAlign = 'left';
+
+  // 24h 涨跌徽章(右上角)
+  if (Math.abs(change24h) > 0.001) {
+    const sign = change24h >= 0 ? '+' : '';
+    const text = `${sign}${change24h.toFixed(2)}% 24H`;
+    ctx.font = 'bold 18px ui-monospace, monospace';
+    const tw = ctx.measureText(text).width;
+    const bx = x + w - tw - 16;
+    const by = y + 4;
+    const bh = 28;
+    ctx.fillStyle = up ? 'rgba(25,251,155,0.18)' : 'rgba(239,68,68,0.18)';
+    roundRect(ctx, bx - 8, by, tw + 16, bh, 6);
+    ctx.fill();
+    ctx.fillStyle = up ? COLORS.accent : COLORS.danger;
+    ctx.fillText(text, bx, by + 20);
+  }
+}
+
+function priceFromPctChange(currentPrice: number, pctChange?: number): number {
+  if (pctChange == null || !Number.isFinite(pctChange)) return currentPrice;
+  return currentPrice / (1 + pctChange / 100);
+}
+
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('image load failed'));
-    // 5s 内不下来就放弃
     setTimeout(() => reject(new Error('image timeout')), 5_000);
     img.src = url;
   });
@@ -204,6 +402,15 @@ function formatNumber(n: number): string {
   if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
   if (n >= 1) return n.toFixed(2);
   return n.toFixed(6);
+}
+
+function formatPrice(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  if (n >= 1000) return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (n >= 1) return '$' + n.toFixed(2);
+  if (n >= 0.01) return '$' + n.toFixed(4);
+  if (n >= 0.0001) return '$' + n.toFixed(6);
+  return '$' + n.toPrecision(3);
 }
 
 function truncate(s: string, n: number): string {
