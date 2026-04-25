@@ -22,7 +22,7 @@ import { ActivityBoard } from './activity-board';
 import { TradeTabs } from './trade-tabs';
 import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
-import { fetchTokenDetail, type TokenDetail } from '@/lib/token-info';
+import { fetchTokenDetail, overallRisk, type TokenDetail } from '@/lib/token-info';
 import { SOL_MINT } from '@/lib/preset-tokens';
 
 function isValidMint(s: string): boolean {
@@ -76,7 +76,7 @@ export function TradeScreen() {
         </div>
         {/* 右:交易表单 + 行情 + 安全 */}
         <div className="space-y-4">
-          <TradeTabs mint={mint} compact />
+          <TradeTabs mint={mint} compact risk={detail ? overallRisk(detail) : undefined} />
           <InfoPanel detail={detail} />
           <SafetyPanel detail={detail} />
         </div>

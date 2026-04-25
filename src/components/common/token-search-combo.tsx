@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { Search, ChevronDown, Loader2 } from 'lucide-react';
 import { PublicKey } from '@solana/web3.js';
 import { Input } from '@/components/ui/input';
-import { fetchTokenInfo, fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
+import { fetchTokenInfo, fetchTokensInfoBatch, searchTokens, type TokenInfo } from '@/lib/portfolio';
 import { PRESET_ALL } from '@/lib/preset-tokens';
 import { useTranslations } from 'next-intl';
 
@@ -40,6 +40,9 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
   const [presets, setPresets] = useState<TokenInfo[]>([]);
   const [current, setCurrent] = useState<TokenInfo | null>(null);
   const [externalLoading, setExternalLoading] = useState(false);
+  // 远端搜索结果(DexScreener)
+  const [remoteHits, setRemoteHits] = useState<TokenInfo[]>([]);
+  const [remoteLoading, setRemoteLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -84,7 +87,7 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
     return () => document.removeEventListener('mousedown', onClick);
   }, [open]);
 
-  const filtered = useMemo(() => {
+  const localFiltered = useMemo(() => {
     const q = input.trim().toLowerCase();
     if (!q) return presets;
     return presets.filter(
@@ -94,6 +97,32 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
         t.mint.toLowerCase().startsWith(q)
     );
   }, [input, presets]);
+
+  // 远端搜索 · 输入 >= 2 字符且不是完整 mint 时触发,防抖 350ms
+  useEffect(() => {
+    const q = input.trim();
+    if (q.length < 2 || isValidMint(q)) {
+      setRemoteHits([]);
+      setRemoteLoading(false);
+      return;
+    }
+    setRemoteLoading(true);
+    const id = setTimeout(() => {
+      searchTokens(q, 20)
+        .then((hits) => setRemoteHits(hits))
+        .catch(() => setRemoteHits([]))
+        .finally(() => setRemoteLoading(false));
+    }, 350);
+    return () => clearTimeout(id);
+  }, [input]);
+
+  // 合并 local + remote,去重保留 local 优先
+  const filtered = useMemo(() => {
+    if (remoteHits.length === 0) return localFiltered;
+    const seen = new Set(localFiltered.map((t) => t.mint));
+    const remoteOnly = remoteHits.filter((t) => !seen.has(t.mint));
+    return [...localFiltered, ...remoteOnly];
+  }, [localFiltered, remoteHits]);
 
   const inputIsMint = isValidMint(input.trim());
   const showRawMintOption =
@@ -207,9 +236,16 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
 
             {/* 候选列表 */}
             {filtered.length === 0 && !showRawMintOption ? (
-              <div className="py-8 text-center text-xs text-muted-foreground">
-                {t('noResults')}
-              </div>
+              remoteLoading ? (
+                <div className="py-8 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {t('loading')}
+                </div>
+              ) : (
+                <div className="py-8 text-center text-xs text-muted-foreground">
+                  {t('noResults')}
+                </div>
+              )
             ) : (
               filtered.map((tok) => (
                 <button

@@ -40,6 +40,7 @@ import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
 import { toast } from 'sonner';
+import type { OverallRisk } from '@/lib/token-info';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -71,9 +72,11 @@ interface BuyFormProps {
   mint?: string;
   /** 紧凑模式:去掉 max-width,把 form 撑满父容器 */
   compact?: boolean;
+  /** 上层算好的风险等级:high / critical 时弹"我知晓"勾选 */
+  risk?: OverallRisk;
 }
 
-export function BuyForm({ mint: mintProp, compact }: BuyFormProps = {}) {
+export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
   const t = useTranslations();
   const chain = getCurrentChain();
   const { connection } = useConnection();
@@ -434,6 +437,8 @@ export function BuyForm({ mint: mintProp, compact }: BuyFormProps = {}) {
         symbol={mint.trim() ? mint.trim().slice(0, 4) + '…' + mint.trim().slice(-4) : undefined}
         onConfirm={doBuy}
         confirming={stage === 'signing' || stage === 'sending'}
+        solAmount={quoteData?.inputSol}
+        highRisk={risk === 'high' || risk === 'critical'}
       />
     </>
   );

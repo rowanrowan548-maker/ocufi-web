@@ -132,3 +132,55 @@ export async function fetchSolUsdPrice(): Promise<number> {
   const info = await fetchTokenInfo(SOL_MINT);
   return info?.priceUsd ?? 0;
 }
+
+const DEXSCREENER_SEARCH_URL = 'https://api.dexscreener.com/latest/dex/search';
+
+/**
+ * 按 symbol / name 搜索 Solana 代币(走 DexScreener)
+ * 同一 baseToken 可能多个 pair,按流动性聚合后只取每个 mint 最深的那个
+ */
+export async function searchTokens(query: string, limit = 20): Promise<TokenInfo[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  try {
+    const res = await fetch(`${DEXSCREENER_SEARCH_URL}?q=${encodeURIComponent(q)}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pairs: any[] = (data?.pairs ?? []).filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (p: any) => p?.chainId === 'solana' && p?.baseToken?.address
+    );
+    // 按流动性降序,聚合 mint(同一 mint 取最深 pair)
+    pairs.sort(
+      (a, b) =>
+        Number(b?.liquidity?.usd ?? 0) - Number(a?.liquidity?.usd ?? 0)
+    );
+    const seen = new Set<string>();
+    const out: TokenInfo[] = [];
+    for (const p of pairs) {
+      const mint = p.baseToken.address as string;
+      if (seen.has(mint)) continue;
+      seen.add(mint);
+      out.push({
+        mint,
+        symbol: p.baseToken.symbol ?? mint.slice(0, 6),
+        name: p.baseToken.name ?? '',
+        priceUsd: Number(p.priceUsd ?? 0),
+        priceNative: Number(p.priceNative ?? 0),
+        liquidityUsd: Number(p.liquidity?.usd ?? 0),
+        marketCap: Number(p.fdv ?? p.marketCap ?? 0),
+        priceChange24h: Number(p.priceChange?.h24 ?? 0) || undefined,
+        volume24h: Number(p.volume?.h24 ?? 0) || undefined,
+        logoUri: p.info?.imageUrl,
+      });
+      if (out.length >= limit) break;
+    }
+    return out;
+  } catch (e) {
+    console.warn('[portfolio] searchTokens', q, e);
+    return [];
+  }
+}

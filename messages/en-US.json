@@ -227,7 +227,20 @@
     "confirm": {
       "buyTitle": "Confirm buy {symbol}",
       "sellTitle": "Confirm sell {symbol}",
-      "notice": "Please review the details. After confirming, your wallet will ask for a signature."
+      "notice": "Please review the details. After confirming, your wallet will ask for a signature.",
+      "highRisk": {
+        "title": "⚠️ High-risk token",
+        "desc": "RugCheck flags this token as high risk: authorities may not be renounced, liquidity may be unlocked, or holdings may be concentrated. You could lose your entire principal.",
+        "ack": "I understand the risk and want to continue"
+      },
+      "large": {
+        "title": "Large trade · {amount} SOL",
+        "desc": "This is a sizable amount. Double-check the mint address, slippage, and amount. The button unlocks after 2 seconds."
+      }
+    },
+    "solBaseHint": {
+      "title": "SOL is the base currency",
+      "subtitle": "Search for any other token (USDC, JUP, Bonk, etc.) to buy or sell. SOL is the default pay/receive currency for all trades."
     },
     "result": {
       "success": "Trade successful",

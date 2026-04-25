@@ -41,6 +41,7 @@ export function useAutoQuote(params: AutoQuoteParams): AutoQuoteState {
       !params.enabled ||
       !params.inputMint ||
       !params.outputMint ||
+      params.inputMint === params.outputMint ||
       !params.amountRaw ||
       BigInt(params.amountRaw.toString()) <= BigInt(0)
     ) {

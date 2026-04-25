@@ -227,7 +227,20 @@
     "confirm": {
       "buyTitle": "确认买入 {symbol}",
       "sellTitle": "确认卖出 {symbol}",
-      "notice": "请再次确认下单信息。确认后钱包会弹窗要求签名。"
+      "notice": "请再次确认下单信息。确认后钱包会弹窗要求签名。",
+      "highRisk": {
+        "title": "⚠️ 高风险代币",
+        "desc": "RugCheck 标记此代币为高风险:可能存在权限未放弃、流动性未锁、或筹码集中等问题。继续交易可能损失全部本金。",
+        "ack": "我已知晓风险,仍要继续"
+      },
+      "large": {
+        "title": "大额交易 · {amount} SOL",
+        "desc": "金额较大,请再次确认 mint 地址、滑点、金额无误。按钮 2 秒后可点击。"
+      }
+    },
+    "solBaseHint": {
+      "title": "SOL 是基础币",
+      "subtitle": "搜索其他代币(如 USDC、JUP、Bonk 等)即可买入 / 卖出。SOL 在所有交易中默认作为支付/收款货币。"
     },
     "result": {
       "success": "交易成功",

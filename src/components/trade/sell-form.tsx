@@ -40,6 +40,7 @@ import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
 import { toast } from 'sonner';
+import type { OverallRisk } from '@/lib/token-info';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -70,9 +71,11 @@ interface Result {
 interface SellFormProps {
   mint?: string;
   compact?: boolean;
+  /** 上层算好的风险等级:high / critical 时弹"我知晓"勾选 */
+  risk?: OverallRisk;
 }
 
-export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
+export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) {
   const t = useTranslations();
   const chain = getCurrentChain();
   const { connection } = useConnection();
@@ -81,6 +84,8 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
 
   const [mint, setMint] = useState(mintProp ?? '');
   const [tokenAmount, setTokenAmount] = useState('');
+  // 100% 卖空时记下精确 raw amount,quote/swap 用它而非 ui×10^dec
+  const [fullSellRaw, setFullSellRaw] = useState<string | null>(null);
 
   useEffect(() => {
     if (mintProp != null) setMint(mintProp);
@@ -111,8 +116,11 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
     amt > 0 &&
     balance.decimals != null &&
     (balance.amount == null || amt <= balance.amount * 1.0001);
+  // 100% 用 chain raw,其他用 ui × 10^dec
   const amountRaw = validInput
-    ? BigInt(Math.floor(amt * 10 ** (balance.decimals ?? 0)))
+    ? fullSellRaw
+      ? BigInt(fullSellRaw)
+      : BigInt(Math.floor(amt * 10 ** (balance.decimals ?? 0)))
     : null;
   const autoQuote = useAutoQuote({
     enabled: validInput && stage !== 'done' && stage !== 'signing' && stage !== 'sending' && stage !== 'confirming',
@@ -140,18 +148,19 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
   };
 
   // 百分比快捷
-  // 100% 全仓卖的坑:前端 balance 和链上实时值可能有微小差(别的 tx 扣了 rent/别的 swap),
-  // 传 Jupiter 构造 tx 时"卖 X 个",链上实际只有 X-ε,OKX 预模拟 insufficient balance 失败。
-  // 所以 100% 时保留 0.1% dust,避免全额卖空触发这个坑
+  // 100% 全仓卖:**直接传链上 raw amount**,quote/swap 用 BigInt 精确,
+  // 不走 ui × 10^decimals 的浮点路径(浮点会有 1-2 lamport 偏差,触发 insufficient balance)
   function setPct(pct: number) {
     if (balance.amount == null || balance.decimals == null) return;
-    let n = (balance.amount * pct) / 100;
-    if (pct === 100) {
-      const dust = balance.amount * 0.001; // 0.1% 保留
-      n = balance.amount - dust;
+    if (pct === 100 && balance.rawAmount) {
+      const n = Number(balance.rawAmount) / 10 ** balance.decimals;
+      setTokenAmount(n >= 1 ? n.toFixed(4) : n.toFixed(9));
+      setFullSellRaw(balance.rawAmount);
+    } else {
+      const n = (balance.amount * pct) / 100;
+      setTokenAmount(n >= 1 ? n.toFixed(4) : n.toFixed(9));
+      setFullSellRaw(null);
     }
-    // 限制有效位数,避免科学计数
-    setTokenAmount(n >= 1 ? n.toFixed(4) : n.toFixed(9));
     resetOnInput();
   }
 
@@ -321,7 +330,7 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
                 min="0"
                 placeholder="0"
                 value={tokenAmount}
-                onChange={(e) => { setTokenAmount(e.target.value); resetOnInput(); }}
+                onChange={(e) => { setTokenAmount(e.target.value); setFullSellRaw(null); resetOnInput(); }}
               />
             </div>
             <div className="space-y-2">
@@ -461,6 +470,8 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
         symbol={mint.trim() ? mint.trim().slice(0, 4) + '…' + mint.trim().slice(-4) : undefined}
         onConfirm={doSell}
         confirming={stage === 'signing' || stage === 'sending'}
+        solAmount={quoteData?.outSol}
+        highRisk={risk === 'high' || risk === 'critical'}
       />
     </>
   );
