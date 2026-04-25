@@ -214,7 +214,24 @@
     "gas": {
       "normal": "普通",
       "fast": "快速",
-      "turbo": "极速"
+      "turbo": "极速",
+      "normalDesc": "0.000005 SOL · 10-30s",
+      "fastDesc": "0.00005 SOL · 3-10s",
+      "turboDesc": "0.001 SOL · <3s",
+      "congestionHint": "网络拥堵时建议至少选「快速」"
+    },
+    "progress": {
+      "title": "交易进行中",
+      "subtitle": "请勿关闭页面,等待全部步骤完成",
+      "signing": "钱包签名",
+      "sending": "广播到链上",
+      "confirming": "等待区块确认",
+      "viewTx": "在 Solscan 查看",
+      "timeoutWarning": "网络拥堵中,稍等片刻…",
+      "timeoutSlow": "已超 60 秒未确认。建议关闭后用「极速」优先费重试,或在 Solscan 查看交易最终状态"
+    },
+    "quickAmount": {
+      "max": "MAX"
     },
     "buttons": {
       "quote": "查询报价",

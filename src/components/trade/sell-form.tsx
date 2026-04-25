@@ -39,6 +39,7 @@ import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
+import { TradeProgressOverlay } from './trade-progress-overlay';
 import { toast } from 'sonner';
 import type { OverallRisk } from '@/lib/token-info';
 
@@ -106,6 +107,8 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [progressSig, setProgressSig] = useState<string | undefined>(undefined);
+  const [progressStartedAt, setProgressStartedAt] = useState<number | undefined>(undefined);
 
   const balance = useTokenBalance(mint.trim() || null);
 
@@ -178,6 +181,8 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
     if (!quoteData || !wallet.publicKey) return;
     setErr(null);
     setConfirmOpen(false);
+    setProgressSig(undefined);
+    setProgressStartedAt(Date.now());
 
     try {
       setStage('signing');
@@ -192,6 +197,7 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
 
       setStage('sending');
       const sig = await signAndSendTx(connection, wallet, tx);
+      setProgressSig(sig);
 
       setStage('confirming');
       const confirmed = await confirmTx(connection, sig, 60_000);
@@ -358,9 +364,16 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
               <Select value={gasLevel} onValueChange={(v) => setGasLevel(v as GasLevel)}>
                 <SelectTrigger id="sell-gas">{t(`trade.gas.${gasLevel}`)}</SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="normal">{t('trade.gas.normal')}</SelectItem>
-                  <SelectItem value="fast">{t('trade.gas.fast')}</SelectItem>
-                  <SelectItem value="turbo">{t('trade.gas.turbo')}</SelectItem>
+                  {(['normal', 'fast', 'turbo'] as GasLevel[]).map((g) => (
+                    <SelectItem key={g} value={g}>
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm">{t(`trade.gas.${g}`)}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {t(`trade.gas.${g}Desc`)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -472,6 +485,14 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
         confirming={stage === 'signing' || stage === 'sending'}
         solAmount={quoteData?.outSol}
         highRisk={risk === 'high' || risk === 'critical'}
+      />
+
+      <TradeProgressOverlay
+        open={stage === 'signing' || stage === 'sending' || stage === 'confirming'}
+        stage={stage}
+        signature={progressSig}
+        explorer={chain.explorer}
+        startedAt={progressStartedAt}
       />
     </>
   );

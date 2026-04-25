@@ -39,8 +39,12 @@ import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
+import { TradeProgressOverlay } from './trade-progress-overlay';
 import { toast } from 'sonner';
 import type { OverallRisk } from '@/lib/token-info';
+
+// SOL 余额安全保留(rent + 优先费 buffer)
+const SOL_RESERVE = 0.01;
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -115,6 +119,25 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
   const [result, setResult] = useState<Result | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [decimals, setDecimals] = useState<number | null>(null);
+  const [progressSig, setProgressSig] = useState<string | undefined>(undefined);
+  const [progressStartedAt, setProgressStartedAt] = useState<number | undefined>(undefined);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+
+  // SOL 余额(用于 MAX 按钮);连钱包 + stage 切换时刷
+  useEffect(() => {
+    if (!wallet.publicKey) {
+      setSolBalance(null);
+      return;
+    }
+    let cancelled = false;
+    connection
+      .getBalance(wallet.publicKey)
+      .then((lamports) => {
+        if (!cancelled) setSolBalance(lamports / LAMPORTS_PER_SOL);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [wallet.publicKey, connection, stage]);
 
   // 拉目标 token 的 decimals(供 outAmount 解析)
   useEffect(() => {
@@ -173,6 +196,8 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
     if (!quoteData || !wallet.publicKey) return;
     setErr(null);
     setConfirmOpen(false);
+    setProgressSig(undefined);
+    setProgressStartedAt(Date.now());
 
     try {
       setStage('signing');
@@ -188,6 +213,7 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
 
       setStage('sending');
       const sig = await signAndSendTx(connection, wallet, tx);
+      setProgressSig(sig);
 
       setStage('confirming');
       const confirmed = await confirmTx(connection, sig, 60_000);
@@ -319,13 +345,58 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
               <Select value={gasLevel} onValueChange={(v) => setGasLevel(v as GasLevel)}>
                 <SelectTrigger id="buy-gas">{t(`trade.gas.${gasLevel}`)}</SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="normal">{t('trade.gas.normal')}</SelectItem>
-                  <SelectItem value="fast">{t('trade.gas.fast')}</SelectItem>
-                  <SelectItem value="turbo">{t('trade.gas.turbo')}</SelectItem>
+                  {(['normal', 'fast', 'turbo'] as GasLevel[]).map((g) => (
+                    <SelectItem key={g} value={g}>
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm">{t(`trade.gas.${g}`)}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          {t(`trade.gas.${g}Desc`)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX */}
+          {wallet.connected && (
+            <div className="flex gap-2 flex-wrap">
+              {[0.1, 0.5, 1].map((v) => (
+                <Button
+                  key={v}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
+                  className="text-xs px-3"
+                >
+                  {v} SOL
+                </Button>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={solBalance == null || solBalance <= SOL_RESERVE}
+                onClick={() => {
+                  if (solBalance == null) return;
+                  const max = Math.max(0, solBalance - SOL_RESERVE);
+                  setSolAmount(max.toFixed(4));
+                  resetOnInput();
+                }}
+                className="text-xs px-3"
+              >
+                {t('trade.quickAmount.max')}
+                {solBalance != null && (
+                  <span className="ml-1 text-muted-foreground/70 font-mono">
+                    {Math.max(0, solBalance - SOL_RESERVE).toFixed(2)}
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
 
           {err && (
             <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
@@ -439,6 +510,14 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
         confirming={stage === 'signing' || stage === 'sending'}
         solAmount={quoteData?.inputSol}
         highRisk={risk === 'high' || risk === 'critical'}
+      />
+
+      <TradeProgressOverlay
+        open={stage === 'signing' || stage === 'sending' || stage === 'confirming'}
+        stage={stage}
+        signature={progressSig}
+        explorer={chain.explorer}
+        startedAt={progressStartedAt}
       />
     </>
   );

@@ -214,7 +214,24 @@
     "gas": {
       "normal": "Normal",
       "fast": "Fast",
-      "turbo": "Turbo"
+      "turbo": "Turbo",
+      "normalDesc": "0.000005 SOL · 10-30s",
+      "fastDesc": "0.00005 SOL · 3-10s",
+      "turboDesc": "0.001 SOL · <3s",
+      "congestionHint": "Pick \"Fast\" or higher when the network is congested"
+    },
+    "progress": {
+      "title": "Transaction in progress",
+      "subtitle": "Do not close this page until all steps complete",
+      "signing": "Wallet signature",
+      "sending": "Broadcasting on-chain",
+      "confirming": "Awaiting confirmation",
+      "viewTx": "View on Solscan",
+      "timeoutWarning": "Network is congested, please wait…",
+      "timeoutSlow": "More than 60 seconds without confirmation. Consider retrying with Turbo priority, or check final status on Solscan."
+    },
+    "quickAmount": {
+      "max": "MAX"
     },
     "buttons": {
       "quote": "Get Quote",
