@@ -93,7 +93,7 @@ export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
   // ── 左侧:数据 ──
   // Range label
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '20px ui-sans-serif, sans-serif';
+  ctx.font = '24px ui-sans-serif, sans-serif';
   ctx.fillText(`${data.rangeLabel} 累计盈亏`, 60, 220);
 
   // 总盈亏徽章 · 大字
@@ -122,20 +122,20 @@ export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
   const textY = badgeY + badgeH / 2 + 28;
   ctx.fillText(totalText, badgeX + 24, textY);
 
-  // 总涨幅 %(徽章右下角小字)
+  // 总涨幅 %(徽章下方)
   if (Number.isFinite(data.totalPct)) {
     ctx.fillStyle = COLORS.muted;
-    ctx.font = '18px ui-monospace, monospace';
+    ctx.font = '22px ui-monospace, monospace';
     const pctSign = data.totalPct >= 0 ? '+' : '';
-    ctx.fillText(`${pctSign}${data.totalPct.toFixed(2)}% ${data.rangeLabel}`, 60, 372);
+    ctx.fillText(`${pctSign}${data.totalPct.toFixed(2)}% ${data.rangeLabel}`, 60, 376);
   }
 
   // 细分:已实现 / 未实现 / 胜率
-  let rowY = 430;
+  let rowY = 432;
   drawStatRow(ctx, '已实现', formatPnl(data.realizedUsd), pnlColor(data.realizedUsd), rowY);
-  rowY += 50;
+  rowY += 56;
   drawStatRow(ctx, '未实现', formatPnl(data.unrealizedUsd), pnlColor(data.unrealizedUsd), rowY);
-  rowY += 50;
+  rowY += 56;
   // 胜率显示 W/L 样式 + 百分比
   const winRate = data.closedCount > 0 ? (data.winCount / data.closedCount) * 100 : 0;
   const wlText = `${data.winCount}/${data.closedCount}`;
@@ -162,14 +162,14 @@ export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
   ctx.stroke();
 
   ctx.fillStyle = COLORS.dim;
-  ctx.font = '17px ui-sans-serif, sans-serif';
-  ctx.fillText('Powered by Ocufi · open-source · audit-friendly', 60, 638);
+  ctx.font = '20px ui-sans-serif, sans-serif';
+  ctx.fillText('Powered by Ocufi · open-source · audit-friendly', 60, 640);
 
   ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 22px ui-monospace, monospace';
+  ctx.font = 'bold 25px ui-monospace, monospace';
   const inviteUrl = `ocufi.io/?ref=${data.inviteCode}`;
   const w = ctx.measureText(inviteUrl).width;
-  ctx.fillText(inviteUrl, W - 60 - w, 638);
+  ctx.fillText(inviteUrl, W - 60 - w, 640);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -188,12 +188,12 @@ function drawStatRow(
   y: number,
 ) {
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '20px ui-sans-serif, sans-serif';
+  ctx.font = '24px ui-sans-serif, sans-serif';
   ctx.fillText(label, 60, y);
 
   ctx.fillStyle = valueColor;
-  ctx.font = 'bold 28px ui-monospace, monospace';
-  ctx.fillText(value, 220, y);
+  ctx.font = 'bold 34px ui-monospace, monospace';
+  ctx.fillText(value, 240, y);
 }
 
 function drawAbstractGraphic(ctx: CanvasRenderingContext2D, isUp: boolean) {
@@ -253,14 +253,14 @@ function drawWalletAndInvite(ctx: CanvasRenderingContext2D, data: PnlShareCardDa
       : data.walletAddress;
 
   // ── 钱包 pill(头像点 + 脱敏地址 + 半透明背景) ──
-  ctx.font = 'bold 18px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.font = 'bold 22px ui-monospace, "SF Mono", Menlo, monospace';
   const walletTextW = ctx.measureText(masked).width;
-  const dotR = 9;
-  const padX = 14;
-  const pillH = 36;
-  const pillW = dotR * 2 + 8 + walletTextW + padX * 2;
+  const dotR = 11;
+  const padX = 16;
+  const pillH = 44;
+  const pillW = dotR * 2 + 10 + walletTextW + padX * 2;
   const pillX = rightX - pillW;
-  const pillY = 490;
+  const pillY = 480;
 
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
@@ -279,25 +279,25 @@ function drawWalletAndInvite(ctx: CanvasRenderingContext2D, data: PnlShareCardDa
   ctx.fillStyle = COLORS.fg;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(masked, pillX + padX + dotR * 2 + 8, pillY + pillH / 2);
+  ctx.fillText(masked, pillX + padX + dotR * 2 + 10, pillY + pillH / 2);
   ctx.textBaseline = 'alphabetic';
 
   // ── 邀请码(右对齐,labels + code 一行,无重叠) ──
-  const codeY = pillY + pillH + 30;
+  const codeY = pillY + pillH + 36;
   const codeLabel = '邀请码 ';
-  ctx.font = '14px ui-sans-serif, sans-serif';
+  ctx.font = '18px ui-sans-serif, sans-serif';
   const labelW = ctx.measureText(codeLabel).width;
-  ctx.font = 'bold 17px ui-monospace, monospace';
+  ctx.font = 'bold 22px ui-monospace, monospace';
   const codeW = ctx.measureText(data.inviteCode).width;
   const totalW = labelW + codeW;
   const startX = rightX - totalW;
 
   ctx.textAlign = 'left';
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '14px ui-sans-serif, sans-serif';
+  ctx.font = '18px ui-sans-serif, sans-serif';
   ctx.fillText(codeLabel, startX, codeY);
   ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 17px ui-monospace, monospace';
+  ctx.font = 'bold 22px ui-monospace, monospace';
   ctx.fillText(data.inviteCode, startX + labelW, codeY);
 }
 

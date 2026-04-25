@@ -122,7 +122,7 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
 
   // 数量(symbol 单位)
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '24px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.font = '28px ui-monospace, "SF Mono", Menlo, monospace';
   ctx.fillText(
     `${formatNumber(data.amount)} ${truncate(data.symbol, 10)}`,
     60,
@@ -131,14 +131,14 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
 
   // SOL 大字
   ctx.fillStyle = COLORS.fg;
-  ctx.font = 'bold 56px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText(`${data.solAmount.toFixed(4)} SOL`, 60, 410);
+  ctx.font = 'bold 60px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.fillText(`${data.solAmount.toFixed(4)} SOL`, 60, 414);
 
   // USD
   if (data.usdAmount && data.usdAmount > 0) {
     ctx.fillStyle = COLORS.muted;
-    ctx.font = '22px ui-monospace, monospace';
-    ctx.fillText(`≈ $${data.usdAmount.toFixed(2)} USD`, 60, 446);
+    ctx.font = '26px ui-monospace, monospace';
+    ctx.fillText(`≈ $${data.usdAmount.toFixed(2)} USD`, 60, 452);
   }
 
   // PnL(卖出且有数据)
@@ -208,12 +208,12 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   // 当前价(logo 下方)
   if (data.priceUsd && data.priceUsd > 0) {
     ctx.fillStyle = COLORS.muted;
-    ctx.font = '14px ui-monospace, monospace';
+    ctx.font = '17px ui-monospace, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('CURRENT PRICE', LOGO_CX, LOGO_CY + LOGO_R + 28);
+    ctx.fillText('CURRENT PRICE', LOGO_CX, LOGO_CY + LOGO_R + 30);
     ctx.fillStyle = COLORS.fg;
-    ctx.font = 'bold 32px ui-monospace, monospace';
-    ctx.fillText(formatPrice(data.priceUsd), LOGO_CX, LOGO_CY + LOGO_R + 60);
+    ctx.font = 'bold 38px ui-monospace, monospace';
+    ctx.fillText(formatPrice(data.priceUsd), LOGO_CX, LOGO_CY + LOGO_R + 66);
     ctx.textAlign = 'left';
   }
 
@@ -234,14 +234,14 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   ctx.stroke();
 
   ctx.fillStyle = COLORS.dim;
-  ctx.font = '17px ui-sans-serif, sans-serif';
-  ctx.fillText('Powered by Ocufi · open-source · audit-friendly', 60, 638);
+  ctx.font = '20px ui-sans-serif, sans-serif';
+  ctx.fillText('Powered by Ocufi · open-source · audit-friendly', 60, 640);
 
   ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 22px ui-monospace, monospace';
+  ctx.font = 'bold 25px ui-monospace, monospace';
   const inviteUrl = `ocufi.io/?ref=${data.inviteCode}`;
   const w = ctx.measureText(inviteUrl).width;
-  ctx.fillText(inviteUrl, W - 60 - w, 638);
+  ctx.fillText(inviteUrl, W - 60 - w, 640);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -334,7 +334,7 @@ function drawSparkline(
 
   // 底部时间标记 + 24h 涨跌大字
   ctx.fillStyle = COLORS.dim;
-  ctx.font = '13px ui-monospace, monospace';
+  ctx.font = '16px ui-monospace, monospace';
   ctx.fillText('-24h', x, y + h - 10);
   ctx.textAlign = 'right';
   ctx.fillText('NOW', x + w, y + h - 10);
@@ -344,16 +344,16 @@ function drawSparkline(
   if (Math.abs(change24h) > 0.001) {
     const sign = change24h >= 0 ? '+' : '';
     const text = `${sign}${change24h.toFixed(2)}% 24H`;
-    ctx.font = 'bold 18px ui-monospace, monospace';
+    ctx.font = 'bold 22px ui-monospace, monospace';
     const tw = ctx.measureText(text).width;
     const bx = x + w - tw - 16;
     const by = y + 4;
-    const bh = 28;
+    const bh = 34;
     ctx.fillStyle = up ? 'rgba(25,251,155,0.18)' : 'rgba(239,68,68,0.18)';
     roundRect(ctx, bx - 8, by, tw + 16, bh, 6);
     ctx.fill();
     ctx.fillStyle = up ? COLORS.accent : COLORS.danger;
-    ctx.fillText(text, bx, by + 20);
+    ctx.fillText(text, bx, by + 24);
   }
 }
 
@@ -447,8 +447,8 @@ export function drawBrandLockup(
 
   // 副标 · muted gray monospace,在 wordmark 下方
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText(opts.subtitle, textX, baselineY + 26);
+  ctx.font = '18px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.fillText(opts.subtitle, textX, baselineY + 30);
 }
 
 /** Arc O logo · Canvas 版 · anchor 在左上角 (x, y),size 是边长 */
