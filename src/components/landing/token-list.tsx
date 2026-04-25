@@ -26,6 +26,8 @@ import {
   PRESET_ALL, PRESET_MAJORS, PRESET_MEME, PRESET_STABLE,
 } from '@/lib/preset-tokens';
 import { useFavorites } from '@/lib/favorites';
+import { MiniSparkline } from '@/components/common/mini-sparkline';
+import { TokenTags, tagsFor } from '@/components/common/token-tags';
 
 const ALL = PRESET_ALL;
 
@@ -201,7 +203,10 @@ function Row({
             )}
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-medium truncate">{tok.symbol}</div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm font-medium truncate">{tok.symbol}</span>
+              <TokenTags kinds={tagsFor(tok)} />
+            </div>
             {tok.name && tok.name !== tok.symbol && (
               <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
                 {tok.name}
@@ -214,12 +219,21 @@ function Row({
         ${formatPrice(tok.priceUsd)}
       </TableCell>
       <TableCell className="text-right">
-        <span
-          className={`text-xs font-mono inline-flex items-center gap-0.5 justify-end ${color}`}
-        >
-          {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
-          {change != null ? `${up ? '+' : ''}${change.toFixed(2)}%` : '—'}
-        </span>
+        <div className="flex items-center justify-end gap-2">
+          <MiniSparkline
+            priceUsd={tok.priceUsd}
+            change24h={tok.priceChange24h}
+            change6h={tok.priceChange6h}
+            change1h={tok.priceChange1h}
+            change5m={tok.priceChange5m}
+            width={50}
+            height={18}
+          />
+          <span className={`text-xs font-mono inline-flex items-center gap-0.5 justify-end ${color}`}>
+            {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
+            {change != null ? `${up ? '+' : ''}${change.toFixed(2)}%` : '—'}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell">
         {tok.volume24h ? `$${formatCompact(tok.volume24h)}` : '—'}

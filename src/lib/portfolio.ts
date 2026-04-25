@@ -85,8 +85,13 @@ export interface TokenInfo {
   liquidityUsd: number;
   marketCap: number;
   priceChange24h?: number;   // 百分比,可能正可能负
+  priceChange6h?: number;
+  priceChange1h?: number;
+  priceChange5m?: number;
   volume24h?: number;
   logoUri?: string;
+  /** pair 创建时间(ms),用于 NEW 标签 */
+  pairCreatedAt?: number;
 }
 
 /**
@@ -131,8 +136,12 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
       liquidityUsd: Number(top.liquidity?.usd ?? 0),
       marketCap: Number(top.fdv ?? top.marketCap ?? 0),
       priceChange24h,
+      priceChange6h: top.priceChange?.h6 != null ? Number(top.priceChange.h6) : undefined,
+      priceChange1h: top.priceChange?.h1 != null ? Number(top.priceChange.h1) : undefined,
+      priceChange5m: top.priceChange?.m5 != null ? Number(top.priceChange.m5) : undefined,
       volume24h: Number(top.volume?.h24 ?? 0) || undefined,
       logoUri: safeUrl(top.info?.imageUrl),
+      pairCreatedAt: top.pairCreatedAt ? Number(top.pairCreatedAt) : undefined,
     };
   } catch (e) {
     console.warn('[portfolio] fetchTokenInfo', mint.slice(0, 8), e);

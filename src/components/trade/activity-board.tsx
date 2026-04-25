@@ -135,10 +135,9 @@ export function ActivityBoard({ detail }: Props) {
           ) : holders && holders.length > 0 ? (
             <div className="space-y-1 text-xs max-h-[480px] overflow-y-auto">
               {/* 表头 */}
-              <div className="grid grid-cols-[40px_1fr_70px_60px] gap-2 px-1 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium sticky top-0 bg-card">
+              <div className="grid grid-cols-[40px_1fr_60px] gap-2 px-1 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium sticky top-0 bg-card">
                 <span>#</span>
                 <span>{t('cols.owner')}</span>
-                <span className="text-right">{t('cols.amount')}</span>
                 <span className="text-right">{t('cols.pct')}</span>
               </div>
               {holders.map((h, i) => (
@@ -146,8 +145,8 @@ export function ActivityBoard({ detail }: Props) {
                   key={h.account}
                   rank={i + 1}
                   holder={h}
-                  decimals={detail?.mint ? undefined : undefined}
                   explorer={chain.explorer}
+                  maxPct={holders[0]?.pct ?? 0}
                 />
               ))}
             </div>
@@ -235,30 +234,43 @@ function TradeRow({ tr, explorer }: { tr: GTTrade; explorer: string }) {
 }
 
 function HolderRow({
-  rank, holder, explorer,
+  rank, holder, explorer, maxPct,
 }: {
   rank: number;
   holder: Holder;
   decimals?: number;
   explorer: string;
+  maxPct: number;
 }) {
   const owner = holder.owner;
+  // 柱状图宽度按 maxPct(top1)归一化,top1 = 100% bar 宽度
+  const barWidth = maxPct > 0 ? Math.max(2, (holder.pct / maxPct) * 100) : 0;
+  // 单一持有占比颜色:>50% 红 / >20% 黄 / <20% 绿
+  const barColor =
+    holder.pct > 50 ? 'bg-danger/40' : holder.pct > 20 ? 'bg-warning/50' : 'bg-primary/40';
+
   return (
     <a
       href={owner ? `${explorer}/account/${owner}` : '#'}
       target="_blank"
       rel="noopener noreferrer"
-      className="grid grid-cols-[40px_1fr_70px_60px] gap-2 px-1 py-1 hover:bg-muted/30 transition-colors text-xs"
+      className="grid grid-cols-[40px_1fr_60px] gap-2 px-1 py-1.5 hover:bg-muted/30 transition-colors text-xs"
     >
       <span className="font-mono text-muted-foreground">#{rank}</span>
-      <span className="font-mono text-muted-foreground/80 truncate flex items-center gap-1">
-        {owner ? `${owner.slice(0, 6)}…${owner.slice(-4)}` : '—'}
-        {owner && <ExternalLink className="h-2.5 w-2.5 opacity-50" />}
-      </span>
-      <span className="font-mono text-right text-muted-foreground/80">
-        {formatCompact(Number(holder.amountRaw))}
-      </span>
-      <span className="font-mono text-right">{holder.pct.toFixed(2)}%</span>
+      <div className="min-w-0 flex flex-col gap-1">
+        <span className="font-mono text-muted-foreground/80 truncate flex items-center gap-1">
+          {owner ? `${owner.slice(0, 6)}…${owner.slice(-4)}` : '—'}
+          {owner && <ExternalLink className="h-2.5 w-2.5 opacity-50" />}
+        </span>
+        {/* 占比柱(归一化到 top1) */}
+        <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${barColor}`}
+            style={{ width: `${barWidth}%` }}
+          />
+        </div>
+      </div>
+      <span className="font-mono text-right tabular-nums">{holder.pct.toFixed(2)}%</span>
     </a>
   );
 }
