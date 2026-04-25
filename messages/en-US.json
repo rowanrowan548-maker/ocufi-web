@@ -83,6 +83,32 @@
         "desc": "Frontend audited on GitHub. No black box, no hidden fees."
       }
     },
+    "compare": {
+      "title": "Compare us — we still win",
+      "subtitle": "Ocufi vs the major Solana trading terminals, side by side",
+      "cols": {
+        "metric": "Metric"
+      },
+      "rows": {
+        "buyFee": "Buy fee",
+        "sellFee": "Sell fee",
+        "nonCustodial": "Non-custodial (you hold the keys)",
+        "openSource": "Open-source frontend",
+        "dualSafety": "RugCheck + GoPlus dual safety review",
+        "zhUI": "Chinese UI"
+      },
+      "values": {
+        "free": "Free"
+      },
+      "disclaimer": "Rates are public list prices; VIP / referral discounts excluded. Ocufi V1 sells are free, blended fee ≈ 0.05%.",
+      "calc": {
+        "title": "How much you'd save",
+        "monthlyVolume": "Your monthly volume (USD)",
+        "monthShort": "mo",
+        "savings": "You save",
+        "yearly": "≈ ${amount} saved per year — this is why Ocufi exists"
+      }
+    },
     "functions": {
       "title": "What you can do",
       "subtitle": "V1 feature set",

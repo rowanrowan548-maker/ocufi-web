@@ -11,6 +11,7 @@ import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { MarketSnapshot } from '@/components/landing/market-snapshot';
 import { TokenList } from '@/components/landing/token-list';
 import { PriceTicker } from '@/components/landing/price-ticker';
+import { CompetitorCompare } from '@/components/landing/competitor-compare';
 
 export default async function Landing({
   params,
@@ -119,6 +120,9 @@ export default async function Landing({
           </div>
         </div>
       </section>
+
+      {/* ═══════ 竞品对比 + 手续费计算器 ═══════ */}
+      <CompetitorCompare />
 
       {/* ═══════ 能做什么 ═══════ */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 border-t border-border/40">
