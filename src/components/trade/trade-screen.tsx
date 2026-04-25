@@ -80,7 +80,13 @@ export function TradeScreen() {
         </div>
         {/* 右:交易表单 + 行情 + 安全 */}
         <div className="space-y-4">
-          <TradeTabs mint={mint} compact risk={detail ? overallRisk(detail) : undefined} defaultSide={defaultSide} />
+          <TradeTabs
+            mint={mint}
+            compact
+            risk={detail ? overallRisk(detail) : undefined}
+            defaultSide={defaultSide}
+            onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+          />
           <InfoPanel detail={detail} />
           <SafetyPanel detail={detail} />
         </div>

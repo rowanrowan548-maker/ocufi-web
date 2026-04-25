@@ -9,7 +9,6 @@
  *   实际是路由到 /trade?mint=USDC&side=sell(USDC 页的卖出 = 用 USDC 换 SOL)
  */
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -32,14 +31,15 @@ interface Props {
   risk?: OverallRisk;
   /** 默认 tab,从 ?side= URL 读 */
   defaultSide?: 'buy' | 'sell';
+  /** 上层(trade-screen)切换 mint + side 的回调 — SOL 页"用 USDC 买 SOL"按钮调用 */
+  onPickMint?: (mint: string, side: 'buy' | 'sell') => void;
 }
 
 type Side = 'buy' | 'sell';
 type OrderType = 'market' | 'limit';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSide }: Props = {}) {
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSide, onPickMint }: Props = {}) {
   const t = useTranslations();
-  const router = useRouter();
   const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
 
@@ -61,7 +61,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSid
           </div>
           <div className="space-y-2">
             <Button
-              onClick={() => router.push(`/trade?mint=${USDC_MINT}&side=sell`)}
+              onClick={() => onPickMint?.(USDC_MINT, 'sell')}
               variant="outline"
               className="w-full justify-between"
             >
@@ -72,7 +72,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSid
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
-              onClick={() => router.push(`/trade?mint=${USDT_MINT}&side=sell`)}
+              onClick={() => onPickMint?.(USDT_MINT, 'sell')}
               variant="outline"
               className="w-full justify-between"
             >

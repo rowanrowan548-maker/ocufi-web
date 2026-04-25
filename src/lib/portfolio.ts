@@ -7,6 +7,7 @@
  * 3. fetchSolUsdPrice   — SOL 美元价(DexScreener SOL mint)
  */
 import { Connection, PublicKey } from '@solana/web3.js';
+import { isStableToken } from './verified-tokens';
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
@@ -116,6 +117,11 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
     );
     const top = solPairs[0];
     const base = top.baseToken ?? {};
+    // 稳定币:DexScreener 在 USDC-as-base 池子(多半深度低)的 priceChange 不可靠,
+    // 直接置 0(0.00% 比 — 更直观,稳定币本来就接近 0%)
+    let priceChange24h: number | undefined =
+      top.priceChange?.h24 != null ? Number(top.priceChange.h24) : undefined;
+    if (priceChange24h == null && isStableToken(mint)) priceChange24h = 0;
     return {
       mint,
       symbol: safeText(base.symbol, 24) || mint.slice(0, 6),
@@ -124,7 +130,7 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
       priceNative: Number(top.priceNative ?? 0),
       liquidityUsd: Number(top.liquidity?.usd ?? 0),
       marketCap: Number(top.fdv ?? top.marketCap ?? 0),
-      priceChange24h: top.priceChange?.h24 != null ? Number(top.priceChange.h24) : undefined,
+      priceChange24h,
       volume24h: Number(top.volume?.h24 ?? 0) || undefined,
       logoUri: safeUrl(top.info?.imageUrl),
     };

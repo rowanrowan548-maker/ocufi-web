@@ -104,10 +104,9 @@ export function ActivityBoard({ detail }: Props) {
           ) : trades && trades.length > 0 ? (
             <div className="text-xs">
               {/* 表头 */}
-              <div className="grid grid-cols-[60px_1fr_1fr_1fr_50px] gap-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
+              <div className="grid grid-cols-[60px_1fr_1fr_50px] gap-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
                 <span>{t('cols.side')}</span>
                 <span className="text-right">{t('cols.usd')}</span>
-                <span className="text-right">{t('cols.tokens')}</span>
                 <span>{t('cols.maker')}</span>
                 <span className="text-right">{t('cols.time')}</span>
               </div>
@@ -216,7 +215,7 @@ function TradeRow({ tr, explorer }: { tr: GTTrade; explorer: string }) {
       href={tr.txSignature ? `${explorer}/tx/${tr.txSignature}` : '#'}
       target="_blank"
       rel="noopener noreferrer"
-      className="grid grid-cols-[60px_1fr_1fr_1fr_50px] gap-2 px-2 py-1.5 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-b-0"
+      className="grid grid-cols-[60px_1fr_1fr_50px] gap-2 px-2 py-1.5 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-b-0"
     >
       <span className={`flex items-center gap-1 font-medium ${sideColor}`}>
         <SideIcon className="h-3 w-3" />
@@ -224,9 +223,6 @@ function TradeRow({ tr, explorer }: { tr: GTTrade; explorer: string }) {
       </span>
       <span className="text-right font-mono">
         ${formatCompact(tr.usdValue)}
-      </span>
-      <span className="text-right font-mono text-muted-foreground">
-        {formatCompact(tr.tokenAmount)}
       </span>
       <span className="font-mono text-muted-foreground/70 truncate">
         {tr.fromAddress ? `${tr.fromAddress.slice(0, 4)}…${tr.fromAddress.slice(-4)}` : '—'}

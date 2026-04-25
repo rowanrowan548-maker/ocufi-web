@@ -49,26 +49,25 @@ export async function fetchTopHolders(
     ]);
     const total = supply?.value?.amount ? BigInt(supply.value.amount) : BigInt(0);
 
-    // token account → owner 解析,并行
-    const owners = await Promise.all(
-      largest.value.slice(0, cap).map(async (acc) => {
-        try {
-          const info = await connection.getParsedAccountInfo(acc.address);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const parsed: any = info.value?.data;
-          const owner = parsed?.parsed?.info?.owner ?? '';
-          return { account: acc.address.toBase58(), owner };
-        } catch {
-          return { account: acc.address.toBase58(), owner: '' };
-        }
-      })
-    );
+    // 单次 getMultipleAccountsInfo 批量取所有 token account,
+    // 用原始 buffer 解析 owner(offset 32, 32 bytes),避开慢的 getParsedAccountInfo
+    const accountKeys = largest.value.slice(0, cap).map((a) => a.address);
+    const infos = await connection.getMultipleAccountsInfo(accountKeys);
 
     const holders: Holder[] = largest.value.slice(0, cap).map((acc, i) => {
       const raw = BigInt(acc.amount);
+      let owner = '';
+      const info = infos[i];
+      if (info && info.data && info.data.length >= 64) {
+        try {
+          owner = new PublicKey(info.data.subarray(32, 64)).toBase58();
+        } catch {
+          /* 数据损坏,留空 */
+        }
+      }
       return {
-        account: owners[i].account,
-        owner: owners[i].owner,
+        account: acc.address.toBase58(),
+        owner,
         amountRaw: raw.toString(),
         pct: total > BigInt(0)
           ? Number((raw * BigInt(1_000_000)) / total) / 10_000
