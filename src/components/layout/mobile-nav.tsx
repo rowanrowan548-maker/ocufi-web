@@ -65,10 +65,13 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
         aria-hidden={!open}
       />
 
-      {/* Drawer · 用 bg-popover(比 card 更亮)+ 强阴影 + 显式背景,不会再透下去 */}
+      {/* Drawer · 直接写 hex bg,不依赖任何 CSS 变量(变量在某些渲染上下文里没解析) */}
       <aside
-        style={{ background: 'var(--popover, #1B1E26)' }}
-        className={`sm:hidden fixed top-0 right-0 bottom-0 z-[61] w-[85vw] max-w-sm border-l border-border/60 shadow-[-12px_0_32px_rgba(0,0,0,0.5)] transform transition-transform duration-200 ${
+        style={{
+          backgroundColor: '#13151A',
+          backgroundImage: 'none',
+        }}
+        className={`sm:hidden fixed top-0 right-0 bottom-0 z-[61] w-[85vw] max-w-sm border-l border-zinc-700 shadow-[-12px_0_32px_rgba(0,0,0,0.6)] transform transition-transform duration-200 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!open}

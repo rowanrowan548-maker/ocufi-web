@@ -44,6 +44,14 @@ function isInWalletBrowser(): boolean {
 
 function recentlyDismissed(): boolean {
   if (typeof window === 'undefined') return false;
+  // 调试旁路:?showWalletHint=1 强制弹一次,方便测试
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('showWalletHint') === '1') {
+      window.localStorage.removeItem(DISMISS_KEY);
+      return false;
+    }
+  } catch { /* */ }
   try {
     const v = window.localStorage.getItem(DISMISS_KEY);
     if (!v) return false;
