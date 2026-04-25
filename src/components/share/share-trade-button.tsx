@@ -7,7 +7,7 @@
  * 桌面 fallback:弹自定义小菜单(Twitter / Telegram / 复制图片到剪贴板 / 下载)
  */
 import { useEffect, useRef, useState } from 'react';
-import { Share2, Loader2, Send, Copy, Download, X } from 'lucide-react';
+import { Share2, Loader2, Send, Copy, Download, X, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button } from '@/components/ui/button';
@@ -98,28 +98,7 @@ export function ShareTradeButton(props: Props) {
       const result = await generate();
       if (!result) return;
       const { blob, code } = result;
-      const file = new File([blob], `ocufi-trade-${Date.now()}.png`, { type: 'image/png' });
-      const inviteUrl = buildInviteUrl(code || '');
-      const text = t('shareText');
-
-      const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
-      if (
-        typeof nav.share === 'function' &&
-        typeof nav.canShare === 'function' &&
-        nav.canShare({ files: [file] })
-      ) {
-        try {
-          await nav.share({ files: [file], text, url: inviteUrl });
-          toast.success(t('shared'));
-          return;
-        } catch (e: unknown) {
-          if (e instanceof Error && (e.name === 'AbortError' || /abort|cancel/i.test(e.message))) return;
-          // share API 失败 → fallback 到菜单
-          console.warn('[share] webShare failed, fallback', e);
-        }
-      }
-
-      // 桌面 fallback:弹自定义菜单
+      // 总是先弹卡片预览 + 菜单,不直接拉系统分享
       const url = URL.createObjectURL(blob);
       setGenerated({ blob, url, code });
       setMenuOpen(true);
@@ -128,6 +107,36 @@ export function ShareTradeButton(props: Props) {
       toast.error(t('failed'));
     } finally {
       setBusy(false);
+    }
+  }
+
+  // Web Share API 是否可用 + canShare files
+  function canSystemShare(): boolean {
+    if (!generated) return false;
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (typeof nav.share !== 'function' || typeof nav.canShare !== 'function') return false;
+    const file = new File([generated.blob], 'ocufi.png', { type: 'image/png' });
+    try {
+      return nav.canShare({ files: [file] });
+    } catch {
+      return false;
+    }
+  }
+
+  async function shareViaSystem() {
+    if (!generated) return;
+    const file = new File([generated.blob], `ocufi-trade-${Date.now()}.png`, {
+      type: 'image/png',
+    });
+    const inviteUrl = buildInviteUrl(generated.code || '');
+    const text = t('shareText');
+    try {
+      await navigator.share({ files: [file], text, url: inviteUrl });
+      toast.success(t('shared'));
+      closeMenu();
+    } catch (e: unknown) {
+      if (e instanceof Error && (e.name === 'AbortError' || /abort|cancel/i.test(e.message))) return;
+      toast.error(t('failed'));
     }
   }
 
@@ -231,6 +240,13 @@ export function ShareTradeButton(props: Props) {
             <MenuItem icon={Send} label={t('via.telegram')} onClick={openTelegram} />
             <MenuItem icon={Copy} label={t('via.copyImage')} onClick={copyImage} />
             <MenuItem icon={Download} label={t('via.download')} onClick={downloadOnly} />
+            {canSystemShare() && (
+              <MenuItem
+                icon={Smartphone}
+                label={t('via.moreApps')}
+                onClick={shareViaSystem}
+              />
+            )}
           </div>
         </div>
       )}

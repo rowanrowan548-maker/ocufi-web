@@ -5,7 +5,7 @@
  * 生成 PnL 总盈亏卡 + 多端分享菜单(逻辑跟 ShareTradeButton 同款)
  */
 import { useEffect, useRef, useState } from 'react';
-import { Trophy, Loader2, Send, Copy, Download, X } from 'lucide-react';
+import { Trophy, Loader2, Send, Copy, Download, X, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Button } from '@/components/ui/button';
@@ -81,26 +81,7 @@ export function PnlShareButton(props: Props) {
       const result = await generate();
       if (!result) return;
       const { blob, code } = result;
-      const file = new File([blob], `ocufi-pnl-${Date.now()}.png`, { type: 'image/png' });
-      const inviteUrl = buildInviteUrl(code || '');
-      const text = t('pnlShareText');
-
-      const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
-      if (
-        typeof nav.share === 'function' &&
-        typeof nav.canShare === 'function' &&
-        nav.canShare({ files: [file] })
-      ) {
-        try {
-          await nav.share({ files: [file], text, url: inviteUrl });
-          toast.success(t('shared'));
-          return;
-        } catch (e: unknown) {
-          if (e instanceof Error && (e.name === 'AbortError' || /abort|cancel/i.test(e.message))) return;
-          console.warn('[pnl-share] webShare failed', e);
-        }
-      }
-
+      // 总是先弹卡片预览 + 菜单,让用户先看清要分享的内容
       const url = URL.createObjectURL(blob);
       setGenerated({ blob, url, code });
       setMenuOpen(true);
@@ -109,6 +90,35 @@ export function PnlShareButton(props: Props) {
       toast.error(t('failed'));
     } finally {
       setBusy(false);
+    }
+  }
+
+  function canSystemShare(): boolean {
+    if (!generated) return false;
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (typeof nav.share !== 'function' || typeof nav.canShare !== 'function') return false;
+    const file = new File([generated.blob], 'ocufi.png', { type: 'image/png' });
+    try {
+      return nav.canShare({ files: [file] });
+    } catch {
+      return false;
+    }
+  }
+
+  async function shareViaSystem() {
+    if (!generated) return;
+    const file = new File([generated.blob], `ocufi-pnl-${Date.now()}.png`, {
+      type: 'image/png',
+    });
+    const inviteUrl = buildInviteUrl(generated.code || '');
+    const text = t('pnlShareText');
+    try {
+      await navigator.share({ files: [file], text, url: inviteUrl });
+      toast.success(t('shared'));
+      closeMenu();
+    } catch (e: unknown) {
+      if (e instanceof Error && (e.name === 'AbortError' || /abort|cancel/i.test(e.message))) return;
+      toast.error(t('failed'));
     }
   }
 
@@ -188,6 +198,13 @@ export function PnlShareButton(props: Props) {
             <MenuItem icon={Send} label={t('via.telegram')} onClick={openTelegram} />
             <MenuItem icon={Copy} label={t('via.copyImage')} onClick={copyImage} />
             <MenuItem icon={Download} label={t('via.download')} onClick={downloadOnly} />
+            {canSystemShare() && (
+              <MenuItem
+                icon={Smartphone}
+                label={t('via.moreApps')}
+                onClick={shareViaSystem}
+              />
+            )}
           </div>
         </div>
       )}

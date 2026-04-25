@@ -247,55 +247,59 @@ function drawAbstractGraphic(ctx: CanvasRenderingContext2D, isUp: boolean) {
 }
 
 function drawWalletAndInvite(ctx: CanvasRenderingContext2D, data: PnlShareCardData) {
-  const x = W - 60;
-  const baseY = 510;
-
-  // 钱包脱敏
+  const rightX = W - 60;
   const masked =
     data.walletAddress.length > 8
       ? `${data.walletAddress.slice(0, 4)}…${data.walletAddress.slice(-4)}`
       : data.walletAddress;
 
+  // ── 钱包 pill(头像点 + 脱敏地址 + 半透明背景) ──
+  ctx.font = 'bold 18px ui-monospace, "SF Mono", Menlo, monospace';
+  const walletTextW = ctx.measureText(masked).width;
+  const dotR = 9;
+  const padX = 14;
+  const pillH = 36;
+  const pillW = dotR * 2 + 8 + walletTextW + padX * 2;
+  const pillX = rightX - pillW;
+  const pillY = 490;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  roundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
   // 头像圆点
   ctx.fillStyle = COLORS.accent;
   ctx.beginPath();
-  ctx.arc(x - 220, baseY - 6, 12, 0, Math.PI * 2);
+  ctx.arc(pillX + padX + dotR, pillY + pillH / 2, dotR, 0, Math.PI * 2);
   ctx.fill();
 
+  // 脱敏地址
   ctx.fillStyle = COLORS.fg;
-  ctx.font = 'bold 18px ui-monospace, monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText(masked, x, baseY);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(masked, pillX + padX + dotR * 2 + 8, pillY + pillH / 2);
+  ctx.textBaseline = 'alphabetic';
 
-  // 邀请码
-  ctx.fillStyle = COLORS.muted;
-  ctx.font = '14px ui-sans-serif, sans-serif';
-  ctx.fillText(`邀请码  `, x - ctx.measureText(data.inviteCode).width - 10 - ctx.measureText('邀请码  ').width + ctx.measureText('邀请码  ').width, baseY + 30);
-
-  // 简化:直接拼一行
-  ctx.textAlign = 'right';
-  ctx.fillStyle = COLORS.muted;
-  ctx.font = '14px ui-sans-serif, sans-serif';
+  // ── 邀请码(右对齐,labels + code 一行,无重叠) ──
+  const codeY = pillY + pillH + 30;
   const codeLabel = '邀请码 ';
-  const codeFull = `${codeLabel}${data.inviteCode}`;
-  // measure split
   ctx.font = '14px ui-sans-serif, sans-serif';
   const labelW = ctx.measureText(codeLabel).width;
-  ctx.font = 'bold 16px ui-monospace, monospace';
+  ctx.font = 'bold 17px ui-monospace, monospace';
   const codeW = ctx.measureText(data.inviteCode).width;
-  const startX = x - labelW - codeW;
-  ctx.textAlign = 'left';
-  ctx.font = '14px ui-sans-serif, sans-serif';
-  ctx.fillStyle = COLORS.muted;
-  ctx.fillText(codeLabel, startX, baseY + 30);
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 16px ui-monospace, monospace';
-  ctx.fillText(data.inviteCode, startX + labelW, baseY + 30);
+  const totalW = labelW + codeW;
+  const startX = rightX - totalW;
 
-  // 重置
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  void codeFull;
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '14px ui-sans-serif, sans-serif';
+  ctx.fillText(codeLabel, startX, codeY);
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = 'bold 17px ui-monospace, monospace';
+  ctx.fillText(data.inviteCode, startX + labelW, codeY);
 }
 
 function pnlColor(usd: number): string {
