@@ -64,7 +64,7 @@
     },
     "features": {
       "title": "Why Ocufi",
-      "subtitle": "What gmgn / bullx / axiom don't give you — we do",
+      "subtitle": "We're missing one thing the competition has — your support",
       "nonCustodial": {
         "title": "Non-custodial",
         "desc": "Your keys stay yours. Ocufi never holds your funds."
@@ -252,8 +252,9 @@
       "receive": "You receive",
       "minReceive": "Minimum (with slippage)",
       "priceImpact": "Price impact",
-      "platformFee": "Ocufi fee",
-      "platformFeeNone": "0 (V1 free)",
+      "platformFee": "Ocufi fee 0.1%",
+      "platformFeeNone": "0 (not charged)",
+      "networkFee": "Network gas (max)",
       "slippageWarn": "Price impact {impact}% exceeds your {current}% slippage — trade may fail",
       "slippageApply": "Raise to {bps}%"
     },
@@ -325,6 +326,13 @@
       "value": "Value"
     },
     "distribution": "Asset distribution",
+    "feesTotal": {
+      "title": "Lifetime fees",
+      "ocufi": "Ocufi fees",
+      "network": "Solana gas",
+      "txCount": "Trades",
+      "note": "Tracked locally on this device only — never uploaded. Verify each transaction on Solscan."
+    },
     "tabs": {
       "holdings": "Holdings",
       "closed": "Closed"

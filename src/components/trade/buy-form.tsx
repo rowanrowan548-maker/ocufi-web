@@ -40,6 +40,7 @@ import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
 import { TradeProgressOverlay } from './trade-progress-overlay';
+import { recordFee } from '@/lib/fee-tracker';
 import { toast } from 'sonner';
 import type { OverallRisk } from '@/lib/token-info';
 
@@ -228,6 +229,15 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
 
       setResult({ signature: sig, actualTokens, feeSol, solSpent });
       setStage('done');
+
+      // 累计手续费(本地)· Ocufi 0.1% × 输入 SOL,网络 Gas 来自实际 tx 解析
+      if (wallet.publicKey) {
+        recordFee(wallet.publicKey.toBase58(), {
+          ocufiSol: quoteData.inputSol * 0.001,
+          networkSol: feeSol,
+        });
+      }
+
       track('swap_success', {
         side: 'buy',
         mint: mint.trim(),
@@ -270,6 +280,14 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
     }
   }
 
+  // Solana 网络 Gas 上限(SOL):base 5000 lamports + priority fee maxLamports
+  const networkFeeMaxSol = (() => {
+    const baseLamports = 5_000;
+    const priorityMax =
+      gasLevel === 'normal' ? 5_000 : gasLevel === 'fast' ? 50_000 : 1_000_000;
+    return (baseLamports + priorityMax) / LAMPORTS_PER_SOL;
+  })();
+
   const previewData = quoteData
     ? {
         payAmount: quoteData.inputSol,
@@ -279,6 +297,9 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
         minReceiveAmount: quoteData.minTokens,
         minReceiveLabel: formatAmount(quoteData.minTokens),
         priceImpactPct: quoteData.priceImpactPct,
+        // 买入收 0.1% SOL fee
+        platformFeeSol: quoteData.inputSol * 0.001,
+        networkFeeMaxSol,
       }
     : null;
 

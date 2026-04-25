@@ -1,8 +1,14 @@
 'use client';
 
 /**
- * 交易报价预览组件
- * 买入/卖出共用。显示支付/收到/最低到账/价格冲击/手续费。
+ * 交易报价预览
+ *
+ * 展示项:
+ *  - 支付 / 收到 / 最低到账(滑点底)
+ *  - 价格冲击
+ *  - Ocufi 平台手续费(0.1%,仅买入)
+ *  - Solana 网络 Gas 估算
+ *  - 滑点超阈警告 + 一键拉
  */
 import { AlertTriangle, ArrowDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -15,6 +21,10 @@ export interface QuotePreviewData {
   minReceiveAmount: number;
   minReceiveLabel: string;
   priceImpactPct: number;      // 百分比值 0.123 = 0.123%
+  /** Ocufi 平台手续费(SOL),买入 = inputSol × 0.1%;卖出 = 0 */
+  platformFeeSol?: number;
+  /** Solana 网络 Gas 估算上限(SOL) */
+  networkFeeMaxSol?: number;
 }
 
 interface Props {
@@ -28,10 +38,8 @@ interface Props {
 export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Props) {
   const t = useTranslations();
 
-  // 建议滑点:price impact × 2(至少 1%)向上取整到合理档位
   const currentBps = currentSlippageBps ?? 0;
   const currentPct = currentBps / 100;
-  // 规则:price impact 超过当前滑点一半就警告(例如当前 2%,实际 1.5% 就提示)
   const showSlippageWarn =
     currentBps > 0 && data.priceImpactPct > currentPct * 0.5 + 0.1;
   const suggestedPct = Math.max(2, Math.ceil(data.priceImpactPct * 2));
@@ -50,15 +58,36 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
         <span className="text-muted-foreground">{t('trade.preview.receive')}</span>
         <span className="font-mono font-medium">{data.receiveLabel}</span>
       </div>
-      <div className="flex justify-between text-xs text-muted-foreground border-t pt-2">
-        <span>{t('trade.preview.minReceive')}</span>
-        <span className="font-mono">{data.minReceiveLabel}</span>
-      </div>
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{t('trade.preview.priceImpact')}</span>
-        <span className={data.priceImpactPct > 5 ? 'text-destructive font-medium' : ''}>
-          {data.priceImpactPct.toFixed(3)}%
-        </span>
+
+      <div className="border-t pt-2 space-y-1.5">
+        <Row
+          label={t('trade.preview.minReceive')}
+          value={data.minReceiveLabel}
+          tooltip={`滑点 ${currentPct.toFixed(2)}% 兜底`}
+        />
+        <Row
+          label={t('trade.preview.priceImpact')}
+          value={`${data.priceImpactPct.toFixed(3)}%`}
+          valueClassName={data.priceImpactPct > 5 ? 'text-destructive font-medium' : ''}
+        />
+        <Row
+          label={t('trade.preview.platformFee')}
+          value={
+            data.platformFeeSol != null && data.platformFeeSol > 0
+              ? `${data.platformFeeSol.toFixed(6)} SOL`
+              : t('trade.preview.platformFeeNone')
+          }
+          tooltip="Ocufi 0.1%(仅买入,自组 tx 直接转入,链上可查)"
+        />
+        <Row
+          label={t('trade.preview.networkFee')}
+          value={
+            data.networkFeeMaxSol != null
+              ? `≤ ${data.networkFeeMaxSol.toFixed(6)} SOL`
+              : '—'
+          }
+          tooltip="Solana 网络 Gas + 优先费上限,实际可能更低"
+        />
       </div>
 
       {showSlippageWarn && suggestedBps > currentBps && onApplySlippage && (
@@ -79,6 +108,22 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function Row({
+  label, value, valueClassName, tooltip,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+  tooltip?: string;
+}) {
+  return (
+    <div className="flex justify-between text-xs text-muted-foreground" title={tooltip}>
+      <span>{label}</span>
+      <span className={`font-mono ${valueClassName ?? ''}`}>{value}</span>
     </div>
   );
 }

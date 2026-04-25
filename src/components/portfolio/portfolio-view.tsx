@@ -30,6 +30,7 @@ import {
   readSnapshots,
   type Snapshot,
 } from '@/lib/portfolio-history';
+import { readFees, type FeeTotal } from '@/lib/fee-tracker';
 
 import { HoldingsTable } from './holdings-table';
 import { ClosedPositions } from './closed-positions';
@@ -44,16 +45,21 @@ export function PortfolioView() {
   const { costs } = useCostBasis();
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [fees, setFees] = useState<FeeTotal>({
+    ocufiSol: 0, networkSol: 0, txCount: 0, startedAt: 0, lastAt: 0,
+  });
 
   const walletAddr = wallet.publicKey?.toBase58() ?? '';
 
-  // 钱包切换时读快照
+  // 钱包切换时读快照 + 累计手续费
   useEffect(() => {
     if (!walletAddr) {
       setSnapshots([]);
+      setFees({ ocufiSol: 0, networkSol: 0, txCount: 0, startedAt: 0, lastAt: 0 });
       return;
     }
     setSnapshots(readSnapshots(walletAddr));
+    setFees(readFees(walletAddr));
   }, [walletAddr]);
 
   // 持仓加载完毕,且金额大于 0,才追加快照(避免 loading 期间记 0)
@@ -172,6 +178,50 @@ export function PortfolioView() {
                     <AssetPie items={pieItems} totalUsd={totalUsd} size={180} />
                   </div>
                   <AssetPieLegend items={pieItems} totalUsd={totalUsd} />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 累计手续费 · 透明展示我们和网络收了你多少 */}
+          {fees.txCount > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.feesTotal.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-3 sm:gap-6">
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {t('portfolio.feesTotal.ocufi')}
+                    </div>
+                    <div className="text-base sm:text-lg font-mono font-semibold mt-1">
+                      {fees.ocufiSol.toFixed(6)}
+                      <span className="text-[10px] text-muted-foreground/60 ml-1">SOL</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {t('portfolio.feesTotal.network')}
+                    </div>
+                    <div className="text-base sm:text-lg font-mono font-semibold mt-1">
+                      {fees.networkSol.toFixed(6)}
+                      <span className="text-[10px] text-muted-foreground/60 ml-1">SOL</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {t('portfolio.feesTotal.txCount')}
+                    </div>
+                    <div className="text-base sm:text-lg font-mono font-semibold mt-1 tabular-nums">
+                      {fees.txCount}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[10px] text-muted-foreground/70 mt-3">
+                  {t('portfolio.feesTotal.note')}
                 </div>
               </CardContent>
             </Card>

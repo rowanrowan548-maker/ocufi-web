@@ -40,6 +40,7 @@ import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
 import { TradeProgressOverlay } from './trade-progress-overlay';
+import { recordFee } from '@/lib/fee-tracker';
 import { toast } from 'sonner';
 import type { OverallRisk } from '@/lib/token-info';
 
@@ -211,6 +212,15 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
 
       setResult({ signature: sig, actualSol, feeSol });
       setStage('done');
+
+      // 卖出 V1 不收 Ocufi fee,只记网络 Gas
+      if (wallet.publicKey) {
+        recordFee(wallet.publicKey.toBase58(), {
+          ocufiSol: 0,
+          networkSol: feeSol,
+        });
+      }
+
       track('swap_success', {
         side: 'sell',
         mint: mint.trim(),
@@ -251,6 +261,14 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
     }
   }
 
+  // Solana 网络 Gas 上限(SOL):base 5000 lamports + priority fee maxLamports
+  const networkFeeMaxSol = (() => {
+    const baseLamports = 5_000;
+    const priorityMax =
+      gasLevel === 'normal' ? 5_000 : gasLevel === 'fast' ? 50_000 : 1_000_000;
+    return (baseLamports + priorityMax) / LAMPORTS_PER_SOL;
+  })();
+
   const previewData = quoteData
     ? {
         payAmount: quoteData.tokenAmount,
@@ -260,6 +278,9 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
         minReceiveAmount: quoteData.minSol,
         minReceiveLabel: `${quoteData.minSol.toFixed(6)} SOL`,
         priceImpactPct: quoteData.priceImpactPct,
+        // V1 卖出不收 Ocufi fee
+        platformFeeSol: 0,
+        networkFeeMaxSol,
       }
     : null;
 
