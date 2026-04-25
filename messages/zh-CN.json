@@ -12,7 +12,8 @@
     "history": "成交记录",
     "points": "积分",
     "settings": "设置",
-    "docs": "文档",
+    "docs": "使用文档",
+    "status": "服务状态",
     "tokenCheck": "查币",
     "faq": "常见问题",
     "more": "更多"
@@ -665,6 +666,70 @@
       "nft_airdrop": "NFT 空投",
       "nft": "NFT 操作",
       "other": "其他"
+    }
+  },
+  "docs": {
+    "title": "使用文档",
+    "subtitle": "5 分钟上手 Ocufi · 链上交易完整流程",
+    "connect": {
+      "title": "连接钱包",
+      "body": "支持 Phantom / Solflare / OKX。点右上角「连接钱包」选你装好的钱包扩展(桌面端)。\n\n手机端:你必须在钱包 app 自带的浏览器里打开 ocufi.io,普通 Safari/Chrome 检测不到钱包。",
+      "cta": "去持仓页 →"
+    },
+    "buy": {
+      "title": "买入代币",
+      "body": "进交易页,在顶部搜索框输入「币名 / 符号 / 合约地址」。选好代币后看 K 线 + 安全审查。\n\n买入面板默认用 SOL 支付,输入数量(或点 0.1 / 0.5 / 1 / MAX 快捷),选好滑点和优先费,点「确认买入」。弹窗会显示预览(预计获得 / 价格冲击 / 最少到账),再点确认就在钱包里签名。",
+      "cta": "去交易页 →"
+    },
+    "sell": {
+      "title": "卖出代币",
+      "body": "持仓页或代币详情页都能进卖出。卖出面板自动读你的余额,点 25% / 50% / 100% 快捷数量。\n\n注:100% 卖会用链上原始 raw amount(BigInt 精确),避免浮点漂移导致 insufficient balance。",
+      "cta": "去持仓 →"
+    },
+    "limit": {
+      "title": "限价单",
+      "body": "在交易面板顶部 tab 切到「限价」。输入目标价格 + 数量,Jupiter 会在到价时自动撮合。\n\n限价单生命周期:挂单 → 等待 → 成交 / 取消。所有状态在「限价单」tab 实时更新。",
+      "cta": "去限价单 →"
+    },
+    "safety": {
+      "title": "安全审查",
+      "body": "粘合约地址到查币页,免费看完整 RugCheck 报告:Mint 权限、Freeze 权限、LP 锁定%、前 10 持仓集中度。\n\n红色警告 = 多重 danger 标记或已被判定为 rug。绿色 verified = 在我们维护的白名单里(USDC、JUP、TRUMP 等正规中心化代币)。",
+      "cta": "去查币 →"
+    },
+    "watchlist": {
+      "title": "自选系统",
+      "body": "在行情表或代币详情页点星标 ⭐ 添加自选。所有自选只存在你的浏览器 localStorage,不上送服务器。\n\n顶部 nav「自选」入口直接打开你的清单,显示实时行情。",
+      "cta": "去自选 →"
+    },
+    "footer": "更多问题可看 FAQ 或在 GitHub 提 Issue。所有代码开源可审计。"
+  },
+  "status": {
+    "title": "服务状态",
+    "subtitle": "实时探活外部依赖 · 30 秒自动刷新",
+    "overall": {
+      "checking": "检查中…",
+      "healthy": "全部正常",
+      "degraded": "部分降级",
+      "down": "有服务不可用",
+      "refreshHint": "30 秒自动刷新一次,也可以右边手动点"
+    },
+    "disclaimer": "仅探测从你浏览器到外部 API 的连通性,不代表 ocufi.io 整体可用性。完整可用性看你能否正常完成交易。"
+  },
+  "feedback": {
+    "label": "反馈",
+    "title": "给 Ocufi 提反馈",
+    "subtitle": "我们读每一条 — 早期阶段你的反馈最有价值",
+    "channels": {
+      "tg": "TG 群",
+      "github": "GitHub",
+      "twitter": "Twitter"
+    },
+    "orInline": "或在这里直接写,会跳到 GitHub Issue 提交",
+    "form": {
+      "subject": "标题(必填,< 100 字)",
+      "body": "详细描述 · 怎么操作的 / 期望什么 / 实际什么(< 2000 字)",
+      "submit": "提交到 GitHub Issue",
+      "hint": "GitHub Issue 公开可见。隐私问题请走 TG 群私聊。"
     }
   },
   "watchlist": {

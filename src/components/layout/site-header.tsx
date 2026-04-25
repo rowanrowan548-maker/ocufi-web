@@ -20,7 +20,9 @@ export async function SiteHeader() {
     { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
     { href: '/points', label: t('nav.points') },
+    { href: '/docs', label: t('nav.docs') },
     { href: '/faq', label: t('nav.faq') },
+    { href: '/status', label: t('nav.status') },
     { href: '/settings', label: t('nav.settings') },
   ];
 

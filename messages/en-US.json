@@ -13,6 +13,7 @@
     "points": "Points",
     "settings": "Settings",
     "docs": "Docs",
+    "status": "Status",
     "tokenCheck": "Token Check",
     "faq": "FAQ",
     "more": "More"
@@ -650,6 +651,70 @@
       "nft_airdrop": "NFT Airdrop",
       "nft": "NFT",
       "other": "Other"
+    }
+  },
+  "docs": {
+    "title": "Docs",
+    "subtitle": "Get up and running with Ocufi in 5 minutes",
+    "connect": {
+      "title": "Connect a wallet",
+      "body": "Phantom / Solflare / OKX supported. On desktop, click \"Connect wallet\" in the top right and pick your installed wallet extension.\n\nOn mobile you must open ocufi.io inside your wallet app's built-in browser — Safari/Chrome cannot detect wallet extensions.",
+      "cta": "Go to portfolio →"
+    },
+    "buy": {
+      "title": "Buy a token",
+      "body": "On the trade page, search by name / symbol / contract address. Pick a token to see the chart and safety check.\n\nBuy form pays in SOL by default. Enter an amount (or click 0.1 / 0.5 / 1 / MAX), pick slippage and priority fee, click confirm. The dialog previews tokens out / price impact / min received before your wallet signs.",
+      "cta": "Go to trade →"
+    },
+    "sell": {
+      "title": "Sell a token",
+      "body": "Reach the sell form from portfolio or any token detail page. The form auto-loads your balance — click 25% / 50% / 100% for quick amounts.\n\nNote: 100% uses raw on-chain BigInt to avoid floating-point dust mismatches that cause insufficient-balance failures.",
+      "cta": "Go to portfolio →"
+    },
+    "limit": {
+      "title": "Limit orders",
+      "body": "Switch the inner tab on the trade form to \"Limit\". Set a target price + amount and Jupiter auto-fills when reached.\n\nLifecycle: pending → waiting → filled or cancelled. The Limit tab shows real-time status.",
+      "cta": "Open limit form →"
+    },
+    "safety": {
+      "title": "Safety check",
+      "body": "Paste any contract address to see a full free RugCheck report: mint authority, freeze authority, LP lock %, top-10 concentration.\n\nRed = multiple danger flags or already rugged. Green verified = in our maintained whitelist (USDC, JUP, TRUMP, etc. — legitimate centralized tokens).",
+      "cta": "Open token check →"
+    },
+    "watchlist": {
+      "title": "Watchlist",
+      "body": "Star ⭐ a token from any list or detail page. Favorites live only in your browser localStorage — never uploaded.\n\nThe \"Watchlist\" link in the top nav opens the full list with live prices.",
+      "cta": "Open watchlist →"
+    },
+    "footer": "More questions? Check the FAQ or open a GitHub Issue. All code is open and auditable."
+  },
+  "status": {
+    "title": "Service Status",
+    "subtitle": "Live probes against external dependencies · refreshes every 30s",
+    "overall": {
+      "checking": "Checking…",
+      "healthy": "All systems normal",
+      "degraded": "Partial degradation",
+      "down": "Some services down",
+      "refreshHint": "Auto-refreshes every 30s · click on the right to refresh manually"
+    },
+    "disclaimer": "We probe connectivity from your browser to upstream APIs. Full availability still depends on whether you can complete a trade end-to-end."
+  },
+  "feedback": {
+    "label": "Feedback",
+    "title": "Give Ocufi feedback",
+    "subtitle": "We read every one — at this stage your feedback matters most",
+    "channels": {
+      "tg": "TG Group",
+      "github": "GitHub",
+      "twitter": "Twitter"
+    },
+    "orInline": "Or write inline and we'll redirect to a prefilled GitHub Issue",
+    "form": {
+      "subject": "Title (required, < 100 chars)",
+      "body": "Details · what you did / what you expected / what happened (< 2000 chars)",
+      "submit": "Submit to GitHub Issue",
+      "hint": "GitHub Issues are public. For private matters use the TG group."
     }
   },
   "watchlist": {
