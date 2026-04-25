@@ -231,16 +231,27 @@ export interface AdminRecentEvent {
   amount: number;
   at: string;
 }
+export interface AdminTimeBucket {
+  date: string;
+  count: number;
+}
 export interface AdminStats {
   total_wallets: number;
   new_wallets_24h: number;
+  new_wallets_7d: number;
   total_trades: number;
   trades_24h: number;
+  trades_7d: number;
   total_points_awarded: number;
   points_24h: number;
   invite_bound: number;
   invite_activated: number;
   activation_rate_pct: number;
+  repeat_wallet_count: number;
+  repeat_rate_pct: number;
+  daily_trades_30d: AdminTimeBucket[];
+  daily_wallets_30d: AdminTimeBucket[];
+  hourly_activity_24h: AdminTimeBucket[];
   top_inviters: AdminTopInviter[];
   top_traders: AdminTopTrader[];
   recent_events: AdminRecentEvent[];

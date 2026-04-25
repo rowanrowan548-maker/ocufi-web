@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react';
 import {
   RefreshCw, Users, ShoppingCart, Coins, Sparkles, AlertCircle, Loader2, Lock,
+  TrendingUp, ExternalLink,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { fetchAdminStats, isApiConfigured, type AdminStats } from '@/lib/api-client';
+import { DailyBarChart, HourlyHeatmap } from './admin-charts';
 
 const REFRESH_MS = 30_000;
 
@@ -130,19 +132,19 @@ export function AdminScreen() {
           </Card>
         ) : (
           <>
-            {/* 4 张大数字卡 */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* 6 张大数字卡 */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <BigNumberCard
                 Icon={Users}
                 label="累计钱包"
                 value={stats.total_wallets.toLocaleString()}
-                delta={stats.new_wallets_24h > 0 ? `+${stats.new_wallets_24h} (24h)` : ''}
+                delta={stats.new_wallets_24h > 0 ? `+${stats.new_wallets_24h} (24h)` : `+${stats.new_wallets_7d} (7d)`}
               />
               <BigNumberCard
                 Icon={ShoppingCart}
                 label="累计交易"
                 value={stats.total_trades.toLocaleString()}
-                delta={stats.trades_24h > 0 ? `+${stats.trades_24h} (24h)` : ''}
+                delta={stats.trades_24h > 0 ? `+${stats.trades_24h} (24h)` : `+${stats.trades_7d} (7d)`}
               />
               <BigNumberCard
                 Icon={Coins}
@@ -151,12 +153,48 @@ export function AdminScreen() {
                 delta={stats.points_24h > 0 ? `+${stats.points_24h} (24h)` : ''}
               />
               <BigNumberCard
+                Icon={TrendingUp}
+                label="留存率"
+                value={`${stats.repeat_rate_pct.toFixed(1)}%`}
+                delta={`${stats.repeat_wallet_count}/${stats.total_wallets} 多次成交`}
+              />
+              <BigNumberCard
                 Icon={Sparkles}
                 label="邀请激活率"
                 value={`${stats.activation_rate_pct.toFixed(1)}%`}
                 delta={`${stats.invite_activated}/${stats.invite_bound}`}
               />
+              <BigNumberCard
+                Icon={ExternalLink}
+                label="访客流量"
+                value="去 Vercel"
+                delta="点开新窗口"
+                href="https://vercel.com/dashboard"
+              />
             </div>
+
+            {/* 时间序列图表 */}
+            <div className="grid lg:grid-cols-2 gap-4">
+              <Card className="p-4 sm:p-5">
+                <DailyBarChart
+                  data={stats.daily_trades_30d}
+                  label="近 30 天交易"
+                  accent="#19FB9B"
+                />
+              </Card>
+              <Card className="p-4 sm:p-5">
+                <DailyBarChart
+                  data={stats.daily_wallets_30d}
+                  label="近 30 天新钱包"
+                  accent="#7B5BFF"
+                />
+              </Card>
+            </div>
+
+            {/* 24 小时热度 */}
+            <Card className="p-4 sm:p-5">
+              <HourlyHeatmap data={stats.hourly_activity_24h} />
+            </Card>
 
             {/* Top 邀请人 + Top 积分钱包 */}
             <div className="grid lg:grid-cols-2 gap-4">
@@ -271,27 +309,41 @@ export function AdminScreen() {
 }
 
 function BigNumberCard({
-  Icon, label, value, delta,
+  Icon, label, value, delta, href,
 }: {
   Icon: typeof Users;
   label: string;
   value: string;
   delta?: string;
+  href?: string;
 }) {
-  return (
-    <Card className="p-4 sm:p-5">
+  const content = (
+    <>
       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
         <Icon className="h-3 w-3" />
         {label}
       </div>
-      <div className="text-2xl sm:text-3xl font-mono font-bold tabular-nums mt-2">
+      <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums mt-2">
         {value}
       </div>
       {delta && (
         <div className="text-[10px] font-mono text-success/80 mt-1">{delta}</div>
       )}
-    </Card>
+    </>
   );
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block transition-colors hover:bg-muted/30 rounded-xl"
+      >
+        <Card className="p-4 sm:p-5">{content}</Card>
+      </a>
+    );
+  }
+  return <Card className="p-4 sm:p-5">{content}</Card>;
 }
 
 function KeyForm({ onSubmit }: { onSubmit: (k: string) => void }) {
