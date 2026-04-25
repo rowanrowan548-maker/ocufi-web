@@ -6,6 +6,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { PageTracker } from '@/components/analytics/page-tracker';
 import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
 import { SiteHeader } from '@/components/layout/site-header';
 import { FeedbackButton } from '@/components/feedback/feedback-button';
@@ -101,6 +102,7 @@ export default async function LocaleLayout({
             <SwRegister />
             <RefCapture />
             <WalletBind />
+            <PageTracker />
             <SiteHeader />
             {children}
             <FeedbackButton />

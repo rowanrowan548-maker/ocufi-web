@@ -235,6 +235,18 @@ export interface AdminTimeBucket {
   date: string;
   count: number;
 }
+export interface AdminTopPage {
+  path: string;
+  views: number;
+}
+export interface AdminTopReferrer {
+  host: string;
+  views: number;
+}
+export interface AdminDeviceCount {
+  device: string;
+  count: number;
+}
 export interface AdminStats {
   total_wallets: number;
   new_wallets_24h: number;
@@ -252,6 +264,15 @@ export interface AdminStats {
   daily_trades_30d: AdminTimeBucket[];
   daily_wallets_30d: AdminTimeBucket[];
   hourly_activity_24h: AdminTimeBucket[];
+  total_page_views: number;
+  page_views_24h: number;
+  page_views_7d: number;
+  unique_visitors_24h: number;
+  unique_visitors_7d: number;
+  daily_views_30d: AdminTimeBucket[];
+  top_pages: AdminTopPage[];
+  top_referrers: AdminTopReferrer[];
+  device_breakdown: AdminDeviceCount[];
   top_inviters: AdminTopInviter[];
   top_traders: AdminTopTrader[];
   recent_events: AdminRecentEvent[];

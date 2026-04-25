@@ -166,10 +166,9 @@ export function AdminScreen() {
               />
               <BigNumberCard
                 Icon={ExternalLink}
-                label="访客流量"
-                value="去 Vercel"
-                delta="点开新窗口"
-                href="https://vercel.com/dashboard"
+                label="独立访客 24h"
+                value={stats.unique_visitors_24h.toLocaleString()}
+                delta={`PV ${stats.page_views_24h} · 7d 独立 ${stats.unique_visitors_7d}`}
               />
             </div>
 
@@ -195,6 +194,107 @@ export function AdminScreen() {
             <Card className="p-4 sm:p-5">
               <HourlyHeatmap data={stats.hourly_activity_24h} />
             </Card>
+
+            {/* 访客图表 */}
+            <Card className="p-4 sm:p-5">
+              <DailyBarChart
+                data={stats.daily_views_30d}
+                label="近 30 天页面浏览(PV)"
+                accent="#5BC8FF"
+              />
+            </Card>
+
+            {/* Top 页面 + Top 来源 + 设备 */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <Card>
+                <div className="px-5 py-3 border-b border-border/40">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Top 10 热门页面 (7d)</div>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>路径</TableHead>
+                        <TableHead className="text-right">PV</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stats.top_pages.length === 0 ? (
+                        <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground/60 py-8">暂无</TableCell></TableRow>
+                      ) : stats.top_pages.map((p, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-mono text-xs truncate max-w-[180px]">{p.path}</TableCell>
+                          <TableCell className="text-right font-mono text-xs">{p.views.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="px-5 py-3 border-b border-border/40">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Top 10 流量来源 (7d)</div>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>来源</TableHead>
+                        <TableHead className="text-right">访问</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stats.top_referrers.length === 0 ? (
+                        <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground/60 py-8">暂无 / 全部直接访问</TableCell></TableRow>
+                      ) : stats.top_referrers.map((r, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-mono text-xs truncate max-w-[180px]">{r.host}</TableCell>
+                          <TableCell className="text-right font-mono text-xs">{r.views.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="px-5 py-3 border-b border-border/40">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">设备分布 (7d)</div>
+                </div>
+                <div className="p-5 space-y-3">
+                  {stats.device_breakdown.length === 0 ? (
+                    <div className="text-center text-xs text-muted-foreground/60 py-8">暂无</div>
+                  ) : (() => {
+                    const totalDev = stats.device_breakdown.reduce((s, d) => s + d.count, 0);
+                    return stats.device_breakdown.map((d, i) => {
+                      const pct = totalDev > 0 ? (d.count / totalDev) * 100 : 0;
+                      const colors: Record<string, string> = {
+                        desktop: 'bg-primary/60',
+                        mobile: 'bg-[#5BC8FF]/60',
+                        tablet: 'bg-warning/60',
+                      };
+                      return (
+                        <div key={i} className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="font-mono">{d.device}</span>
+                            <span className="font-mono text-muted-foreground">
+                              {d.count.toLocaleString()} <span className="text-[10px]">({pct.toFixed(1)}%)</span>
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted/40 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${colors[d.device] || 'bg-muted-foreground/40'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </Card>
+            </div>
 
             {/* Top 邀请人 + Top 积分钱包 */}
             <div className="grid lg:grid-cols-2 gap-4">
