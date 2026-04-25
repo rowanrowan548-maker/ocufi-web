@@ -1,0 +1,330 @@
+/**
+ * 战绩 / 总盈亏分享卡 · 1200×675 PNG
+ *
+ * 用户从持仓页一键生成,展示:
+ *  - 累计盈亏(USD)大字
+ *  - 已实现 / 未实现 / 胜率(W/L)
+ *  - 钱包脱敏 + 邀请码 box
+ *  - 右半:抽象品牌图形(同心圆 + 渐变光晕)
+ *  - 右上 @Ocufi_io · ocufi.io 强化品牌
+ */
+import { drawSocials } from './share-card';
+
+const W = 1200;
+const H = 675;
+
+const COLORS = {
+  bg: '#0A0B0D',
+  bg2: '#0F1115',
+  accent: '#19FB9B',
+  danger: '#EF4444',
+  fg: '#fafafa',
+  muted: '#a1a1aa',
+  dim: '#71717a',
+  grid: 'rgba(255,255,255,0.04)',
+};
+
+export interface PnlShareCardData {
+  walletAddress: string;
+  inviteCode: string;
+  realizedUsd: number;
+  unrealizedUsd: number;
+  totalUsd: number;
+  totalPct: number;
+  /** 平仓盈利笔数 */
+  winCount: number;
+  /** 平仓总笔数 */
+  closedCount: number;
+  /** 时间范围标签:7D / 30D / All-time 等 */
+  rangeLabel: string;
+}
+
+export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('canvas 2d context unavailable');
+
+  // ── 背景 ──
+  ctx.fillStyle = COLORS.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 网格
+  ctx.strokeStyle = COLORS.grid;
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, H);
+    ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(W, y + 0.5);
+    ctx.stroke();
+  }
+
+  // 左上品牌径向光
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 800);
+  grad.addColorStop(0, 'rgba(25,251,155,0.13)');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 右下副色光(总盈亏正负决定)
+  const isUp = data.totalUsd >= 0;
+  const grad2 = ctx.createRadialGradient(W, H / 2, 0, W, H / 2, 700);
+  grad2.addColorStop(0, isUp ? 'rgba(25,251,155,0.10)' : 'rgba(239,68,68,0.10)');
+  grad2.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad2;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── 顶部品牌 ──
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = 'bold 38px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
+  ctx.fillText('OCUFI', 60, 95);
+
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.fillText('Solana · Non-custodial · Open-source', 60, 122);
+
+  ctx.strokeStyle = 'rgba(25,251,155,0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(60, 60);
+  ctx.lineTo(220, 60);
+  ctx.stroke();
+
+  // 右上社交账号
+  drawSocials(ctx, W - 60, 95);
+
+  // ── 左侧:数据 ──
+  // Range label
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '20px ui-sans-serif, sans-serif';
+  ctx.fillText(`${data.rangeLabel} 累计盈亏`, 60, 220);
+
+  // 总盈亏徽章 · 大字
+  const sign = data.totalUsd >= 0 ? '+' : '';
+  const totalText = `${sign}$${formatUsd(Math.abs(data.totalUsd))}`;
+  ctx.font = 'bold 80px ui-mono, "SF Mono", Menlo, monospace';
+  const tw = ctx.measureText(totalText).width;
+  const badgeColor = isUp ? COLORS.accent : COLORS.danger;
+  // 实心徽章(模仿 gmgn 但用品牌绿)
+  ctx.fillStyle = badgeColor;
+  roundRect(ctx, 60, 240, tw + 48, 100, 12);
+  ctx.fill();
+
+  ctx.fillStyle = COLORS.bg;
+  ctx.font = 'bold 80px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(totalText, 60 + 24, 240 + 50);
+  ctx.textBaseline = 'alphabetic';
+
+  // 总涨幅 %(徽章右下角小字)
+  if (Number.isFinite(data.totalPct)) {
+    ctx.fillStyle = COLORS.muted;
+    ctx.font = '18px ui-monospace, monospace';
+    const pctSign = data.totalPct >= 0 ? '+' : '';
+    ctx.fillText(`${pctSign}${data.totalPct.toFixed(2)}% ${data.rangeLabel}`, 60, 372);
+  }
+
+  // 细分:已实现 / 未实现 / 胜率
+  let rowY = 430;
+  drawStatRow(ctx, '已实现', formatPnl(data.realizedUsd), pnlColor(data.realizedUsd), rowY);
+  rowY += 50;
+  drawStatRow(ctx, '未实现', formatPnl(data.unrealizedUsd), pnlColor(data.unrealizedUsd), rowY);
+  rowY += 50;
+  // 胜率显示 W/L 样式 + 百分比
+  const winRate = data.closedCount > 0 ? (data.winCount / data.closedCount) * 100 : 0;
+  const wlText = `${data.winCount}/${data.closedCount}`;
+  drawStatRow(
+    ctx,
+    '胜率',
+    `${wlText}  (${winRate.toFixed(0)}%)`,
+    data.closedCount > 0 ? COLORS.fg : COLORS.muted,
+    rowY,
+  );
+
+  // ── 右侧:抽象品牌图形 ──
+  drawAbstractGraphic(ctx, isUp);
+
+  // 钱包脱敏 + 邀请码(右下,gmgn 风)
+  drawWalletAndInvite(ctx, data);
+
+  // ── 底部水印 ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(60, 605);
+  ctx.lineTo(W - 60, 605);
+  ctx.stroke();
+
+  ctx.fillStyle = COLORS.dim;
+  ctx.font = '17px ui-sans-serif, sans-serif';
+  ctx.fillText('Powered by Ocufi · open-source · audit-friendly', 60, 638);
+
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = 'bold 22px ui-monospace, monospace';
+  const inviteUrl = `ocufi.io/?ref=${data.inviteCode}`;
+  const w = ctx.measureText(inviteUrl).width;
+  ctx.fillText(inviteUrl, W - 60 - w, 638);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
+      'image/png',
+      0.95,
+    );
+  });
+}
+
+function drawStatRow(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  value: string,
+  valueColor: string,
+  y: number,
+) {
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '20px ui-sans-serif, sans-serif';
+  ctx.fillText(label, 60, y);
+
+  ctx.fillStyle = valueColor;
+  ctx.font = 'bold 28px ui-monospace, monospace';
+  ctx.fillText(value, 220, y);
+}
+
+function drawAbstractGraphic(ctx: CanvasRenderingContext2D, isUp: boolean) {
+  const cx = 950;
+  const cy = 320;
+  const baseColor = isUp ? '25,251,155' : '239,68,68';
+
+  // 同心圆环
+  for (let i = 6; i >= 1; i--) {
+    const r = i * 40;
+    const alpha = 0.04 + (6 - i) * 0.025;
+    ctx.strokeStyle = `rgba(${baseColor},${alpha})`;
+    ctx.lineWidth = i === 1 ? 3 : 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 中心 dot 光晕
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 80);
+  glow.addColorStop(0, `rgba(${baseColor},0.4)`);
+  glow.addColorStop(1, `rgba(${baseColor},0)`);
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 80, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 中心实心 dot
+  ctx.fillStyle = `rgba(${baseColor},0.9)`;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 几个轨道粒子
+  const orbits = [
+    { angle: 0.2, r: 80, size: 5 },
+    { angle: 1.6, r: 120, size: 4 },
+    { angle: 3.0, r: 160, size: 6 },
+    { angle: 4.5, r: 200, size: 4 },
+    { angle: 5.8, r: 240, size: 3 },
+  ];
+  for (const o of orbits) {
+    const px = cx + o.r * Math.cos(o.angle);
+    const py = cy + o.r * Math.sin(o.angle);
+    ctx.fillStyle = `rgba(${baseColor},0.7)`;
+    ctx.beginPath();
+    ctx.arc(px, py, o.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawWalletAndInvite(ctx: CanvasRenderingContext2D, data: PnlShareCardData) {
+  const x = W - 60;
+  const baseY = 510;
+
+  // 钱包脱敏
+  const masked =
+    data.walletAddress.length > 8
+      ? `${data.walletAddress.slice(0, 4)}…${data.walletAddress.slice(-4)}`
+      : data.walletAddress;
+
+  // 头像圆点
+  ctx.fillStyle = COLORS.accent;
+  ctx.beginPath();
+  ctx.arc(x - 220, baseY - 6, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = COLORS.fg;
+  ctx.font = 'bold 18px ui-monospace, monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(masked, x, baseY);
+
+  // 邀请码
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '14px ui-sans-serif, sans-serif';
+  ctx.fillText(`邀请码  `, x - ctx.measureText(data.inviteCode).width - 10 - ctx.measureText('邀请码  ').width + ctx.measureText('邀请码  ').width, baseY + 30);
+
+  // 简化:直接拼一行
+  ctx.textAlign = 'right';
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '14px ui-sans-serif, sans-serif';
+  const codeLabel = '邀请码 ';
+  const codeFull = `${codeLabel}${data.inviteCode}`;
+  // measure split
+  ctx.font = '14px ui-sans-serif, sans-serif';
+  const labelW = ctx.measureText(codeLabel).width;
+  ctx.font = 'bold 16px ui-monospace, monospace';
+  const codeW = ctx.measureText(data.inviteCode).width;
+  const startX = x - labelW - codeW;
+  ctx.textAlign = 'left';
+  ctx.font = '14px ui-sans-serif, sans-serif';
+  ctx.fillStyle = COLORS.muted;
+  ctx.fillText(codeLabel, startX, baseY + 30);
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = 'bold 16px ui-monospace, monospace';
+  ctx.fillText(data.inviteCode, startX + labelW, baseY + 30);
+
+  // 重置
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  void codeFull;
+}
+
+function pnlColor(usd: number): string {
+  if (usd > 0) return COLORS.accent;
+  if (usd < 0) return COLORS.danger;
+  return COLORS.muted;
+}
+
+function formatPnl(usd: number): string {
+  const sign = usd > 0 ? '+' : usd < 0 ? '-' : '';
+  return `${sign}$${formatUsd(Math.abs(usd))}`;
+}
+
+function formatUsd(n: number): string {
+  if (!Number.isFinite(n)) return '0';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number, r: number,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}

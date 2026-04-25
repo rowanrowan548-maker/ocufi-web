@@ -37,6 +37,7 @@ import { ClosedPositions } from './closed-positions';
 import { AssetPie, AssetPieLegend } from './asset-pie';
 import { ValueChart } from './value-chart';
 import { SavingsCard } from './savings-card';
+import { PnlShareButton } from '@/components/share/pnl-share-button';
 
 export function PortfolioView() {
   const t = useTranslations();
@@ -83,6 +84,45 @@ export function PortfolioView() {
     }
     return items;
   }, [sol, tokens]);
+
+  // ── 总盈亏数据(分享卡用) ──
+  const solUsdPrice = sol.amount > 0 ? sol.valueUsd / sol.amount : 0;
+  const pnlSummary = useMemo(() => {
+    // 已实现:closed positions 累计 SOL PnL × 当前 SOL 价
+    let realizedSol = 0;
+    let winCount = 0;
+    for (const p of closed) {
+      realizedSol += p.realizedPnlSol;
+      if (p.realizedPnlSol > 0) winCount++;
+    }
+    const realizedUsd = realizedSol * solUsdPrice;
+
+    // 未实现:每个 token (currentPriceUsd - avgCostUsd) × balance
+    let unrealizedUsd = 0;
+    for (const tk of tokens) {
+      const cost = costs.get(tk.mint);
+      if (!cost || cost.avgCostSol <= 0) continue;
+      const avgCostUsd = cost.avgCostSol * solUsdPrice;
+      if (avgCostUsd <= 0 || tk.priceUsd <= 0) continue;
+      unrealizedUsd += (tk.priceUsd - avgCostUsd) * tk.amount;
+    }
+
+    const totalUsd = realizedUsd + unrealizedUsd;
+    // 总投入 = 累计买入 SOL × 当前 SOL 价(粗略基线)
+    let totalBuySol = 0;
+    for (const c of costs.values()) totalBuySol += c.totalBoughtSol;
+    const baselineUsd = totalBuySol * solUsdPrice;
+    const totalPct = baselineUsd > 0 ? (totalUsd / baselineUsd) * 100 : 0;
+
+    return {
+      realizedUsd,
+      unrealizedUsd,
+      totalUsd,
+      totalPct,
+      winCount,
+      closedCount: closed.length,
+    };
+  }, [closed, tokens, costs, solUsdPrice]);
 
   // 未连接
   if (!wallet.connected || !wallet.publicKey) {
@@ -170,8 +210,23 @@ export function PortfolioView() {
             <SavingsCard
               volumeSol={fees.volumeSol}
               txCount={fees.txCount}
-              solUsdPrice={sol.amount > 0 ? sol.valueUsd / sol.amount : 0}
+              solUsdPrice={solUsdPrice}
             />
+          )}
+
+          {/* 分享我的战绩 · 有平仓 OR 有持仓时才显示 */}
+          {(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0 && (
+            <div className="flex items-center justify-end pt-1">
+              <PnlShareButton
+                realizedUsd={pnlSummary.realizedUsd}
+                unrealizedUsd={pnlSummary.unrealizedUsd}
+                totalUsd={pnlSummary.totalUsd}
+                totalPct={pnlSummary.totalPct}
+                winCount={pnlSummary.winCount}
+                closedCount={pnlSummary.closedCount}
+                rangeLabel="All-time"
+              />
+            </div>
           )}
 
           {/* 资产分布 */}

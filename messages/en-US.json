@@ -788,6 +788,8 @@
   },
   "share": {
     "button": "Share",
+    "pnlButton": "Share my P/L",
+    "pnlShareText": "My all-time P/L on Ocufi · 0.1% fee saves 90% vs competitors · join 👇",
     "shareText": "I'm trading on Solana with Ocufi — only 0.1% fee (vs 1% on competitors). Come try 👇",
     "shared": "Shared",
     "downloadHint": "Card downloaded · paste or upload it in the opened window",

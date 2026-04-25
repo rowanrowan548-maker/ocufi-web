@@ -803,6 +803,8 @@
   },
   "share": {
     "button": "晒一单",
+    "pnlButton": "分享我的战绩",
+    "pnlShareText": "在 Ocufi 上的累计盈亏卡片 · 0.1% 手续费比竞品省 90% · 来一起 👇",
     "shareText": "我用 Ocufi 在 Solana 上做交易,手续费只要 0.1%(竞品 1%)。来试试 👇",
     "shared": "分享成功",
     "downloadHint": "卡片已下载,在打开的页面里粘贴或上传图片即可",

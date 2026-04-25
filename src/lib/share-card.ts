@@ -108,6 +108,9 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   ctx.lineTo(220, 60);
   ctx.stroke();
 
+  // 右上角:社交账号 · 强化品牌识别 + 引流
+  drawSocials(ctx, W - 60, 95);
+
   // ── 左侧:交易信息 ──
   // BUY/SELL 大徽章
   const badgeColor = isBuy ? COLORS.accent : COLORS.danger;
@@ -416,4 +419,44 @@ function formatPrice(n: number): string {
 function truncate(s: string, n: number): string {
   if (s.length <= n) return s;
   return s.slice(0, n - 1) + '…';
+}
+
+/** 卡片右上角:𝕏 @Ocufi_io · ocufi.io 字符串 · anchor 在 (rightX, baseY) */
+export function drawSocials(
+  ctx: CanvasRenderingContext2D,
+  rightX: number,
+  baseY: number,
+) {
+  const handle = '@Ocufi_io';
+  const domain = 'ocufi.io';
+
+  ctx.font = '16px ui-sans-serif, sans-serif';
+  ctx.fillStyle = COLORS.muted;
+
+  // 先量度:domain 在最右,handle 在它左边,再加分隔点
+  const domainW = ctx.measureText(domain).width;
+  const sepW = ctx.measureText(' · ').width;
+  ctx.font = 'bold 16px ui-sans-serif, sans-serif';
+  const handleW = ctx.measureText('𝕏 ').width + ctx.measureText(handle).width;
+
+  const totalW = handleW + sepW + domainW;
+  const x0 = rightX - totalW;
+
+  // 𝕏 + handle
+  ctx.fillStyle = COLORS.fg;
+  ctx.font = 'bold 16px ui-sans-serif, sans-serif';
+  ctx.fillText('𝕏 ', x0, baseY);
+  const xAfterIcon = x0 + ctx.measureText('𝕏 ').width;
+  ctx.fillStyle = COLORS.muted;
+  ctx.fillText(handle, xAfterIcon, baseY);
+
+  // 分隔点
+  ctx.fillStyle = COLORS.dim;
+  ctx.font = '16px ui-sans-serif, sans-serif';
+  ctx.fillText(' · ', x0 + handleW, baseY);
+
+  // domain
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = 'bold 16px ui-sans-serif, sans-serif';
+  ctx.fillText(domain, x0 + handleW + sepW, baseY);
 }
