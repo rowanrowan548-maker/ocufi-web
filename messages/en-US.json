@@ -786,6 +786,13 @@
     "backendPending": "Backend wiring in progress",
     "howLink": "Read more"
   },
+  "share": {
+    "button": "Share",
+    "shareText": "I'm trading on Solana with Ocufi — only 0.1% fee (vs 1% on competitors). Come try 👇",
+    "shared": "Shared",
+    "downloadHint": "Card downloaded · Twitter compose opened — paste the image to attach",
+    "failed": "Generation failed, please retry"
+  },
   "feedback": {
     "label": "Feedback",
     "title": "Give Ocufi feedback",

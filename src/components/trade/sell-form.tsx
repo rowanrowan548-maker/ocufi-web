@@ -41,6 +41,7 @@ import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
 import { TradeProgressOverlay } from './trade-progress-overlay';
 import { recordFee } from '@/lib/fee-tracker';
+import { ShareTradeButton } from '@/components/share/share-trade-button';
 import { toast } from 'sonner';
 import type { OverallRisk } from '@/lib/token-info';
 
@@ -437,15 +438,23 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
                 <span>{t('trade.result.networkFee')}</span>
                 <span className="font-mono">{result.feeSol.toFixed(6)} SOL</span>
               </div>
-              <a
-                href={`${chain.explorer}/tx/${result.signature}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-primary hover:underline text-xs pt-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                {t('trade.result.viewOnExplorer')}
-              </a>
+              <div className="flex items-center justify-between pt-1">
+                <a
+                  href={`${chain.explorer}/tx/${result.signature}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-primary hover:underline text-xs"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('trade.result.viewOnExplorer')}
+                </a>
+                <ShareTradeButton
+                  mint={mint.trim()}
+                  kind="sell"
+                  amount={quoteData?.tokenAmount ?? 0}
+                  solAmount={result.actualSol}
+                />
+              </div>
             </div>
           )}
         </CardContent>

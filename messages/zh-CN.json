@@ -801,6 +801,13 @@
     "backendPending": "数据接口待上线",
     "howLink": "查看玩法"
   },
+  "share": {
+    "button": "晒一单",
+    "shareText": "我用 Ocufi 在 Solana 上做交易,手续费只要 0.1%(竞品 1%)。来试试 👇",
+    "shared": "分享成功",
+    "downloadHint": "卡片已下载到本地 · Twitter 撰写窗口已打开,记得粘贴图片",
+    "failed": "生成失败,稍后再试"
+  },
   "feedback": {
     "label": "反馈",
     "title": "给 Ocufi 提反馈",
