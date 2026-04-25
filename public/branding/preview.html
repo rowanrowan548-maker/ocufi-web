@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ocufi · Logo 候选预览</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+                   "Microsoft YaHei", sans-serif;
+      background: #0a0b0d;
+      color: #fafafa;
+      line-height: 1.5;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sub { color: #8b8d94; font-size: 14px; margin: 0 0 32px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: #13151a;
+      overflow: hidden;
+    }
+    .card header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card header h2 { font-size: 16px; margin: 0; }
+    .badge {
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 11px;
+      color: #19fb9b;
+      padding: 2px 8px;
+      border: 1px solid rgba(25,251,155,0.4);
+      border-radius: 4px;
+    }
+    .desc { padding: 12px 16px; font-size: 13px; color: #a1a1aa; }
+
+    .row {
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      display: flex; align-items: center; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .row.light { background: #fafafa; color: #0a0b0d; }
+    .row.light .label { color: #555; }
+    .row.brand { background: #19fb9b; color: #0a0b0d; }
+    .row.brand .label { color: rgba(0,0,0,0.6); }
+
+    .label {
+      font-size: 11px;
+      color: #71717a;
+      width: 80px;
+      flex-shrink: 0;
+      font-family: ui-monospace, "SF Mono", monospace;
+    }
+    .sizes {
+      display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .sizes img { display: block; }
+
+    .wordmark {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .wordmark img { display: block; }
+    .wordmark .text { font-size: 22px; }
+
+    /* Twitter banner mock 1500×500 比例 */
+    .banner {
+      grid-column: 1 / -1;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .banner-canvas {
+      aspect-ratio: 3/1;
+      background:
+        radial-gradient(ellipse 60% 70% at 0% 0%, rgba(25,251,155,0.18), transparent 70%),
+        radial-gradient(ellipse 40% 60% at 100% 100%, rgba(25,251,155,0.08), transparent 70%),
+        #0a0b0d;
+      display: flex; align-items: center; justify-content: center;
+      gap: 20px;
+      font-size: clamp(28px, 4vw, 56px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .banner-canvas .tag {
+      font-size: 0.36em;
+      letter-spacing: 0.02em;
+      color: #19fb9b;
+      font-weight: 500;
+      display: block;
+      margin-top: 8px;
+    }
+
+    .footer {
+      margin-top: 40px; padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 12px; color: #71717a; text-align: center;
+    }
+    code {
+      font-family: ui-monospace, "SF Mono", monospace;
+      background: rgba(255,255,255,0.06);
+      padding: 1px 6px; border-radius: 3px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ocufi · Logo 候选预览</h1>
+  <p class="sub">
+    四种方向。请在 <strong>16 / 32 / 64 / 128 / 256 px</strong> 不同尺寸下,
+    在 <strong>黑底 / 白底 / 品牌绿底</strong> 三种背景上比较辨识度。
+  </p>
+
+  <div class="grid">
+
+    <!-- A · Iris -->
+    <div class="card">
+      <header>
+        <h2>A · Iris(瞳孔)</h2>
+        <span class="badge">同心圆 / 直接表达"眼"</span>
+      </header>
+      <div class="desc">
+        三层同心圆:外淡环(光感)+ 主环(瞳孔)+ 中心实点。最像一只眼睛,
+        小尺寸保留度高,做 favicon 也清晰。视觉重心居中,稳定。
+      </div>
+      <div class="row">
+        <span class="label">DARK</span>
+        <div class="sizes">
+          <img src="logo-a-iris.svg" width="16" height="16" />
+          <img src="logo-a-iris.svg" width="32" height="32" />
+          <img src="logo-a-iris.svg" width="64" height="64" />
+          <img src="logo-a-iris.svg" width="128" height="128" />
+        </div>
+      </div>
+      <div class="row light">
+        <span class="label">LIGHT</span>
+        <div class="sizes">
+          <img src="logo-a-iris.svg" width="32" height="32" />
+          <img src="logo-a-iris.svg" width="64" height="64" />
+        </div>
+      </div>
+      <div class="row">
+        <span class="label">字标合体</span>
+        <div class="wordmark">
+          <img src="logo-a-iris.svg" width="36" height="36" />
+          <span class="text">Ocufi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B · 菱形 + 波纹 -->
+    <div class="card">
+      <header>
+        <h2>B · 菱形 + 波纹</h2>
+        <span class="badge">现有方向 + 中心强化</span>
+      </header>
+      <div class="desc">
+        保留当前菱形(链上世界的边界)+ 中心改成同心圆瞳孔。
+        识别度延续现有,但 logo 更有"看"的语义,辨识更精致。
+      </div>
+      <div class="row">
+        <span class="label">DARK</span>
+        <div class="sizes">
+          <img src="logo-b-diamond-ripple.svg" width="16" height="16" />
+          <img src="logo-b-diamond-ripple.svg" width="32" height="32" />
+          <img src="logo-b-diamond-ripple.svg" width="64" height="64" />
+          <img src="logo-b-diamond-ripple.svg" width="128" height="128" />
+        </div>
+      </div>
+      <div class="row light">
+        <span class="label">LIGHT</span>
+        <div class="sizes">
+          <img src="logo-b-diamond-ripple.svg" width="32" height="32" />
+          <img src="logo-b-diamond-ripple.svg" width="64" height="64" />
+        </div>
+      </div>
+      <div class="row">
+        <span class="label">字标合体</span>
+        <div class="wordmark">
+          <img src="logo-b-diamond-ripple.svg" width="36" height="36" />
+          <span class="text">Ocufi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- C · 椭圆瞳眼 -->
+    <div class="card">
+      <header>
+        <h2>C · 椭圆瞳眼</h2>
+        <span class="badge">最直白 / 最有性格</span>
+      </header>
+      <div class="desc">
+        横椭圆 + 中心瞳孔 + 高光小点 = 一只眼睛。
+        最有"识别 + 温度",但视觉重量大,字标合体时要比例平衡。
+      </div>
+      <div class="row">
+        <span class="label">DARK</span>
+        <div class="sizes">
+          <img src="logo-c-eye.svg" width="16" height="16" />
+          <img src="logo-c-eye.svg" width="32" height="32" />
+          <img src="logo-c-eye.svg" width="64" height="64" />
+          <img src="logo-c-eye.svg" width="128" height="128" />
+        </div>
+      </div>
+      <div class="row light">
+        <span class="label">LIGHT</span>
+        <div class="sizes">
+          <img src="logo-c-eye.svg" width="32" height="32" />
+          <img src="logo-c-eye.svg" width="64" height="64" />
+        </div>
+      </div>
+      <div class="row">
+        <span class="label">字标合体</span>
+        <div class="wordmark">
+          <img src="logo-c-eye.svg" width="36" height="36" />
+          <span class="text">Ocufi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D · 渐变立体版 -->
+    <div class="card">
+      <header>
+        <h2>D · 渐变立体版</h2>
+        <span class="badge">现有方向 + 渐变立体感</span>
+      </header>
+      <div class="desc">
+        保留菱形结构,描边/中心点改成 #1FFFA3→#0FCC78 渐变,
+        加中心光晕。给金融产品一些"权威感"和层次。
+        小尺寸下渐变会丢失细节,做 16px favicon 时建议 fallback 到 A/B 平面版。
+      </div>
+      <div class="row">
+        <span class="label">DARK</span>
+        <div class="sizes">
+          <img src="logo-d-gradient.svg" width="16" height="16" />
+          <img src="logo-d-gradient.svg" width="32" height="32" />
+          <img src="logo-d-gradient.svg" width="64" height="64" />
+          <img src="logo-d-gradient.svg" width="128" height="128" />
+        </div>
+      </div>
+      <div class="row light">
+        <span class="label">LIGHT</span>
+        <div class="sizes">
+          <img src="logo-d-gradient.svg" width="32" height="32" />
+          <img src="logo-d-gradient.svg" width="64" height="64" />
+        </div>
+      </div>
+      <div class="row">
+        <span class="label">字标合体</span>
+        <div class="wordmark">
+          <img src="logo-d-gradient.svg" width="36" height="36" />
+          <span class="text">Ocufi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Twitter banner mock — 用胜出的那个替换 -->
+    <div class="banner">
+      <div class="banner-canvas">
+        <img src="logo-a-iris.svg" width="120" height="120" alt="Ocufi A" />
+        <div>
+          Ocufi
+          <span class="tag">0.1% fee · Non-custodial · Open-source</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    点开任一 SVG 文件可单独看完整代码:
+    <code>/branding/logo-a-iris.svg</code> ·
+    <code>/branding/logo-b-diamond-ripple.svg</code> ·
+    <code>/branding/logo-c-eye.svg</code> ·
+    <code>/branding/logo-d-gradient.svg</code>
+  </div>
+</body>
+</html>
