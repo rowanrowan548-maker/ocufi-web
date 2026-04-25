@@ -48,7 +48,34 @@ export interface TokenDetail {
   hasRugCheckData: boolean;
 }
 
+// 详情缓存 30s,trade 页频繁切代币也不重打 RugCheck / DexScreener
+const detailCache = new Map<string, { data: TokenDetail; expiresAt: number }>();
+const DETAIL_TTL_MS = 30_000;
+const detailInflight = new Map<string, Promise<TokenDetail>>();
+
 export async function fetchTokenDetail(mint: string): Promise<TokenDetail> {
+  const cached = detailCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  const existing = detailInflight.get(mint);
+  if (existing) return existing;
+
+  const promise = doFetchTokenDetail(mint).then((detail) => {
+    detailCache.set(mint, { data: detail, expiresAt: Date.now() + DETAIL_TTL_MS });
+    detailInflight.delete(mint);
+    return detail;
+  }).catch((err) => {
+    detailInflight.delete(mint);
+    // 失败时复用旧缓存(限速期间不让 UI 空白)
+    if (cached) return cached.data;
+    throw err;
+  });
+
+  detailInflight.set(mint, promise);
+  return promise;
+}
+
+async function doFetchTokenDetail(mint: string): Promise<TokenDetail> {
   const [dex, rug] = await Promise.all([
     fetchDexInfo(mint),
     fetchRugCheckReport(mint),
