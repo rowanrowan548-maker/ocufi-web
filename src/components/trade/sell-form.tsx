@@ -213,11 +213,12 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
       setResult({ signature: sig, actualSol, feeSol });
       setStage('done');
 
-      // 卖出 V1 不收 Ocufi fee,只记网络 Gas
+      // 卖出 V1 不收 Ocufi fee,只记网络 Gas;体量按 outputSol(收到的 SOL)
       if (wallet.publicKey) {
         recordFee(wallet.publicKey.toBase58(), {
           ocufiSol: 0,
           networkSol: feeSol,
+          volumeSol: actualSol,
         });
       }
 

@@ -14,6 +14,7 @@
     "settings": "Settings",
     "docs": "Docs",
     "status": "Status",
+    "invite": "Invite",
     "tokenCheck": "Token Check",
     "faq": "FAQ",
     "more": "More"
@@ -332,6 +333,15 @@
       "network": "Solana gas",
       "txCount": "Trades",
       "note": "Tracked locally on this device only — never uploaded. Verify each transaction on Solscan."
+    },
+    "savings": {
+      "label": "You've saved on Ocufi",
+      "subtitle": "{count} trades · {sol} SOL total",
+      "comparison": "You paid ${ocufi} on Ocufi · the same trades would cost ${competitor} at 1% on competitors",
+      "shareTwitter": "Share to Twitter",
+      "copyLink": "Copy invite link",
+      "copied": "Invite link copied",
+      "copyFailed": "Copy failed — please select manually"
     },
     "tabs": {
       "holdings": "Holdings",
@@ -718,6 +728,63 @@
       "iosBody": "Add to home screen and Ocufi runs like a native app",
       "iosSteps": "Safari toolbar → Share → \"Add to Home Screen\""
     }
+  },
+  "invite": {
+    "page": {
+      "title": "Invite Rewards",
+      "subtitle": "Bring friends · earn 10% of their trade points forever"
+    },
+    "shareText": "I'm trading on Solana with Ocufi — only 0.1% fee (vs 1% on competitors). Come save with me:",
+    "notConnected": {
+      "title": "Connect wallet to see your invite code",
+      "subtitle": "Code is derived from your wallet address — same wallet, same code, always",
+      "connect": "Connect wallet"
+    },
+    "myCode": {
+      "label": "My invite code",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "shareTwitter": "Share to Twitter"
+    },
+    "stats": {
+      "invited": "Invited",
+      "activated": "Activated",
+      "earnedPoints": "Invite points"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "s1": "Copy your invite link and share it. When someone first connects their wallet through your link, they're permanently bound to you.",
+      "s2": "Once they make a trade ≥ $100, the invite is auto-activated.",
+      "s3": "After activation, every trade they make earns you +10% of their points — forever, not a one-time bonus.",
+      "s4": "Points redeem for merch; may unlock more perks later.",
+      "note": "We don't share trading fees (0.2% is the moat). We share points — printed by us, near-zero cost, sustainable long-term."
+    },
+    "myInvitees": {
+      "title": "People you've invited",
+      "activated": "Activated",
+      "pending": "Pending",
+      "empty": {
+        "title": "Nobody has joined through your link yet",
+        "subtitle": "Copy the link above and post it in TG / Twitter / friends groups"
+      },
+      "cols": {
+        "address": "Wallet",
+        "status": "Status",
+        "points": "Earned",
+        "joinedAt": "Joined"
+      }
+    },
+    "leaderboard": {
+      "title": "All-time Top 10 Inviters",
+      "empty": "No leaderboard yet · you can be #1",
+      "cols": {
+        "address": "Wallet",
+        "activated": "Activated",
+        "points": "Points"
+      }
+    },
+    "backendPending": "Backend wiring in progress",
+    "howLink": "Read more"
   },
   "feedback": {
     "label": "Feedback",

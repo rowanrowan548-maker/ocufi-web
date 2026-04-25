@@ -18,6 +18,7 @@ export async function SiteHeader() {
 
   // 二线功能 · 桌面收到「更多」下拉,移动端进抽屉
   const moreLinks = [
+    { href: '/invite', label: t('nav.invite') },
     { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
     { href: '/points', label: t('nav.points') },

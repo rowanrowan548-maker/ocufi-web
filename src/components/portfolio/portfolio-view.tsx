@@ -36,6 +36,7 @@ import { HoldingsTable } from './holdings-table';
 import { ClosedPositions } from './closed-positions';
 import { AssetPie, AssetPieLegend } from './asset-pie';
 import { ValueChart } from './value-chart';
+import { SavingsCard } from './savings-card';
 
 export function PortfolioView() {
   const t = useTranslations();
@@ -46,7 +47,7 @@ export function PortfolioView() {
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [fees, setFees] = useState<FeeTotal>({
-    ocufiSol: 0, networkSol: 0, txCount: 0, startedAt: 0, lastAt: 0,
+    ocufiSol: 0, networkSol: 0, txCount: 0, volumeSol: 0, startedAt: 0, lastAt: 0,
   });
 
   const walletAddr = wallet.publicKey?.toBase58() ?? '';
@@ -55,7 +56,7 @@ export function PortfolioView() {
   useEffect(() => {
     if (!walletAddr) {
       setSnapshots([]);
-      setFees({ ocufiSol: 0, networkSol: 0, txCount: 0, startedAt: 0, lastAt: 0 });
+      setFees({ ocufiSol: 0, networkSol: 0, txCount: 0, volumeSol: 0, startedAt: 0, lastAt: 0 });
       return;
     }
     setSnapshots(readSnapshots(walletAddr));
@@ -164,6 +165,15 @@ export function PortfolioView() {
         </Card>
       ) : (
         <>
+          {/* 已节省手续费 · 病毒传播触发点 · 仅在有过成交时显示 */}
+          {fees.txCount > 0 && fees.volumeSol > 0 && (
+            <SavingsCard
+              volumeSol={fees.volumeSol}
+              txCount={fees.txCount}
+              solUsdPrice={sol.amount > 0 ? sol.valueUsd / sol.amount : 0}
+            />
+          )}
+
           {/* 资产分布 */}
           {pieItems.length > 0 && (
             <Card>

@@ -14,6 +14,7 @@
     "settings": "设置",
     "docs": "使用文档",
     "status": "服务状态",
+    "invite": "邀请",
     "tokenCheck": "查币",
     "faq": "常见问题",
     "more": "更多"
@@ -332,6 +333,15 @@
       "network": "Solana 网络 Gas",
       "txCount": "成交笔数",
       "note": "本地统计 · 仅你这台设备的浏览器记录,不上送服务器。链上每一笔可在 Solscan 自行核对。"
+    },
+    "savings": {
+      "label": "在 Ocufi,你已经省下",
+      "subtitle": "{count} 笔成交累计 · 折合 {sol} SOL",
+      "comparison": "本来在 Ocufi 花了 ${ocufi} · 同样的交易在 1% 手续费的平台要花 ${competitor}",
+      "shareTwitter": "分享到 Twitter",
+      "copyLink": "复制邀请链接",
+      "copied": "邀请链接已复制",
+      "copyFailed": "复制失败,请手动选择"
     },
     "tabs": {
       "holdings": "当前持仓",
@@ -733,6 +743,63 @@
       "iosBody": "添加到主屏后,Ocufi 像原生 app 一样使用",
       "iosSteps": "Safari 工具栏 → 分享 → 「添加到主屏幕」"
     }
+  },
+  "invite": {
+    "page": {
+      "title": "邀请奖励",
+      "subtitle": "拉朋友来用 · 每笔交易终身分 10% 积分"
+    },
+    "shareText": "我用 Ocufi 在 Solana 上做交易,手续费只要 0.1%(竞品 1%)。来一起省:",
+    "notConnected": {
+      "title": "连接钱包查看你的邀请码",
+      "subtitle": "邀请码由钱包地址确定 · 同钱包永远同码",
+      "connect": "连接钱包"
+    },
+    "myCode": {
+      "label": "我的邀请码",
+      "copy": "复制链接",
+      "copied": "已复制",
+      "shareTwitter": "分享到 Twitter"
+    },
+    "stats": {
+      "invited": "已邀请",
+      "activated": "已激活",
+      "earnedPoints": "邀请积分"
+    },
+    "howItWorks": {
+      "title": "怎么算的",
+      "s1": "复制你的邀请链接,发给朋友。新用户首次连钱包就和你绑定,永久。",
+      "s2": "对方单笔交易 ≥ 100 美元等值,邀请关系自动激活。",
+      "s3": "激活后,对方每笔交易产生的积分,你自动 +10%(终身,不一次性)。",
+      "s4": "积分用于实物周边兑换;未来可能关联更多权益。",
+      "note": "我们不分手续费(0.2% 是产品护城河),分积分。积分由我们出,等于零成本拉新,长期可持续。"
+    },
+    "myInvitees": {
+      "title": "我邀请的人",
+      "activated": "已激活",
+      "pending": "未激活",
+      "empty": {
+        "title": "还没人通过你的链接进来",
+        "subtitle": "复制上面的链接发到 TG / Twitter / 朋友群"
+      },
+      "cols": {
+        "address": "钱包",
+        "status": "状态",
+        "points": "贡献积分",
+        "joinedAt": "加入"
+      }
+    },
+    "leaderboard": {
+      "title": "全站邀请 Top 10",
+      "empty": "暂无榜单 · 你可以是第一个",
+      "cols": {
+        "address": "钱包",
+        "activated": "激活数",
+        "points": "积分"
+      }
+    },
+    "backendPending": "数据接口待上线",
+    "howLink": "查看玩法"
   },
   "feedback": {
     "label": "反馈",

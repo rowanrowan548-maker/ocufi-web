@@ -230,11 +230,12 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
       setResult({ signature: sig, actualTokens, feeSol, solSpent });
       setStage('done');
 
-      // 累计手续费(本地)· Ocufi 0.1% × 输入 SOL,网络 Gas 来自实际 tx 解析
+      // 累计手续费(本地)· Ocufi 0.1% × 输入 SOL,网络 Gas 来自实际 tx 解析,体量 = inputSol
       if (wallet.publicKey) {
         recordFee(wallet.publicKey.toBase58(), {
           ocufiSol: quoteData.inputSol * 0.001,
           networkSol: feeSol,
+          volumeSol: solSpent,
         });
       }
 
