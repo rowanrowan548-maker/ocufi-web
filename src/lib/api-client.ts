@@ -212,6 +212,44 @@ export async function fetchInviteLeaderboard(limit = 10): Promise<InviteLeaderbo
   return apiFetch(`/invite/leaderboard?limit=${limit}`);
 }
 
+// ─── Admin stats(密码保护) ───
+
+export interface AdminTopInviter {
+  wallet_short: string;
+  invited: number;
+  activated: number;
+  earned: number;
+}
+export interface AdminTopTrader {
+  wallet_short: string;
+  points: number;
+  trade_count: number;
+}
+export interface AdminRecentEvent {
+  wallet_short: string;
+  event_type: string;
+  amount: number;
+  at: string;
+}
+export interface AdminStats {
+  total_wallets: number;
+  new_wallets_24h: number;
+  total_trades: number;
+  trades_24h: number;
+  total_points_awarded: number;
+  points_24h: number;
+  invite_bound: number;
+  invite_activated: number;
+  activation_rate_pct: number;
+  top_inviters: AdminTopInviter[];
+  top_traders: AdminTopTrader[];
+  recent_events: AdminRecentEvent[];
+}
+
+export async function fetchAdminStats(key: string): Promise<AdminStats> {
+  return apiFetch<AdminStats>(`/admin/stats?key=${encodeURIComponent(key)}`);
+}
+
 // ─── Day 11 user settings (email) ───
 
 export interface UserSettingsApi {
