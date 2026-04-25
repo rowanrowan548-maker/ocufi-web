@@ -105,7 +105,8 @@ export function TokenList() {
           </Tabs>
         </div>
 
-        <Card className="overflow-x-auto">
+        {/* 桌面 / 平板:表格视图 */}
+        <Card className="overflow-x-auto hidden sm:block">
           <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
@@ -149,6 +150,25 @@ export function TokenList() {
             </TableBody>
           </Table>
         </Card>
+
+        {/* 移动端:卡片视图(替代横向滚动表格) */}
+        <div className="sm:hidden space-y-2">
+          {rows.length === 0 ? (
+            <Card className="p-6 text-center text-xs text-muted-foreground">
+              {tab === 'fav' ? t('emptyFav') : '⌛ loading…'}
+            </Card>
+          ) : (
+            rows.map((tok) => (
+              <MobileCard
+                key={tok.mint}
+                tok={tok}
+                starred={isFavorite(tok.mint)}
+                onToggleStar={() => toggle(tok.mint)}
+                onTrade={() => router.push(`/trade?mint=${tok.mint}`)}
+              />
+            ))
+          )}
+        </div>
       </div>
     </section>
   );
@@ -271,4 +291,97 @@ function formatCompact(n: number): string {
   if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
   return n.toFixed(0);
+}
+
+/**
+ * 移动端卡片视图 · 把表格行改成纵向卡片布局
+ *
+ * 一卡两行:
+ *  Row1: [⭐] [logo] [SYMBOL + 标签] [价格 + 涨跌] [🛒]
+ *  Row2: [迷你 sparkline]   [Vol + MC]
+ */
+function MobileCard({
+  tok, starred, onToggleStar, onTrade,
+}: {
+  tok: TokenInfo;
+  starred: boolean;
+  onToggleStar: () => void;
+  onTrade: () => void;
+}) {
+  const change = tok.priceChange24h;
+  const up = change != null && change > 0;
+  const down = change != null && change < 0;
+  const ChangeIcon = up ? TrendingUp : down ? TrendingDown : null;
+  const color = up ? 'text-success' : down ? 'text-danger' : 'text-muted-foreground';
+
+  return (
+    <Card className="p-3">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleStar}
+          aria-label={starred ? 'Remove favorite' : 'Add favorite'}
+          // 44px tap target
+          className="h-11 w-11 -m-3 flex items-center justify-center hover:bg-muted/40 rounded transition-colors flex-shrink-0"
+        >
+          <Star
+            className={`h-4 w-4 ${
+              starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'
+            }`}
+          />
+        </button>
+
+        <Link href={`/token/${tok.mint}`} className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
+            {tok.logoUri ? (
+              <Image src={tok.logoUri} alt={tok.symbol} width={36} height={36} className="object-cover" unoptimized />
+            ) : (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {tok.symbol.slice(0, 2).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold truncate">{tok.symbol}</span>
+              <TokenTags kinds={tagsFor(tok)} />
+            </div>
+            <div className="text-[10px] font-mono text-muted-foreground/60 truncate">
+              Vol ${formatCompact(tok.volume24h ?? 0)} · MC ${formatCompact(tok.marketCap)}
+            </div>
+          </div>
+        </Link>
+
+        <div className="text-right flex-shrink-0">
+          <div className="text-sm font-mono font-semibold">${formatPrice(tok.priceUsd)}</div>
+          <div className={`text-[11px] font-mono inline-flex items-center gap-0.5 justify-end ${color}`}>
+            {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
+            {change != null ? `${up ? '+' : ''}${change.toFixed(2)}%` : '—'}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onTrade}
+          aria-label="Trade"
+          // 44px tap
+          className="h-11 w-11 -m-3 ml-0 flex items-center justify-center text-primary hover:bg-primary/10 rounded transition-colors flex-shrink-0"
+        >
+          <ShoppingCart className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-2 flex justify-end">
+        <MiniSparkline
+          priceUsd={tok.priceUsd}
+          change24h={tok.priceChange24h}
+          change6h={tok.priceChange6h}
+          change1h={tok.priceChange1h}
+          change5m={tok.priceChange5m}
+          width={120}
+          height={24}
+        />
+      </div>
+    </Card>
+  );
 }

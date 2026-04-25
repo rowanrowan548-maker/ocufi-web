@@ -716,6 +716,15 @@
     },
     "disclaimer": "仅探测从你浏览器到外部 API 的连通性,不代表 ocufi.io 整体可用性。完整可用性看你能否正常完成交易。"
   },
+  "pwa": {
+    "install": {
+      "title": "安装 Ocufi 到主屏",
+      "body": "像 app 一样打开,启动更快,体验更顺",
+      "installButton": "安装",
+      "iosBody": "添加到主屏后,Ocufi 像原生 app 一样使用",
+      "iosSteps": "Safari 工具栏 → 分享 → 「添加到主屏幕」"
+    }
+  },
   "feedback": {
     "label": "反馈",
     "title": "给 Ocufi 提反馈",

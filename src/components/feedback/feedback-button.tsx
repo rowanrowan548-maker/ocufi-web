@@ -45,7 +45,8 @@ export function FeedbackButton() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('label')}
-        className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-primary text-background h-11 px-4 shadow-lg hover:opacity-90 transition-opacity text-sm font-medium"
+        // 圆形 44px tap target on mobile,带 label 的 pill 在桌面
+        className="fixed bottom-4 right-4 z-40 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-background h-11 w-11 sm:w-auto sm:px-4 shadow-lg hover:opacity-90 transition-opacity text-sm font-medium"
       >
         <MessageSquare className="h-4 w-4" />
         <span className="hidden sm:inline">{t('label')}</span>

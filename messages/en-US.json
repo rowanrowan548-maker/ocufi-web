@@ -701,6 +701,15 @@
     },
     "disclaimer": "We probe connectivity from your browser to upstream APIs. Full availability still depends on whether you can complete a trade end-to-end."
   },
+  "pwa": {
+    "install": {
+      "title": "Install Ocufi",
+      "body": "Open it like a native app, faster launch, smoother UX",
+      "installButton": "Install",
+      "iosBody": "Add to home screen and Ocufi runs like a native app",
+      "iosSteps": "Safari toolbar → Share → \"Add to Home Screen\""
+    }
+  },
   "feedback": {
     "label": "Feedback",
     "title": "Give Ocufi feedback",

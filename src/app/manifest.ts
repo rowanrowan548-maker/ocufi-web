@@ -14,11 +14,34 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/icon.svg',
         sizes: 'any',
         type: 'image/svg+xml',
+        purpose: 'any',
       },
       {
         src: '/apple-icon',
         sizes: '180x180',
         type: 'image/png',
+        purpose: 'any',
+      },
+    ],
+    categories: ['finance', 'productivity'],
+    orientation: 'portrait',
+    scope: '/',
+    lang: 'zh-CN',
+    shortcuts: [
+      {
+        name: '交易',
+        short_name: '交易',
+        url: '/trade',
+      },
+      {
+        name: '持仓',
+        short_name: '持仓',
+        url: '/portfolio',
+      },
+      {
+        name: '自选',
+        short_name: '自选',
+        url: '/watchlist',
       },
     ],
   };
