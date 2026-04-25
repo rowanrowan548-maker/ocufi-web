@@ -17,12 +17,13 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
  */
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // script-src 加 va.vercel-scripts.com(Analytics + Speed Insights 脚本来源)
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: https: blob:",
-  // 外部数据源:DexScreener / GeckoTerminal / RugCheck / Jupiter / Solana RPC / Helius / Ocufi API(Railway)
-  "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app",
+  // 外部数据源 + Vercel Analytics 上报 endpoint
+  "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "frame-src 'self' https://dexscreener.com https://*.dexscreener.com",
   "object-src 'none'",
   "base-uri 'self'",

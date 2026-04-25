@@ -4,6 +4,8 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import { routing } from '@/i18n/routing';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
 import { SiteHeader } from '@/components/layout/site-header';
 import { FeedbackButton } from '@/components/feedback/feedback-button';
@@ -107,6 +109,8 @@ export default async function LocaleLayout({
             <Toaster />
           </SolanaWalletProvider>
         </NextIntlClientProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
