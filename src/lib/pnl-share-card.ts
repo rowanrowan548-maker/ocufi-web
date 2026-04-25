@@ -82,7 +82,7 @@ export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
   ctx.fillRect(0, 0, W, H);
 
   // ── 顶部品牌锁层 · Logo (绿) + Wordmark (白) ──
-  drawBrandLockup(ctx, 60, 115, {
+  drawBrandLockup(ctx, 60, 100, {
     wordmark: 'OCUFI',
     subtitle: 'Solana · Non-custodial · Open-source',
   });

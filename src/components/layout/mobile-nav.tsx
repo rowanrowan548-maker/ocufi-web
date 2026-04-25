@@ -101,7 +101,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
           }}
         >
           <Link href="/" onClick={() => setOpen(false)}>
-            <Logo variant="full" size={64} />
+            <Logo variant="full" size={45} />
           </Link>
           <button
             type="button"

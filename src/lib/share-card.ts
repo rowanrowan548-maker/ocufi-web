@@ -91,7 +91,7 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   ctx.fillRect(0, 0, W, H);
 
   // ── 顶部品牌锁层 · Logo (绿) + Wordmark (白) ──
-  drawBrandLockup(ctx, 60, 115, {
+  drawBrandLockup(ctx, 60, 100, {
     wordmark: 'OCUFI',
     subtitle: 'Solana · Non-custodial · 0.2% fee',
   });
@@ -426,9 +426,9 @@ export function drawBrandLockup(
   baselineY: number,
   opts: { wordmark: string; subtitle: string },
 ) {
-  const FONT_SIZE = 64;
-  const LOGO_SIZE = 64;
-  const GAP = 18;
+  const FONT_SIZE = 45;
+  const LOGO_SIZE = 45;
+  const GAP = 14;
 
   // OCUFI 字母 cap 中心 ≈ baseline 上方 0.35×fontSize
   const capCenterY = baselineY - FONT_SIZE * 0.35;
@@ -447,8 +447,8 @@ export function drawBrandLockup(
 
   // 副标 · muted gray monospace,在 wordmark 下方
   ctx.fillStyle = COLORS.muted;
-  ctx.font = '17px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText(opts.subtitle, textX, baselineY + 30);
+  ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.fillText(opts.subtitle, textX, baselineY + 26);
 }
 
 /** Arc O logo · Canvas 版 · anchor 在左上角 (x, y),size 是边长 */
