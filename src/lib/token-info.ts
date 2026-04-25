@@ -135,20 +135,44 @@ export async function fetchTokenDetail(mint: string): Promise<TokenDetail> {
 // ────── 风险综合评级 ──────
 export type OverallRisk = 'verified' | 'low' | 'medium' | 'high' | 'critical' | 'unknown';
 
+/**
+ * 综合风险评分
+ *
+ * 设计原则:
+ *  - 白名单(USDC / TRUMP / JLP 等正规中心化代币)直接判 verified,跳过通用评分
+ *  - 高市值 + 高流动性 token 即使有 1-2 个 danger 标记,也不直接判 critical
+ *    (RugCheck 的 danger 项里很多是"权限未放弃"这类合规需求)
+ *  - 真正的 critical:RugCheck 已确认 rugged / 多个 danger 同时出现 / 流动性极低
+ *  - 单个 danger + 高市值 → high(警示但不阻止交易)
+ */
 export function overallRisk(d: TokenDetail): OverallRisk {
-  // 白名单:主流稳定币/蓝筹,通用规则对它们过严(USDC 必须保留 mint 权限等)
+  // 白名单:主流稳定币 / 蓝筹 / 高市值正规中心化代币
   if (isVerifiedToken(d.mint)) return 'verified';
 
   if (!d.hasRugCheckData) return 'unknown';
   if (d.rugged) return 'critical';
+
   const dangers = d.risks.filter((r) => r.level === 'danger').length;
   const warns = d.risks.filter((r) => r.level === 'warn').length;
   const top10 = d.top10Pct ?? 0;
   const lpLocked = d.lpLockedPct ?? 0;
 
-  if (dangers > 0) return 'critical';
-  if (d.mintAuthority || d.freezeAuthority) return 'high';
+  // 高市值 / 高流动性 buffer:超过阈值的代币即使有少量 danger 也降级
+  const isHighCap = (d.marketCap ?? 0) >= 50_000_000;       // ≥ $50M FDV
+  const isHighLiq = (d.liquidityUsd ?? 0) >= 1_000_000;     // ≥ $1M 流动性
+  const isHighProfile = isHighCap || isHighLiq;
+
+  // 真 critical:多重 danger / 流动性极低
+  if (dangers >= 3) return 'critical';
+  if (dangers >= 2 && !isHighProfile) return 'critical';
+  if (lpLocked < 5 && !isHighProfile) return 'critical';
+
+  // high
+  if (dangers >= 1 && !isHighProfile) return 'high';
   if (top10 > 80 || lpLocked < 20) return 'high';
-  if (warns >= 2 || top10 > 50 || lpLocked < 70) return 'medium';
+  if ((d.mintAuthority || d.freezeAuthority) && !isHighProfile) return 'high';
+
+  // medium
+  if (dangers >= 1 || warns >= 2 || top10 > 50 || lpLocked < 70) return 'medium';
   return 'low';
 }

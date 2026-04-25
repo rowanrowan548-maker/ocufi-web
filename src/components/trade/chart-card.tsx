@@ -10,7 +10,6 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { LineChart, Loader2 } from 'lucide-react';
-import { SOL_MINT } from '@/lib/preset-tokens';
 
 interface Props {
   mint?: string | null;
@@ -26,15 +25,6 @@ export function ChartCard({ mint }: Props) {
 
   if (!mint) {
     return <Placeholder text="loading…" Icon={Loader2} spin />;
-  }
-
-  if (mint === SOL_MINT) {
-    return (
-      <Placeholder
-        text="SOL 是基础币 · 选其他代币查看 K 线"
-        Icon={LineChart}
-      />
-    );
   }
 
   // DexScreener 自带 mint→pair 重定向,直接构 URL,免去等 detail.dexUrl

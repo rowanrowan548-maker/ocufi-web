@@ -255,6 +255,13 @@
       "title": "SOL is the base currency",
       "subtitle": "Search for any other token (USDC, JUP, Bonk, etc.) to buy or sell. SOL is the default pay/receive currency for all trades."
     },
+    "buySol": {
+      "title": "Buy SOL",
+      "subtitle": "Pick the stablecoin you want to use",
+      "withUsdc": "Buy SOL with USDC",
+      "withUsdt": "Buy SOL with USDT",
+      "hint": "Any other token works too: open that token's page and click \"Sell\" to swap it for SOL."
+    },
     "result": {
       "success": "Trade successful",
       "actualReceived": "Actually received",

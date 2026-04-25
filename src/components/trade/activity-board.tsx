@@ -67,7 +67,7 @@ export function ActivityBoard({ detail }: Props) {
     if (holders && holders.length > 0) return; // 已经有数据
     let cancelled = false;
     setHoldersLoading(true);
-    fetchTopHolders(connection, mint, 100)
+    fetchTopHolders(connection, mint, 20)
       .then((h) => { if (!cancelled) setHolders(h); })
       .finally(() => { if (!cancelled) setHoldersLoading(false); });
     return () => { cancelled = true; };

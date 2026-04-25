@@ -4,11 +4,16 @@
  * 双层交易面板:
  *   外层 Buy / Sell
  *   内层 市价 / 限价
+ *
+ * mint===SOL 特殊处理:不能 SOL→SOL,改成"用 USDC/USDT 买 SOL"快捷入口,
+ *   实际是路由到 /trade?mint=USDC&side=sell(USDC 页的卖出 = 用 USDC 换 SOL)
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Info } from 'lucide-react';
+import { ArrowRight, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BuyForm } from './buy-form';
 import { SellForm } from './sell-form';
@@ -16,31 +21,70 @@ import { LimitForm } from '@/components/limit/limit-form';
 import { SOL_MINT } from '@/lib/preset-tokens';
 import type { OverallRisk } from '@/lib/token-info';
 
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+
 interface Props {
   mint?: string;
   compact?: boolean;
   onLimitOrderCreated?: () => void;
   /** 上层 trade-screen 已经 fetch 过 detail,把 risk 传下来给确认弹窗用 */
   risk?: OverallRisk;
+  /** 默认 tab,从 ?side= URL 读 */
+  defaultSide?: 'buy' | 'sell';
 }
 
 type Side = 'buy' | 'sell';
 type OrderType = 'market' | 'limit';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk }: Props = {}) {
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSide }: Props = {}) {
   const t = useTranslations();
-  const [side, setSide] = useState<Side>('buy');
+  const router = useRouter();
+  const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
 
-  // SOL 是基础币,不能 swap 自己
+  // 外部 defaultSide 变化时同步
+  useEffect(() => {
+    if (defaultSide) setSide(defaultSide);
+  }, [defaultSide]);
+
+  // mint===SOL:跳转用别的稳定币买 SOL(/trade?mint=USDC&side=sell)
   if (mint === SOL_MINT) {
     return (
       <Card className={compact ? 'p-4' : 'p-6 w-full max-w-xl'}>
-        <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <Info className="h-10 w-10 text-muted-foreground/40" />
-          <div className="text-sm font-medium">{t('trade.solBaseHint.title')}</div>
-          <div className="text-xs text-muted-foreground max-w-xs">
-            {t('trade.solBaseHint.subtitle')}
+        <div className="space-y-4">
+          <div className="text-center">
+            <div className="text-sm font-medium">{t('trade.buySol.title')}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {t('trade.buySol.subtitle')}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Button
+              onClick={() => router.push(`/trade?mint=${USDC_MINT}&side=sell`)}
+              variant="outline"
+              className="w-full justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" />
+                {t('trade.buySol.withUsdc')}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => router.push(`/trade?mint=${USDT_MINT}&side=sell`)}
+              variant="outline"
+              className="w-full justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" />
+                {t('trade.buySol.withUsdt')}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-[11px] text-muted-foreground/70 text-center pt-2 border-t border-border/40">
+            {t('trade.buySol.hint')}
           </div>
         </div>
       </Card>

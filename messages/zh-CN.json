@@ -255,6 +255,13 @@
       "title": "SOL 是基础币",
       "subtitle": "搜索其他代币(如 USDC、JUP、Bonk 等)即可买入 / 卖出。SOL 在所有交易中默认作为支付/收款货币。"
     },
+    "buySol": {
+      "title": "买入 SOL",
+      "subtitle": "选择你想用的稳定币",
+      "withUsdc": "用 USDC 买 SOL",
+      "withUsdt": "用 USDT 买 SOL",
+      "hint": "其他代币也可以:进入对应代币页面,点击「卖出」即可换成 SOL"
+    },
     "result": {
       "success": "交易成功",
       "actualReceived": "实际到账",

@@ -124,7 +124,7 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
       priceNative: Number(top.priceNative ?? 0),
       liquidityUsd: Number(top.liquidity?.usd ?? 0),
       marketCap: Number(top.fdv ?? top.marketCap ?? 0),
-      priceChange24h: Number(top.priceChange?.h24 ?? 0) || undefined,
+      priceChange24h: top.priceChange?.h24 != null ? Number(top.priceChange.h24) : undefined,
       volume24h: Number(top.volume?.h24 ?? 0) || undefined,
       logoUri: safeUrl(top.info?.imageUrl),
     };
@@ -192,7 +192,7 @@ export async function searchTokens(query: string, limit = 20): Promise<TokenInfo
         priceNative: Number(p.priceNative ?? 0),
         liquidityUsd: Number(p.liquidity?.usd ?? 0),
         marketCap: Number(p.fdv ?? p.marketCap ?? 0),
-        priceChange24h: Number(p.priceChange?.h24 ?? 0) || undefined,
+        priceChange24h: p.priceChange?.h24 != null ? Number(p.priceChange.h24) : undefined,
         volume24h: Number(p.volume?.h24 ?? 0) || undefined,
         logoUri: safeUrl(p.info?.imageUrl),
       });

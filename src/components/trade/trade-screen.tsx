@@ -37,11 +37,15 @@ function isValidMint(s: string): boolean {
 export function TradeScreen() {
   const [mint, setMint] = useState<string>(SOL_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
+  const [defaultSide, setDefaultSide] = useState<'buy' | 'sell' | undefined>(undefined);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const m = new URLSearchParams(window.location.search).get('mint');
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mint');
     if (m && isValidMint(m)) setMint(m);
+    const s = params.get('side');
+    if (s === 'buy' || s === 'sell') setDefaultSide(s);
   }, []);
 
   useEffect(() => {
@@ -76,7 +80,7 @@ export function TradeScreen() {
         </div>
         {/* 右:交易表单 + 行情 + 安全 */}
         <div className="space-y-4">
-          <TradeTabs mint={mint} compact risk={detail ? overallRisk(detail) : undefined} />
+          <TradeTabs mint={mint} compact risk={detail ? overallRisk(detail) : undefined} defaultSide={defaultSide} />
           <InfoPanel detail={detail} />
           <SafetyPanel detail={detail} />
         </div>
