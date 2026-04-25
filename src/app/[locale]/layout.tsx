@@ -6,6 +6,7 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
 import { SiteHeader } from '@/components/layout/site-header';
+import { Toaster } from '@/components/ui/sonner';
 import '../globals.css';
 
 // 品牌字体 · heading / hero
@@ -91,6 +92,7 @@ export default async function LocaleLayout({
           <SolanaWalletProvider>
             <SiteHeader />
             {children}
+            <Toaster />
           </SolanaWalletProvider>
         </NextIntlClientProvider>
       </body>

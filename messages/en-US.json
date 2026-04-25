@@ -147,6 +147,16 @@
       "market": "Market",
       "limit": "Limit"
     },
+    "quoteStatus": {
+      "loading": "Fetching quote…",
+      "live": "Live · auto-refresh",
+      "error": "Quote failed, retrying in 3s"
+    },
+    "toast": {
+      "buySuccess": "Bought · received {tokens} (paid {sol} SOL)",
+      "sellSuccess": "Sold · received {sol} SOL (sold {tokens})",
+      "viewExplorer": "View on Solscan"
+    },
     "activity": {
       "activity": "Activity",
       "orders": "Orders",

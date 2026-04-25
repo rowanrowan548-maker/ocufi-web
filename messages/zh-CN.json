@@ -147,6 +147,16 @@
       "market": "市价",
       "limit": "限价"
     },
+    "quoteStatus": {
+      "loading": "查询报价中…",
+      "live": "实时报价 · 自动刷新",
+      "error": "报价失败,3 秒后重试"
+    },
+    "toast": {
+      "buySuccess": "买入成功 · 收到 {tokens}(花 {sol} SOL)",
+      "sellSuccess": "卖出成功 · 收到 {sol} SOL(卖出 {tokens})",
+      "viewExplorer": "查看 Solscan"
+    },
     "activity": {
       "activity": "成交活动",
       "orders": "订单",

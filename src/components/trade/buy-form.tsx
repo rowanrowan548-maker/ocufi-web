@@ -24,7 +24,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { getCurrentChain } from '@/config/chains';
 import {
-  getQuote,
   SOL_MINT,
   type JupiterQuote,
   type GasLevel,
@@ -38,6 +37,9 @@ import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
+import { useAutoQuote } from '@/hooks/use-auto-quote';
+import { RefreshRing } from '@/components/common/refresh-ring';
+import { toast } from 'sonner';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -107,52 +109,53 @@ export function BuyForm({ mint: mintProp, compact }: BuyFormProps = {}) {
 
   const [stage, setStage] = useState<Stage>('idle');
   const [err, setErr] = useState<string | null>(null);
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [decimals, setDecimals] = useState<number | null>(null);
+
+  // 拉目标 token 的 decimals(供 outAmount 解析)
+  useEffect(() => {
+    const m = mint.trim();
+    if (!isValidMint(m)) {
+      setDecimals(null);
+      return;
+    }
+    let cancelled = false;
+    getDecimals(connection, m).then((d) => {
+      if (!cancelled) setDecimals(d);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [mint, connection]);
+
+  // ── 自动报价 hook ──
+  const sol = Number(solAmount);
+  const validInput = isValidMint(mint.trim()) && sol > 0;
+  const amountRaw = validInput ? BigInt(Math.round(sol * LAMPORTS_PER_SOL)) : null;
+  const autoQuote = useAutoQuote({
+    enabled: validInput && stage !== 'done' && stage !== 'signing' && stage !== 'sending' && stage !== 'confirming',
+    inputMint: SOL_MINT,
+    outputMint: mint.trim(),
+    amountRaw,
+    options: { slippageBps },
+  });
+
+  // 派生 quoteData(给 QuotePreview / ConfirmDialog 用)
+  const quoteData: QuoteData | null =
+    autoQuote.status === 'ok' && decimals != null
+      ? {
+          quote: autoQuote.quote,
+          outTokens: Number(autoQuote.quote.outAmount) / 10 ** decimals,
+          minTokens: Number(autoQuote.quote.otherAmountThreshold) / 10 ** decimals,
+          priceImpactPct: Number(autoQuote.quote.priceImpactPct) * 100,
+          inputSol: sol,
+        }
+      : null;
 
   const resetOnInput = () => {
-    if (stage === 'quoted' || stage === 'done' || stage === 'error') setStage('idle');
-    setQuoteData(null);
+    if (stage === 'done' || stage === 'error') setStage('idle');
     setResult(null);
     setErr(null);
   };
-
-  async function handleQuote() {
-    setErr(null);
-    setResult(null);
-    setQuoteData(null);
-
-    if (!isValidMint(mint.trim())) {
-      setErr(t('trade.errors.invalidMint'));
-      return;
-    }
-    const sol = Number(solAmount);
-    if (!sol || sol <= 0) {
-      setErr(t('trade.errors.invalidSol'));
-      return;
-    }
-
-    setStage('quoting');
-    track('swap_quote_requested', { side: 'buy', mint: mint.trim(), sol });
-    try {
-      const amountRaw = BigInt(Math.round(sol * LAMPORTS_PER_SOL));
-      // 不在 Jupiter 报价里带 platformFeeBps:我们自己组 tx 插 SOL transfer 收 fee
-      const quote = await getQuote(SOL_MINT, mint.trim(), amountRaw, {
-        slippageBps,
-      });
-      const decimals = await getDecimals(connection, mint.trim());
-      const outTokens = Number(quote.outAmount) / 10 ** decimals;
-      const minTokens = Number(quote.otherAmountThreshold) / 10 ** decimals;
-      const priceImpactPct = Number(quote.priceImpactPct) * 100;
-
-      setQuoteData({ quote, outTokens, minTokens, priceImpactPct, inputSol: sol });
-      setStage('quoted');
-    } catch (e: unknown) {
-      setErr(mapError(t, humanize(e)));
-      setStage('error');
-    }
-  }
 
   function openConfirm() {
     if (!quoteData) return;
@@ -203,15 +206,38 @@ export function BuyForm({ mint: mintProp, compact }: BuyFormProps = {}) {
         tokens: actualTokens,
         signature: sig,
       });
-      // 后端在线才上报积分,失败不影响交易
+
+      // 成功 toast · 含 Solscan 链接
+      toast.success(
+        t('trade.toast.buySuccess', {
+          tokens: formatAmount(actualTokens),
+          sol: solSpent.toFixed(4),
+        }),
+        {
+          action: {
+            label: t('trade.toast.viewExplorer'),
+            onClick: () => window.open(`${chain.explorer}/tx/${sig}`, '_blank'),
+          },
+          duration: 8000,
+        }
+      );
+
       if (isApiConfigured() && wallet.publicKey) {
         claimPoints(wallet.publicKey.toBase58(), sig).catch(() => {});
       }
     } catch (e: unknown) {
       const reason = humanize(e);
-      setErr(mapError(t, reason));
+      const friendly = mapError(t, reason);
+      setErr(friendly);
       setStage('error');
       track('swap_failure', { side: 'buy', mint: mint.trim(), reason });
+
+      // 失败 toast · 用 sentinel 区分
+      if (reason === '__ERR_USER_REJECTED') {
+        toast.info(friendly);
+      } else {
+        toast.error(friendly, { duration: 6000 });
+      }
     }
   }
 
@@ -349,36 +375,54 @@ export function BuyForm({ mint: mintProp, compact }: BuyFormProps = {}) {
         </CardContent>
 
         <CardContent className="pt-0">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleQuote}
-              disabled={stage === 'quoting' || stage === 'signing' || stage === 'sending' || stage === 'confirming'}
-              className="flex-1"
-            >
-              {stage === 'quoting' ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.quoting')}</>
-              ) : t('trade.buttons.quote')}
-            </Button>
+          {/* 报价状态指示 */}
+          {validInput && (
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+              <span>
+                {autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
+                {autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
+                {autoQuote.status === 'error' && (
+                  <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+                )}
+                {autoQuote.status === 'idle' && '—'}
+              </span>
+              {autoQuote.status === 'ok' && (
+                <RefreshRing
+                  remaining={autoQuote.refreshIn}
+                  total={8}
+                  size={20}
+                />
+              )}
+              {autoQuote.status === 'loading' && (
+                <RefreshRing remaining={0} total={8} size={20} loading />
+              )}
+            </div>
+          )}
 
-            {!wallet.connected ? (
-              <Button onClick={() => openWalletModal(true)} className="flex-1">
-                {t('wallet.connect')}
-              </Button>
-            ) : (
-              <Button
-                onClick={openConfirm}
-                disabled={!quoteData || stage === 'signing' || stage === 'sending' || stage === 'confirming' || stage === 'done'}
-                className="flex-1"
-              >
-                {stage === 'signing' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.signing')}</>}
-                {stage === 'sending' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.sending')}</>}
-                {stage === 'confirming' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.confirming')}</>}
-                {(stage === 'idle' || stage === 'quoted' || stage === 'error') && t('trade.buttons.buy')}
-                {stage === 'done' && t('trade.buttons.buyAgain')}
-              </Button>
-            )}
-          </div>
+          {!wallet.connected ? (
+            <Button onClick={() => openWalletModal(true)} className="w-full" size="lg">
+              {t('wallet.connect')}
+            </Button>
+          ) : (
+            <Button
+              onClick={openConfirm}
+              size="lg"
+              disabled={
+                !quoteData ||
+                stage === 'signing' ||
+                stage === 'sending' ||
+                stage === 'confirming' ||
+                stage === 'done'
+              }
+              className="w-full"
+            >
+              {stage === 'signing' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.signing')}</>}
+              {stage === 'sending' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.sending')}</>}
+              {stage === 'confirming' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.confirming')}</>}
+              {(stage === 'idle' || stage === 'error') && t('trade.buttons.buy')}
+              {stage === 'done' && t('trade.buttons.buyAgain')}
+            </Button>
+          )}
         </CardContent>
       </Card>
 

@@ -23,7 +23,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { getCurrentChain } from '@/config/chains';
 import {
-  getQuote,
   SOL_MINT,
   type JupiterQuote,
   type GasLevel,
@@ -38,6 +37,9 @@ import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
+import { useAutoQuote } from '@/hooks/use-auto-quote';
+import { RefreshRing } from '@/components/common/refresh-ring';
+import { toast } from 'sonner';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -97,15 +99,42 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
 
   const [stage, setStage] = useState<Stage>('idle');
   const [err, setErr] = useState<string | null>(null);
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const balance = useTokenBalance(mint.trim() || null);
 
+  // ── 自动报价 ──
+  const amt = Number(tokenAmount);
+  const validInput =
+    isValidMint(mint.trim()) &&
+    amt > 0 &&
+    balance.decimals != null &&
+    (balance.amount == null || amt <= balance.amount * 1.0001);
+  const amountRaw = validInput
+    ? BigInt(Math.floor(amt * 10 ** (balance.decimals ?? 0)))
+    : null;
+  const autoQuote = useAutoQuote({
+    enabled: validInput && stage !== 'done' && stage !== 'signing' && stage !== 'sending' && stage !== 'confirming',
+    inputMint: mint.trim(),
+    outputMint: SOL_MINT,
+    amountRaw,
+    options: { slippageBps },
+  });
+
+  const quoteData: QuoteData | null =
+    autoQuote.status === 'ok'
+      ? {
+          quote: autoQuote.quote,
+          tokenAmount: amt,
+          outSol: Number(autoQuote.quote.outAmount) / LAMPORTS_PER_SOL,
+          minSol: Number(autoQuote.quote.otherAmountThreshold) / LAMPORTS_PER_SOL,
+          priceImpactPct: Number(autoQuote.quote.priceImpactPct) * 100,
+        }
+      : null;
+
   const resetOnInput = () => {
-    if (stage === 'quoted' || stage === 'done' || stage === 'error') setStage('idle');
-    setQuoteData(null);
+    if (stage === 'done' || stage === 'error') setStage('idle');
     setResult(null);
     setErr(null);
   };
@@ -124,49 +153,6 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
     // 限制有效位数,避免科学计数
     setTokenAmount(n >= 1 ? n.toFixed(4) : n.toFixed(9));
     resetOnInput();
-  }
-
-  async function handleQuote() {
-    setErr(null);
-    setResult(null);
-    setQuoteData(null);
-
-    if (!isValidMint(mint.trim())) {
-      setErr(t('trade.errors.invalidMint'));
-      return;
-    }
-    const amt = Number(tokenAmount);
-    if (!amt || amt <= 0) {
-      setErr(t('trade.errors.invalidAmount'));
-      return;
-    }
-    if (balance.decimals == null) {
-      setErr(t('trade.errors.balanceUnknown'));
-      return;
-    }
-    if (balance.amount != null && amt > balance.amount * 1.0001) {
-      setErr(t('trade.errors.insufficientToken'));
-      return;
-    }
-
-    setStage('quoting');
-    track('swap_quote_requested', { side: 'sell', mint: mint.trim(), tokens: amt });
-    try {
-      const amountRaw = BigInt(Math.floor(amt * 10 ** balance.decimals));
-      // 卖出 V1 不收 fee(买入端已经收过一次);Day 9 可扩展 swap 后 transfer
-      const quote = await getQuote(mint.trim(), SOL_MINT, amountRaw, {
-        slippageBps,
-      });
-      const outSol = Number(quote.outAmount) / LAMPORTS_PER_SOL;
-      const minSol = Number(quote.otherAmountThreshold) / LAMPORTS_PER_SOL;
-      const priceImpactPct = Number(quote.priceImpactPct) * 100;
-
-      setQuoteData({ quote, tokenAmount: amt, outSol, minSol, priceImpactPct });
-      setStage('quoted');
-    } catch (e: unknown) {
-      setErr(mapError(t, humanize(e)));
-      setStage('error');
-    }
   }
 
   // 点"卖出"先弹确认
@@ -217,14 +203,36 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
         tokens: quoteData.tokenAmount,
         signature: sig,
       });
+
+      toast.success(
+        t('trade.toast.sellSuccess', {
+          sol: actualSol.toFixed(4),
+          tokens: formatAmount(quoteData.tokenAmount),
+        }),
+        {
+          action: {
+            label: t('trade.toast.viewExplorer'),
+            onClick: () => window.open(`${chain.explorer}/tx/${sig}`, '_blank'),
+          },
+          duration: 8000,
+        }
+      );
+
       if (isApiConfigured() && wallet.publicKey) {
         claimPoints(wallet.publicKey.toBase58(), sig).catch(() => {});
       }
     } catch (e: unknown) {
       const reason = humanize(e);
-      setErr(mapError(t, reason));
+      const friendly = mapError(t, reason);
+      setErr(friendly);
       setStage('error');
       track('swap_failure', { side: 'sell', mint: mint.trim(), reason });
+
+      if (reason === '__ERR_USER_REJECTED') {
+        toast.info(friendly);
+      } else {
+        toast.error(friendly, { duration: 6000 });
+      }
     }
   }
 
@@ -399,36 +407,49 @@ export function SellForm({ mint: mintProp, compact }: SellFormProps = {}) {
         </CardContent>
 
         <CardContent className="pt-0">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleQuote}
-              disabled={stage === 'quoting' || stage === 'signing' || stage === 'sending' || stage === 'confirming'}
-              className="flex-1"
-            >
-              {stage === 'quoting' ? (
-                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.quoting')}</>
-              ) : t('trade.buttons.quote')}
-            </Button>
+          {validInput && (
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+              <span>
+                {autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
+                {autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
+                {autoQuote.status === 'error' && (
+                  <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+                )}
+                {autoQuote.status === 'idle' && '—'}
+              </span>
+              {autoQuote.status === 'ok' && (
+                <RefreshRing remaining={autoQuote.refreshIn} total={8} size={20} />
+              )}
+              {autoQuote.status === 'loading' && (
+                <RefreshRing remaining={0} total={8} size={20} loading />
+              )}
+            </div>
+          )}
 
-            {!wallet.connected ? (
-              <Button onClick={() => openWalletModal(true)} className="flex-1">
-                {t('wallet.connect')}
-              </Button>
-            ) : (
-              <Button
-                onClick={openConfirm}
-                disabled={!quoteData || stage === 'signing' || stage === 'sending' || stage === 'confirming' || stage === 'done'}
-                className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              >
-                {stage === 'signing' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.signing')}</>}
-                {stage === 'sending' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.sending')}</>}
-                {stage === 'confirming' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.confirming')}</>}
-                {(stage === 'idle' || stage === 'quoted' || stage === 'error') && t('trade.buttons.sell')}
-                {stage === 'done' && t('trade.buttons.sellAgain')}
-              </Button>
-            )}
-          </div>
+          {!wallet.connected ? (
+            <Button onClick={() => openWalletModal(true)} className="w-full" size="lg">
+              {t('wallet.connect')}
+            </Button>
+          ) : (
+            <Button
+              onClick={openConfirm}
+              size="lg"
+              disabled={
+                !quoteData ||
+                stage === 'signing' ||
+                stage === 'sending' ||
+                stage === 'confirming' ||
+                stage === 'done'
+              }
+              className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {stage === 'signing' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.signing')}</>}
+              {stage === 'sending' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.sending')}</>}
+              {stage === 'confirming' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.confirming')}</>}
+              {(stage === 'idle' || stage === 'error') && t('trade.buttons.sell')}
+              {stage === 'done' && t('trade.buttons.sellAgain')}
+            </Button>
+          )}
         </CardContent>
       </Card>
 
