@@ -30,10 +30,10 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+      <div className="mx-auto flex h-20 sm:h-24 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-2">
-            <Logo variant="full" size={36} />
+            <Logo variant="full" size={72} />
           </Link>
           {/* 桌面 nav */}
           <nav className="hidden sm:flex items-center gap-5 text-sm">
