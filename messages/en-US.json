@@ -219,10 +219,15 @@
       "normal": "Normal",
       "fast": "Fast",
       "turbo": "Turbo",
-      "normalDesc": "0.000005 SOL · 10-30s",
-      "fastDesc": "0.00005 SOL · 3-10s",
-      "turboDesc": "0.001 SOL · <3s",
-      "congestionHint": "Pick \"Fast\" or higher when the network is congested"
+      "normalDesc": "~0.000005 SOL · 10-30s",
+      "fastDesc": "~0.00005 SOL · 3-10s",
+      "turboDesc": "~0.001 SOL · <3s",
+      "congestionHint": "Network congested — pick Fast or higher",
+      "congestion": {
+        "idle": "Network idle",
+        "normal": "Network normal",
+        "busy": "Network busy"
+      }
     },
     "progress": {
       "title": "Transaction in progress",
@@ -265,8 +270,28 @@
       "notice": "Please review the details. After confirming, your wallet will ask for a signature.",
       "highRisk": {
         "title": "⚠️ High-risk token",
-        "desc": "RugCheck flags this token as high risk: authorities may not be renounced, liquidity may be unlocked, or holdings may be concentrated. You could lose your entire principal.",
-        "ack": "I understand the risk and want to continue"
+        "titleCritical": "🚨 Critical risk · likely total loss",
+        "titleUnknown": "❓ Risk data unavailable",
+        "desc": "RugCheck + GoPlus dual safety review flagged the issues below. You could lose your entire principal.",
+        "descUnknown": "Neither RugCheck nor GoPlus returned data. Could be a brand-new mint, rate-limit, or network issue. We do NOT silently let this through — please confirm risk yourself.",
+        "ack": "I understand the risk and want to continue",
+        "ackUnknown": "I accept the missing data and proceed at my own risk",
+        "reasons": {
+          "rugged": "Flagged as rugged by RugCheck (team abandoned)",
+          "nonTransferable": "Token marked non-transferable (honeypot core trait)",
+          "maliciousCreator": "Creator address flagged malicious by GoPlus",
+          "balanceMutable": "External authority can mutate your balance",
+          "highTransferFee": "Transfer tax ≥ 10% (suspected honeypot)",
+          "transferFee": "Token has a transfer tax",
+          "lowLiquidity": "Liquidity below $10K — extremely thin",
+          "brandNew": "Brand-new token < 1 hour old",
+          "newToken": "New token < 24 hours old",
+          "mintActive": "Mint authority not renounced (can dilute supply)",
+          "freezeActive": "Freeze authority not renounced (can freeze your holdings)",
+          "concentration": "Top 10 holders > 80% concentration",
+          "lpUnlocked": "LP locked under 20% (rug risk)",
+          "dataUnavailable": "Both RugCheck and GoPlus data unavailable"
+        }
       },
       "large": {
         "title": "Large trade · {amount} SOL",

@@ -22,7 +22,7 @@ import { ActivityBoard } from './activity-board';
 import { TradeTabs } from './trade-tabs';
 import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
-import { fetchTokenDetail, overallRisk, type TokenDetail } from '@/lib/token-info';
+import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { SOL_MINT } from '@/lib/preset-tokens';
 
 function isValidMint(s: string): boolean {
@@ -82,6 +82,7 @@ export function TradeScreen() {
             mint={mint}
             compact
             risk={detail ? overallRisk(detail) : undefined}
+            reasons={detail ? riskReasons(detail) : undefined}
             defaultSide={defaultSide}
             onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
           />

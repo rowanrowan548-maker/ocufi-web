@@ -37,6 +37,7 @@ import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
+import { GasSelect } from './gas-select';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
@@ -44,7 +45,7 @@ import { TradeProgressOverlay } from './trade-progress-overlay';
 import { recordFee } from '@/lib/fee-tracker';
 import { ShareTradeButton } from '@/components/share/share-trade-button';
 import { toast } from 'sonner';
-import type { OverallRisk } from '@/lib/token-info';
+import type { OverallRisk, RiskReason } from '@/lib/token-info';
 
 // SOL 余额安全保留(rent + 优先费 buffer)
 const SOL_RESERVE = 0.01;
@@ -79,11 +80,13 @@ interface BuyFormProps {
   mint?: string;
   /** 紧凑模式:去掉 max-width,把 form 撑满父容器 */
   compact?: boolean;
-  /** 上层算好的风险等级:high / critical 时弹"我知晓"勾选 */
+  /** 上层算好的风险等级:high / critical / unknown 时弹"我知晓"勾选 */
   risk?: OverallRisk;
+  /** 具体风险原因列表(由上层 riskReasons() 算出),展示在确认弹窗里 */
+  reasons?: RiskReason[];
 }
 
-export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
+export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps = {}) {
   const t = useTranslations();
   const chain = getCurrentChain();
   const { connection } = useConnection();
@@ -369,24 +372,7 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="buy-gas">{t('trade.fields.gas')}</Label>
-              <Select value={gasLevel} onValueChange={(v) => setGasLevel(v as GasLevel)}>
-                <SelectTrigger id="buy-gas">{t(`trade.gas.${gasLevel}`)}</SelectTrigger>
-                <SelectContent>
-                  {(['normal', 'fast', 'turbo'] as GasLevel[]).map((g) => (
-                    <SelectItem key={g} value={g}>
-                      <div className="flex flex-col items-start">
-                        <span className="text-sm">{t(`trade.gas.${g}`)}</span>
-                        <span className="text-[10px] font-mono text-muted-foreground">
-                          {t(`trade.gas.${g}Desc`)}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} />
           </div>
 
           {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX */}
@@ -546,7 +532,8 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
         onConfirm={doBuy}
         confirming={stage === 'signing' || stage === 'sending'}
         solAmount={quoteData?.inputSol}
-        highRisk={risk === 'high' || risk === 'critical'}
+        risk={risk}
+        reasons={reasons}
       />
 
       <TradeProgressOverlay

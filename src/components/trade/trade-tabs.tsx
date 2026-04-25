@@ -18,7 +18,7 @@ import { BuyForm } from './buy-form';
 import { SellForm } from './sell-form';
 import { LimitForm } from '@/components/limit/limit-form';
 import { SOL_MINT } from '@/lib/preset-tokens';
-import type { OverallRisk } from '@/lib/token-info';
+import type { OverallRisk, RiskReason } from '@/lib/token-info';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
@@ -29,6 +29,8 @@ interface Props {
   onLimitOrderCreated?: () => void;
   /** 上层 trade-screen 已经 fetch 过 detail,把 risk 传下来给确认弹窗用 */
   risk?: OverallRisk;
+  /** 风险原因列表(由 trade-screen 算好) */
+  reasons?: RiskReason[];
   /** 默认 tab,从 ?side= URL 读 */
   defaultSide?: 'buy' | 'sell';
   /** 上层(trade-screen)切换 mint + side 的回调 — SOL 页"用 USDC 买 SOL"按钮调用 */
@@ -38,7 +40,7 @@ interface Props {
 type Side = 'buy' | 'sell';
 type OrderType = 'market' | 'limit';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSide, onPickMint }: Props = {}) {
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint }: Props = {}) {
   const t = useTranslations();
   const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
@@ -120,9 +122,9 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, defaultSid
 
         <TabsContent value="market">
           {side === 'buy' ? (
-            <BuyForm mint={mint} compact risk={risk} />
+            <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
           ) : (
-            <SellForm mint={mint} compact risk={risk} />
+            <SellForm mint={mint} compact risk={risk} reasons={reasons} />
           )}
         </TabsContent>
         <TabsContent value="limit">

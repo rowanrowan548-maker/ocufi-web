@@ -219,10 +219,15 @@
       "normal": "普通",
       "fast": "快速",
       "turbo": "极速",
-      "normalDesc": "0.000005 SOL · 10-30s",
-      "fastDesc": "0.00005 SOL · 3-10s",
-      "turboDesc": "0.001 SOL · <3s",
-      "congestionHint": "网络拥堵时建议至少选「快速」"
+      "normalDesc": "约 0.000005 SOL · 10-30s",
+      "fastDesc": "约 0.00005 SOL · 3-10s",
+      "turboDesc": "约 0.001 SOL · <3s",
+      "congestionHint": "网络拥堵中,建议至少选「快速」",
+      "congestion": {
+        "idle": "网络空闲",
+        "normal": "网络正常",
+        "busy": "网络拥堵"
+      }
     },
     "progress": {
       "title": "交易进行中",
@@ -265,8 +270,28 @@
       "notice": "请再次确认下单信息。确认后钱包会弹窗要求签名。",
       "highRisk": {
         "title": "⚠️ 高风险代币",
-        "desc": "RugCheck 标记此代币为高风险:可能存在权限未放弃、流动性未锁、或筹码集中等问题。继续交易可能损失全部本金。",
-        "ack": "我已知晓风险,仍要继续"
+        "titleCritical": "🚨 严重风险 · 极可能损失本金",
+        "titleUnknown": "❓ 风险数据不可用",
+        "desc": "RugCheck + GoPlus 双源审查命中以下风险信号。继续交易可能损失全部本金。",
+        "descUnknown": "RugCheck 和 GoPlus 都没返回数据。可能是新发币 / 接口被限速 / 网络问题。在数据缺失情况下不静默放行,请你自行确认。",
+        "ack": "我已知晓风险,仍要继续",
+        "ackUnknown": "我已知晓数据缺失,自行承担风险",
+        "reasons": {
+          "rugged": "已被 RugCheck 标记为 rugged(项目已跑路)",
+          "nonTransferable": "代币被设置为不可转让(蜜罐核心特征)",
+          "maliciousCreator": "创建者地址被 GoPlus 标记为恶意",
+          "balanceMutable": "外部权限可直接修改你的余额",
+          "highTransferFee": "转账税 ≥ 10%(疑似蜜罐)",
+          "transferFee": "代币包含转账税",
+          "lowLiquidity": "流动性低于 $10K,极易被砸盘",
+          "brandNew": "新发币 < 1 小时,数据未稳定",
+          "newToken": "新发币 < 24 小时,价格剧烈波动",
+          "mintActive": "Mint 增发权未放弃(可随时增发稀释)",
+          "freezeActive": "Freeze 冻结权未放弃(可冻结你的持仓)",
+          "concentration": "前 10 持仓占比 > 80%(高度集中)",
+          "lpUnlocked": "LP 流动性未锁定 < 20%(rug 风险)",
+          "dataUnavailable": "RugCheck 和 GoPlus 数据均不可用"
+        }
       },
       "large": {
         "title": "大额交易 · {amount} SOL",
