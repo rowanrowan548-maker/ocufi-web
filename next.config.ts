@@ -20,7 +20,7 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: https:",
+  "img-src 'self' data: https: blob:",
   // 外部数据源:DexScreener / GeckoTerminal / RugCheck / Jupiter / Solana RPC / Helius
   "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com",
   "frame-src 'self' https://dexscreener.com https://*.dexscreener.com",

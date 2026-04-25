@@ -109,19 +109,28 @@ export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
   // 总盈亏徽章 · 大字
   const sign = data.totalUsd >= 0 ? '+' : '';
   const totalText = `${sign}$${formatUsd(Math.abs(data.totalUsd))}`;
-  ctx.font = 'bold 80px ui-mono, "SF Mono", Menlo, monospace';
+  // 一次性设好字体后量度,避免量度时和绘制时字体不一致导致错位
+  ctx.font = 'bold 80px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
   const tw = ctx.measureText(totalText).width;
+
+  // 实心徽章
+  const badgeX = 60;
+  const badgeY = 240;
+  const badgeH = 100;
+  const badgeW = tw + 48;
   const badgeColor = isUp ? COLORS.accent : COLORS.danger;
-  // 实心徽章(模仿 gmgn 但用品牌绿)
   ctx.fillStyle = badgeColor;
-  roundRect(ctx, 60, 240, tw + 48, 100, 12);
+  roundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
   ctx.fill();
 
+  // 文字垂直居中:用 alphabetic baseline + 偏移,避免不同字体 middle baseline 不一致
   ctx.fillStyle = COLORS.bg;
   ctx.font = 'bold 80px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(totalText, 60 + 24, 240 + 50);
-  ctx.textBaseline = 'alphabetic';
+  // alphabetic baseline 通常在文字下边缘上方约 0.2em 处;80px × ~0.7 = 56 看起来居中
+  const textY = badgeY + badgeH / 2 + 28;
+  ctx.fillText(totalText, badgeX + 24, textY);
 
   // 总涨幅 %(徽章右下角小字)
   if (Number.isFinite(data.totalPct)) {
