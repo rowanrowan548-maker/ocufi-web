@@ -1,13 +1,14 @@
 'use client';
 
 /**
- * 移动端导航抽屉
+ * 移动端导航抽屉(Portal 版)
  *
- * 触发器:右上角汉堡按钮 ☰
- * 内容:主链接(大字 / 图标)+ 二线链接(小字)+ 底部社交链接
- * 关闭:点 backdrop / 点 X / 点链接
+ * 用 createPortal 把 backdrop + drawer 渲染到 document.body 直下,
+ * 完全脱离 SiteHeader 的 CSS 上下文(避免 backdrop-blur / 父级 stacking
+ * / opacity 等导致的诡异透明问题)
  */
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
@@ -25,6 +26,10 @@ interface Props {
 
 export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // SSR 期间 document 不存在,先标记 mounted
+  useEffect(() => { setMounted(true); }, []);
 
   // 打开时锁定 body 滚动
   useEffect(() => {
@@ -44,6 +49,186 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // 抽屉本身用 Portal 挂到 body,backdrop + 抽屉一起
+  const drawer = mounted && (
+    <>
+      {/* Backdrop · 纯黑 70% 完全挡住底层 */}
+      <div
+        onClick={() => setOpen(false)}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 60,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? 'auto' : 'none',
+          transition: 'opacity 200ms',
+        }}
+        className="sm:hidden"
+        aria-hidden={!open}
+      />
+
+      {/* Drawer */}
+      <aside
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '85vw',
+          maxWidth: '320px',
+          zIndex: 61,
+          backgroundColor: '#13151A',
+          backgroundImage: 'none',
+          borderLeft: '1px solid rgb(63 63 70)',
+          boxShadow: '-12px 0 32px rgba(0,0,0,0.6)',
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 200ms',
+          color: '#fafafa',
+          isolation: 'isolate',
+        }}
+        className="sm:hidden flex flex-col"
+        aria-hidden={!open}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 16px',
+            borderBottom: '1px solid rgb(39 39 42)',
+            flexShrink: 0,
+          }}
+        >
+          <Link href="/" onClick={() => setOpen(false)}>
+            <Logo variant="full" size={22} />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+            style={{
+              height: 44,
+              width: 44,
+              marginRight: -8,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#a1a1aa',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav
+          style={{
+            overflowY: 'auto',
+            padding: 16,
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 24,
+          }}
+        >
+          {/* 主功能 · 大字 */}
+          <div>
+            {mainLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px',
+                  borderRadius: 6,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: '#fafafa',
+                  textDecoration: 'none',
+                }}
+                className="hover:bg-zinc-800/60"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* 更多 · 二级 */}
+          <div>
+            <div
+              style={{
+                padding: '0 12px 8px',
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: '#71717a',
+                fontWeight: 500,
+              }}
+            >
+              {moreLabel}
+            </div>
+            {moreLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  fontSize: 14,
+                  color: '#a1a1aa',
+                  textDecoration: 'none',
+                }}
+                className="hover:bg-zinc-800/60 hover:text-foreground"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* 社交 */}
+          <div
+            style={{
+              borderTop: '1px solid rgb(39 39 42)',
+              paddingTop: 16,
+              display: 'flex',
+              gap: 12,
+              padding: '16px 12px 0',
+              fontSize: 12,
+              color: '#a1a1aa',
+            }}
+          >
+            <a
+              href="https://x.com/Ocufi_io"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'none' }}
+              className="hover:text-foreground"
+            >
+              𝕏 Twitter
+            </a>
+            <a
+              href="https://github.com/rowanrowan548-maker/ocufi-web"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'none' }}
+              className="hover:text-foreground"
+            >
+              GitHub
+            </a>
+          </div>
+        </nav>
+      </aside>
+    </>
+  );
+
   return (
     <>
       <button
@@ -55,95 +240,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
       >
         <Menu className="h-5 w-5" />
       </button>
-
-      {/* Backdrop · 不透明,挡掉页面所有交互;同时挡住 SiteHeader 的 backdrop-blur 透出 */}
-      <div
-        onClick={() => setOpen(false)}
-        className={`sm:hidden fixed inset-0 z-[60] bg-black/70 transition-opacity ${
-          open ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        aria-hidden={!open}
-      />
-
-      {/* Drawer · 直接写 hex bg,不依赖任何 CSS 变量(变量在某些渲染上下文里没解析) */}
-      <aside
-        style={{
-          backgroundColor: '#13151A',
-          backgroundImage: 'none',
-        }}
-        className={`sm:hidden fixed top-0 right-0 bottom-0 z-[61] w-[85vw] max-w-sm border-l border-zinc-700 shadow-[-12px_0_32px_rgba(0,0,0,0.6)] transform transition-transform duration-200 ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        aria-hidden={!open}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-border/40">
-          <Link href="/" onClick={() => setOpen(false)}>
-            <Logo variant="full" size={22} />
-          </Link>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close menu"
-            className="h-11 w-11 -mr-2 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <nav className="overflow-y-auto h-[calc(100vh-65px)] p-4 space-y-6">
-          {/* 主功能 · 大字 */}
-          <div className="space-y-1">
-            {mainLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                // 48px row,易点
-                className="flex items-center px-3 py-3 rounded-md hover:bg-muted/40 transition-colors text-base font-medium text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* 更多 · 二级 */}
-          <div className="space-y-1">
-            <div className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium pb-1">
-              {moreLabel}
-            </div>
-            {moreLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center px-3 py-2.5 rounded-md hover:bg-muted/40 transition-colors text-sm text-muted-foreground hover:text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* 社交 */}
-          <div className="border-t border-border/40 pt-4 flex gap-3 px-3 text-xs text-muted-foreground">
-            <a
-              href="https://x.com/Ocufi_io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground"
-            >
-              𝕏 Twitter
-            </a>
-            <a
-              href="https://github.com/rowanrowan548-maker/ocufi-web"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground"
-            >
-              GitHub
-            </a>
-          </div>
-        </nav>
-      </aside>
+      {drawer && createPortal(drawer, document.body)}
     </>
   );
 }
