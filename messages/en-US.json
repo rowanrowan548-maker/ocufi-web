@@ -321,6 +321,33 @@
       "avgCost": "Avg Cost",
       "pnl": "P/L %",
       "value": "Value"
+    },
+    "distribution": "Asset distribution",
+    "tabs": {
+      "holdings": "Holdings",
+      "closed": "Closed"
+    },
+    "closed": {
+      "summary": "Total realized P/L",
+      "empty": {
+        "title": "No closed positions yet",
+        "subtitle": "Once you buy and fully sell a token it'll appear here with realized P/L"
+      },
+      "cols": {
+        "token": "Token",
+        "bought": "Bought",
+        "sold": "Sold",
+        "pnlSol": "Realized P/L",
+        "pnlPct": "P/L %",
+        "closedAt": "Closed"
+      }
+    },
+    "chart": {
+      "title": "Total value over time",
+      "collecting": {
+        "title": "Collecting data",
+        "subtitle": "{count} more visit(s) to start charting — history is stored only in your browser, never uploaded"
+      }
     }
   },
   "token": {

@@ -25,6 +25,36 @@ export interface CostEntry {
   totalBoughtTokens: number;
   /** 有几笔 buy 交易 */
   buyCount: number;
+  /** 累计卖出收回的 SOL 总量 */
+  totalSoldSol: number;
+  /** 累计卖出的 token 总量 */
+  totalSoldTokens: number;
+  /** 有几笔 sell 交易 */
+  sellCount: number;
+  /** 最近一笔 tx 的 blockTime(秒) */
+  lastTxAt: number;
+}
+
+export interface ClosedPosition {
+  mint: string;
+  /** 累计买入 SOL */
+  totalBoughtSol: number;
+  /** 累计买入 tokens */
+  totalBoughtTokens: number;
+  /** 累计卖出 SOL */
+  totalSoldSol: number;
+  /** 累计卖出 tokens */
+  totalSoldTokens: number;
+  /** 已实现盈亏(SOL) */
+  realizedPnlSol: number;
+  /** 已实现盈亏 % */
+  realizedPnlPct: number;
+  /** 平均买入价(SOL/token) */
+  avgBuyPriceSol: number;
+  /** 平均卖出价(SOL/token) */
+  avgSellPriceSol: number;
+  /** 最后一笔卖出时间(秒) */
+  closedAt: number;
 }
 
 export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
@@ -44,7 +74,12 @@ export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
       totalBoughtSol: 0,
       totalBoughtTokens: 0,
       buyCount: 0,
+      totalSoldSol: 0,
+      totalSoldTokens: 0,
+      sellCount: 0,
+      lastTxAt: 0,
     };
+    const ts = r.blockTime ?? 0;
 
     if (r.type === 'buy' && r.tokenAmount > 0 && r.solAmount > 0) {
       const newBalance = prev.derivedBalance + r.tokenAmount;
@@ -59,6 +94,7 @@ export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
         totalBoughtSol: prev.totalBoughtSol + r.solAmount,
         totalBoughtTokens: prev.totalBoughtTokens + r.tokenAmount,
         buyCount: prev.buyCount + 1,
+        lastTxAt: Math.max(prev.lastTxAt, ts),
       });
     } else if (r.type === 'sell' && r.tokenAmount > 0) {
       const newBalance = Math.max(0, prev.derivedBalance - r.tokenAmount);
@@ -67,6 +103,10 @@ export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
         derivedBalance: newBalance,
         // 余额清零就重置成本(下次重新买入起算)
         avgCostSol: newBalance === 0 ? 0 : prev.avgCostSol,
+        totalSoldSol: prev.totalSoldSol + r.solAmount,
+        totalSoldTokens: prev.totalSoldTokens + r.tokenAmount,
+        sellCount: prev.sellCount + 1,
+        lastTxAt: Math.max(prev.lastTxAt, ts),
       });
     } else if ((r.type === 'receive' || r.type === 'send') && r.tokenAmount > 0) {
       // 转入/转出不影响成本(没法知道外部成本),只更新 derivedBalance 方便追
@@ -79,4 +119,47 @@ export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
   }
 
   return map;
+}
+
+/**
+ * 从 CostEntry 衍生出已平仓列表
+ *
+ * 平仓判定:
+ *  - 至少一次买入 + 一次卖出
+ *  - derivedBalance ≈ 0(<= 总买入 1% 视为平仓,允许浮点 / 灰尘误差)
+ *
+ * 已实现 PnL = totalSoldSol - totalBoughtSol(SOL 计价)
+ */
+export function getClosedPositions(costs: Map<string, CostEntry>): ClosedPosition[] {
+  const out: ClosedPosition[] = [];
+  for (const c of costs.values()) {
+    if (c.buyCount === 0 || c.sellCount === 0) continue;
+    if (c.totalBoughtTokens <= 0) continue;
+    const dustTolerance = c.totalBoughtTokens * 0.01;
+    if (c.derivedBalance > dustTolerance) continue;
+
+    const realizedPnlSol = c.totalSoldSol - c.totalBoughtSol;
+    const realizedPnlPct =
+      c.totalBoughtSol > 0 ? (realizedPnlSol / c.totalBoughtSol) * 100 : 0;
+    const avgBuyPriceSol =
+      c.totalBoughtTokens > 0 ? c.totalBoughtSol / c.totalBoughtTokens : 0;
+    const avgSellPriceSol =
+      c.totalSoldTokens > 0 ? c.totalSoldSol / c.totalSoldTokens : 0;
+
+    out.push({
+      mint: c.mint,
+      totalBoughtSol: c.totalBoughtSol,
+      totalBoughtTokens: c.totalBoughtTokens,
+      totalSoldSol: c.totalSoldSol,
+      totalSoldTokens: c.totalSoldTokens,
+      realizedPnlSol,
+      realizedPnlPct,
+      avgBuyPriceSol,
+      avgSellPriceSol,
+      closedAt: c.lastTxAt,
+    });
+  }
+  // 按平仓时间倒序
+  out.sort((a, b) => b.closedAt - a.closedAt);
+  return out;
 }
