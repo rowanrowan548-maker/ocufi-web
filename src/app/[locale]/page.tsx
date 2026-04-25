@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentChain } from '@/config/chains';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
-import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
 import { MarketSnapshot } from '@/components/landing/market-snapshot';
 import { TokenList } from '@/components/landing/token-list';
 import { PriceTicker } from '@/components/landing/price-ticker';
@@ -80,8 +79,6 @@ export default async function Landing({
               </Button>
             </Link>
           </div>
-
-          <MobileDeeplink />
         </div>
       </section>
 

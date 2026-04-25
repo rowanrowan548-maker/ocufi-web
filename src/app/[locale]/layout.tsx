@@ -9,6 +9,7 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { FeedbackButton } from '@/components/feedback/feedback-button';
 import { SwRegister } from '@/components/pwa/sw-register';
 import { InstallPrompt } from '@/components/pwa/install-prompt';
+import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
 import { Toaster } from '@/components/ui/sonner';
 import '../globals.css';
 
@@ -98,6 +99,7 @@ export default async function LocaleLayout({
             {children}
             <FeedbackButton />
             <InstallPrompt />
+            <MobileDeeplink />
             <Toaster />
           </SolanaWalletProvider>
         </NextIntlClientProvider>

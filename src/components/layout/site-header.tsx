@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { Logo } from '@/components/brand/logo';
 import { MoreMenu } from './more-menu';
+import { MobileNav } from './mobile-nav';
 
 export async function SiteHeader() {
   const t = await getTranslations();
@@ -15,7 +16,7 @@ export async function SiteHeader() {
     { href: '/token', label: t('nav.tokenCheck') },
   ];
 
-  // 二线功能 · 收到"更多"下拉
+  // 二线功能 · 桌面收到「更多」下拉,移动端进抽屉
   const moreLinks = [
     { href: '/alerts', label: t('nav.alerts') },
     { href: '/history', label: t('nav.history') },
@@ -26,16 +27,14 @@ export async function SiteHeader() {
     { href: '/settings', label: t('nav.settings') },
   ];
 
-  // 手机端 nav 全部展开(横向滚动)
-  const allLinks = [...mainLinks, ...moreLinks];
-
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-2">
             <Logo variant="full" size={22} />
           </Link>
+          {/* 桌面 nav */}
           <nav className="hidden sm:flex items-center gap-5 text-sm">
             {mainLinks.map((l) => (
               <Link
@@ -49,20 +48,17 @@ export async function SiteHeader() {
             <MoreMenu label={t('nav.more')} items={moreLinks} />
           </nav>
         </div>
-        <ConnectWalletButton variant="header" />
+
+        {/* 右侧:钱包 + 移动端汉堡 */}
+        <div className="flex items-center gap-1">
+          <ConnectWalletButton variant="header" />
+          <MobileNav
+            mainLinks={mainLinks}
+            moreLinks={moreLinks}
+            moreLabel={t('nav.more')}
+          />
+        </div>
       </div>
-      {/* 手机端 nav · 横向滚动一行 */}
-      <nav className="sm:hidden flex items-center gap-5 text-xs overflow-x-auto px-4 pb-2 -mt-1">
-        {allLinks.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-          >
-            {l.label}
-          </Link>
-        ))}
-      </nav>
     </header>
   );
 }

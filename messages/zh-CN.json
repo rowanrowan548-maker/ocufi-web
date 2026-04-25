@@ -123,10 +123,11 @@
     "viewExplorer": "在 Solscan 查看"
   },
   "mobile": {
-    "title": "手机用户请用钱包自带浏览器打开",
-    "hint": "Safari / Chrome 看不到你装的 Phantom / Solflare。点下面按钮会跳转到钱包 app 内置浏览器。",
+    "title": "手机端用钱包浏览器打开",
+    "hint": "Safari / Chrome 检测不到你装的 Phantom / Solflare。点下面按钮会自动跳到钱包 app 的内置浏览器,在那里就能正常连。",
     "openPhantom": "用 Phantom 打开",
-    "openSolflare": "用 Solflare 打开"
+    "openSolflare": "用 Solflare 打开",
+    "later": "稍后再说"
   },
   "trade": {
     "page": {

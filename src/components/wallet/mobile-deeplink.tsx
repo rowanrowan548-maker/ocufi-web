@@ -1,22 +1,35 @@
 'use client';
 
 /**
- * 手机端钱包 deeplink 引导
+ * 手机端钱包 deeplink 引导(弹窗版)
  *
  * Solana 生态通病:手机浏览器(Safari/Chrome)没有 `window.phantom` 注入,
- * wallet-adapter 扫不到钱包。用户必须**在钱包 app 自带浏览器里打开网站**才能连。
+ * wallet-adapter 扫不到钱包。用户必须在钱包 app 自带浏览器里打开网站才能连。
  *
  * 显示条件:
- *  - 当前是移动设备 UA
- *  - 不在 Phantom / Solflare 的 in-app browser 里(检测 window.phantom / window.solflare)
+ *  - 移动设备 UA
+ *  - 不在 Phantom / Solflare 的 in-app browser 里
  *  - 钱包未连接
+ *  - 24h 内没被关闭过
  *
- * 点击按钮 → 跳转 deeplink → 钱包 app 自动打开并在 in-app browser 加载网站
+ * 改成弹窗(原 inline banner 占地方且影响美观)。关闭后 24h 不再弹。
  */
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Smartphone, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
+const DISMISS_KEY = 'ocufi.mobile-hint.dismissedAt';
+const DISMISS_HOURS = 24;
 
 function isMobile(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -27,58 +40,95 @@ function isInWalletBrowser(): boolean {
   if (typeof window === 'undefined') return false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const w = window as any;
-  // Phantom in-app 浏览器会注入 window.phantom;Solflare 会注入 window.solflare
   return !!(w.phantom?.solana || w.solflare);
+}
+
+function recentlyDismissed(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const v = window.localStorage.getItem(DISMISS_KEY);
+    if (!v) return false;
+    const ago = Date.now() - Number(v);
+    return ago < DISMISS_HOURS * 3600_000;
+  } catch {
+    return false;
+  }
 }
 
 export function MobileDeeplink() {
   const t = useTranslations();
   const { connected } = useWallet();
-  const [show, setShow] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [phantomUrl, setPhantomUrl] = useState('');
+  const [solflareUrl, setSolflareUrl] = useState('');
 
   useEffect(() => {
-    // 仅在客户端判断
-    setShow(isMobile() && !isInWalletBrowser() && !connected);
+    // 仅在客户端检测,且只在条件满足时弹一次
+    if (!isMobile()) return;
+    if (isInWalletBrowser()) return;
+    if (connected) return;
+    if (recentlyDismissed()) return;
+
+    // 延迟一点再弹,避免和页面初次渲染抢主线程
+    const t = setTimeout(() => {
+      const url = window.location.href;
+      const enc = encodeURIComponent(url);
+      setPhantomUrl(`https://phantom.app/ul/browse/${enc}?ref=${enc}`);
+      setSolflareUrl(`https://solflare.com/ul/v1/browse/${enc}?ref=${enc}`);
+      setOpen(true);
+    }, 800);
+    return () => clearTimeout(t);
   }, [connected]);
 
-  if (!show) return null;
-
-  const currentUrl =
-    typeof window !== 'undefined' ? window.location.href : 'https://www.ocufi.io';
-  const encoded = encodeURIComponent(currentUrl);
-  const phantomUrl = `https://phantom.app/ul/browse/${encoded}?ref=${encoded}`;
-  const solflareUrl = `https://solflare.com/ul/v1/browse/${encoded}?ref=${encoded}`;
+  function dismiss() {
+    setOpen(false);
+    try {
+      window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    } catch {
+      /* */
+    }
+  }
 
   return (
-    <div className="w-full max-w-xl mx-auto rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm space-y-3">
-      <div className="flex gap-2 items-start">
-        <Smartphone className="h-5 w-5 mt-0.5 flex-shrink-0 text-primary" />
-        <div>
-          <div className="font-medium text-foreground">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) dismiss(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-primary" />
             {t('mobile.title')}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">{t('mobile.hint')}</div>
-        </div>
-      </div>
+          </DialogTitle>
+          <DialogDescription>{t('mobile.hint')}</DialogDescription>
+        </DialogHeader>
 
-      <div className="flex gap-2">
-        <a
-          href={phantomUrl}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-md
-                     bg-[#4C44C6] text-white text-sm font-medium h-10 hover:opacity-90"
-        >
-          <ExternalLink className="h-4 w-4" />
-          {t('mobile.openPhantom')}
-        </a>
-        <a
-          href={solflareUrl}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-md
-                     bg-[#FC8F30] text-white text-sm font-medium h-10 hover:opacity-90"
-        >
-          <ExternalLink className="h-4 w-4" />
-          {t('mobile.openSolflare')}
-        </a>
-      </div>
-    </div>
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <a
+            href={phantomUrl}
+            className="inline-flex items-center justify-center gap-2 rounded-md
+                       bg-[#4C44C6] text-white text-sm font-medium h-11 hover:opacity-90"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {t('mobile.openPhantom')}
+          </a>
+          <a
+            href={solflareUrl}
+            className="inline-flex items-center justify-center gap-2 rounded-md
+                       bg-[#FC8F30] text-white text-sm font-medium h-11 hover:opacity-90"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {t('mobile.openSolflare')}
+          </a>
+        </div>
+
+        <DialogFooter className="sm:justify-center">
+          <Button
+            variant="ghost"
+            onClick={dismiss}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {t('mobile.later')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
