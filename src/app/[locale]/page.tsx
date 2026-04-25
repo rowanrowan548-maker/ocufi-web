@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Link from 'next/link';
 import {
   Shield, Lock, Coins, Eye, ArrowRight,
-  LineChart, Timer, Wallet, Bell, History, ShieldCheck,
+  LineChart, Star, Wallet, Bell, History, ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,7 @@ export default async function Landing({
 
   const funcs = [
     { href: '/trade', Icon: LineChart, key: 'trade' },
-    { href: '/limit', Icon: Timer, key: 'limit' },
+    { href: '/watchlist', Icon: Star, key: 'watchlist' },
     { href: '/portfolio', Icon: Wallet, key: 'portfolio' },
     { href: '/alerts', Icon: Bell, key: 'alerts' },
     { href: '/history', Icon: History, key: 'history' },

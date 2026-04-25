@@ -73,13 +73,11 @@ export function TradeScreen() {
       <TradingHeader mint={mint} detail={detail} />
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-4 items-start">
-        {/* 左:K线 + 活动板 */}
-        <div className="min-w-0 space-y-4">
-          <ChartCard mint={mint} />
-          <ActivityBoard detail={detail} />
-        </div>
-        {/* 右:交易表单 + 行情 + 安全 */}
-        <div className="space-y-4">
+        {/*
+         * 移动端:DOM 顺序 = 显示顺序 → 交易面板第一(用户最常用),其次 K线/活动
+         * 桌面端:lg:order-1/2 把 K线 拉到左,交易面板拉到右
+         */}
+        <div className="space-y-4 lg:order-2">
           <TradeTabs
             mint={mint}
             compact
@@ -89,6 +87,10 @@ export function TradeScreen() {
           />
           <InfoPanel detail={detail} />
           <SafetyPanel detail={detail} />
+        </div>
+        <div className="min-w-0 space-y-4 lg:order-1">
+          <ChartCard mint={mint} />
+          <ActivityBoard detail={detail} />
         </div>
       </div>
     </div>

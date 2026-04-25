@@ -6,11 +6,10 @@
   "nav": {
     "home": "首页",
     "trade": "交易",
-    "limit": "限价单",
+    "watchlist": "自选",
     "portfolio": "持仓",
     "alerts": "价格提醒",
     "history": "成交记录",
-    "alerts": "价格提醒",
     "points": "积分",
     "settings": "设置",
     "docs": "文档",
@@ -89,9 +88,9 @@
         "title": "市价买卖",
         "desc": "Jupiter 聚合最优路径"
       },
-      "limit": {
-        "title": "限价单",
-        "desc": "挂单等到价自动成交"
+      "watchlist": {
+        "title": "我的自选",
+        "desc": "收藏代币 · 一眼看完"
       },
       "portfolio": {
         "title": "持仓",
@@ -639,6 +638,25 @@
       "nft_airdrop": "NFT 空投",
       "nft": "NFT 操作",
       "other": "其他"
+    }
+  },
+  "watchlist": {
+    "page": {
+      "title": "我的自选",
+      "subtitle": "你已收藏 {count} 个代币 · 点星标可移除"
+    },
+    "empty": {
+      "title": "还没有自选代币",
+      "subtitle": "去首页或代币详情页点击星标 ⭐,自选代币会列在这里",
+      "browseTokens": "浏览行情",
+      "goTrade": "去交易"
+    },
+    "cols": {
+      "name": "代币",
+      "price": "价格",
+      "change": "24h 涨跌",
+      "volume": "24h 成交量",
+      "action": "操作"
     }
   },
   "common": {

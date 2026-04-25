@@ -6,11 +6,10 @@
   "nav": {
     "home": "Home",
     "trade": "Trade",
-    "limit": "Limit Order",
+    "watchlist": "Watchlist",
     "portfolio": "Portfolio",
-    "alerts": "Alerts",
-    "history": "History",
     "alerts": "Price Alerts",
+    "history": "History",
     "points": "Points",
     "settings": "Settings",
     "docs": "Docs",
@@ -89,9 +88,9 @@
         "title": "Market trade",
         "desc": "Jupiter best-route aggregator"
       },
-      "limit": {
-        "title": "Limit orders",
-        "desc": "Auto-execute at your target price"
+      "watchlist": {
+        "title": "My Watchlist",
+        "desc": "Starred tokens at a glance"
       },
       "portfolio": {
         "title": "Portfolio",
@@ -624,6 +623,25 @@
       "nft_airdrop": "NFT Airdrop",
       "nft": "NFT",
       "other": "Other"
+    }
+  },
+  "watchlist": {
+    "page": {
+      "title": "My Watchlist",
+      "subtitle": "{count} tokens starred · click the star to remove"
+    },
+    "empty": {
+      "title": "No favorite tokens yet",
+      "subtitle": "Tap the star ⭐ on any token (home page or detail page) to add it here.",
+      "browseTokens": "Browse markets",
+      "goTrade": "Go to Trade"
+    },
+    "cols": {
+      "name": "Token",
+      "price": "Price",
+      "change": "24h Change",
+      "volume": "24h Volume",
+      "action": "Action"
     }
   },
   "common": {

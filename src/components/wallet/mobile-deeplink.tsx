@@ -50,11 +50,11 @@ export function MobileDeeplink() {
   const solflareUrl = `https://solflare.com/ul/v1/browse/${encoded}?ref=${encoded}`;
 
   return (
-    <div className="w-full max-w-xl mx-auto rounded-lg border border-warning/30 bg-amber-500/5 p-4 text-sm space-y-3">
+    <div className="w-full max-w-xl mx-auto rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm space-y-3">
       <div className="flex gap-2 items-start">
-        <Smartphone className="h-5 w-5 mt-0.5 flex-shrink-0 text-warning" />
+        <Smartphone className="h-5 w-5 mt-0.5 flex-shrink-0 text-primary" />
         <div>
-          <div className="font-medium text-warning">
+          <div className="font-medium text-foreground">
             {t('mobile.title')}
           </div>
           <div className="text-xs text-muted-foreground mt-1">{t('mobile.hint')}</div>
