@@ -83,30 +83,42 @@
         "desc": "GitHub 上可审计,没有黑箱逻辑,没有暗抽成"
       }
     },
-    "compare": {
-      "title": "和谁比都不亏",
-      "subtitle": "Ocufi 与主流 Solana 交易终端,六项关键指标对照",
-      "cols": {
-        "metric": "指标"
+    "promise": {
+      "title": "Ocufi 的承诺",
+      "subtitle": "我们对自己定的硬规则 · 写在代码里,放在 GitHub 上",
+      "sellFeeValue": "免费",
+      "items": {
+        "buyFee": {
+          "title": "买入手续费",
+          "desc": "0.1% 直接由 SystemProgram.transfer 收取,链上可查"
+        },
+        "sellFee": {
+          "title": "卖出手续费",
+          "desc": "V1 阶段卖出不收任何手续费,只付 Solana 网络 Gas"
+        },
+        "nonCustodial": {
+          "title": "非托管",
+          "desc": "私钥永远在你钱包里 · Ocufi 不存账号、不能挪用"
+        },
+        "openSource": {
+          "title": "前端开源",
+          "desc": "GitHub 完整代码可审计,任何人都能 fork 自己部署"
+        },
+        "dualSafety": {
+          "title": "双源安全审查",
+          "desc": "RugCheck + GoPlus 并行查蜜罐 / 转账税 / 权限"
+        },
+        "i18n": {
+          "title": "中英双语",
+          "desc": "完整的中英文界面 · 风险提示也支持本地化"
+        }
       },
-      "rows": {
-        "buyFee": "买入手续费",
-        "sellFee": "卖出手续费",
-        "nonCustodial": "非托管(私钥归你)",
-        "openSource": "前端开源",
-        "dualSafety": "RugCheck + GoPlus 双源审查",
-        "zhUI": "中文界面"
-      },
-      "values": {
-        "free": "免费"
-      },
-      "disclaimer": "费率为各家公开数据,VIP / 邀请折扣不计入。Ocufi V1 卖出免手续费,买卖均摊 ≈ 0.05%。",
       "calc": {
-        "title": "算一下你能省多少",
-        "monthlyVolume": "你的月成交额(USD)",
-        "monthShort": "月",
-        "savings": "省下",
-        "yearly": "一年下来约能省 ${amount} 美元 · 这就是 Ocufi 存在的理由"
+        "title": "算一下你的成本",
+        "monthlyVolume": "假设你的月成交额(USD)",
+        "monthly": "月手续费",
+        "yearly": "年手续费",
+        "note": "按 0.1% 买入 + 0 卖出 · 买卖各占 50% 时均摊费率 ≈ 0.05%"
       }
     },
     "functions": {
