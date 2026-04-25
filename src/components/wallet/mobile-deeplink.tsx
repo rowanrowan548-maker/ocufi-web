@@ -22,7 +22,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -91,16 +90,18 @@ export function MobileDeeplink() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) dismiss(); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5 text-primary" />
-            {t('mobile.title')}
+          <DialogTitle className="flex items-center gap-2 pr-6">
+            <Smartphone className="h-5 w-5 text-primary flex-shrink-0" />
+            <span className="leading-snug">{t('mobile.title')}</span>
           </DialogTitle>
-          <DialogDescription>{t('mobile.hint')}</DialogDescription>
+          <DialogDescription className="leading-relaxed">
+            {t('mobile.hint')}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className="grid grid-cols-1 gap-2">
           <a
             href={phantomUrl}
             className="inline-flex items-center justify-center gap-2 rounded-md
@@ -117,17 +118,14 @@ export function MobileDeeplink() {
             <ExternalLink className="h-4 w-4" />
             {t('mobile.openSolflare')}
           </a>
-        </div>
-
-        <DialogFooter className="sm:justify-center">
           <Button
             variant="ghost"
             onClick={dismiss}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="h-9 text-xs text-muted-foreground hover:text-foreground"
           >
             {t('mobile.later')}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

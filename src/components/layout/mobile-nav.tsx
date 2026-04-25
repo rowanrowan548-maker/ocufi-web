@@ -56,18 +56,19 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Backdrop */}
+      {/* Backdrop · 不透明,挡掉页面所有交互;同时挡住 SiteHeader 的 backdrop-blur 透出 */}
       <div
         onClick={() => setOpen(false)}
-        className={`sm:hidden fixed inset-0 z-50 bg-background/85 backdrop-blur-sm transition-opacity ${
+        className={`sm:hidden fixed inset-0 z-[60] bg-black/70 transition-opacity ${
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden={!open}
       />
 
-      {/* Drawer */}
+      {/* Drawer · 用 bg-popover(比 card 更亮)+ 强阴影 + 显式背景,不会再透下去 */}
       <aside
-        className={`sm:hidden fixed top-0 right-0 bottom-0 z-50 w-[85vw] max-w-sm bg-card border-l border-border/40 shadow-2xl transform transition-transform duration-200 ${
+        style={{ background: 'var(--popover, #1B1E26)' }}
+        className={`sm:hidden fixed top-0 right-0 bottom-0 z-[61] w-[85vw] max-w-sm border-l border-border/60 shadow-[-12px_0_32px_rgba(0,0,0,0.5)] transform transition-transform duration-200 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!open}
