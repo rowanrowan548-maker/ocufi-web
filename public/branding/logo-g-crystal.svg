@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" aria-label="Ocufi · Crystal">
+  <rect width="32" height="32" rx="6" fill="#0A0B0D"/>
+  <!-- 上半棱面(亮) -->
+  <path d="M 7 14 L 16 5 L 25 14 L 16 16 Z"
+        stroke="#19FB9B" stroke-width="1.5" fill="rgba(25,251,155,0.22)"
+        stroke-linejoin="round"/>
+  <!-- 下半棱面(暗) -->
+  <path d="M 7 14 L 16 16 L 25 14 L 16 27 Z"
+        stroke="#19FB9B" stroke-width="1.5" fill="rgba(25,251,155,0.06)"
+        stroke-linejoin="round"/>
+  <!-- 中心刻面线 -->
+  <line x1="16" y1="5" x2="16" y2="27" stroke="#19FB9B" stroke-width="0.8" opacity="0.5"/>
+</svg>

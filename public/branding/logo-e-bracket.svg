@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" aria-label="Ocufi · Bracket Pulse">
+  <rect width="32" height="32" rx="6" fill="#0A0B0D"/>
+  <!-- 左方括号 -->
+  <path d="M 11 8 L 7 8 L 7 24 L 11 24" stroke="#19FB9B" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 右方括号 -->
+  <path d="M 21 8 L 25 8 L 25 24 L 21 24" stroke="#19FB9B" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 中心节点 -->
+  <circle cx="16" cy="16" r="3" fill="#19FB9B"/>
+</svg>
