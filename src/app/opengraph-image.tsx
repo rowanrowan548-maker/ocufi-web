@@ -27,18 +27,11 @@ export default async function Image() {
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <svg width="56" height="56" viewBox="0 0 32 32">
-            <rect
-              x="4"
-              y="4"
-              width="24"
-              height="24"
-              rx="6"
-              transform="rotate(45 16 16)"
-              stroke="#19FB9B"
-              strokeWidth="2.5"
-              fill="none"
-            />
-            <circle cx="16" cy="16" r="3.5" fill="#19FB9B" />
+            <path d="M 16 5 A 11 11 0 0 1 27 16" stroke="#19FB9B" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+            <path d="M 16 27 A 11 11 0 0 1 5 16" stroke="#19FB9B" strokeWidth="2.8" fill="none" strokeLinecap="round" />
+            <path d="M 27 16 A 11 11 0 0 1 16 27" stroke="#19FB9B" strokeWidth="2.8" fill="none" strokeLinecap="round" opacity="0.3" />
+            <path d="M 5 16 A 11 11 0 0 1 16 5" stroke="#19FB9B" strokeWidth="2.8" fill="none" strokeLinecap="round" opacity="0.3" />
+            <circle cx="16" cy="16" r="2.2" fill="#19FB9B" />
           </svg>
           <div style={{ fontSize: '48px', fontWeight: 700, letterSpacing: '-0.03em' }}>
             Ocufi

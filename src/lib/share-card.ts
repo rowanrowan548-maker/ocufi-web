@@ -90,25 +90,17 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   ctx.fillStyle = grad2;
   ctx.fillRect(0, 0, W, H);
 
-  // ── 顶部品牌 ──
-  // OCUFI logo wordmark · 加粗 + 字间距
+  // ── 顶部品牌 · Arc O logo + 字标 ──
+  drawBrandLogo(ctx, 60, 70, 44);
   ctx.fillStyle = COLORS.accent;
   ctx.font = 'bold 38px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
-  ctx.fillText('OCUFI', 60, 95);
+  ctx.fillText('OCUFI', 116, 100);
 
   ctx.fillStyle = COLORS.muted;
   ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText('Solana · Non-custodial · 0.2% fee', 60, 122);
+  ctx.fillText('Solana · Non-custodial · 0.2% fee', 116, 124);
 
-  // 顶部 Brand 装饰线
-  ctx.strokeStyle = 'rgba(25,251,155,0.4)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(60, 60);
-  ctx.lineTo(220, 60);
-  ctx.stroke();
-
-  // 右上角:社交账号 · 强化品牌识别 + 引流
+  // 右上角:社交账号
   drawSocials(ctx, W - 60, 95);
 
   // ── 左侧:交易信息 ──
@@ -419,6 +411,55 @@ function formatPrice(n: number): string {
 function truncate(s: string, n: number): string {
   if (s.length <= n) return s;
   return s.slice(0, n - 1) + '…';
+}
+
+/** Arc O logo · Canvas 版 · anchor 在左上角 (x, y),size 是边长 */
+export function drawBrandLogo(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+) {
+  const scale = size / 32;
+  const cx = x + size / 2;
+  const cy = y + size / 2;
+  const r = 11 * scale;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 2.8 * scale;
+  ctx.strokeStyle = COLORS.accent;
+
+  // 实色弧 · 上右 (从 12 点到 3 点)
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, -Math.PI / 2, 0);
+  ctx.stroke();
+
+  // 实色弧 · 下左(从 6 点到 9 点)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI / 2, Math.PI);
+  ctx.stroke();
+
+  // 淡色弧 · 下右
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI / 2);
+  ctx.stroke();
+
+  // 淡色弧 · 上左
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, -Math.PI / 2);
+  ctx.stroke();
+
+  // 中心瞳点
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = COLORS.accent;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2.2 * scale, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 /** 卡片右上角:𝕏 @Ocufi_io · ocufi.io 字符串 · anchor 在 (rightX, baseY) */
