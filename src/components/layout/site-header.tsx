@@ -33,7 +33,7 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-2">
-            <Logo variant="full" size={22} />
+            <Logo variant="full" size={36} />
           </Link>
           {/* 桌面 nav */}
           <nav className="hidden sm:flex items-center gap-5 text-sm">
