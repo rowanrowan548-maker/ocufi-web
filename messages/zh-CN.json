@@ -39,17 +39,16 @@
       "more": "更多",
       "hot": "热门",
       "meme": "Meme",
-      "lst": "流动性质押",
-      "stables": "稳定币 / L1"
+      "majors": "主流币",
+      "stables": "稳定币"
     },
     "tokenList": {
       "title": "代币行情",
-      "subtitle": "按市值排序 · 点击操作直接交易",
+      "subtitle": "按 24h 成交量排序 · 点击操作直接交易",
       "tabs": {
         "all": "全部",
-        "blue": "蓝筹",
+        "major": "主流币",
         "meme": "Meme",
-        "lst": "LST",
         "stable": "稳定币"
       },
       "cols": {
@@ -179,6 +178,20 @@
       "noRisks": {
         "title": "无明显风险",
         "subtitle": "RugCheck 没有标记任何风险信号"
+      },
+      "noActivity": {
+        "title": "暂无成交记录",
+        "subtitle": "GeckoTerminal 没找到该代币的活跃池子"
+      },
+      "cols": {
+        "side": "方向",
+        "usd": "金额",
+        "tokens": "数量",
+        "maker": "交易者",
+        "time": "时间",
+        "owner": "持有者",
+        "amount": "持仓",
+        "pct": "占比"
       }
     },
     "buy": {

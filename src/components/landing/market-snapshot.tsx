@@ -11,40 +11,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  TrendingUp, TrendingDown, Flame, Sparkles, BarChart3, Rocket, ArrowRight,
+  TrendingUp, TrendingDown, Flame, Sparkles, BarChart3, ArrowRight,
 } from 'lucide-react';
 import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
+import { PRESET_MAJORS, PRESET_MEME, PRESET_STABLE } from '@/lib/preset-tokens';
 import { useTranslations } from 'next-intl';
 
-const HOT_MINTS = [
-  'So11111111111111111111111111111111111111112',
-  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
-  'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3',
-  '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',
-  '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E',
-  'rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof',
-];
-const MEME_MINTS = [
-  'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
-  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',
-  'MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5',
-];
-const LST_MINTS = [
-  'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',
-  'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
-  'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1',
-  '7Q2afV64in6N6SeZsAAB81TJzwDoD6zpqmHkzi9Dcavn',
-  'BNso1VUJnh4zcfpZa6986Ea66P6TCp59hvtNJ8b1X85',
-];
-const VOL_MINTS = [
-  'So11111111111111111111111111111111111111112',
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
-  '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E',
-  '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',
-];
-
-const ALL = Array.from(new Set([...HOT_MINTS, ...MEME_MINTS, ...LST_MINTS, ...VOL_MINTS]));
+const ALL = Array.from(new Set([...PRESET_MAJORS, ...PRESET_MEME, ...PRESET_STABLE]));
 
 export function MarketSnapshot() {
   const t = useTranslations('landing.market');
@@ -54,7 +27,21 @@ export function MarketSnapshot() {
     fetchTokensInfoBatch(ALL).then(setInfos).catch(() => {});
   }, []);
 
-  const pick = (mints: string[]) => mints.map((m) => infos.get(m)).filter(Boolean) as TokenInfo[];
+  // 选 token + 过滤 logo 缺失 + 按 24h 成交量排序,取前 5
+  const pick = (mints: string[]): TokenInfo[] => {
+    const list = mints
+      .map((m) => infos.get(m))
+      .filter((t): t is TokenInfo => !!t && !!t.logoUri);
+    list.sort((a, b) => (b.volume24h ?? 0) - (a.volume24h ?? 0));
+    return list.slice(0, 5);
+  };
+
+  // "热门" 卡:跨所有池子按 24h 成交量取 Top 5
+  const hot = (() => {
+    const all = Array.from(infos.values()).filter((t) => !!t.logoUri);
+    all.sort((a, b) => (b.volume24h ?? 0) - (a.volume24h ?? 0));
+    return all.slice(0, 5);
+  })();
 
   return (
     <section className="px-4 sm:px-6 py-6 sm:py-10">
@@ -68,11 +55,10 @@ export function MarketSnapshot() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <SnapCard Icon={Flame} label={t('hot')} tokens={pick(HOT_MINTS)} more="/trade" />
-          <SnapCard Icon={Sparkles} label={t('meme')} tokens={pick(MEME_MINTS)} more="/trade" />
-          <SnapCard Icon={Rocket} label={t('lst')} tokens={pick(LST_MINTS)} more="/trade" />
-          <SnapCard Icon={BarChart3} label={t('stables')} tokens={pick(VOL_MINTS)} more="/trade" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <SnapCard Icon={Flame} label={t('hot')} tokens={hot} more="/trade" />
+          <SnapCard Icon={Sparkles} label={t('meme')} tokens={pick(PRESET_MEME)} more="/trade" />
+          <SnapCard Icon={BarChart3} label={t('majors')} tokens={pick(PRESET_MAJORS)} more="/trade" />
         </div>
       </div>
     </section>

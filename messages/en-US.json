@@ -39,17 +39,16 @@
       "more": "More",
       "hot": "Hot",
       "meme": "Meme",
-      "lst": "Liquid Staking",
-      "stables": "Stables / L1"
+      "majors": "Majors",
+      "stables": "Stables"
     },
     "tokenList": {
       "title": "Token Markets",
-      "subtitle": "Sorted by market cap · click action to trade",
+      "subtitle": "Sorted by 24h volume · click action to trade",
       "tabs": {
         "all": "All",
-        "blue": "Blue Chip",
+        "major": "Majors",
         "meme": "Meme",
-        "lst": "LST",
         "stable": "Stables"
       },
       "cols": {
@@ -179,6 +178,20 @@
       "noRisks": {
         "title": "No risks flagged",
         "subtitle": "RugCheck didn't surface any warning signals"
+      },
+      "noActivity": {
+        "title": "No recent trades",
+        "subtitle": "GeckoTerminal has no active pools for this token"
+      },
+      "cols": {
+        "side": "Side",
+        "usd": "USD",
+        "tokens": "Tokens",
+        "maker": "Maker",
+        "time": "Time",
+        "owner": "Owner",
+        "amount": "Amount",
+        "pct": "%"
       }
     },
     "buy": {

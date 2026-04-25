@@ -207,7 +207,9 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
                 ref={inputRef}
                 placeholder={t('inputPlaceholder')}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                // 防御:截到 80 字符,挡超长输入打满搜索 API 配额
+                onChange={(e) => setInput(e.target.value.slice(0, 80))}
+                maxLength={80}
                 className="border-0 focus-visible:ring-0 px-0 h-8 bg-transparent shadow-none"
                 autoFocus
               />
@@ -273,10 +275,18 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{tok.symbol}</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-medium truncate">
+                        {safeText(tok.symbol, 24)}
+                      </span>
+                      {/* 同名币区分 · mint 首尾位 */}
+                      <span className="text-[9px] font-mono text-muted-foreground/50 whitespace-nowrap">
+                        {tok.mint.slice(0, 6)}…{tok.mint.slice(-4)}
+                      </span>
+                    </div>
                     {tok.name && tok.name !== tok.symbol && (
                       <div className="text-[10px] text-muted-foreground truncate">
-                        {tok.name}
+                        {safeText(tok.name, 40)}
                       </div>
                     )}
                   </div>
@@ -305,6 +315,12 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
       )}
     </div>
   );
+}
+
+/** 防御:剥离控制字符 + 截断,避免外部 API 注入超长 / 隐形字符 */
+function safeText(s: string, max = 64): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
 }
 
 function formatPrice(n: number): string {

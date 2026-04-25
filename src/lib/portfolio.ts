@@ -16,6 +16,22 @@ export const TOKEN_2022_PROGRAM_ID = new PublicKey(
 );
 export const SOL_MINT = 'So11111111111111111111111111111111111111112';
 
+/** 防御:剥离控制字符 + 截断,挡 DexScreener 返回的超长 / 不可见字符 */
+function safeText(s: unknown, max = 64): string {
+  if (typeof s !== 'string') return '';
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
+}
+
+/** 防御:logo URL 必须 https / data 协议,挡 javascript: / 内网穿透 */
+function safeUrl(u: unknown): string | undefined {
+  if (typeof u !== 'string') return undefined;
+  const t = u.trim();
+  if (!t) return undefined;
+  if (/^(https?:|data:image\/)/i.test(t)) return t.slice(0, 500);
+  return undefined;
+}
+
 export interface WalletToken {
   mint: string;
   amount: number;      // uiAmount
@@ -79,7 +95,10 @@ export interface TokenInfo {
  */
 export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
   try {
-    const res = await fetch(`${DEXSCREENER_URL}/${mint}`, { cache: 'no-store' });
+    const res = await fetch(`${DEXSCREENER_URL}/${mint}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!res.ok) return null;
     const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,15 +118,15 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
     const base = top.baseToken ?? {};
     return {
       mint,
-      symbol: base.symbol ?? mint.slice(0, 6),
-      name: base.name ?? '',
+      symbol: safeText(base.symbol, 24) || mint.slice(0, 6),
+      name: safeText(base.name, 64),
       priceUsd: Number(top.priceUsd ?? 0),
       priceNative: Number(top.priceNative ?? 0),
       liquidityUsd: Number(top.liquidity?.usd ?? 0),
       marketCap: Number(top.fdv ?? top.marketCap ?? 0),
       priceChange24h: Number(top.priceChange?.h24 ?? 0) || undefined,
       volume24h: Number(top.volume?.h24 ?? 0) || undefined,
-      logoUri: top.info?.imageUrl,
+      logoUri: safeUrl(top.info?.imageUrl),
     };
   } catch (e) {
     console.warn('[portfolio] fetchTokenInfo', mint.slice(0, 8), e);
@@ -140,11 +159,12 @@ const DEXSCREENER_SEARCH_URL = 'https://api.dexscreener.com/latest/dex/search';
  * 同一 baseToken 可能多个 pair,按流动性聚合后只取每个 mint 最深的那个
  */
 export async function searchTokens(query: string, limit = 20): Promise<TokenInfo[]> {
-  const q = query.trim();
+  const q = query.trim().slice(0, 80);  // 防超长 query
   if (q.length < 2) return [];
   try {
     const res = await fetch(`${DEXSCREENER_SEARCH_URL}?q=${encodeURIComponent(q)}`, {
       cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -166,15 +186,15 @@ export async function searchTokens(query: string, limit = 20): Promise<TokenInfo
       seen.add(mint);
       out.push({
         mint,
-        symbol: p.baseToken.symbol ?? mint.slice(0, 6),
-        name: p.baseToken.name ?? '',
+        symbol: safeText(p.baseToken.symbol, 24) || mint.slice(0, 6),
+        name: safeText(p.baseToken.name, 64),
         priceUsd: Number(p.priceUsd ?? 0),
         priceNative: Number(p.priceNative ?? 0),
         liquidityUsd: Number(p.liquidity?.usd ?? 0),
         marketCap: Number(p.fdv ?? p.marketCap ?? 0),
         priceChange24h: Number(p.priceChange?.h24 ?? 0) || undefined,
         volume24h: Number(p.volume?.h24 ?? 0) || undefined,
-        logoUri: p.info?.imageUrl,
+        logoUri: safeUrl(p.info?.imageUrl),
       });
       if (out.length >= limit) break;
     }

@@ -23,20 +23,19 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
 import {
-  PRESET_ALL, PRESET_BLUE_CHIPS, PRESET_MEME, PRESET_LST, PRESET_STABLE,
+  PRESET_ALL, PRESET_MAJORS, PRESET_MEME, PRESET_STABLE,
 } from '@/lib/preset-tokens';
 
 const ALL = PRESET_ALL;
 
 const GROUPS: Record<string, string[]> = {
   all: ALL,
-  blue: PRESET_BLUE_CHIPS,
+  major: PRESET_MAJORS,
   meme: PRESET_MEME,
-  lst: PRESET_LST,
   stable: PRESET_STABLE,
 };
 
-type Tab = 'all' | 'blue' | 'meme' | 'lst' | 'stable';
+type Tab = 'all' | 'major' | 'meme' | 'stable';
 
 export function TokenList() {
   const t = useTranslations('landing.tokenList');
@@ -51,8 +50,14 @@ export function TokenList() {
   const rows = useMemo(() => {
     const list = (GROUPS[tab] || ALL)
       .map((m) => infos.get(m))
-      .filter(Boolean) as TokenInfo[];
-    return list.sort((a, b) => b.marketCap - a.marketCap);
+      .filter((t): t is TokenInfo => !!t && !!t.logoUri);
+    // 默认按 24h 成交量降序;成交量为空的排到最后,按市值兜底
+    return list.sort((a, b) => {
+      const va = a.volume24h ?? 0;
+      const vb = b.volume24h ?? 0;
+      if (va !== vb) return vb - va;
+      return (b.marketCap ?? 0) - (a.marketCap ?? 0);
+    });
   }, [tab, infos]);
 
   return (
@@ -68,9 +73,8 @@ export function TokenList() {
           <Tabs value={tab} onValueChange={(v) => v && setTab(v as Tab)}>
             <TabsList>
               <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
-              <TabsTrigger value="blue">{t('tabs.blue')}</TabsTrigger>
+              <TabsTrigger value="major">{t('tabs.major')}</TabsTrigger>
               <TabsTrigger value="meme">{t('tabs.meme')}</TabsTrigger>
-              <TabsTrigger value="lst">{t('tabs.lst')}</TabsTrigger>
               <TabsTrigger value="stable">{t('tabs.stable')}</TabsTrigger>
             </TabsList>
           </Tabs>

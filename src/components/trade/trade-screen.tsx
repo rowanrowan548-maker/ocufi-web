@@ -71,7 +71,7 @@ export function TradeScreen() {
       <div className="grid lg:grid-cols-[1fr_400px] gap-4 items-start">
         {/* 左:K线 + 活动板 */}
         <div className="min-w-0 space-y-4">
-          <ChartCard detail={detail} />
+          <ChartCard mint={mint} />
           <ActivityBoard detail={detail} />
         </div>
         {/* 右:交易表单 + 行情 + 安全 */}

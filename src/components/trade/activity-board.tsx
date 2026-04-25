@@ -1,61 +1,167 @@
 'use client';
 
 /**
- * 交易活动面板(占位)
- * gmgn 风:tabs 切换 活动 / 订单 / 持有者 / 交易者 / 流动性池 / 风险明细
+ * 交易活动面板 · gmgn 风
  *
- * V1 大部分是空状态,Day 13+ 接入真实数据:
- *  - 活动:链上 swap/transfer 流(用 Helius webhook 或轮询 getSignaturesForAddress)
- *  - 订单:用户对此币的限价单(/limit 已经能拿)
- *  - 持有者:RugCheck topHolders(detail.topHolders 已经有)
- *  - 风险明细:detail.risks 已经有
+ * tabs:
+ *  - 活动:GeckoTerminal 拉最近 100 笔成交
+ *  - 订单:占位(限价单聚合,Day 13+)
+ *  - 持有者:链上 getProgramAccounts 拉前 100,失败回落 RugCheck topHolders
+ *  - 风险明细:RugCheck risks
  */
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { useConnection } from '@solana/wallet-adapter-react';
 import { useTranslations } from 'next-intl';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Activity, ListOrdered, Users, AlertTriangle, Wallet, Construction } from 'lucide-react';
+import {
+  Activity, ListOrdered, Users, AlertTriangle, Wallet, Construction,
+  ExternalLink, ArrowUpRight, ArrowDownLeft, Loader2,
+} from 'lucide-react';
 import type { TokenDetail } from '@/lib/token-info';
+import { getCurrentChain } from '@/config/chains';
+import { fetchMintTrades, type GTTrade } from '@/lib/geckoterminal';
+import { fetchTopHolders, type Holder } from '@/lib/holders';
 
 interface Props {
   detail: TokenDetail | null;
 }
 
+const ACTIVITY_REFRESH_MS = 30_000;
+
 export function ActivityBoard({ detail }: Props) {
   const t = useTranslations('trade.activity');
+  const chain = getCurrentChain();
+  const { connection } = useConnection();
   const [tab, setTab] = useState('activity');
+
+  const mint = detail?.mint;
+
+  // ── 活动:GeckoTerminal trades(30s 自动刷新) ──
+  const [trades, setTrades] = useState<GTTrade[] | null>(null);
+  const [tradesLoading, setTradesLoading] = useState(false);
+  useEffect(() => {
+    if (!mint) {
+      setTrades(null);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      setTradesLoading(true);
+      const list = await fetchMintTrades(mint, 100);
+      if (!cancelled) {
+        setTrades(list);
+        setTradesLoading(false);
+      }
+    };
+    load();
+    const id = setInterval(load, ACTIVITY_REFRESH_MS);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [mint]);
+
+  // ── 持有者:链上拉前 100,失败回落 RugCheck ──
+  const [holders, setHolders] = useState<Holder[] | null>(null);
+  const [holdersLoading, setHoldersLoading] = useState(false);
+  useEffect(() => {
+    if (!mint || tab !== 'holders') return;
+    if (holders && holders.length > 0) return; // 已经有数据
+    let cancelled = false;
+    setHoldersLoading(true);
+    fetchTopHolders(connection, mint, 100)
+      .then((h) => { if (!cancelled) setHolders(h); })
+      .finally(() => { if (!cancelled) setHoldersLoading(false); });
+    return () => { cancelled = true; };
+  }, [mint, tab, connection, holders]);
+
+  // mint 切换重置
+  useEffect(() => {
+    setHolders(null);
+  }, [mint]);
 
   return (
     <Card className="p-4">
       <Tabs value={tab} onValueChange={(v) => v && setTab(v)}>
         <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto overflow-x-auto">
-          <TabBtn value="activity" Icon={Activity}>{t('activity')}</TabBtn>
+          <TabBtn value="activity" Icon={Activity}>
+            {t('activity')}{trades?.length ? ` ${trades.length}` : ''}
+          </TabBtn>
           <TabBtn value="orders" Icon={ListOrdered}>{t('orders')}</TabBtn>
           <TabBtn value="holders" Icon={Users}>
-            {t('holders')}{detail?.totalHolders ? ` ${detail.totalHolders.toLocaleString()}` : ''}
+            {t('holders')}
+            {detail?.totalHolders ? ` ${detail.totalHolders.toLocaleString()}` : ''}
           </TabBtn>
           <TabBtn value="risks" Icon={AlertTriangle}>
             {t('risks')}{detail?.risks?.length ? ` ${detail.risks.length}` : ''}
           </TabBtn>
         </TabsList>
 
+        {/* ── 活动 ── */}
         <TabsContent value="activity">
-          <Empty Icon={Construction} title={t('comingSoon.activity.title')} subtitle={t('comingSoon.activity.subtitle')} />
+          {!mint ? (
+            <Empty Icon={Construction} title={t('comingSoon.activity.title')} subtitle={t('comingSoon.activity.subtitle')} />
+          ) : tradesLoading && !trades ? (
+            <LoadingRow />
+          ) : trades && trades.length > 0 ? (
+            <div className="text-xs">
+              {/* 表头 */}
+              <div className="grid grid-cols-[60px_1fr_1fr_1fr_50px] gap-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
+                <span>{t('cols.side')}</span>
+                <span className="text-right">{t('cols.usd')}</span>
+                <span className="text-right">{t('cols.tokens')}</span>
+                <span>{t('cols.maker')}</span>
+                <span className="text-right">{t('cols.time')}</span>
+              </div>
+              <div className="max-h-[480px] overflow-y-auto">
+                {trades.slice(0, 100).map((tr) => (
+                  <TradeRow key={tr.txSignature} tr={tr} explorer={chain.explorer} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Empty Icon={Activity} title={t('noActivity.title')} subtitle={t('noActivity.subtitle')} />
+          )}
         </TabsContent>
 
+        {/* ── 订单 ── */}
         <TabsContent value="orders">
           <Empty Icon={Wallet} title={t('comingSoon.orders.title')} subtitle={t('comingSoon.orders.subtitle')} />
         </TabsContent>
 
+        {/* ── 持有者 ── */}
         <TabsContent value="holders">
-          {detail?.topHolders && detail.topHolders.length > 0 ? (
-            <div className="space-y-2 text-xs">
-              {detail.topHolders.slice(0, 10).map((h, i) => (
-                <div key={i} className="flex items-center justify-between py-1 border-b border-border/30 last:border-b-0">
-                  <span className="font-mono text-muted-foreground">
-                    #{i + 1} {h.address ? `${h.address.slice(0, 4)}…${h.address.slice(-4)}` : '—'}
+          {!mint ? (
+            <Empty Icon={Users} title={t('comingSoon.holders.title')} subtitle={t('comingSoon.holders.subtitle')} />
+          ) : holdersLoading ? (
+            <LoadingRow />
+          ) : holders && holders.length > 0 ? (
+            <div className="space-y-1 text-xs max-h-[480px] overflow-y-auto">
+              {/* 表头 */}
+              <div className="grid grid-cols-[40px_1fr_70px_60px] gap-2 px-1 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium sticky top-0 bg-card">
+                <span>#</span>
+                <span>{t('cols.owner')}</span>
+                <span className="text-right">{t('cols.amount')}</span>
+                <span className="text-right">{t('cols.pct')}</span>
+              </div>
+              {holders.map((h, i) => (
+                <HolderRow
+                  key={h.account}
+                  rank={i + 1}
+                  holder={h}
+                  decimals={detail?.mint ? undefined : undefined}
+                  explorer={chain.explorer}
+                />
+              ))}
+            </div>
+          ) : detail?.topHolders && detail.topHolders.length > 0 ? (
+            // 链上失败,降级显示 RugCheck
+            <div className="space-y-1 text-xs">
+              {detail.topHolders.slice(0, 100).map((h, i) => (
+                <div key={i} className="grid grid-cols-[40px_1fr_60px] gap-2 py-1 border-b border-border/30 last:border-b-0">
+                  <span className="font-mono text-muted-foreground">#{i + 1}</span>
+                  <span className="font-mono text-muted-foreground/80 truncate">
+                    {h.address ? `${h.address.slice(0, 6)}…${h.address.slice(-4)}` : '—'}
                   </span>
-                  <span className="font-mono">{(h.pct ?? 0).toFixed(2)}%</span>
+                  <span className="font-mono text-right">{(h.pct ?? 0).toFixed(2)}%</span>
                 </div>
               ))}
             </div>
@@ -64,6 +170,7 @@ export function ActivityBoard({ detail }: Props) {
           )}
         </TabsContent>
 
+        {/* ── 风险明细 ── */}
         <TabsContent value="risks">
           {detail?.risks && detail.risks.length > 0 ? (
             <div className="space-y-2">
@@ -81,8 +188,12 @@ export function ActivityBoard({ detail }: Props) {
                 >
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <div className="font-medium">{r.name}</div>
-                    {r.description && <div className="text-[11px] mt-0.5 opacity-80">{r.description}</div>}
+                    <div className="font-medium">{safeText(r.name)}</div>
+                    {r.description && (
+                      <div className="text-[11px] mt-0.5 opacity-80">
+                        {safeText(r.description)}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -94,6 +205,99 @@ export function ActivityBoard({ detail }: Props) {
       </Tabs>
     </Card>
   );
+}
+
+function TradeRow({ tr, explorer }: { tr: GTTrade; explorer: string }) {
+  const isBuy = tr.kind === 'buy';
+  const sideColor = isBuy ? 'text-success' : 'text-danger';
+  const SideIcon = isBuy ? ArrowDownLeft : ArrowUpRight;
+  return (
+    <a
+      href={tr.txSignature ? `${explorer}/tx/${tr.txSignature}` : '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="grid grid-cols-[60px_1fr_1fr_1fr_50px] gap-2 px-2 py-1.5 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-b-0"
+    >
+      <span className={`flex items-center gap-1 font-medium ${sideColor}`}>
+        <SideIcon className="h-3 w-3" />
+        {isBuy ? 'BUY' : 'SELL'}
+      </span>
+      <span className="text-right font-mono">
+        ${formatCompact(tr.usdValue)}
+      </span>
+      <span className="text-right font-mono text-muted-foreground">
+        {formatCompact(tr.tokenAmount)}
+      </span>
+      <span className="font-mono text-muted-foreground/70 truncate">
+        {tr.fromAddress ? `${tr.fromAddress.slice(0, 4)}…${tr.fromAddress.slice(-4)}` : '—'}
+      </span>
+      <span className="text-right text-muted-foreground/60 text-[10px]">
+        {timeAgo(tr.blockTimestampMs)}
+      </span>
+    </a>
+  );
+}
+
+function HolderRow({
+  rank, holder, explorer,
+}: {
+  rank: number;
+  holder: Holder;
+  decimals?: number;
+  explorer: string;
+}) {
+  const owner = holder.owner;
+  return (
+    <a
+      href={owner ? `${explorer}/account/${owner}` : '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="grid grid-cols-[40px_1fr_70px_60px] gap-2 px-1 py-1 hover:bg-muted/30 transition-colors text-xs"
+    >
+      <span className="font-mono text-muted-foreground">#{rank}</span>
+      <span className="font-mono text-muted-foreground/80 truncate flex items-center gap-1">
+        {owner ? `${owner.slice(0, 6)}…${owner.slice(-4)}` : '—'}
+        {owner && <ExternalLink className="h-2.5 w-2.5 opacity-50" />}
+      </span>
+      <span className="font-mono text-right text-muted-foreground/80">
+        {formatCompact(Number(holder.amountRaw))}
+      </span>
+      <span className="font-mono text-right">{holder.pct.toFixed(2)}%</span>
+    </a>
+  );
+}
+
+function LoadingRow() {
+  return (
+    <div className="py-12 flex items-center justify-center text-muted-foreground text-xs gap-2">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      loading…
+    </div>
+  );
+}
+
+/** 安全文本:剥离控制字符 + 截断,防外部 API 注入超长/恶意字符串 */
+function safeText(s: string, max = 200): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
+}
+
+function formatCompact(n: number): string {
+  if (!n || !Number.isFinite(n)) return '0';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+  if (n >= 1) return n.toFixed(2);
+  return n.toPrecision(3);
+}
+
+function timeAgo(ms: number): string {
+  if (!ms) return '—';
+  const diff = Date.now() - ms;
+  if (diff < 60_000) return `${Math.floor(diff / 1000)}s`;
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h`;
+  return `${Math.floor(diff / 86_400_000)}d`;
 }
 
 function TabBtn({ value, Icon, children }: { value: string; Icon: typeof Activity; children: React.ReactNode }) {
