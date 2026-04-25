@@ -8,7 +8,7 @@
  *  - 右半:抽象品牌图形(同心圆 + 渐变光晕)
  *  - 右上 @Ocufi_io · ocufi.io 强化品牌
  */
-import { drawSocials, drawBrandLogo } from './share-card';
+import { drawSocials, drawBrandLockup } from './share-card';
 
 const W = 1200;
 const H = 675;
@@ -81,15 +81,11 @@ export async function buildPnlShareCard(data: PnlShareCardData): Promise<Blob> {
   ctx.fillStyle = grad2;
   ctx.fillRect(0, 0, W, H);
 
-  // ── 顶部品牌 · Arc O logo + 字标 ──
-  drawBrandLogo(ctx, 60, 70, 44);
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 38px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
-  ctx.fillText('OCUFI', 116, 100);
-
-  ctx.fillStyle = COLORS.muted;
-  ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText('Solana · Non-custodial · Open-source', 116, 124);
+  // ── 顶部品牌锁层 · Logo (绿) + Wordmark (白) ──
+  drawBrandLockup(ctx, 60, 90, {
+    wordmark: 'OCUFI',
+    subtitle: 'Solana · Non-custodial · Open-source',
+  });
 
   // 右上社交账号
   drawSocials(ctx, W - 60, 95);

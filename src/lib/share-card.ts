@@ -90,17 +90,13 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   ctx.fillStyle = grad2;
   ctx.fillRect(0, 0, W, H);
 
-  // ── 顶部品牌 · Arc O logo + 字标 ──
-  drawBrandLogo(ctx, 60, 70, 44);
-  ctx.fillStyle = COLORS.accent;
-  ctx.font = 'bold 38px ui-sans-serif, -apple-system, "Segoe UI", sans-serif';
-  ctx.fillText('OCUFI', 116, 100);
+  // ── 顶部品牌锁层 · Logo (绿) + Wordmark (白) ──
+  drawBrandLockup(ctx, 60, 90, {
+    wordmark: 'OCUFI',
+    subtitle: 'Solana · Non-custodial · 0.2% fee',
+  });
 
-  ctx.fillStyle = COLORS.muted;
-  ctx.font = '15px ui-monospace, "SF Mono", Menlo, monospace';
-  ctx.fillText('Solana · Non-custodial · 0.2% fee', 116, 124);
-
-  // 右上角:社交账号
+  // 右上角社交账号
   drawSocials(ctx, W - 60, 95);
 
   // ── 左侧:交易信息 ──
@@ -411,6 +407,48 @@ function formatPrice(n: number): string {
 function truncate(s: string, n: number): string {
   if (s.length <= n) return s;
   return s.slice(0, n - 1) + '…';
+}
+
+/**
+ * 品牌锁层 = Logo + OCUFI 字标 + 副标
+ *
+ * 视觉规则(参考 Linear / Vercel):
+ *  - Logo 尺寸 = OCUFI 字母 cap 高度,视觉重心一致
+ *  - Logo 用品牌色,Wordmark 用白色 — 更高级,不抢戏
+ *  - 副标小字灰色,挂在 wordmark 正下方
+ *
+ * @param x 锁层左上 x
+ * @param baselineY OCUFI 文字 baseline 的 y(其他元素围绕这个对齐)
+ */
+export function drawBrandLockup(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  baselineY: number,
+  opts: { wordmark: string; subtitle: string },
+) {
+  const FONT_SIZE = 36;
+  const LOGO_SIZE = 36;
+  const GAP = 12;
+
+  // OCUFI 字母 cap 中心 ≈ baseline 上方 0.35×fontSize
+  const capCenterY = baselineY - FONT_SIZE * 0.35;
+  // Logo 顶部 y 让其视觉中心(LOGO_SIZE/2)对准 cap 中心
+  const logoY = capCenterY - LOGO_SIZE / 2;
+
+  drawBrandLogo(ctx, x, logoY, LOGO_SIZE);
+
+  // Wordmark · 白色,字间距紧
+  ctx.fillStyle = COLORS.fg;
+  ctx.font = `bold ${FONT_SIZE}px ui-sans-serif, -apple-system, "Segoe UI", sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  const textX = x + LOGO_SIZE + GAP;
+  ctx.fillText(opts.wordmark, textX, baselineY);
+
+  // 副标 · muted gray monospace,在 wordmark 下方(间距 8px)
+  ctx.fillStyle = COLORS.muted;
+  ctx.font = '14px ui-monospace, "SF Mono", Menlo, monospace';
+  ctx.fillText(opts.subtitle, textX, baselineY + 24);
 }
 
 /** Arc O logo · Canvas 版 · anchor 在左上角 (x, y),size 是边长 */
