@@ -65,10 +65,20 @@ export interface ClaimResult {
   message: string;
 }
 
-export async function claimPoints(wallet: string, txSignature: string): Promise<ClaimResult> {
+export async function claimPoints(
+  wallet: string,
+  txSignature: string,
+  usdValue?: number,
+): Promise<ClaimResult> {
   return apiFetch<ClaimResult>('/points/claim', {
     method: 'POST',
-    body: JSON.stringify({ wallet, tx_signature: txSignature }),
+    body: JSON.stringify({
+      wallet,
+      tx_signature: txSignature,
+      ...(usdValue != null && Number.isFinite(usdValue) && usdValue > 0
+        ? { usd_value: usdValue }
+        : {}),
+    }),
   });
 }
 
@@ -138,6 +148,68 @@ export async function deleteAlert(wallet: string, id: number): Promise<void> {
 
 export async function ackAlert(wallet: string, id: number): Promise<void> {
   await apiFetch(`/alerts/${id}/ack?wallet=${wallet}`, { method: 'POST' });
+}
+
+// ─── Day 11 invite ───
+
+export interface InviteRegisterResp {
+  code: string;
+}
+
+export async function registerInviteCode(address: string): Promise<InviteRegisterResp> {
+  return apiFetch('/invite/register', {
+    method: 'POST',
+    body: JSON.stringify({ address }),
+  });
+}
+
+export interface InviteBindResp {
+  bound: boolean;
+  reason: 'ok' | 'already_bound' | 'invalid_code' | 'inviter_not_found' | 'self_invite';
+}
+
+export async function bindInvite(
+  inviterCode: string,
+  inviteeAddress: string,
+): Promise<InviteBindResp> {
+  return apiFetch('/invite/bind', {
+    method: 'POST',
+    body: JSON.stringify({ inviter_code: inviterCode, invitee_address: inviteeAddress }),
+  });
+}
+
+export interface InviteeRow {
+  address: string;
+  status: 'pending' | 'activated';
+  contributed_points: number;
+  joined_at: string;
+}
+
+export interface InviteMeResp {
+  code: string;
+  invited_count: number;
+  activated_count: number;
+  earned_points: number;
+  invitees: InviteeRow[];
+}
+
+export async function fetchInviteMe(address: string): Promise<InviteMeResp> {
+  return apiFetch(`/invite/me?address=${address}`);
+}
+
+export interface InviteLeaderRow {
+  rank: number;
+  wallet_short: string;
+  activated: number;
+  points: number;
+}
+
+export interface InviteLeaderboardResp {
+  items: InviteLeaderRow[];
+}
+
+export async function fetchInviteLeaderboard(limit = 10): Promise<InviteLeaderboardResp> {
+  return apiFetch(`/invite/leaderboard?limit=${limit}`);
 }
 
 // ─── Day 11 user settings (email) ───

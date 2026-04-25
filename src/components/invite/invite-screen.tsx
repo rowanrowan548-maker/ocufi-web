@@ -24,6 +24,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { inviteCodeFor, readCachedMyCode, cacheMyCode, buildInviteUrl } from '@/lib/invite';
+import {
+  fetchInviteMe, fetchInviteLeaderboard, isApiConfigured,
+  type InviteeRow as ApiInviteeRow, type InviteLeaderRow,
+} from '@/lib/api-client';
 import { toast } from 'sonner';
 
 interface InviteStats {
@@ -54,11 +58,11 @@ export function InviteScreen() {
   const [myCode, setMyCode] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // 后端待接 · V1 mock
-  const [stats] = useState<InviteStats>({ invited: 0, activated: 0, earnedPoints: 0 });
-  const [invitees] = useState<InviteeRow[]>([]);
-  const [leaderboard] = useState<LeaderRow[]>([]);
+  const [stats, setStats] = useState<InviteStats>({ invited: 0, activated: 0, earnedPoints: 0 });
+  const [invitees, setInvitees] = useState<InviteeRow[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
 
+  // 邀请码:先用本地 SHA-256 算出来即时显示,后端 /invite/me 返回更权威值再覆盖
   useEffect(() => {
     if (!wallet.publicKey) { setMyCode(''); return; }
     const addr = wallet.publicKey.toBase58();
@@ -67,6 +71,49 @@ export function InviteScreen() {
     inviteCodeFor(addr).then((c) => {
       if (c) { setMyCode(c); cacheMyCode(addr, c); }
     });
+  }, [wallet.publicKey]);
+
+  // 拉真实邀请数据(后端在线时)
+  useEffect(() => {
+    if (!wallet.publicKey || !isApiConfigured()) return;
+    const addr = wallet.publicKey.toBase58();
+    let cancelled = false;
+
+    fetchInviteMe(addr)
+      .then((r) => {
+        if (cancelled) return;
+        if (r.code) setMyCode(r.code);
+        setStats({
+          invited: r.invited_count,
+          activated: r.activated_count,
+          earnedPoints: r.earned_points,
+        });
+        setInvitees(
+          r.invitees.map((row: ApiInviteeRow) => ({
+            address: row.address,
+            status: row.status,
+            contributedPoints: row.contributed_points,
+            joinedAt: new Date(row.joined_at).getTime(),
+          })),
+        );
+      })
+      .catch((e) => { console.warn('[invite] me failed', e); });
+
+    fetchInviteLeaderboard(10)
+      .then((r) => {
+        if (cancelled) return;
+        setLeaderboard(
+          r.items.map((row: InviteLeaderRow) => ({
+            rank: row.rank,
+            address: row.wallet_short,  // 后端已脱敏
+            activated: row.activated,
+            points: row.points,
+          })),
+        );
+      })
+      .catch((e) => { console.warn('[invite] leaderboard failed', e); });
+
+    return () => { cancelled = true; };
   }, [wallet.publicKey]);
 
   const inviteUrl = myCode ? buildInviteUrl(myCode) : '';
@@ -285,9 +332,7 @@ export function InviteScreen() {
                   {leaderboard.map((row) => (
                     <TableRow key={row.rank}>
                       <TableCell className="font-mono text-xs">#{row.rank}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {row.address.slice(0, 4)}…{row.address.slice(-4)}
-                      </TableCell>
+                      <TableCell className="font-mono text-xs">{row.address}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{row.activated}</TableCell>
                       <TableCell className="text-right font-mono text-xs">
                         {row.points.toLocaleString()}

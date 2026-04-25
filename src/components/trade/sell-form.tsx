@@ -34,6 +34,7 @@ import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
+import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
@@ -246,7 +247,10 @@ export function SellForm({ mint: mintProp, compact, risk }: SellFormProps = {}) 
       );
 
       if (isApiConfigured() && wallet.publicKey) {
-        claimPoints(wallet.publicKey.toBase58(), sig).catch(() => {});
+        const usdValue = await fetchSolUsdPrice()
+          .then((p) => p > 0 ? p * actualSol : undefined)
+          .catch(() => undefined);
+        claimPoints(wallet.publicKey.toBase58(), sig, usdValue).catch(() => {});
       }
     } catch (e: unknown) {
       const reason = humanize(e);

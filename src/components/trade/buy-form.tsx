@@ -34,6 +34,7 @@ import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
+import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
@@ -264,7 +265,12 @@ export function BuyForm({ mint: mintProp, compact, risk }: BuyFormProps = {}) {
       );
 
       if (isApiConfigured() && wallet.publicKey) {
-        claimPoints(wallet.publicKey.toBase58(), sig).catch(() => {});
+        // 算 USD 估值用于邀请激活判定(单笔 ≥ $100 激活)
+        // 用最近的 SOL 价 × inputSol;失败就不传(后端不激活,但仍记积分)
+        const usdValue = await fetchSolUsdPrice()
+          .then((p) => p > 0 ? p * solSpent : undefined)
+          .catch(() => undefined);
+        claimPoints(wallet.publicKey.toBase58(), sig, usdValue).catch(() => {});
       }
     } catch (e: unknown) {
       const reason = humanize(e);

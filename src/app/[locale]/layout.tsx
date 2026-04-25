@@ -11,6 +11,7 @@ import { SwRegister } from '@/components/pwa/sw-register';
 import { InstallPrompt } from '@/components/pwa/install-prompt';
 import { MobileDeeplink } from '@/components/wallet/mobile-deeplink';
 import { RefCapture } from '@/components/invite/ref-capture';
+import { WalletBind } from '@/components/invite/wallet-bind';
 import { Toaster } from '@/components/ui/sonner';
 import '../globals.css';
 
@@ -97,6 +98,7 @@ export default async function LocaleLayout({
           <SolanaWalletProvider>
             <SwRegister />
             <RefCapture />
+            <WalletBind />
             <SiteHeader />
             {children}
             <FeedbackButton />
