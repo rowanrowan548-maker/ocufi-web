@@ -345,6 +345,7 @@
     },
     "chart": {
       "title": "Total value over time",
+      "collectingShort": "Collecting data — visit again for richer history",
       "collecting": {
         "title": "Collecting data",
         "subtitle": "{count} more visit(s) to start charting — history is stored only in your browser, never uploaded"

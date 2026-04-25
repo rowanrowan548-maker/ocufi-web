@@ -16,9 +16,11 @@ import { useTranslations } from 'next-intl';
 
 interface Props {
   snapshots: Snapshot[];
+  /** 当前总值,数据点不够时画一条平直线兜底 */
+  currentTotalUsd?: number;
 }
 
-export function ValueChart({ snapshots }: Props) {
+export function ValueChart({ snapshots, currentTotalUsd }: Props) {
   const t = useTranslations('portfolio.chart');
   const [range, setRange] = useState<'7d' | '30d'>('7d');
 
@@ -27,6 +29,22 @@ export function ValueChart({ snapshots }: Props) {
     [snapshots, range]
   );
 
+  // 数据不足时构造平直线:当前值 + 一个早 N 天的同值点
+  const renderPoints = useMemo<Snapshot[]>(() => {
+    if (points.length >= 2) return points;
+    const baseValue =
+      points.length === 1
+        ? points[0].totalUsd
+        : currentTotalUsd ?? 0;
+    if (baseValue <= 0) return [];
+    const now = Date.now();
+    const rangeMs = (range === '7d' ? 7 : 30) * 24 * 3600 * 1000;
+    return [
+      { ts: now - rangeMs, totalUsd: baseValue },
+      { ts: now, totalUsd: baseValue },
+    ];
+  }, [points, currentTotalUsd, range]);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -34,8 +52,11 @@ export function ValueChart({ snapshots }: Props) {
           <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             {t('title')}
           </div>
-          {points.length >= 2 && (
-            <ChangeBadge points={points} />
+          {points.length >= 2 && <ChangeBadge points={points} />}
+          {points.length < 2 && renderPoints.length > 0 && (
+            <span className="text-[10px] text-muted-foreground/60 font-mono tabular-nums">
+              {t('collectingShort')}
+            </span>
           )}
         </div>
         <Tabs value={range} onValueChange={(v) => v && setRange(v as '7d' | '30d')}>
@@ -46,17 +67,12 @@ export function ValueChart({ snapshots }: Props) {
         </Tabs>
       </div>
 
-      {points.length < 2 ? (
-        <div className="h-[160px] rounded-md border border-dashed border-border/50 flex flex-col items-center justify-center text-center px-4 gap-2">
-          <div className="text-xs font-medium text-muted-foreground">
-            {t('collecting.title')}
-          </div>
-          <div className="text-[11px] text-muted-foreground/70 max-w-xs">
-            {t('collecting.subtitle', { count: Math.max(0, 2 - points.length) })}
-          </div>
+      {renderPoints.length === 0 ? (
+        <div className="h-[160px] rounded-md border border-dashed border-border/50 flex items-center justify-center text-xs text-muted-foreground/60">
+          —
         </div>
       ) : (
-        <Sparkline points={points} />
+        <Sparkline points={renderPoints} flat={points.length < 2} />
       )}
     </div>
   );
@@ -78,7 +94,7 @@ function ChangeBadge({ points }: { points: Snapshot[] }) {
   );
 }
 
-function Sparkline({ points }: { points: Snapshot[] }) {
+function Sparkline({ points, flat }: { points: Snapshot[]; flat?: boolean }) {
   const W = 720;
   const H = 160;
   const pad = 8;
@@ -104,7 +120,12 @@ function Sparkline({ points }: { points: Snapshot[] }) {
   const last = points[points.length - 1];
   const first = points[0];
   const up = last.totalUsd >= first.totalUsd;
-  const stroke = up ? 'oklch(0.85 0.25 155)' : 'oklch(0.7 0.22 30)';
+  // flat = 数据点不够,用中性灰避免误导用户「在涨」
+  const stroke = flat
+    ? 'oklch(0.6 0.02 220)'
+    : up
+    ? 'oklch(0.85 0.25 155)'
+    : 'oklch(0.7 0.22 30)';
 
   return (
     <svg

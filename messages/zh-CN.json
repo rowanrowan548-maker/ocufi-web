@@ -345,6 +345,7 @@
     },
     "chart": {
       "title": "总资产走势",
+      "collectingShort": "数据采集中(下次打开会有更多)",
       "collecting": {
         "title": "数据采集中",
         "subtitle": "再用 {count} 次后即可看到曲线 — 历史只在你浏览器本地存,不上送服务器"

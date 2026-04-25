@@ -135,7 +135,7 @@ export function PortfolioView() {
 
         <Card>
           <CardContent className="pt-6">
-            <ValueChart snapshots={snapshots} />
+            <ValueChart snapshots={snapshots} currentTotalUsd={totalUsd} />
           </CardContent>
         </Card>
       </div>

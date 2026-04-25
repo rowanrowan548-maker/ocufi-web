@@ -28,24 +28,30 @@ interface ServiceProbe {
   noCors?: boolean;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+// 用 USDC mint 探活 RugCheck(高流动性大币确保有数据,SOL 在 RugCheck 上有时返 5xx)
+const PROBE_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
 const PROBES: ServiceProbe[] = [
   {
     id: 'dexscreener',
     name: 'DexScreener',
     purpose: '行情 / 价格 / 交易对',
-    url: 'https://api.dexscreener.com/latest/dex/tokens/So11111111111111111111111111111111111111112',
+    url: `https://api.dexscreener.com/latest/dex/tokens/${PROBE_MINT}`,
   },
   {
     id: 'gt',
     name: 'GeckoTerminal',
     purpose: '成交活动 feed',
-    url: 'https://api.geckoterminal.com/api/v2/networks/solana/tokens/So11111111111111111111111111111111111111112/pools?page=1',
+    url: `https://api.geckoterminal.com/api/v2/networks/solana/tokens/${PROBE_MINT}/pools?page=1`,
   },
   {
     id: 'rugcheck',
     name: 'RugCheck',
     purpose: '代币安全审查',
-    url: 'https://api.rugcheck.xyz/v1/tokens/So11111111111111111111111111111111111111112/report',
+    // RugCheck 不允许 CORS preflight,但 simple GET 不带 custom header 能过
+    url: `https://api.rugcheck.xyz/v1/tokens/${PROBE_MINT}/report/summary`,
   },
   {
     id: 'jupiter',
@@ -53,12 +59,17 @@ const PROBES: ServiceProbe[] = [
     purpose: '聚合报价 + swap',
     url: 'https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&amount=1000000',
   },
-  {
-    id: 'api',
-    name: 'Ocufi API',
-    purpose: '积分 / 后端',
-    url: (process.env.NEXT_PUBLIC_API_URL ?? '') + '/health',
-  },
+  // 后端 API 只在配了 NEXT_PUBLIC_API_URL 时才探(没配就当不需要后端)
+  ...(API_BASE
+    ? [
+        {
+          id: 'api',
+          name: 'Ocufi API',
+          purpose: '积分 / 后端',
+          url: `${API_BASE}/health`,
+        } satisfies ServiceProbe,
+      ]
+    : []),
 ];
 
 interface ProbeResult {
@@ -78,10 +89,6 @@ export function StatusBoard() {
     const out: Record<string, ProbeResult> = {};
     await Promise.all(
       PROBES.map(async (p) => {
-        if (!p.url || p.url.endsWith('/health') && !process.env.NEXT_PUBLIC_API_URL) {
-          out[p.id] = { health: 'down', error: 'not configured' };
-          return;
-        }
         const start = Date.now();
         try {
           const res = await fetch(p.url, {
