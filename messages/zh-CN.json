@@ -83,6 +83,18 @@
         "desc": "GitHub 上可审计,没有黑箱逻辑,没有暗抽成"
       }
     },
+    "stats": {
+      "totalTrades": "累计成交",
+      "totalWallets": "累计钱包",
+      "totalChecks": "审查代币次数",
+      "uniqueVisitors30d": "30 天访客"
+    },
+    "footer": {
+      "product": "产品",
+      "resources": "资源",
+      "legal": "法律",
+      "poweredBy": "Powered by Solana · Jupiter"
+    },
     "promise": {
       "title": "Ocufi 的承诺",
       "subtitle": "我们对自己定的硬规则 · 写在代码里,放在 GitHub 上",

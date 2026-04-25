@@ -282,6 +282,19 @@ export async function fetchAdminStats(key: string): Promise<AdminStats> {
   return apiFetch<AdminStats>(`/admin/stats?key=${encodeURIComponent(key)}`);
 }
 
+// ─── Public stats(无鉴权 · Landing 数据条用) ───
+
+export interface PublicStats {
+  total_wallets: number;
+  total_trades: number;
+  total_token_checks: number;
+  unique_visitors_30d: number;
+}
+
+export async function fetchPublicStats(): Promise<PublicStats> {
+  return apiFetch<PublicStats>('/public/stats');
+}
+
 // ─── Day 11 user settings (email) ───
 
 export interface UserSettingsApi {

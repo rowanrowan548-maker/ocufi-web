@@ -83,6 +83,18 @@
         "desc": "Frontend audited on GitHub. No black box, no hidden fees."
       }
     },
+    "stats": {
+      "totalTrades": "Total trades",
+      "totalWallets": "Wallets",
+      "totalChecks": "Token checks",
+      "uniqueVisitors30d": "Visitors (30d)"
+    },
+    "footer": {
+      "product": "Product",
+      "resources": "Resources",
+      "legal": "Legal",
+      "poweredBy": "Powered by Solana · Jupiter"
+    },
     "promise": {
       "title": "Ocufi's promise",
       "subtitle": "Hard rules we set for ourselves · written in code, on GitHub",

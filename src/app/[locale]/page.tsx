@@ -12,6 +12,7 @@ import { MarketSnapshot } from '@/components/landing/market-snapshot';
 import { TokenList } from '@/components/landing/token-list';
 import { PriceTicker } from '@/components/landing/price-ticker';
 import { OurPromise } from '@/components/landing/our-promise';
+import { StatsBar } from '@/components/landing/stats-bar';
 
 export default async function Landing({
   params,
@@ -82,6 +83,9 @@ export default async function Landing({
           </div>
         </div>
       </section>
+
+      {/* ═══════ Stats Bar · Ocufi 实时聚合数据 ═══════ */}
+      <StatsBar />
 
       {/* ═══════ Market Snapshot ═══════ */}
       <MarketSnapshot />
@@ -160,33 +164,89 @@ export default async function Landing({
         </div>
       </section>
 
-      {/* ═══════ Footer ═══════ */}
-      <footer className="px-4 sm:px-6 py-8 border-t border-border/40 mt-auto">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-muted-foreground">
-          <div className="font-mono">
-            © {new Date().getFullYear()} Ocufi · {chain.name} · v0.4
+      {/* ═══════ Footer · 四列布局 ═══════ */}
+      <footer className="px-4 sm:px-6 py-10 sm:py-12 border-t border-border/40 mt-auto">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            {/* 品牌列 */}
+            <div className="col-span-2 md:col-span-1 space-y-3">
+              <div className="font-heading font-bold text-lg">Ocufi</div>
+              <div className="text-xs text-muted-foreground leading-relaxed max-w-xs">
+                {t('brand.tagline')}
+              </div>
+              <div className="flex gap-3 text-muted-foreground text-sm">
+                <a
+                  href="https://x.com/Ocufi_io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground"
+                  aria-label="Twitter / X"
+                >
+                  𝕏
+                </a>
+                <a
+                  href="https://github.com/rowanrowan548-maker/ocufi-web"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground"
+                  aria-label="GitHub"
+                >
+                  GitHub
+                </a>
+              </div>
+            </div>
+
+            {/* 产品列 */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('landing.footer.product')}
+              </div>
+              <div className="space-y-1.5 text-sm text-muted-foreground">
+                <Link href="/trade" className="block hover:text-foreground">{t('nav.trade')}</Link>
+                <Link href="/portfolio" className="block hover:text-foreground">{t('nav.portfolio')}</Link>
+                <Link href="/watchlist" className="block hover:text-foreground">{t('nav.watchlist')}</Link>
+                <Link href="/limit" className="block hover:text-foreground">{t('limit.page.title')}</Link>
+                <Link href="/invite" className="block hover:text-foreground">{t('nav.invite')}</Link>
+              </div>
+            </div>
+
+            {/* 资源列 */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('landing.footer.resources')}
+              </div>
+              <div className="space-y-1.5 text-sm text-muted-foreground">
+                <Link href="/faq" className="block hover:text-foreground">{t('nav.faq')}</Link>
+                <Link href="/docs" className="block hover:text-foreground">{t('nav.docs')}</Link>
+                <Link href="/status" className="block hover:text-foreground">{t('nav.status')}</Link>
+                <a
+                  href="https://github.com/rowanrowan548-maker/ocufi-web"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block hover:text-foreground"
+                >
+                  GitHub
+                </a>
+              </div>
+            </div>
+
+            {/* 法律列 */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('landing.footer.legal')}
+              </div>
+              <div className="space-y-1.5 text-sm text-muted-foreground">
+                <Link href="/legal/privacy" className="block hover:text-foreground">{t('legal.footer.privacy')}</Link>
+                <Link href="/legal/terms" className="block hover:text-foreground">{t('legal.footer.terms')}</Link>
+                <Link href="/legal/disclaimer" className="block hover:text-foreground">{t('legal.footer.disclaimer')}</Link>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-4 flex-wrap">
-            <a
-              href="https://x.com/Ocufi_io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground"
-            >
-              𝕏 Twitter
-            </a>
-            <a
-              href="https://github.com/rowanrowan548-maker/ocufi-web"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground"
-            >
-              GitHub
-            </a>
-            <Link href="/faq" className="hover:text-foreground">FAQ</Link>
-            <Link href="/legal/privacy" className="hover:text-foreground">{t('legal.footer.privacy')}</Link>
-            <Link href="/legal/terms" className="hover:text-foreground">{t('legal.footer.terms')}</Link>
-            <Link href="/legal/disclaimer" className="hover:text-foreground">{t('legal.footer.disclaimer')}</Link>
+
+          {/* 底部 */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px] text-muted-foreground/70 pt-6 border-t border-border/40 font-mono">
+            <div>© {new Date().getFullYear()} Ocufi · {chain.name} · v0.4</div>
+            <div>{t('landing.footer.poweredBy')}</div>
           </div>
         </div>
       </footer>
