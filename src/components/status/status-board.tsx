@@ -50,8 +50,10 @@ const PROBES: ServiceProbe[] = [
     id: 'rugcheck',
     name: 'RugCheck',
     purpose: '代币安全审查',
-    // RugCheck 不允许 CORS preflight,但 simple GET 不带 custom header 能过
+    // RugCheck CORS 在不同环境(localhost vs ocufi.io)行为不一致,
+    // 用 no-cors 只测可达性 — 实际报告调用走 fetchRugCheckReport,有自己的容错
     url: `https://api.rugcheck.xyz/v1/tokens/${PROBE_MINT}/report/summary`,
+    noCors: true,
   },
   {
     id: 'jupiter',
@@ -60,6 +62,7 @@ const PROBES: ServiceProbe[] = [
     url: 'https://lite-api.jup.ag/swap/v1/quote?inputMint=So11111111111111111111111111111111111111112&outputMint=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&amount=1000000',
   },
   // 后端 API 只在配了 NEXT_PUBLIC_API_URL 时才探(没配就当不需要后端)
+  // 用 no-cors:本地 dev 环境后端可能没配 CORS allow-origin,用 cors 模式必失败
   ...(API_BASE
     ? [
         {
@@ -67,6 +70,7 @@ const PROBES: ServiceProbe[] = [
           name: 'Ocufi API',
           purpose: '积分 / 后端',
           url: `${API_BASE}/health`,
+          noCors: true,
         } satisfies ServiceProbe,
       ]
     : []),

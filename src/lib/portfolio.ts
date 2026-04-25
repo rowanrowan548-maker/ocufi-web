@@ -127,14 +127,28 @@ export async function fetchTokenInfo(mint: string): Promise<TokenInfo | null> {
     let priceChange24h: number | undefined =
       top.priceChange?.h24 != null ? Number(top.priceChange.h24) : undefined;
     if (priceChange24h == null && isStableToken(mint)) priceChange24h = 0;
+
+    // 市值:深度最高的 pair 不一定带 fdv 字段,找首个非 0 的;
+    // SOL(WSOL mint)在 DexScreener 上经常缺 fdv,fallback 到 priceUsd × 已知流通量
+    const priceUsd = Number(top.priceUsd ?? 0);
+    let marketCap = 0;
+    for (const p of solPairs) {
+      const m = Number(p?.fdv ?? p?.marketCap ?? 0);
+      if (m > 0) { marketCap = m; break; }
+    }
+    if (marketCap === 0 && mint === SOL_MINT && priceUsd > 0) {
+      // SOL 流通量约 5.8 亿(2026-04 时点近似;略保守)
+      marketCap = priceUsd * 580_000_000;
+    }
+
     return {
       mint,
       symbol: safeText(base.symbol, 24) || mint.slice(0, 6),
       name: safeText(base.name, 64),
-      priceUsd: Number(top.priceUsd ?? 0),
+      priceUsd,
       priceNative: Number(top.priceNative ?? 0),
       liquidityUsd: Number(top.liquidity?.usd ?? 0),
-      marketCap: Number(top.fdv ?? top.marketCap ?? 0),
+      marketCap,
       priceChange24h,
       priceChange6h: top.priceChange?.h6 != null ? Number(top.priceChange.h6) : undefined,
       priceChange1h: top.priceChange?.h1 != null ? Number(top.priceChange.h1) : undefined,
