@@ -5,7 +5,8 @@
  * 拿 mint,调 fetchTokenDetail,渲染 Hero + 核心数据 + 安全核查 + 风险明细 + 前10持有者 + 动作按钮
  */
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { translateRiskName, translateRiskDesc } from '@/lib/rugcheck-i18n';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -32,6 +33,7 @@ interface Props {
 
 export function TokenDetailView({ mint, hideHero }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const chain = getCurrentChain();
 
   const [detail, setDetail] = useState<TokenDetail | null>(null);
@@ -308,9 +310,9 @@ export function TokenDetailView({ mint, hideHero }: Props) {
               >
                 <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <div className="min-w-0">
-                  <div className="font-medium">{r.name}</div>
+                  <div className="font-medium">{translateRiskName(r.name, locale)}</div>
                   {r.description && (
-                    <div className="text-xs mt-1 opacity-90">{r.description}</div>
+                    <div className="text-xs mt-1 opacity-90">{translateRiskDesc(r.description, locale)}</div>
                   )}
                 </div>
               </div>

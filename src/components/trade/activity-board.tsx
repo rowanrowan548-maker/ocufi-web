@@ -11,7 +11,8 @@
  */
 import { useEffect, useState } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { translateRiskName, translateRiskDesc } from '@/lib/rugcheck-i18n';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -31,6 +32,7 @@ const ACTIVITY_REFRESH_MS = 30_000;
 
 export function ActivityBoard({ detail }: Props) {
   const t = useTranslations('trade.activity');
+  const locale = useLocale();
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const [tab, setTab] = useState('activity');
@@ -186,10 +188,10 @@ export function ActivityBoard({ detail }: Props) {
                 >
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <div className="font-medium">{safeText(r.name)}</div>
+                    <div className="font-medium">{translateRiskName(safeText(r.name), locale)}</div>
                     {r.description && (
                       <div className="text-[11px] mt-0.5 opacity-80">
-                        {safeText(r.description)}
+                        {translateRiskDesc(safeText(r.description), locale)}
                       </div>
                     )}
                   </div>
