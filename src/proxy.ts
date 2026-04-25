@@ -98,8 +98,9 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // 跑在所有路径,排除静态资源和图标(Next 会自己跳过 _next 但显式声明更稳)
+  // 排除:Next 内部路径 / public/branding/* 静态文件 / api / 各类静态资源 / .html 文件
+  // 这些路径不进 middleware,Vercel CDN 直接返回静态文件,不会被 launch 锁拦截
   matcher: [
-    '/((?!_next/static|_next/image|_vercel|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot)$).*)',
+    '/((?!_next/|_vercel/|api/|branding/|favicon\\.ico|sw\\.js|robots\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot|html)$).*)',
   ],
 };
