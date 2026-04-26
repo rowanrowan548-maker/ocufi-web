@@ -185,6 +185,17 @@
       "title": "交易",
       "subtitle": "Jupiter 聚合器,自动选最优路线,手续费透明"
     },
+    "header": {
+      "verified": "已验证",
+      "dataLabels": {
+        "marketCap": "市值",
+        "liquidity": "流动性",
+        "volume24h": "24h 量",
+        "holders": "持币",
+        "risk": "风险",
+        "age": "年龄"
+      }
+    },
     "search": {
       "placeholder": "选择代币 · 默认 SOL",
       "inputPlaceholder": "搜代币名 / 符号 / 合约地址",
@@ -490,11 +501,12 @@
       "active": "未放弃 ⚠️"
     },
     "age": {
-      "minutes": "分钟前",
-      "hours": "小时前",
-      "days": "天前",
-      "months": "个月前",
-      "years": "年前"
+      "minutes": "{n} 分钟前",
+      "hours": "{n} 小时前",
+      "days": "{n} 天前",
+      "months": "{n} 个月前",
+      "years": "{n} 年前",
+      "justNow": "刚刚"
     },
     "actions": {
       "buy": "立即买入"

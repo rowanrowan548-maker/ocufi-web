@@ -185,6 +185,17 @@
       "title": "Trade",
       "subtitle": "Jupiter aggregator · best route · transparent fees"
     },
+    "header": {
+      "verified": "Verified",
+      "dataLabels": {
+        "marketCap": "Market cap",
+        "liquidity": "Liquidity",
+        "volume24h": "24h vol",
+        "holders": "Holders",
+        "risk": "Risk",
+        "age": "Age"
+      }
+    },
     "search": {
       "placeholder": "Pick a token · default SOL",
       "inputPlaceholder": "Search by name / symbol / mint",
@@ -490,11 +501,12 @@
       "active": "Active ⚠️"
     },
     "age": {
-      "minutes": "min ago",
-      "hours": "hrs ago",
-      "days": "days ago",
-      "months": "months ago",
-      "years": "years ago"
+      "minutes": "{n}m ago",
+      "hours": "{n}h ago",
+      "days": "{n}d ago",
+      "months": "{n}mo ago",
+      "years": "{n}y ago",
+      "justNow": "just now"
     },
     "actions": {
       "buy": "Buy now"
