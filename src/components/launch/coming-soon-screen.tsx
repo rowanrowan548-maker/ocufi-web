@@ -13,7 +13,7 @@ import { Logo } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
 
 const TWITTER = 'https://x.com/Ocufi_io';
-const TG = 'https://t.me/ocufi';
+const TG = 'https://t.me/+HucmvmOx2IswZDBl';
 const GITHUB = 'https://github.com/rowanrowan548-maker/ocufi-web';
 
 export function ComingSoonScreen() {

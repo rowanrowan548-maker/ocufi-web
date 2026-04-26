@@ -185,6 +185,15 @@ export default async function Landing({
                   𝕏
                 </a>
                 <a
+                  href="https://t.me/+HucmvmOx2IswZDBl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground"
+                  aria-label="Telegram"
+                >
+                  TG
+                </a>
+                <a
                   href="https://github.com/rowanrowan548-maker/ocufi-web"
                   target="_blank"
                   rel="noopener noreferrer"

@@ -15,7 +15,7 @@ import { useTranslations } from 'next-intl';
 import { MessageSquare, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const TG_GROUP_URL = 'https://t.me/ocufi';
+const TG_GROUP_URL = 'https://t.me/+HucmvmOx2IswZDBl';
 const GITHUB_REPO = 'rowanrowan548-maker/ocufi-web';
 const TWITTER_HANDLE = 'Ocufi_io';
 
