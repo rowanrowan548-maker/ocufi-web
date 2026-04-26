@@ -9,6 +9,10 @@ export function humanize(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
   const name = (e as any)?.name as string | undefined;
 
+  // 余额预校验主动抛(swap-with-fee.ts):透传 sentinel
+  if (msg === '__ERR_BALANCE_DRIFT') {
+    return '__ERR_BALANCE_DRIFT';
+  }
   // 用户在钱包里点了"拒绝"
   if (
     /user rejected/i.test(msg) ||
@@ -24,6 +28,10 @@ export function humanize(e: unknown): string {
   // 余额不足
   if (/insufficient funds/i.test(msg) || /insufficient lamports/i.test(msg)) {
     return '__ERR_INSUFFICIENT_FUNDS';
+  }
+  // blockhash 失效 / 已过 lastValidBlockHeight(网络拥堵导致 tx 没赶上)
+  if (/blockhash/i.test(msg) || /block\s*height\s*exceeded/i.test(msg)) {
+    return '__ERR_BLOCKHASH_EXPIRED';
   }
   // Jupiter 无路由
   if (/no route/i.test(msg) || /could not find any route/i.test(msg)) {

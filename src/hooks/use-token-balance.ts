@@ -4,9 +4,9 @@
  * 读钱包里某 SPL Token 的余额
  *
  * 用 getParsedTokenAccountsByOwner 按 mint filter,汇总所有 ATA(通常只有 1 个)
- * 30s 轮询,mint 或钱包改变时自动重拉
+ * 30s 轮询,mint 或钱包改变时自动重拉。可选 refetch() 主动重拉。
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
@@ -17,30 +17,38 @@ export interface TokenBalanceState {
   decimals: number | null;
   loading: boolean;
   error: string | null;
+  /** 主动重拉余额(前端可在交易确认前调一次,补强 30s 轮询的竞态) */
+  refetch: () => Promise<void>;
 }
+
+const NOOP_REFETCH = async () => {};
 
 export function useTokenBalance(mint: string | null): TokenBalanceState {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
-  const [state, setState] = useState<TokenBalanceState>({
+  const [state, setState] = useState<Omit<TokenBalanceState, 'refetch'>>({
     amount: null,
     rawAmount: null,
     decimals: null,
     loading: false,
     error: null,
   });
+  // refetchRef 让外部 refetch() 总是调到当前 effect 内的 fetchBal,
+  // 避免 stale closure 在 mint/publicKey 改变后还查老的
+  const refetchRef = useRef<() => Promise<void>>(NOOP_REFETCH);
 
   useEffect(() => {
     if (!mint || !publicKey) {
       setState({ amount: null, rawAmount: null, decimals: null, loading: false, error: null });
+      refetchRef.current = NOOP_REFETCH;
       return;
     }
-    // 先简单校验 mint 格式;无效不查
     let mintPk: PublicKey;
     try {
       mintPk = new PublicKey(mint);
     } catch {
       setState({ amount: null, rawAmount: null, decimals: null, loading: false, error: null });
+      refetchRef.current = NOOP_REFETCH;
       return;
     }
 
@@ -87,13 +95,26 @@ export function useTokenBalance(mint: string | null): TokenBalanceState {
       }
       if (!cancelled) timer = setTimeout(fetchBal, 30_000);
     };
+
+    refetchRef.current = async () => {
+      // 主动 refetch 时清掉排队中的 30s 轮询,避免短时间内并发两次
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      await fetchBal();
+    };
+
     fetchBal();
 
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
+      refetchRef.current = NOOP_REFETCH;
     };
   }, [mint, publicKey, connection]);
 
-  return state;
+  const refetch = useCallback(() => refetchRef.current(), []);
+
+  return { ...state, refetch };
 }

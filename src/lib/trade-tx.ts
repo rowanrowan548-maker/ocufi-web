@@ -23,33 +23,77 @@ export function decodeSwapTx(base64: string): VersionedTransaction {
   return VersionedTransaction.deserialize(raw);
 }
 
-/** 直接签名 + 广播已构造好的 VersionedTransaction(新路径,配合 swap-with-fee) */
+export interface SignAndSendOptions {
+  /** 跳过本地预模拟。自组 tx 已在 build 阶段校验,可设 true 减一次 RPC 来回。default false */
+  skipPreflight?: boolean;
+  /** 网络抖动(503/fetch fail)重试次数。blockhash 类错误不重试(避免 OKX 双签风控)。default 1 */
+  networkRetries?: number;
+}
+
+/**
+ * 直接签名 + 广播已构造好的 VersionedTransaction(新路径,配合 swap-with-fee)
+ *
+ * 错误分流:
+ *  - blockhash 失效 / block height exceeded → 直接抛(让 friendly-error 翻译为 __ERR_BLOCKHASH_EXPIRED)
+ *  - 其他网络错误(503 / fetch fail / TLS 抖动)→ 等 500-1000ms jitter 后重试,最多 networkRetries 次
+ *  - 所有重试用同一份已签名 raw bytes,不重新签(避免 OKX 风控对短时间多签敏感)
+ */
 export async function signAndSendTx(
   connection: Connection,
   wallet: WalletContextState,
-  tx: VersionedTransaction
+  tx: VersionedTransaction,
+  opts: SignAndSendOptions = {}
 ): Promise<TransactionSignature> {
   if (!wallet.signTransaction) {
     throw new Error('钱包不支持 signTransaction');
   }
+  const skipPreflight = opts.skipPreflight ?? false;
+  const networkRetries = opts.networkRetries ?? 1;
+
   const signed = await wallet.signTransaction(tx);
-  const sig = await connection.sendRawTransaction(signed.serialize(), {
-    skipPreflight: false,
-    maxRetries: 3,
-  });
-  return sig;
+  const raw = signed.serialize();
+
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= networkRetries; attempt++) {
+    try {
+      return await connection.sendRawTransaction(raw, {
+        skipPreflight,
+        maxRetries: 3,
+      });
+    } catch (e) {
+      lastErr = e;
+      const msg = e instanceof Error ? e.message : String(e);
+      // blockhash 类错误重试无意义(同一签名 + 同一 blockhash 重发还是过期)
+      if (/blockhash/i.test(msg) || /block\s*height/i.test(msg)) {
+        throw e;
+      }
+      if (attempt < networkRetries) {
+        await new Promise((r) => setTimeout(r, 500 + Math.random() * 500));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr;
 }
 
 /** 钱包签名 + 广播 + 等上链(旧路径,base64 输入) */
 export async function signAndSend(
   connection: Connection,
   wallet: WalletContextState,
-  swapTxBase64: string
+  swapTxBase64: string,
+  opts?: SignAndSendOptions
 ): Promise<TransactionSignature> {
-  return signAndSendTx(connection, wallet, decodeSwapTx(swapTxBase64));
+  return signAndSendTx(connection, wallet, decodeSwapTx(swapTxBase64), opts);
 }
 
-/** 等链上确认(默认 60 秒超时) */
+/**
+ * 等链上确认(默认 60 秒超时)
+ *
+ * 60s 内每 2s 查 getSignatureStatuses(searchTransactionHistory:false,快路径)
+ * 超时未拿到 → 兜底再查一次 searchTransactionHistory:true(慢路径但全),
+ *   防止 RPC 节点漏 polling 导致误报"未确认"实际已上链
+ */
 export async function confirmTx(
   connection: Connection,
   signature: TransactionSignature,
@@ -73,6 +117,21 @@ export async function confirmTx(
       // 其他错误继续重试
     }
     await new Promise((r) => setTimeout(r, 2000));
+  }
+  // 超时兜底:用 searchTransactionHistory:true 再查一次
+  try {
+    const { value } = await connection.getSignatureStatuses([signature], {
+      searchTransactionHistory: true,
+    });
+    const s = value[0];
+    if (s) {
+      if (s.err) throw new Error('链上交易失败: ' + JSON.stringify(s.err));
+      if (s.confirmationStatus === 'confirmed' || s.confirmationStatus === 'finalized') {
+        return true;
+      }
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith('链上交易失败')) throw e;
   }
   return false;
 }

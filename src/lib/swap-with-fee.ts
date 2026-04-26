@@ -96,6 +96,35 @@ export async function buildSwapTxWithFee(
   const chain = getCurrentChain();
   const gas = GAS_CONFIG[gasLevel];
 
+  // 0. 卖出场景:广播前用链上实时 ATA 余额做 sanity check,挡住"前端 30s 轮询余额 vs
+  //    链上实时余额"的竞态(N3)。仅当「RPC 成功 + 查到余额 > 0 + 小于 quote 要求」
+  //    三件事同时成立时抛 __ERR_BALANCE_DRIFT;其他场景静默放行,让 swap 自己 try。
+  if (quote.inputMint !== SOL_MINT) {
+    let onChainTotal = BigInt(0);
+    let probeOk = false;
+    try {
+      const res = await connection.getParsedTokenAccountsByOwner(
+        new PublicKey(userPublicKey),
+        { mint: new PublicKey(quote.inputMint) }
+      );
+      probeOk = true;
+      for (const acc of res.value) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const info: any = acc.account.data;
+        const amt = info?.parsed?.info?.tokenAmount;
+        if (amt) onChainTotal += BigInt(String(amt.amount ?? '0'));
+      }
+    } catch (e) {
+      console.warn('[swap-with-fee] balance precheck failed, skipping:', e);
+    }
+    if (probeOk && onChainTotal > BigInt(0)) {
+      const need = BigInt(quote.inAmount);
+      if (onChainTotal < need) {
+        throw new Error('__ERR_BALANCE_DRIFT');
+      }
+    }
+  }
+
   // 1. 拿 Jupiter 原始指令
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body: Record<string, any> = {
