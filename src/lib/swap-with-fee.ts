@@ -34,6 +34,10 @@ const GAS_CONFIG: Record<GasLevel, { priorityLevel: string; maxLamports: number 
   turbo: { priorityLevel: 'veryHigh', maxLamports: 1_000_000 },
 };
 
+// SPL Memo program v2 · Solana 第一方 program,所有钱包识别
+const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+const OCUFI_FEE_MEMO = 'Ocufi 0.1% trading fee · ocufi.io/fees';
+
 interface JsonAccount {
   pubkey: string;
   isSigner: boolean;
@@ -170,6 +174,17 @@ export async function buildSwapTxWithFee(
           fromPubkey: new PublicKey(userPublicKey),
           toPubkey: vault,
           lamports: feeLamports,
+        })
+      );
+      // Memo ix:在 Phantom / Solflare simulation UI 里显示用途文本,
+      // 让用户(和 Blowfish)看清楚 fee 转账是"手续费"而非可疑转账。
+      // T-601 Mitigation B · 不依赖外部 SDK,手写 Memo program v2 ix。
+      // signer = 用户钱包(让 indexer / wallet UI 关联到主调者)
+      instructions.push(
+        new TransactionInstruction({
+          programId: MEMO_PROGRAM_ID,
+          keys: [{ pubkey: new PublicKey(userPublicKey), isSigner: true, isWritable: false }],
+          data: Buffer.from(OCUFI_FEE_MEMO, 'utf-8'),
         })
       );
     }
