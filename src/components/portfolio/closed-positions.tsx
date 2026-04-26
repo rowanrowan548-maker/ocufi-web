@@ -79,7 +79,7 @@ function Row({ p }: { p: ClosedPosition }) {
     <TableRow className="hover:bg-muted/30 transition-colors">
       <TableCell>
         <Link
-          href={`/token/${p.mint}`}
+          href={`/trade?mint=${p.mint}`}
           className="flex items-center gap-2 hover:text-primary transition-colors"
         >
           <span className="font-mono text-xs text-muted-foreground/70">

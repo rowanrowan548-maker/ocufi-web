@@ -161,7 +161,7 @@ export function OrderList({ refreshTick = 0 }: Props) {
                   <TableRow key={o.orderKey}>
                     <TableCell>
                       <Link
-                        href={`/token/${v.targetMint}`}
+                        href={`/trade?mint=${v.targetMint}`}
                         className="flex items-center gap-2 hover:underline"
                       >
                         <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">

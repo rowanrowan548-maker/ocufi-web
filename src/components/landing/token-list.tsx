@@ -6,7 +6,7 @@
  * tabs: 全部 / 蓝筹 / Meme / LST / 稳定币
  * 表格列: 名称 / 价格 / 24h 涨跌 / 24h 成交量 / 市值 / 操作
  * 排序: 默认按市值降序
- * 操作: 跳 /trade?mint=X 一键交易,跳 /token/{mint} 看详情
+ * 操作: 跳 /trade?mint=X 一键交易(详情已合并到 /trade,无独立详情页)
  */
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -205,7 +205,7 @@ function Row({
         </button>
       </TableCell>
       <TableCell>
-        <Link href={`/token/${tok.mint}`} className="flex items-center gap-3">
+        <Link href={`/trade?mint=${tok.mint}`} className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
             {tok.logoUri ? (
               <Image
@@ -331,7 +331,7 @@ function MobileCard({
           />
         </button>
 
-        <Link href={`/token/${tok.mint}`} className="flex items-center gap-2 flex-1 min-w-0">
+        <Link href={`/trade?mint=${tok.mint}`} className="flex items-center gap-2 flex-1 min-w-0">
           <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
             {tok.logoUri ? (
               <Image src={tok.logoUri} alt={tok.symbol} width={36} height={36} className="object-cover" unoptimized />

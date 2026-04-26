@@ -117,7 +117,7 @@ function Row({ tok }: { tok: TokenInfo }) {
 
   return (
     <Link
-      href={`/token/${tok.mint}`}
+      href={`/trade?mint=${tok.mint}`}
       className="grid grid-cols-[20px_1fr_auto_auto] items-center gap-2 px-3 py-2 hover:bg-muted/30 transition-colors"
     >
       <div className="h-5 w-5 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">

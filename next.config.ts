@@ -52,6 +52,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/:locale(zh-CN|en-US)/token/:mint',
+        destination: '/:locale/trade?mint=:mint',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

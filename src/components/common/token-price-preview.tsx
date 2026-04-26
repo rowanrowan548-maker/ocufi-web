@@ -141,7 +141,7 @@ export function TokenPricePreview({ mint, debounceMs = 400, showSafetyLink = tru
         {/* 安全链接 */}
         {showSafetyLink && (
           <Link
-            href={`/token/${mint.trim()}`}
+            href={`/trade?mint=${mint.trim()}`}
             className="flex-shrink-0 inline-flex items-center p-1 text-muted-foreground hover:text-foreground"
             title={t('trade.viewSafety')}
           >

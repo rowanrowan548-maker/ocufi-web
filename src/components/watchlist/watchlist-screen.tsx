@@ -151,7 +151,7 @@ function Row({
         </button>
       </TableCell>
       <TableCell>
-        <Link href={`/token/${tok.mint}`} className="flex items-center gap-2 min-w-0">
+        <Link href={`/trade?mint=${tok.mint}`} className="flex items-center gap-2 min-w-0">
           <div className="h-7 w-7 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
             {tok.logoUri ? (
               <Image

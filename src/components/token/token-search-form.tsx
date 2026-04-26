@@ -26,7 +26,7 @@ export function TokenSearchForm() {
       setErr(t('trade.errors.invalidMint'));
       return;
     }
-    router.push(`/token/${m}`);
+    router.push(`/trade?mint=${m}`);
   }
 
   return (

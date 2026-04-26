@@ -89,7 +89,7 @@ export function HoldingsTable({ sol, tokens, costs }: Props) {
               <TableRow key={tok.mint}>
                 <TableCell>
                   <Link
-                    href={`/token/${tok.mint}`}
+                    href={`/trade?mint=${tok.mint}`}
                     className="flex items-center gap-3 hover:bg-muted/50 -mx-4 -my-2 px-4 py-2 rounded transition-colors"
                   >
                     <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">

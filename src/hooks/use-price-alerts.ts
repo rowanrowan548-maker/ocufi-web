@@ -59,7 +59,7 @@ export function usePriceAlerts(): AlertsState {
             fireNotification(
               `${a.symbol || a.mint.slice(0, 6)} ${dir} $${a.target_usd}`,
               `${t('alerts.notif.hit', { price: cur.toPrecision(6) })}`,
-              `${typeof window !== 'undefined' ? window.location.origin : ''}/token/${a.mint}`
+              `${typeof window !== 'undefined' ? window.location.origin : ''}/trade?mint=${a.mint}`
             );
             ackAlert(wallet, a.id).catch(() => {});
           }

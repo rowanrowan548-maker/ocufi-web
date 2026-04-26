@@ -139,7 +139,7 @@ function HistoryRow({
           </div>
         ) : r.tokenMint ? (
           <Link
-            href={`/token/${r.tokenMint}`}
+            href={`/trade?mint=${r.tokenMint}`}
             className="flex items-center gap-2 hover:underline"
           >
             <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">

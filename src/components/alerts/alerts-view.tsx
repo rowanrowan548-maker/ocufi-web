@@ -255,7 +255,7 @@ export function AlertsView() {
                   <TableRow key={a.id} className={a.triggered ? 'opacity-70' : ''}>
                     <TableCell>
                       <Link
-                        href={`/token/${a.mint}`}
+                        href={`/trade?mint=${a.mint}`}
                         className="flex items-center gap-2 hover:underline"
                       >
                         <span className="text-sm font-medium">{a.symbol || a.mint.slice(0, 6)}</span>
