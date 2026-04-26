@@ -13,6 +13,7 @@ import { TokenList } from '@/components/landing/token-list';
 import { PriceTicker } from '@/components/landing/price-ticker';
 import { OurPromise } from '@/components/landing/our-promise';
 import { StatsBar } from '@/components/landing/stats-bar';
+import { XIcon, TelegramIcon, GithubIcon } from '@/components/brand/social-icons';
 
 export default async function Landing({
   params,
@@ -174,33 +175,33 @@ export default async function Landing({
               <div className="text-xs text-muted-foreground leading-relaxed max-w-xs">
                 {t('brand.tagline')}
               </div>
-              <div className="flex gap-3 text-muted-foreground text-sm">
+              <div className="flex gap-3 text-muted-foreground">
                 <a
                   href="https://x.com/Ocufi_io"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-foreground"
+                  className="hover:text-foreground transition-colors"
                   aria-label="Twitter / X"
                 >
-                  𝕏
+                  <XIcon className="h-4 w-4" />
                 </a>
                 <a
                   href="https://t.me/+HucmvmOx2IswZDBl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-foreground"
+                  className="hover:text-foreground transition-colors"
                   aria-label="Telegram"
                 >
-                  TG
+                  <TelegramIcon className="h-4 w-4" />
                 </a>
                 <a
                   href="https://github.com/rowanrowan548-maker/ocufi-web"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-foreground"
+                  className="hover:text-foreground transition-colors"
                   aria-label="GitHub"
                 >
-                  GitHub
+                  <GithubIcon className="h-4 w-4" />
                 </a>
               </div>
             </div>
