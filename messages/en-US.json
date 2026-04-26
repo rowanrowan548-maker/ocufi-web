@@ -381,7 +381,9 @@
       "slippage": "Price moved beyond slippage; raise slippage or retry",
       "insufficientFunds": "SOL balance not enough for trade + fees",
       "noRoute": "Jupiter found no route; this token may have no liquidity",
-      "rpcForbidden": "RPC node refused the request; refresh and retry"
+      "rpcForbidden": "RPC node refused the request; refresh and retry",
+      "blockhashExpired": "Network congested; transaction expired. Please retry.",
+      "balanceDrift": "Balance changed; please refresh and place again."
     }
   },
   "portfolio": {

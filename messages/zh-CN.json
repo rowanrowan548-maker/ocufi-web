@@ -381,7 +381,9 @@
       "slippage": "价格滑点超过设置上限,提高滑点或稍后再试",
       "insufficientFunds": "SOL 余额不足以支付交易或网络费",
       "noRoute": "Jupiter 找不到交易路径,这个币可能流动性太低",
-      "rpcForbidden": "网络节点拒绝访问,刷新页面重试"
+      "rpcForbidden": "网络节点拒绝访问,刷新页面重试",
+      "blockhashExpired": "网络拥堵导致交易失效,请重试一次",
+      "balanceDrift": "余额已变化,请刷新后重新下单"
     }
   },
   "portfolio": {

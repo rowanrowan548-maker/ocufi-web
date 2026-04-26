@@ -362,6 +362,8 @@ function mapError(t: ReturnType<typeof useTranslations>, raw: string): string {
     case '__ERR_USER_REJECTED': return t('trade.errors.userRejected');
     case '__ERR_INSUFFICIENT_FUNDS': return t('trade.errors.insufficientFunds');
     case '__ERR_RPC_FORBIDDEN': return t('trade.errors.rpcForbidden');
+    case '__ERR_BLOCKHASH_EXPIRED': return t('trade.errors.blockhashExpired');
+    case '__ERR_BALANCE_DRIFT': return t('trade.errors.balanceDrift');
     default: return raw;
   }
 }

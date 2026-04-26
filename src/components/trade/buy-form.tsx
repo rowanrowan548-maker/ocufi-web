@@ -568,6 +568,10 @@ function mapError(t: ReturnType<typeof useTranslations>, raw: string): string {
       return t('trade.errors.noRoute');
     case '__ERR_RPC_FORBIDDEN':
       return t('trade.errors.rpcForbidden');
+    case '__ERR_BLOCKHASH_EXPIRED':
+      return t('trade.errors.blockhashExpired');
+    case '__ERR_BALANCE_DRIFT':
+      return t('trade.errors.balanceDrift');
     default:
       return raw;
   }
