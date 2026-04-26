@@ -279,7 +279,9 @@ export interface AdminStats {
 }
 
 export async function fetchAdminStats(key: string): Promise<AdminStats> {
-  return apiFetch<AdminStats>(`/admin/stats?key=${encodeURIComponent(key)}`);
+  return apiFetch<AdminStats>('/admin/stats', {
+    headers: { 'X-Admin-Key': key },
+  });
 }
 
 // ─── Public stats(无鉴权 · Landing 数据条用) ───
