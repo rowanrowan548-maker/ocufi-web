@@ -196,6 +196,20 @@
         "age": "Age"
       }
     },
+    "trust": {
+      "title": "🛡 Safety Signals",
+      "labels": {
+        "lpLocked": "LP Locked",
+        "top1Holder": "Top1 Holder",
+        "mintAuthority": "Mint Auth",
+        "freezeAuthority": "Freeze Auth"
+      },
+      "values": {
+        "renounced": "✅ Renounced",
+        "active": "⚠️ Active",
+        "unknown": "—"
+      }
+    },
     "search": {
       "placeholder": "Pick a token · default SOL",
       "inputPlaceholder": "Search by name / symbol / mint",

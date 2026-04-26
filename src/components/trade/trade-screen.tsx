@@ -20,6 +20,7 @@ import { TradingHeader } from './trading-header';
 import { ChartCard } from './chart-card';
 import { ActivityBoard } from './activity-board';
 import { TradeTabs } from './trade-tabs';
+import { TrustSignals } from './trust-signals';
 import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
@@ -78,6 +79,7 @@ export function TradeScreen() {
          * 桌面端:lg:order-1/2 把 K线 拉到左,交易面板拉到右
          */}
         <div className="space-y-4 lg:order-2">
+          <TrustSignals detail={detail} />
           <TradeTabs
             mint={mint}
             compact

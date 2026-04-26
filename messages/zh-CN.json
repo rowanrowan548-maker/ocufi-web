@@ -196,6 +196,20 @@
         "age": "年龄"
       }
     },
+    "trust": {
+      "title": "🛡 安全信号",
+      "labels": {
+        "lpLocked": "LP 锁定",
+        "top1Holder": "Top1 持仓",
+        "mintAuthority": "Mint 权",
+        "freezeAuthority": "Freeze 权"
+      },
+      "values": {
+        "renounced": "✅ 已放弃",
+        "active": "⚠️ 未放弃",
+        "unknown": "—"
+      }
+    },
     "search": {
       "placeholder": "选择代币 · 默认 SOL",
       "inputPlaceholder": "搜代币名 / 符号 / 合约地址",
