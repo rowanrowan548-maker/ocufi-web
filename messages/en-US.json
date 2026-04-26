@@ -1019,5 +1019,30 @@
         "b": "You must understand and comply with the cryptocurrency holding, trading, and reporting laws of your jurisdiction. Ocufi makes no compliance determinations or tax calculations on your behalf."
       }
     }
+  },
+  "launch": {
+    "comingSoon": {
+      "badge": "PRELAUNCH · COMING SOON",
+      "title": "On-chain trading,\nback in your hands.",
+      "subtitle": "Ocufi is a <b>self-custody · low-fee · transparent · open-source</b> Solana trading terminal. Competitors charge 1% fees — we charge 0.1%.",
+      "chips": {
+        "fee": "0.1% fee",
+        "nonCustodial": "Self-custody",
+        "openSource": "Open source",
+        "onChain": "On-chain"
+      },
+      "email": {
+        "placeholder": "you@example.com · we'll notify you at launch"
+      },
+      "submit": "Join waitlist",
+      "submitted": "✓ You're on the waitlist — we'll notify you at launch.",
+      "footer": {
+        "follow": "Follow for updates",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "disclaimer": "Disclaimer"
+      },
+      "previewHint": "Have an access key? Append <key>?preview=YOUR_KEY</key> to the URL."
+    }
   }
 }

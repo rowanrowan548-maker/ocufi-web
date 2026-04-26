@@ -1034,5 +1034,30 @@
         "b": "你必须自行了解并遵守你所在国家或地区关于加密资产持有、交易、申报的法律。Ocufi 不为你做任何合规判断或税务计算。中国大陆地区禁止虚拟货币交易,中国境内用户使用本服务造成的任何后果由本人承担。"
       }
     }
+  },
+  "launch": {
+    "comingSoon": {
+      "badge": "PRELAUNCH · COMING SOON",
+      "title": "链上交易,\n应该回到你手里。",
+      "subtitle": "Ocufi 是一个<b>非托管 · 低费 · 透明 · 开源</b>的 Solana 链上交易终端。竞品收 1% 手续费,我们只收 0.1%。",
+      "chips": {
+        "fee": "0.1% 手续费",
+        "nonCustodial": "非托管",
+        "openSource": "开源审计",
+        "onChain": "链上即时"
+      },
+      "email": {
+        "placeholder": "你的邮箱 · 上线就通知你"
+      },
+      "submit": "早鸟登记",
+      "submitted": "✓ 已加入早鸟列表,上线第一时间通知你",
+      "footer": {
+        "follow": "关注更新",
+        "privacy": "隐私",
+        "terms": "条款",
+        "disclaimer": "免责"
+      },
+      "previewHint": "有访问密钥?在 URL 后加 <key>?preview=你的密钥</key>"
+    }
   }
 }
