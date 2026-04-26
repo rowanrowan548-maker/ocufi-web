@@ -63,7 +63,7 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
         <Row
           label={t('trade.preview.minReceive')}
           value={data.minReceiveLabel}
-          tooltip={`滑点 ${currentPct.toFixed(2)}% 兜底`}
+          tooltip={t('trade.preview.minReceiveTooltip', { pct: currentPct.toFixed(2) })}
         />
         <Row
           label={t('trade.preview.priceImpact')}
@@ -77,7 +77,7 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
               ? `${data.platformFeeSol.toFixed(6)} SOL`
               : t('trade.preview.platformFeeNone')
           }
-          tooltip="Ocufi 0.1%(仅买入,自组 tx 直接转入,链上可查)"
+          tooltip={t('trade.preview.platformFeeTooltip')}
         />
         <Row
           label={t('trade.preview.networkFee')}
@@ -86,7 +86,7 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
               ? `≤ ${data.networkFeeMaxSol.toFixed(6)} SOL`
               : '—'
           }
-          tooltip="Solana 网络 Gas + 优先费上限,实际可能更低"
+          tooltip={t('trade.preview.networkFeeTooltip')}
         />
       </div>
 

@@ -312,7 +312,10 @@
       "platformFeeNone": "0 (not charged)",
       "networkFee": "Network gas (max)",
       "slippageWarn": "Price impact {impact}% exceeds your {current}% slippage — trade may fail",
-      "slippageApply": "Raise to {bps}%"
+      "slippageApply": "Raise to {bps}%",
+      "minReceiveTooltip": "Slippage floor at {pct}%",
+      "platformFeeTooltip": "Ocufi 0.1% (buy only, direct on-chain transfer, verifiable)",
+      "networkFeeTooltip": "Solana network gas + priority fee ceiling — actual cost may be lower"
     },
     "confirm": {
       "buyTitle": "Confirm buy {symbol}",
