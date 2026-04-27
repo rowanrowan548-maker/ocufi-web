@@ -24,6 +24,8 @@ interface Props {
   winCount: number;
   closedCount: number;
   rangeLabel?: string;
+  /** T-902:icon-only 紧凑模式,顶栏右上角用 */
+  compact?: boolean;
 }
 
 export function PnlShareButton(props: Props) {
@@ -82,14 +84,16 @@ export function PnlShareButton(props: Props) {
         onClick={handleClick}
         disabled={busy}
         size="sm"
-        className="gap-1.5"
+        variant={props.compact ? 'ghost' : 'default'}
+        className={props.compact ? 'h-8 w-8 p-0' : 'gap-1.5'}
+        title={props.compact ? t('pnlButton') : undefined}
       >
         {busy ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
           <Trophy className="h-3.5 w-3.5" />
         )}
-        {t('pnlButton')}
+        {!props.compact && t('pnlButton')}
       </Button>
 
       {generated && (

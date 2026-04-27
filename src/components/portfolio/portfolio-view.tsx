@@ -17,7 +17,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { RefreshCw, Wallet, AlertCircle, Copy, Check, ChevronDown } from 'lucide-react';
+import { RefreshCw, Wallet, AlertCircle, Copy, Check } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,8 +34,6 @@ import { readFees, type FeeTotal } from '@/lib/fee-tracker';
 
 import { HoldingsTable } from './holdings-table';
 import { ClosedPositions } from './closed-positions';
-import { AssetPie, AssetPieLegend } from './asset-pie';
-import { ValueChart } from './value-chart';
 import {
   DailyPnlBars,
   TopGainerBars,
@@ -54,6 +52,11 @@ export function PortfolioView() {
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
   // T-900a:时间筛选 state hoist · T-900c 阶段联动 stat 卡 + 表格数据
   const [range, setRange] = useState<'1d' | '7d' | '30d' | 'all'>('all');
+  // T-902:USD/SOL 单位切换(默认 USD)
+  const [unit, setUnit] = useState<'USD' | 'SOL'>('USD');
+  // T-902:刷新时间戳,用来显示「更新于 X 秒前」
+  const [lastRefreshAt, setLastRefreshAt] = useState(() => Date.now());
+  const [refreshTick, setRefreshTick] = useState(0);
   const [copied, setCopied] = useState(false);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [fees, setFees] = useState<FeeTotal>({
@@ -87,6 +90,17 @@ export function PortfolioView() {
     const updated = appendSnapshot(walletAddr, totalUsd);
     setSnapshots(updated);
   }, [walletAddr, loading, totalUsd]);
+
+  // T-902:loading 转 false → 视为一次新刷新完成
+  useEffect(() => {
+    if (!loading) setLastRefreshAt(Date.now());
+  }, [loading]);
+
+  // T-902:每 5 秒重渲让"更新于 X 秒前"动起来
+  useEffect(() => {
+    const id = window.setInterval(() => setRefreshTick((t) => t + 1), 5000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const closedAll = useMemo(() => getClosedPositions(costs), [costs]);
 
@@ -222,6 +236,15 @@ export function PortfolioView() {
   const avgBuySol =
     tradeStats.buyTxCount > 0 ? tradeStats.buyVolumeSol / tradeStats.buyTxCount : 0;
 
+  // T-902:更新于 X 秒/分前(ticks 触发重算,值是参考)
+  const updatedAgo = useMemo(() => {
+    void refreshTick;
+    const sec = Math.floor((Date.now() - lastRefreshAt) / 1000);
+    if (sec < 5) return t('portfolio.stats.justNow');
+    if (sec < 60) return t('portfolio.stats.secondsAgo', { n: sec });
+    return t('portfolio.stats.minutesAgo', { n: Math.floor(sec / 60) });
+  }, [lastRefreshAt, refreshTick, t]);
+
   // 未连接
   if (!wallet.connected || !wallet.publicKey) {
     return (
@@ -271,7 +294,12 @@ export function PortfolioView() {
                   {t('portfolio.totalValue')}
                 </span>
                 <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight">
-                  ${formatUsd(totalUsd)}
+                  {unit === 'USD'
+                    ? `$${formatUsd(totalUsd)}`
+                    : `${formatSol(solUsdPrice > 0 ? totalUsd / solUsdPrice : 0)} `}
+                  {unit === 'SOL' && (
+                    <span className="text-base text-muted-foreground/60">SOL</span>
+                  )}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -296,34 +324,61 @@ export function PortfolioView() {
               </div>
             </div>
 
-            {/* 时间筛选 + 刷新 */}
-            <div className="flex items-center gap-2">
-              <Tabs value={range} onValueChange={(v) => v && setRange(v as typeof range)}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="1d" className="text-xs px-2.5 h-6">
-                    {t('portfolio.stats.range1d')}
-                  </TabsTrigger>
-                  <TabsTrigger value="7d" className="text-xs px-2.5 h-6">
-                    {t('portfolio.stats.range7d')}
-                  </TabsTrigger>
-                  <TabsTrigger value="30d" className="text-xs px-2.5 h-6">
-                    {t('portfolio.stats.range30d')}
-                  </TabsTrigger>
-                  <TabsTrigger value="all" className="text-xs px-2.5 h-6">
-                    {t('portfolio.stats.rangeAll')}
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={refresh}
-                disabled={loading}
-                className="h-8 w-8 p-0"
-                title={t('portfolio.autoRefreshHint')}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
+            {/* T-902:右上角控制区 — 时间筛选 + USD/SOL + 刷新 + 分享 */}
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                <Tabs value={range} onValueChange={(v) => v && setRange(v as typeof range)}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="1d" className="text-xs px-2.5 h-6">
+                      {t('portfolio.stats.range1d')}
+                    </TabsTrigger>
+                    <TabsTrigger value="7d" className="text-xs px-2.5 h-6">
+                      {t('portfolio.stats.range7d')}
+                    </TabsTrigger>
+                    <TabsTrigger value="30d" className="text-xs px-2.5 h-6">
+                      {t('portfolio.stats.range30d')}
+                    </TabsTrigger>
+                    <TabsTrigger value="all" className="text-xs px-2.5 h-6">
+                      {t('portfolio.stats.rangeAll')}
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Tabs value={unit} onValueChange={(v) => v && setUnit(v as typeof unit)}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="USD" className="text-xs px-2 h-6">
+                      USD
+                    </TabsTrigger>
+                    <TabsTrigger value="SOL" className="text-xs px-2 h-6">
+                      SOL
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={refresh}
+                  disabled={loading}
+                  className="h-8 w-8 p-0"
+                  title={t('portfolio.autoRefreshHint')}
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
+                {(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0 && (
+                  <PnlShareButton
+                    compact
+                    realizedUsd={pnlSummary.realizedUsd}
+                    unrealizedUsd={pnlSummary.unrealizedUsd}
+                    totalUsd={pnlSummary.totalUsd}
+                    totalPct={pnlSummary.totalPct}
+                    winCount={pnlSummary.winCount}
+                    closedCount={pnlSummary.closedCount}
+                    rangeLabel={range === 'all' ? 'All-time' : `Last ${range}`}
+                  />
+                )}
+              </div>
+              <span className="text-[10px] text-muted-foreground/50 font-mono tabular-nums pr-1">
+                {t('portfolio.stats.updatedAgo', { ago: updatedAgo })}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -556,55 +611,9 @@ export function PortfolioView() {
             </Card>
           </div>
 
-          {/* 分享我的战绩 · 有平仓 OR 有持仓时才显示 */}
-          {(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0 && (
-            <div className="flex items-center justify-end pt-1">
-              <PnlShareButton
-                realizedUsd={pnlSummary.realizedUsd}
-                unrealizedUsd={pnlSummary.unrealizedUsd}
-                totalUsd={pnlSummary.totalUsd}
-                totalPct={pnlSummary.totalPct}
-                winCount={pnlSummary.winCount}
-                closedCount={pnlSummary.closedCount}
-                rangeLabel="All-time"
-              />
-            </div>
-          )}
-
-          {/* 资产分布(折叠 details · 默认收起) */}
-          {pieItems.length > 0 && (
-            <details className="group">
-              <summary className="cursor-pointer list-none flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors py-1">
-                <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:-rotate-180" />
-                {t('portfolio.distribution')}
-              </summary>
-              <Card className="mt-2">
-                <CardContent className="pt-4">
-                  <div className="grid sm:grid-cols-[180px_1fr] gap-6 items-center">
-                    <div className="flex items-center justify-center">
-                      <AssetPie items={pieItems} totalUsd={totalUsd} size={180} />
-                    </div>
-                    <AssetPieLegend items={pieItems} totalUsd={totalUsd} />
-                  </div>
-                </CardContent>
-              </Card>
-            </details>
-          )}
-
-          {/* 总资产走势(折叠 · 默认收起 · 数据采集时间长才有意义)· T-900c range 过滤 */}
-          {snapshotsInRange.length >= 2 && (
-            <details className="group">
-              <summary className="cursor-pointer list-none flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors py-1">
-                <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:-rotate-180" />
-                {t('portfolio.chart.title')}
-              </summary>
-              <Card className="mt-2">
-                <CardContent className="pt-6">
-                  <ValueChart snapshots={snapshotsInRange} currentTotalUsd={totalUsd} />
-                </CardContent>
-              </Card>
-            </details>
-          )}
+          {/* T-902:删除中间「分享我的战绩」按钮 + 两条折叠条(资产分布/总资产走势)
+              · 分享按钮已迁到顶部信息条右上角(icon-only)
+              · 资产分布饼图 T-903 移到「资产组合」tab */}
 
           {/* Tabs:持仓 / 已平仓 */}
           <Card className="p-4">
@@ -655,6 +664,12 @@ function shortAddr(s: string): string {
 
 function formatUsd(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatSol(n: number): string {
+  if (n >= 100) return n.toFixed(2);
+  if (n >= 1) return n.toFixed(3);
+  return n.toFixed(4);
 }
 
 // T-900c:加载骨架屏 · 5 张 stat 卡 + 表格 4 行 shimmer

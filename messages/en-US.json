@@ -582,7 +582,11 @@
       "avgBuyPerTx": "Avg {sol} SOL/trade",
       "totalShort": "Total:",
       "unrealizedShort": "Unrealized:",
-      "last7d": "Last 7d"
+      "last7d": "Last 7d",
+      "justNow": "just now",
+      "secondsAgo": "{n}s ago",
+      "minutesAgo": "{n}m ago",
+      "updatedAgo": "Updated {ago}"
     }
   },
   "token": {

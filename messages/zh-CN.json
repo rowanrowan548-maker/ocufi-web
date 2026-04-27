@@ -582,7 +582,11 @@
       "avgBuyPerTx": "平均每笔 {sol} SOL",
       "totalShort": "总:",
       "unrealizedShort": "未实现:",
-      "last7d": "近 7 日"
+      "last7d": "近 7 日",
+      "justNow": "刚刚",
+      "secondsAgo": "{n}秒前",
+      "minutesAgo": "{n}分钟前",
+      "updatedAgo": "更新于 {ago}"
     }
   },
   "token": {
