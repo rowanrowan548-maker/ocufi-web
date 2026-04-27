@@ -575,7 +575,14 @@
       "buyTxs": "买 {n}",
       "sellTxs": "卖 {n}",
       "savedFees": "已节省手续费",
-      "savedFeesNote": "对比平均费率 0.5% · {n} 笔成交"
+      "savedFeesNote": "对比平均费率 0.5% · {n} 笔成交",
+      "topGainer": "收益最高代币",
+      "noHoldingsYet": "暂无持仓",
+      "noTradesYet": "暂无交易",
+      "avgBuyPerTx": "平均每笔 {sol} SOL",
+      "totalShort": "总:",
+      "unrealizedShort": "未实现:",
+      "last7d": "近 7 日"
     }
   },
   "token": {

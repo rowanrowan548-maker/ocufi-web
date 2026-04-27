@@ -36,6 +36,13 @@ import { HoldingsTable } from './holdings-table';
 import { ClosedPositions } from './closed-positions';
 import { AssetPie, AssetPieLegend } from './asset-pie';
 import { ValueChart } from './value-chart';
+import {
+  DailyPnlBars,
+  TopGainerBars,
+  WinDistRows,
+  SavedFeesLine,
+  type TopGainer,
+} from './stat-charts';
 import { PnlShareButton } from '@/components/share/pnl-share-button';
 
 export function PortfolioView() {
@@ -163,22 +170,24 @@ export function PortfolioView() {
     };
   }, [closed, tokens, costs, solUsdPrice]);
 
-  // T-900a/c:buy/sell 笔数 + 总成交额(SOL)· 按 range 过滤
+  // T-900a/c:buy/sell 笔数 + 总成交额 + 买端体量(SOL)· 按 range 过滤
   const tradeStats = useMemo(() => {
     let buyTxCount = 0;
     let sellTxCount = 0;
+    let buyVolumeSol = 0;
     let totalVolumeSol = 0;
     for (const r of recordsInRange) {
       if (r.err) continue;
       if (r.type === 'buy' && r.solAmount > 0) {
         buyTxCount++;
+        buyVolumeSol += r.solAmount;
         totalVolumeSol += r.solAmount;
       } else if (r.type === 'sell' && r.solAmount > 0) {
         sellTxCount++;
         totalVolumeSol += r.solAmount;
       }
     }
-    return { buyTxCount, sellTxCount, totalVolumeSol };
+    return { buyTxCount, sellTxCount, totalVolumeSol, buyVolumeSol };
   }, [recordsInRange]);
 
   // T-900a:已节省手续费 · 复用 SavingsCard 计算逻辑
@@ -193,9 +202,25 @@ export function PortfolioView() {
       ? (pnlSummary.winCount / pnlSummary.closedCount) * 100
       : 0;
 
-  // 占总值百分比(给 unrealized 卡用)
-  const unrealizedPctOfTotal =
-    totalUsd > 0 ? (pnlSummary.unrealizedUsd / totalUsd) * 100 : 0;
+  // T-901:TOP 3 收益代币(按未实现 PnL%)
+  const topGainers = useMemo<TopGainer[]>(() => {
+    const list: TopGainer[] = [];
+    for (const tk of tokens) {
+      const cost = costs.get(tk.mint);
+      if (!cost || cost.avgCostSol <= 0) continue;
+      const avgCostUsd = cost.avgCostSol * solUsdPrice;
+      if (avgCostUsd <= 0 || tk.priceUsd <= 0) continue;
+      const pnlPct = ((tk.priceUsd - avgCostUsd) / avgCostUsd) * 100;
+      const pnlUsd = (tk.priceUsd - avgCostUsd) * tk.amount;
+      list.push({ symbol: tk.symbol, pnlPct, pnlUsd });
+    }
+    list.sort((a, b) => b.pnlPct - a.pnlPct);
+    return list.slice(0, 3);
+  }, [tokens, costs, solUsdPrice]);
+
+  // T-901:平均每笔买入(SOL)给买卖卡副信息
+  const avgBuySol =
+    tradeStats.buyTxCount > 0 ? tradeStats.buyVolumeSol / tradeStats.buyTxCount : 0;
 
   // 未连接
   if (!wallet.connected || !wallet.publicKey) {
@@ -325,132 +350,207 @@ export function PortfolioView() {
         </Card>
       ) : (
         <>
-          {/* T-900a:5 张 stat 卡片(grid lg:5 / sm:2) */}
+          {/* T-900a/T-901:5 张 stat 卡片(grid lg:5 / sm:2)· 每张加 mini 可视化 */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {/* 1. 已实现收益 */}
-            <Card className="hover:border-primary/30 transition-colors">
-              <CardContent className="py-4 space-y-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.stats.realized')}
-                </div>
-                <div
-                  className={`text-xl font-bold font-mono tabular-nums ${
-                    pnlSummary.realizedUsd > 0
-                      ? 'text-success'
-                      : pnlSummary.realizedUsd < 0
-                      ? 'text-danger'
-                      : 'text-foreground'
-                  }`}
-                >
-                  {pnlSummary.realizedUsd >= 0 ? '+' : '-'}$
-                  {formatUsd(Math.abs(pnlSummary.realizedUsd))}
-                </div>
-                <div className="text-[10px] text-muted-foreground/60">
-                  {pnlSummary.closedCount > 0
-                    ? t('portfolio.stats.winRateDetail', {
-                        win: pnlSummary.winCount,
-                        total: pnlSummary.closedCount,
-                      })
-                    : t('portfolio.stats.noClosedYet')}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 2. 未实现收益 */}
-            <Card className="hover:border-primary/30 transition-colors">
-              <CardContent className="py-4 space-y-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.stats.unrealized')}
-                </div>
-                <div
-                  className={`text-xl font-bold font-mono tabular-nums ${
-                    pnlSummary.unrealizedUsd > 0
-                      ? 'text-success'
-                      : pnlSummary.unrealizedUsd < 0
-                      ? 'text-danger'
-                      : 'text-foreground'
-                  }`}
-                >
-                  {pnlSummary.unrealizedUsd >= 0 ? '+' : '-'}$
-                  {formatUsd(Math.abs(pnlSummary.unrealizedUsd))}
-                </div>
-                <div className="text-[10px] text-muted-foreground/60 tabular-nums">
-                  {t('portfolio.stats.ofTotal', {
-                    pct: unrealizedPctOfTotal.toFixed(2),
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 3. 胜率 + 进度条 */}
-            <Card className="hover:border-primary/30 transition-colors">
-              <CardContent className="py-4 space-y-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.stats.winRate')}
-                </div>
-                <div className="text-xl font-bold font-mono tabular-nums">
-                  {pnlSummary.closedCount > 0 ? `${winRatePct.toFixed(0)}%` : '—'}
-                </div>
-                <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+            {/* 1. 已实现收益 + 7 日柱状图 */}
+            <Card className="hover:border-primary/30 transition-colors min-h-[140px]">
+              <CardContent className="py-3 flex flex-col h-full gap-2">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {t('portfolio.stats.realized')}
+                  </div>
                   <div
-                    className="h-full bg-primary/60 transition-all"
-                    style={{ width: `${pnlSummary.closedCount > 0 ? winRatePct : 0}%` }}
-                  />
+                    className={`text-xl font-bold font-mono tabular-nums leading-tight ${
+                      pnlSummary.realizedUsd > 0
+                        ? 'text-success'
+                        : pnlSummary.realizedUsd < 0
+                        ? 'text-danger'
+                        : 'text-foreground'
+                    }`}
+                  >
+                    {pnlSummary.realizedUsd >= 0 ? '+' : '-'}$
+                    {formatUsd(Math.abs(pnlSummary.realizedUsd))}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground/60 tabular-nums flex flex-col">
+                    <span>
+                      {t('portfolio.stats.totalShort')}{' '}
+                      <span
+                        className={
+                          pnlSummary.totalUsd > 0
+                            ? 'text-success'
+                            : pnlSummary.totalUsd < 0
+                            ? 'text-danger'
+                            : ''
+                        }
+                      >
+                        {pnlSummary.totalUsd >= 0 ? '+' : '-'}$
+                        {formatUsd(Math.abs(pnlSummary.totalUsd))}
+                      </span>
+                    </span>
+                    <span>
+                      {t('portfolio.stats.unrealizedShort')}{' '}
+                      <span
+                        className={
+                          pnlSummary.unrealizedUsd > 0
+                            ? 'text-success'
+                            : pnlSummary.unrealizedUsd < 0
+                            ? 'text-danger'
+                            : ''
+                        }
+                      >
+                        {pnlSummary.unrealizedUsd >= 0 ? '+' : '-'}$
+                        {formatUsd(Math.abs(pnlSummary.unrealizedUsd))}
+                      </span>
+                    </span>
+                  </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground/60">
-                  {pnlSummary.closedCount > 0
-                    ? t('portfolio.stats.winRateDetail', {
-                        win: pnlSummary.winCount,
-                        total: pnlSummary.closedCount,
-                      })
-                    : t('portfolio.stats.noClosedYet')}
+                <div className="mt-auto pt-1">
+                  <DailyPnlBars closed={closed} />
+                  <div className="text-[9px] text-muted-foreground/50 font-mono mt-0.5 text-right">
+                    {t('portfolio.stats.last7d')}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 2. 收益最高代币 + TOP3 柱 */}
+            <Card className="hover:border-primary/30 transition-colors min-h-[140px]">
+              <CardContent className="py-3 flex flex-col h-full gap-2">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {t('portfolio.stats.topGainer')}
+                  </div>
+                  {topGainers.length > 0 ? (
+                    <>
+                      <div
+                        className={`text-xl font-bold font-mono tabular-nums leading-tight ${
+                          topGainers[0].pnlPct > 0
+                            ? 'text-success'
+                            : topGainers[0].pnlPct < 0
+                            ? 'text-danger'
+                            : ''
+                        }`}
+                      >
+                        {topGainers[0].pnlPct >= 0 ? '+' : ''}
+                        {topGainers[0].pnlPct.toFixed(1)}%
+                      </div>
+                      <div className="text-[10px] text-muted-foreground/60 font-mono truncate">
+                        {topGainers[0].symbol}{' · '}
+                        {topGainers[0].pnlUsd >= 0 ? '+' : '-'}$
+                        {formatUsd(Math.abs(topGainers[0].pnlUsd))}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xl font-bold font-mono tabular-nums leading-tight text-muted-foreground">
+                        —
+                      </div>
+                      <div className="text-[10px] text-muted-foreground/60">
+                        {t('portfolio.stats.noHoldingsYet')}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="mt-auto pt-1">
+                  <TopGainerBars items={topGainers} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 3. 胜率 + 4 档分布 */}
+            <Card className="hover:border-primary/30 transition-colors min-h-[140px]">
+              <CardContent className="py-3 flex flex-col h-full gap-2">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {t('portfolio.stats.winRate')}
+                  </div>
+                  <div className="text-xl font-bold font-mono tabular-nums leading-tight">
+                    {pnlSummary.closedCount > 0 ? `${winRatePct.toFixed(0)}%` : '—'}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground/60">
+                    {pnlSummary.closedCount > 0
+                      ? t('portfolio.stats.winRateDetail', {
+                          win: pnlSummary.winCount,
+                          total: pnlSummary.closedCount,
+                        })
+                      : t('portfolio.stats.noClosedYet')}
+                  </div>
+                </div>
+                <div className="mt-auto pt-1">
+                  <WinDistRows closed={closed} />
                 </div>
               </CardContent>
             </Card>
 
             {/* 4. 买入/卖出 */}
-            <Card className="hover:border-primary/30 transition-colors">
-              <CardContent className="py-4 space-y-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.stats.buySellRatio')}
+            <Card className="hover:border-primary/30 transition-colors min-h-[140px]">
+              <CardContent className="py-3 flex flex-col h-full gap-2">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {t('portfolio.stats.buySellRatio')}
+                  </div>
+                  <div className="text-xl font-bold font-mono tabular-nums leading-tight">
+                    <span className="text-success">{tradeStats.buyTxCount}</span>
+                    <span className="text-muted-foreground/40 mx-1">|</span>
+                    <span className="text-danger">{tradeStats.sellTxCount}</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground/60 tabular-nums">
+                    {avgBuySol > 0
+                      ? t('portfolio.stats.avgBuyPerTx', { sol: avgBuySol.toFixed(3) })
+                      : t('portfolio.stats.noTradesYet')}
+                  </div>
                 </div>
-                <div className="text-xl font-bold font-mono tabular-nums">
-                  <span className="text-success">{tradeStats.buyTxCount}</span>
-                  <span className="text-muted-foreground/40 mx-1">/</span>
-                  <span className="text-danger">{tradeStats.sellTxCount}</span>
-                </div>
-                <div className="flex h-1 rounded-full overflow-hidden bg-muted/40">
-                  {(() => {
-                    const total = tradeStats.buyTxCount + tradeStats.sellTxCount;
-                    const buyPct = total > 0 ? (tradeStats.buyTxCount / total) * 100 : 50;
-                    return (
-                      <>
-                        <div className="bg-success/60" style={{ width: `${buyPct}%` }} />
-                        <div className="bg-danger/60 flex-1" />
-                      </>
-                    );
-                  })()}
-                </div>
-                <div className="text-[10px] text-muted-foreground/60 tabular-nums">
-                  {tradeStats.totalVolumeSol.toFixed(2)}
-                  <span className="ml-0.5">SOL</span>
+                <div className="mt-auto pt-1 space-y-1">
+                  <div className="flex h-2 rounded-full overflow-hidden bg-muted/40">
+                    {(() => {
+                      const total = tradeStats.buyTxCount + tradeStats.sellTxCount;
+                      const buyPct = total > 0 ? (tradeStats.buyTxCount / total) * 100 : 50;
+                      return (
+                        <>
+                          <div
+                            className="transition-all"
+                            style={{
+                              width: `${buyPct}%`,
+                              background: 'oklch(0.78 0.18 145)',
+                              opacity: 0.85,
+                            }}
+                          />
+                          <div
+                            className="flex-1"
+                            style={{
+                              background: 'oklch(0.65 0.22 25)',
+                              opacity: 0.85,
+                            }}
+                          />
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground/50 font-mono tabular-nums text-right">
+                    {tradeStats.totalVolumeSol.toFixed(2)} SOL
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* 5. 已节省手续费 */}
-            <Card className="hover:border-primary/30 transition-colors col-span-2 lg:col-span-1">
-              <CardContent className="py-4 space-y-1.5">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.stats.savedFees')}
+            {/* 5. 已节省手续费 + mini 累计折线 */}
+            <Card className="hover:border-primary/30 transition-colors min-h-[140px] col-span-2 lg:col-span-1">
+              <CardContent className="py-3 flex flex-col h-full gap-2">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {t('portfolio.stats.savedFees')}
+                  </div>
+                  <div className="text-xl font-bold font-mono text-success tabular-nums leading-tight">
+                    {fees.txCount > 0 && savedUsd > 0
+                      ? `+$${formatUsd(savedUsd)}`
+                      : '$0.00'}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground/60">
+                    {t('portfolio.stats.savedFeesNote', { n: fees.txCount })}
+                  </div>
                 </div>
-                <div className="text-xl font-bold font-mono text-success tabular-nums">
-                  {fees.txCount > 0 && savedUsd > 0
-                    ? `+$${formatUsd(savedUsd)}`
-                    : '$0.00'}
-                </div>
-                <div className="text-[10px] text-muted-foreground/60">
-                  {t('portfolio.stats.savedFeesNote', { n: fees.txCount })}
+                <div className="mt-auto pt-1">
+                  <SavedFeesLine records={recordsInRange} solUsd={solUsdPrice} />
                 </div>
               </CardContent>
             </Card>
