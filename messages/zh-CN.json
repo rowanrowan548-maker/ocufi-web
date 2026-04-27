@@ -59,6 +59,9 @@
     "hero": {
       "title": "链上交易,应该回到你手里",
       "subtitle": "更低的手续费 · 更透明的价格 · 更少的中间人。我们还在成长,但每一步都从用户出发。",
+      "tagline": "0.2% 手续费 · 链上最低",
+      "searchPlaceholder": "粘贴 Solana 合约地址,例如 So111…1112",
+      "hotTokens": "热门",
       "cta_connect": "连接钱包开始",
       "cta_start": "开始交易",
       "cta_check": "不用连钱包,直接查币",
@@ -171,6 +174,8 @@
     "functions": {
       "title": "你可以用它做什么",
       "subtitle": "V1 上线功能全景",
+      "primary": "核心",
+      "secondary": "更多",
       "trade": {
         "title": "市价买卖",
         "desc": "Jupiter 聚合最优路径"
@@ -194,6 +199,18 @@
       "tokenCheck": {
         "title": "代币安全审查",
         "desc": "不用连钱包也能用"
+      },
+      "limit": {
+        "title": "限价单",
+        "desc": "挂单等待自动成交"
+      },
+      "points": {
+        "title": "积分",
+        "desc": "交易赚分 · 榜上露脸"
+      },
+      "invite": {
+        "title": "邀请",
+        "desc": "拉好友,分积分"
       }
     }
   },

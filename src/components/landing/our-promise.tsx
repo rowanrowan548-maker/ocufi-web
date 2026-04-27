@@ -41,7 +41,8 @@ const OCUFI_BLENDED_RATE = 0.0005; // 0.1% 买 + 0 卖,买卖各半均摊
 
 export function OurPromise() {
   const t = useTranslations('landing.promise');
-  const [monthlyUsd, setMonthlyUsd] = useState(10_000);
+  // T-927 #9:默认 $100(不是 $10000)— 多数用户在这个量级
+  const [monthlyUsd, setMonthlyUsd] = useState(100);
 
   const monthlyCost = monthlyUsd * OCUFI_BLENDED_RATE;
   const yearlyCost = monthlyCost * 12;

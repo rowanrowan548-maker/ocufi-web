@@ -1,18 +1,15 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Link from 'next/link';
 import {
-  Shield, Lock, Coins, Eye, ArrowRight,
-  LineChart, Star, Wallet, Bell, History, ShieldCheck,
+  Shield, ArrowRight,
+  LineChart, Star, Wallet, FileText, Trophy, Users,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentChain } from '@/config/chains';
-import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
-import { MarketSnapshot } from '@/components/landing/market-snapshot';
 import { TokenList } from '@/components/landing/token-list';
-import { PriceTicker } from '@/components/landing/price-ticker';
 import { OurPromise } from '@/components/landing/our-promise';
 import { StatsBar } from '@/components/landing/stats-bar';
+import { HeroCASearch } from '@/components/landing/hero-ca-search';
 import { XIcon, TelegramIcon, GithubIcon } from '@/components/brand/social-icons';
 
 export default async function Landing({
@@ -25,29 +22,24 @@ export default async function Landing({
   const t = await getTranslations();
   const chain = getCurrentChain();
 
-  const features = [
-    { Icon: Lock, key: 'nonCustodial' },
-    { Icon: Coins, key: 'lowFee' },
-    { Icon: ShieldCheck, key: 'safety' },
-    { Icon: Eye, key: 'openSource' },
-  ] as const;
-
-  const funcs = [
+  // T-927 #10:主推 3(交易/查币/自选)+ 次要 3(限价/积分/邀请)双层视觉
+  const primaryFuncs = [
     { href: '/trade', Icon: LineChart, key: 'trade' },
-    { href: '/watchlist', Icon: Star, key: 'watchlist' },
-    { href: '/portfolio', Icon: Wallet, key: 'portfolio' },
-    { href: '/alerts', Icon: Bell, key: 'alerts' },
-    { href: '/history', Icon: History, key: 'history' },
     { href: '/token', Icon: Shield, key: 'tokenCheck' },
+    { href: '/watchlist', Icon: Star, key: 'watchlist' },
+  ] as const;
+  const secondaryFuncs = [
+    { href: '/limit', Icon: FileText, key: 'limit' },
+    { href: '/points', Icon: Trophy, key: 'points' },
+    { href: '/invite', Icon: Users, key: 'invite' },
+    { href: '/portfolio', Icon: Wallet, key: 'portfolio' },
   ] as const;
 
   return (
     <main className="flex flex-1 flex-col">
-      {/* ═══════ Price Ticker ═══════ */}
-      <PriceTicker />
-
-      {/* ═══════ Hero ═══════ */}
-      <section className="relative px-4 sm:px-6 pt-10 sm:pt-16 pb-6 sm:pb-10 overflow-hidden">
+      {/* T-927 #11/#1/#2/#3 · Hero 1 屏化:Logo + tagline + 大 CA 搜索 + 热门 chips
+          删 PriceTicker(#3)· 删 Features 4 卡(#7)· 删 MarketSnapshot 冗余 */}
+      <section className="relative px-4 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-14 overflow-hidden">
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10 opacity-60"
@@ -70,17 +62,12 @@ export default async function Landing({
           </h1>
 
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl leading-relaxed">
-            {t('landing.hero.subtitle')}
+            {t('landing.hero.tagline')}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-1">
-            <ConnectWalletButton variant="landing" />
-            <Link href="/token" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full sm:min-w-[180px]">
-                <Shield className="mr-2 h-4 w-4" />
-                {t('landing.hero.cta_check')}
-              </Button>
-            </Link>
+          {/* 大 CA 搜索框 + 热门 token chips · 客户端组件 */}
+          <div className="w-full mt-2">
+            <HeroCASearch />
           </div>
         </div>
       </section>
@@ -88,51 +75,16 @@ export default async function Landing({
       {/* ═══════ Stats Bar · Ocufi 实时聚合数据 ═══════ */}
       <StatsBar />
 
-      {/* ═══════ Market Snapshot ═══════ */}
-      <MarketSnapshot />
-
-      {/* ═══════ Token List · 币安风行情主表 ═══════ */}
+      {/* ═══════ Token List · trending 直接行情 ═══════ */}
       <TokenList />
-
-      {/* ═══════ Features ═══════ */}
-      <section className="px-4 sm:px-6 py-14 sm:py-20 border-t border-border/40">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-heading">
-              {t('landing.features.title')}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              {t('landing.features.subtitle')}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {features.map(({ Icon, key }) => (
-              <div
-                key={key}
-                className="group relative rounded-xl border border-border/60 bg-card p-4 sm:p-5 flex flex-col gap-3 hover:border-primary/40 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="text-sm font-semibold">
-                  {t(`landing.features.${key}.title`)}
-                </div>
-                <div className="text-xs text-muted-foreground leading-relaxed">
-                  {t(`landing.features.${key}.desc`)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ═══════ Ocufi 的承诺 + 手续费计算器(只算自家费用) ═══════ */}
       <OurPromise />
 
-      {/* ═══════ 能做什么 ═══════ */}
+      {/* T-927 #10 · 能做什么:主推 3 + 次要 4 双层视觉 */}
       <section className="px-4 sm:px-6 py-14 sm:py-20 border-t border-border/40">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10 sm:mb-12">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-heading">
               {t('landing.functions.title')}
             </h2>
@@ -140,27 +92,57 @@ export default async function Landing({
               {t('landing.functions.subtitle')}
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {funcs.map(({ href, Icon, key }) => (
-              <Link
-                key={href}
-                href={href}
-                className="group rounded-xl border border-border/60 bg-card p-4 flex items-center gap-3 hover:border-primary/40 hover:bg-card/70 transition"
-              >
-                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
-                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">
-                    {t(`landing.functions.${key}.title`)}
+
+          {/* 核心 3 卡(更大、有图标背景) */}
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80 mb-3">
+              {t('landing.functions.primary')}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {primaryFuncs.map(({ href, Icon, key }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="group rounded-xl border border-primary/30 bg-card p-5 flex items-start gap-3 hover:border-primary/60 hover:bg-card/80 transition"
+                >
+                  <div className="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {t(`landing.functions.${key}.desc`)}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold mb-1">
+                      {t(`landing.functions.${key}.title`)}
+                    </div>
+                    <div className="text-xs text-muted-foreground leading-relaxed">
+                      {t(`landing.functions.${key}.desc`)}
+                    </div>
                   </div>
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-              </Link>
-            ))}
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* 更多 4 卡(更紧凑、无背景色) */}
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">
+              {t('landing.functions.secondary')}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {secondaryFuncs.map(({ href, Icon, key }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="group rounded-lg border border-border/40 bg-card/40 p-3 flex items-center gap-2 hover:border-primary/30 transition"
+                >
+                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium truncate">
+                      {t(`landing.functions.${key}.title`)}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
