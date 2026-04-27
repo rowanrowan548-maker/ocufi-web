@@ -46,6 +46,7 @@ import { recordFee } from '@/lib/fee-tracker';
 import { ShareTradeButton } from '@/components/share/share-trade-button';
 import { toast } from 'sonner';
 import type { OverallRisk, RiskReason } from '@/lib/token-info';
+import { rawGreaterOrEqualToOne, rawToUiFixed, rawToUiNumber } from '@/lib/raw-amount';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -139,11 +140,13 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
     options: { slippageBps },
   });
 
+  // T-205 N2:quoteData.tokenAmount 改用 quote.inAmount(raw)经 BigInt 切位转 number,
+  // 比 Number(tokenAmount) 多一道 BigInt 处理,边界更稳(analytics / toast 显示偏差更小)
   const quoteData: QuoteData | null =
-    autoQuote.status === 'ok'
+    autoQuote.status === 'ok' && balance.decimals != null
       ? {
           quote: autoQuote.quote,
-          tokenAmount: amt,
+          tokenAmount: rawToUiNumber(autoQuote.quote.inAmount, balance.decimals),
           outSol: Number(autoQuote.quote.outAmount) / LAMPORTS_PER_SOL,
           minSol: Number(autoQuote.quote.otherAmountThreshold) / LAMPORTS_PER_SOL,
           priceImpactPct: Number(autoQuote.quote.priceImpactPct) * 100,
@@ -162,8 +165,10 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
   function setPct(pct: number) {
     if (balance.amount == null || balance.decimals == null) return;
     if (pct === 100 && balance.rawAmount) {
-      const n = Number(balance.rawAmount) / 10 ** balance.decimals;
-      setTokenAmount(n >= 1 ? n.toFixed(4) : n.toFixed(9));
+      // T-204 N1:大 raw(meme decimals=6 余额 > 90 亿 / SPL decimals=9 > 900 万)
+      // 走 BigInt → 字符串 切位,不走 Number(raw)/10^dec 浮点损失路径
+      const dp = rawGreaterOrEqualToOne(balance.rawAmount, balance.decimals) ? 4 : 9;
+      setTokenAmount(rawToUiFixed(balance.rawAmount, balance.decimals, dp));
       setFullSellRaw(balance.rawAmount);
     } else {
       const n = (balance.amount * pct) / 100;
