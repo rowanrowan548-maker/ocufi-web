@@ -8,7 +8,7 @@
     "trade": "Trade",
     "watchlist": "Watchlist",
     "portfolio": "Portfolio",
-    "alerts": "Price Alerts",
+    "alerts": "Signals",
     "history": "History",
     "points": "Points",
     "settings": "Settings",
@@ -17,7 +17,23 @@
     "invite": "Invite",
     "tokenCheck": "Token Check",
     "faq": "FAQ",
-    "more": "More"
+    "more": "More",
+    "markets": "Markets",
+    "trending": "Trending",
+    "strategy": "Strategy",
+    "limit": "Limit Order",
+    "copyTrade": "Copy Trade",
+    "smartMoney": "Smart Money",
+    "assets": "Assets",
+    "badges": "Badges",
+    "legal": "Legal",
+    "comingSoon": "Coming Soon",
+    "backHome": "Back to Trade"
+  },
+  "comingSoon": {
+    "trendingDesc": "Real-time trending token boards · grouped by gainers / volume / new launches. Shipping soon.",
+    "copyDesc": "One-click copy trade smart-money wallets with proportional sizing. Shipping soon.",
+    "radarDesc": "Smart-money radar · live whale and KOL on-chain activity feed. Shipping soon."
   },
   "landing": {
     "badge": "Non-custodial · Open-source",
@@ -754,6 +770,14 @@
     }
   },
   "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Auto",
+    "currency": "Currency",
+    "walletDisconnect": "Disconnect Wallet",
+    "aboutLink": "About Ocufi",
     "page": {
       "title": "Settings",
       "subtitle": "Language · Default slippage · About"

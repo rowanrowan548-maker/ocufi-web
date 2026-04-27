@@ -8,6 +8,7 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { PageTracker } from '@/components/analytics/page-tracker';
 import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 import { SiteHeader } from '@/components/layout/site-header';
 import { FeedbackButton } from '@/components/feedback/feedback-button';
 import { SwRegister } from '@/components/pwa/sw-register';
@@ -112,10 +113,12 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      suppressHydrationWarning
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider>
           <SolanaWalletProvider>
             <SwRegister />
             <RefCapture />
@@ -128,6 +131,7 @@ export default async function LocaleLayout({
             <MobileDeeplink />
             <Toaster />
           </SolanaWalletProvider>
+          </ThemeProvider>
         </NextIntlClientProvider>
         <Analytics />
         <SpeedInsights />

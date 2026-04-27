@@ -1,45 +1,35 @@
 'use client';
 
 /**
- * 移动端导航抽屉(Portal 版)
- *
- * 用 createPortal 把 backdrop + drawer 渲染到 document.body 直下,
- * 完全脱离 SiteHeader 的 CSS 上下文(避免 backdrop-blur / 父级 stacking
- * / opacity 等导致的诡异透明问题)
+ * T-908a · 移动端导航抽屉(Portal 版)· 5 组折叠 + 底部设置块
  */
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Logo } from '@/components/brand/logo';
+import { NAV_ENTRIES } from './nav-config';
+import { SettingsMenu } from './settings-menu';
 
-export interface NavItem {
-  href: string;
-  label: string;
-}
-
-interface Props {
-  mainLinks: NavItem[];
-  moreLinks: NavItem[];
-  moreLabel: string;
-}
-
-export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
+export function MobileNav() {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // SSR 期间 document 不存在,先标记 mounted
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  // 打开时锁定 body 滚动
   useEffect(() => {
     if (!open) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = original; };
+    return () => {
+      document.body.style.overflow = original;
+    };
   }, [open]);
 
-  // ESC 关闭
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -49,10 +39,8 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  // 抽屉本身用 Portal 挂到 body,backdrop + 抽屉一起
   const drawer = mounted && (
     <>
-      {/* Backdrop · 纯黑 70% 完全挡住底层 */}
       <div
         onClick={() => setOpen(false)}
         style={{
@@ -64,11 +52,10 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
           pointerEvents: open ? 'auto' : 'none',
           transition: 'opacity 200ms',
         }}
-        className="sm:hidden"
+        className="lg:hidden"
         aria-hidden={!open}
       />
 
-      {/* Drawer */}
       <aside
         style={{
           position: 'fixed',
@@ -76,7 +63,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
           right: 0,
           bottom: 0,
           width: '85vw',
-          maxWidth: '320px',
+          maxWidth: '340px',
           zIndex: 61,
           backgroundColor: '#13151A',
           backgroundImage: 'none',
@@ -87,7 +74,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
           color: '#fafafa',
           isolation: 'isolate',
         }}
-        className="sm:hidden flex flex-col"
+        className="lg:hidden flex flex-col"
         aria-hidden={!open}
       >
         <div
@@ -127,80 +114,129 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
         <nav
           style={{
             overflowY: 'auto',
-            padding: 16,
+            padding: 12,
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 24,
+            gap: 8,
           }}
         >
-          {/* 主功能 · 大字 */}
-          <div>
-            {mainLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '12px',
-                  borderRadius: 6,
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: '#fafafa',
-                  textDecoration: 'none',
-                }}
-                className="hover:bg-zinc-800/60"
+          {NAV_ENTRIES.map((entry, i) => {
+            if (entry.type === 'link') {
+              return (
+                <Link
+                  key={i}
+                  href={entry.href}
+                  onClick={() => setOpen(false)}
+                  style={{
+                    display: 'block',
+                    padding: '12px',
+                    borderRadius: 6,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: '#fafafa',
+                    textDecoration: 'none',
+                  }}
+                  className="hover:bg-zinc-800/60"
+                >
+                  {t(entry.labelKey)}
+                </Link>
+              );
+            }
+            return (
+              <details
+                key={i}
+                className="group"
+                style={{ borderRadius: 6, overflow: 'hidden' }}
               >
-                {l.label}
-              </Link>
-            ))}
-          </div>
+                <summary
+                  className="hover:bg-zinc-800/60"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: '#fafafa',
+                    cursor: 'pointer',
+                    listStyle: 'none',
+                  }}
+                >
+                  <span>{t(entry.labelKey)}</span>
+                  <ChevronDown className="h-4 w-4 transition-transform group-open:-rotate-180" />
+                </summary>
+                <div style={{ padding: '4px 8px 8px 8px' }}>
+                  {entry.items.map((it) => (
+                    <Link
+                      key={it.href}
+                      href={it.href}
+                      onClick={() => setOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 12px',
+                        borderRadius: 6,
+                        fontSize: 14,
+                        color: it.placeholder ? '#71717a' : '#a1a1aa',
+                        textDecoration: 'none',
+                      }}
+                      className="hover:bg-zinc-800/60 hover:!text-foreground"
+                    >
+                      <span>{t(it.labelKey)}</span>
+                      {it.placeholder && (
+                        <span
+                          style={{
+                            fontSize: 9,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            color: '#19FB9B',
+                            fontFamily: 'var(--font-mono)',
+                            opacity: 0.7,
+                          }}
+                        >
+                          {t('nav.comingSoon')}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            );
+          })}
 
-          {/* 更多 · 二级 */}
-          <div>
+          {/* 底部设置块 */}
+          <div
+            style={{
+              borderTop: '1px solid rgb(39 39 42)',
+              marginTop: 8,
+              padding: '12px',
+            }}
+          >
             <div
               style={{
-                padding: '0 12px 8px',
                 fontSize: 10,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 color: '#71717a',
                 fontWeight: 500,
+                marginBottom: 12,
               }}
             >
-              {moreLabel}
+              {t('settings.title')}
             </div>
-            {moreLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '10px 12px',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  color: '#a1a1aa',
-                  textDecoration: 'none',
-                }}
-                className="hover:bg-zinc-800/60 hover:text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
+            <SettingsMenu inline />
           </div>
 
           {/* 社交 */}
           <div
             style={{
               borderTop: '1px solid rgb(39 39 42)',
-              paddingTop: 16,
+              marginTop: 8,
+              padding: '12px',
               display: 'flex',
               gap: 12,
-              padding: '16px 12px 0',
               fontSize: 12,
               color: '#a1a1aa',
             }}
@@ -210,7 +246,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'none' }}
-              className="hover:text-foreground"
+              className="hover:!text-foreground"
             >
               𝕏 Twitter
             </a>
@@ -219,7 +255,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: 'inherit', textDecoration: 'none' }}
-              className="hover:text-foreground"
+              className="hover:!text-foreground"
             >
               GitHub
             </a>
@@ -235,8 +271,7 @@ export function MobileNav({ mainLinks, moreLinks, moreLabel }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        // 44px tap target
-        className="sm:hidden h-11 w-11 -mr-2 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+        className="lg:hidden h-11 w-11 -mr-2 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
       >
         <Menu className="h-5 w-5" />
       </button>
