@@ -39,6 +39,9 @@ const GAS_CONFIG: Record<GasLevel, { priorityLevel: string; maxLamports: number 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 const OCUFI_FEE_MEMO = 'Ocufi 0.1% trading fee · ocufi.io/fees';
 
+// Token program owner ids · 用于检测 mint 是经典 SPL Token 还是 Token-2022
+const TOKEN_2022_PROGRAM_ID = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
+
 interface JsonAccount {
   pubkey: string;
   isSigner: boolean;
@@ -130,6 +133,33 @@ export async function buildSwapTxWithFee(
     }
   }
 
+  // 0.5. T-814 · Token-2022 兼容
+  //   Jupiter `useSharedAccounts=true`(默认)只支持经典 SPL Token 的 shared ATAs,
+  //   遇 Token-2022 mint(如 MEW)会触发 simulate logs:
+  //     "Please upgrade to SPL Token 2022 for immutable owner support"
+  //   → InstructionError [8, "ProgramFailedToComplete"] → Phantom 红警
+  //   解法:检测 swap non-SOL 端 mint 的 owner program,Token-2022 时关 shared accounts。
+  //   RPC 失败 → 保守关(确保兼容性,代价是多几 K lamports gas)。
+  //   经典 SPL 不受影响,继续享受 shared accounts 优化(省 ~5K lamports)。
+  const nonSolMint = quote.inputMint === SOL_MINT ? quote.outputMint : quote.inputMint;
+  let useSharedAccounts = true;
+  try {
+    const info = await connection.getAccountInfo(new PublicKey(nonSolMint));
+    if (info && info.owner.toBase58() === TOKEN_2022_PROGRAM_ID) {
+      useSharedAccounts = false;
+      console.info(
+        '[swap-with-fee] Token-2022 mint detected, useSharedAccounts=false:',
+        nonSolMint.slice(0, 8)
+      );
+    }
+  } catch (e) {
+    console.warn(
+      '[swap-with-fee] mint owner probe failed, defaulting useSharedAccounts=false (safer):',
+      e
+    );
+    useSharedAccounts = false;
+  }
+
   // 1. 拿 Jupiter 原始指令
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body: Record<string, any> = {
@@ -137,6 +167,7 @@ export async function buildSwapTxWithFee(
     userPublicKey,
     wrapAndUnwrapSol: true,
     dynamicComputeUnitLimit: true,
+    useSharedAccounts,
     prioritizationFeeLamports: {
       priorityLevelWithMaxLamports: {
         priorityLevel: gas.priorityLevel,
