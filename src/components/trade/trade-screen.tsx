@@ -38,6 +38,39 @@ function isValidMint(s: string): boolean {
   }
 }
 
+// fetchTokenDetail 全部数据源都挂时的降级值(所有字段未知,UI 显示 — / $0)
+function buildFallbackDetail(mint: string): TokenDetail {
+  return {
+    mint,
+    symbol: mint.slice(0, 4) + '…',
+    name: '',
+    priceUsd: 0,
+    priceNative: 0,
+    marketCap: 0,
+    liquidityUsd: 0,
+    mintAuthority: null,
+    freezeAuthority: null,
+    top10Pct: null,
+    totalHolders: null,
+    lpLockedPct: null,
+    rugged: null,
+    scoreNormalised: null,
+    creatorBalance: null,
+    transferFeePct: null,
+    nonTransferable: null,
+    mintActive: null,
+    freezeActive: null,
+    balanceMutable: null,
+    maliciousCreator: null,
+    goPlusTrusted: null,
+    risks: [],
+    topHolders: [],
+    hasDexData: false,
+    hasRugCheckData: false,
+    hasGoPlusData: false,
+  };
+}
+
 export function TradeScreen() {
   const [mint, setMint] = useState<string>(SOL_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
@@ -63,12 +96,18 @@ export function TradeScreen() {
   }, [mint]);
 
   // 中央 fetch 一次,所有子组件复用
+  // BUG-027:fetchTokenDetail 可能抛错(无缓存 + 上游全挂),detail 永远 null UI 永远 skeleton
+  // catch 里设降级 detail,所有字段空 / 0 / null,让 UI 至少能退出 loading 态
   useEffect(() => {
     setDetail(null);
     let cancelled = false;
-    fetchTokenDetail(mint).then((d) => {
-      if (!cancelled) setDetail(d);
-    });
+    fetchTokenDetail(mint)
+      .then((d) => {
+        if (!cancelled) setDetail(d);
+      })
+      .catch(() => {
+        if (!cancelled) setDetail(buildFallbackDetail(mint));
+      });
     return () => { cancelled = true; };
   }, [mint]);
 

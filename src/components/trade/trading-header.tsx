@@ -100,7 +100,9 @@ export function TradingHeader({ mint, detail: detailProp, onSelectMint }: Props)
 
   const risk = overallRisk(detail);
   const verified = isVerifiedToken(mint);
-  const change = detail.priceChange24h;
+  // BUG-022:DexScreener 偶发返回 NaN/Infinity(分母为 0),Number.isFinite 守卫,非数显示 —
+  const rawChange = detail.priceChange24h;
+  const change = rawChange != null && Number.isFinite(rawChange) ? rawChange : null;
   const up = change != null && change > 0;
   const down = change != null && change < 0;
   const ChangeIcon = up ? TrendingUp : down ? TrendingDown : null;

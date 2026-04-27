@@ -58,6 +58,9 @@ export function ChartCard({ mint }: Props) {
   const [candles, setCandles] = useState<OhlcCandle[]>([]);
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
+  // BUG-023:strict mode 双 mount 时,第二次 mount 后 series ref 是新的但 candles 没变
+  // candle effect 不会重跑 → 空白。chartReady 翻转触发数据 effect 把 candles 推进新 series。
+  const [chartReady, setChartReady] = useState(false);
 
   // ── 1. 初始化 chart(挂载一次) ──
   useEffect(() => {
@@ -99,12 +102,14 @@ export function ChartCard({ mint }: Props) {
     chartRef.current = chart;
     candleRef.current = candleSeries;
     volumeRef.current = volumeSeries;
+    setChartReady(true);
 
     return () => {
       chart.remove();
       chartRef.current = null;
       candleRef.current = null;
       volumeRef.current = null;
+      setChartReady(false);
     };
   }, []);
 
@@ -141,7 +146,7 @@ export function ChartCard({ mint }: Props) {
       .then((c) => {
         if (cancelled) return;
         setCandles(c);
-        if (c.length === 0) setErrored(true);
+        // BUG-024:fetch 成功但空数据 ≠ 失败,空数据走 showEmpty 路径
       })
       .catch(() => {
         if (!cancelled) setErrored(true);
@@ -154,8 +159,9 @@ export function ChartCard({ mint }: Props) {
     };
   }, [pool, tf]);
 
-  // ── 4. 推数据到 series ──
+  // ── 4. 推数据到 series · deps 含 chartReady,strict mode 第二次 mount 后会重推 ──
   useEffect(() => {
+    if (!chartReady) return;
     const candleSeries = candleRef.current;
     const volumeSeries = volumeRef.current;
     const chart = chartRef.current;
@@ -180,11 +186,16 @@ export function ChartCard({ mint }: Props) {
     if (candles.length > 0) {
       chart.timeScale().fitContent();
     }
-  }, [candles]);
+  }, [candles, chartReady]);
 
+  // BUG-024:三态严格区分
+  // - showSpinner:在拉(loading 或 pool 还没解析)且无数据可显
+  // - showError:fetch catch 抛错(errored=true)
+  // - showEmpty:无 LP(pool=null)或 GT 真无数据(candles 空且未错)
   const showSpinner = (loading || pool === undefined) && candles.length === 0;
-  const showEmpty = !loading && pool === null;
-  const showError = !loading && errored && candles.length === 0 && pool != null;
+  const showError = !loading && errored && candles.length === 0;
+  const showEmpty =
+    !loading && !errored && candles.length === 0 && pool !== undefined;
 
   // SOL 基础币无独立 LP 池,K 线请去 SOL/USDC 等池查 → 友好 fallback
   if (mint === SOL_MINT) {

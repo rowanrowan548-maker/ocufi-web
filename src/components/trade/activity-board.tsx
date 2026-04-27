@@ -11,7 +11,7 @@
  *  - 流动性:DexScreener pairs(T-503c · 链上 hook fetchDexPairs)
  *  - Top 交易者:从已加载 trades 聚合(T-503c · 链上 hook aggregateTraders)
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { translateRiskName, translateRiskDesc } from '@/lib/rugcheck-i18n';
@@ -78,32 +78,38 @@ export function ActivityBoard({ detail, initialTab }: Props) {
   }, [mint]);
 
   // ── 持有者:链上拉前 100,失败回落 RugCheck ──
+  // BUG-025:用 ref 标记"已加载过",避免把 holders 放进 deps 导致空数组返回时死循环
+  const holdersLoadedRef = useRef(false);
   const [holders, setHolders] = useState<Holder[] | null>(null);
   const [holdersLoading, setHoldersLoading] = useState(false);
   useEffect(() => {
     if (!mint || tab !== 'holders') return;
-    if (holders && holders.length > 0) return; // 已经有数据
+    if (holdersLoadedRef.current) return;
     let cancelled = false;
+    holdersLoadedRef.current = true;
     setHoldersLoading(true);
     fetchTopHolders(connection, mint, 20)
       .then((h) => { if (!cancelled) setHolders(h); })
       .finally(() => { if (!cancelled) setHoldersLoading(false); });
     return () => { cancelled = true; };
-  }, [mint, tab, connection, holders]);
+  }, [mint, tab, connection]);
 
   // ── 流动性:DexScreener pairs(懒加载,切到 tab 才拉) ──
+  // BUG-025:同上,用 ref 标记
+  const pairsLoadedRef = useRef(false);
   const [pairs, setPairs] = useState<DexPairInfo[] | null>(null);
   const [pairsLoading, setPairsLoading] = useState(false);
   useEffect(() => {
     if (!mint || tab !== 'liquidity') return;
-    if (pairs) return; // 已经有数据(可能是 [] 表示已拉但无)
+    if (pairsLoadedRef.current) return;
     let cancelled = false;
+    pairsLoadedRef.current = true;
     setPairsLoading(true);
     fetchDexPairs(mint)
       .then((p) => { if (!cancelled) setPairs(p); })
       .finally(() => { if (!cancelled) setPairsLoading(false); });
     return () => { cancelled = true; };
-  }, [mint, tab, pairs]);
+  }, [mint, tab, connection]);
 
   // ── Top 交易者:从 trades 聚合(无独立 fetch) ──
   const traders: TraderStats[] = useMemo(
@@ -111,10 +117,12 @@ export function ActivityBoard({ detail, initialTab }: Props) {
     [trades],
   );
 
-  // mint 切换重置
+  // mint 切换重置(数据 + ref 加载标记一起清,允许新 mint 重新加载)
   useEffect(() => {
     setHolders(null);
     setPairs(null);
+    holdersLoadedRef.current = false;
+    pairsLoadedRef.current = false;
   }, [mint]);
 
   return (
