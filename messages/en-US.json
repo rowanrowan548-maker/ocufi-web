@@ -208,6 +208,12 @@
       "risk": "Risk",
       "activity": "Activity"
     },
+    "mobileAction": {
+      "trade": "Trade",
+      "quickBuy": "Quick Buy",
+      "quickBuyAmount": "{amount} SOL",
+      "quickBuyDisabled": "High-risk token requires full review"
+    },
     "chart": {
       "timeframes": {
         "1m": "1m",

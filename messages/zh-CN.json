@@ -208,6 +208,12 @@
       "risk": "风险",
       "activity": "活动"
     },
+    "mobileAction": {
+      "trade": "交易",
+      "quickBuy": "快速买入",
+      "quickBuyAmount": "{amount} SOL",
+      "quickBuyDisabled": "高风险代币需走完整流程"
+    },
     "chart": {
       "timeframes": {
         "1m": "1 分钟",

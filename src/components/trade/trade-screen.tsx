@@ -25,6 +25,7 @@ import { TrustSignals } from './trust-signals';
 import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
 import { MobileTabSwitcher, type MobileTab } from './mobile-tab-switcher';
+import { MobileActionBar } from './mobile-action-bar';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { SOL_MINT } from '@/lib/preset-tokens';
 
@@ -101,8 +102,8 @@ export function TradeScreen() {
         </div>
       </div>
 
-      {/* 移动 < lg:5 tab 切换布局(T-505a) */}
-      <div className="lg:hidden flex flex-col gap-4">
+      {/* 移动 < lg:5 tab 切换布局(T-505a)+ 底部 CTA(T-505b)留 pb-20 防遮挡 */}
+      <div className="lg:hidden flex flex-col gap-4 pb-20">
         <MobileTabSwitcher value={mobileTab} onChange={setMobileTab} />
         {mobileTab === 'chart' && <ChartCard mint={mint} />}
         {mobileTab === 'detail' && (
@@ -122,6 +123,15 @@ export function TradeScreen() {
           <ActivityBoard detail={detail} initialTab="activity" />
         )}
       </div>
+
+      {/* 移动端底部固定双按钮 CTA(T-505b · 仅 lg:hidden) */}
+      <MobileActionBar
+        mint={mint}
+        symbol={detail?.symbol}
+        risk={detail ? overallRisk(detail) : undefined}
+        reasons={detail ? riskReasons(detail) : undefined}
+        onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+      />
     </div>
   );
 }
