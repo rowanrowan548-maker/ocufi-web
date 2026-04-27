@@ -21,7 +21,6 @@
     "markets": "Markets",
     "trending": "Trending",
     "strategy": "Strategy",
-    "limit": "Limit Order",
     "copyTrade": "Copy Trade",
     "smartMoney": "Smart Money",
     "assets": "Assets",
@@ -29,12 +28,14 @@
     "legal": "Legal",
     "comingSoon": "Coming Soon",
     "backHome": "Back to Trade",
+    "search": {
+      "placeholder": "Token / address / DApp..."
+    },
     "descriptions": {
       "trending": "Discover trending tokens & market signals",
       "watchlist": "Create watchlist for real-time tracking",
       "tokenCheck": "Check contract risk before trading",
       "alerts": "Follow market signals for timing",
-      "limit": "Place orders, auto-execute at target",
       "copyTrade": "Track on-chain wallets, one-click copy",
       "smartMoney": "Filter tokens, find smart wallets",
       "portfolio": "View assets & PnL at a glance",

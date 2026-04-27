@@ -21,7 +21,6 @@
     "markets": "行情",
     "trending": "热门",
     "strategy": "策略",
-    "limit": "限价单",
     "copyTrade": "跟单",
     "smartMoney": "地址雷达",
     "assets": "资产",
@@ -29,12 +28,14 @@
     "legal": "法律",
     "comingSoon": "敬请期待",
     "backHome": "返回交易页",
+    "search": {
+      "placeholder": "币种 / 地址 / DApp..."
+    },
     "descriptions": {
       "trending": "洞察市场趋势,发现热门代币",
       "watchlist": "创建自选列表,实时追踪动态",
       "tokenCheck": "输入合约地址,查风险审查",
       "alerts": "紧跟市场信号,把握买入时机",
-      "limit": "挂单等待价格,自动成交",
       "copyTrade": "探索链上地址,一键轻松跟单",
       "smartMoney": "筛选目标代币,发现优质地址",
       "portfolio": "查看资产分布,盈亏一目了然",

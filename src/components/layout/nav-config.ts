@@ -69,12 +69,6 @@ export const NAV_ENTRIES: NavEntry[] = [
         iconName: 'BellRing',
       },
       {
-        href: '/limit',
-        labelKey: 'nav.limit',
-        descKey: 'nav.descriptions.limit',
-        iconName: 'Target',
-      },
-      {
         href: '/strategy/copy',
         labelKey: 'nav.copyTrade',
         descKey: 'nav.descriptions.copyTrade',

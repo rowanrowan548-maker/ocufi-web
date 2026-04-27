@@ -215,7 +215,7 @@ export default async function Landing({
                 <Link href="/trade" className="block hover:text-foreground">{t('nav.trade')}</Link>
                 <Link href="/portfolio" className="block hover:text-foreground">{t('nav.portfolio')}</Link>
                 <Link href="/watchlist" className="block hover:text-foreground">{t('nav.watchlist')}</Link>
-                <Link href="/limit" className="block hover:text-foreground">{t('limit.page.title')}</Link>
+                <Link href="/badges" className="block hover:text-foreground">{t('nav.badges')}</Link>
                 <Link href="/invite" className="block hover:text-foreground">{t('nav.invite')}</Link>
               </div>
             </div>

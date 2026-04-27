@@ -5,6 +5,7 @@ import { Logo } from '@/components/brand/logo';
 import { NavDropdown } from './nav-dropdown';
 import { SettingsMenu } from './settings-menu';
 import { MobileNav } from './mobile-nav';
+import { HeaderSearch } from './header-search';
 import { NAV_ENTRIES } from './nav-config';
 
 /**
@@ -40,8 +41,9 @@ export async function SiteHeader() {
           </nav>
         </div>
 
-        {/* 右侧:设置齿轮 + 钱包 + 移动汉堡 */}
-        <div className="flex items-center gap-1">
+        {/* 右侧:搜索 + 设置齿轮 + 钱包 + 移动汉堡 */}
+        <div className="flex items-center gap-1.5">
+          <HeaderSearch />
           <div className="hidden lg:block">
             <SettingsMenu />
           </div>
