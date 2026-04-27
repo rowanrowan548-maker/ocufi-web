@@ -88,14 +88,20 @@ export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
   }, [value, presets]);
 
   // 点外面关下拉
+  // BUG-011:之前用 mousedown,与 trigger 的 React onClick(等价于 click,
+  // 在 mouseup 后)同 event cycle 触发 race —— 部分场景下 setOpen(true) 还没
+  // commit、listener 已挂,且 React 事件 target 被合成转发给 root,导致首次单击
+  // 看似无反应需双击。改 click(更晚 fire,trigger React onClick 已经处理完)
+  // + 移除 input autoFocus 防 popover 第一帧聚焦抢夺
   useEffect(() => {
+    if (!open) return;
     function onClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
   }, [open]);
 
   const localFiltered = useMemo(() => {
@@ -192,10 +198,18 @@ export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
               ${formatPrice(current.priceUsd)}
             </div>
           </>
-        ) : externalLoading ? (
+        ) : externalLoading && isValidMint(value) ? (
+          // BUG-013:metadata 加载中,显示 mint 截断 fallback,不留空白
           <>
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{t('loading')}</span>
+            <div className="h-7 w-7 rounded-full bg-muted/40 flex items-center justify-center flex-shrink-0">
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="text-sm font-mono text-foreground truncate">
+                {truncateMint(value)}
+              </div>
+              <div className="text-[10px] text-muted-foreground">{t('loading')}</div>
+            </div>
           </>
         ) : (
           <>
@@ -227,7 +241,8 @@ export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
                 onChange={(e) => setInput(e.target.value.slice(0, 80))}
                 maxLength={80}
                 className="border-0 focus-visible:ring-0 px-0 h-8 bg-transparent shadow-none"
-                autoFocus
+                // BUG-011 修:删 autoFocus,toggle() 的 setTimeout 50ms 已经处理 focus,
+                // autoFocus 在 popover 第一帧抢夺焦点会触发 mousedown 类事件影响 outside-click
               />
             </div>
           </div>
@@ -337,6 +352,13 @@ export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
 function safeText(s: string, max = 64): string {
   // eslint-disable-next-line no-control-regex
   return s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max);
+}
+
+/** BUG-013:mint 截断显示(metadata 加载中 trigger fallback) */
+function truncateMint(mint: string): string {
+  if (!mint) return '';
+  if (mint.length <= 12) return mint;
+  return `${mint.slice(0, 4)}…${mint.slice(-4)}`;
 }
 
 function formatPrice(n: number): string {
