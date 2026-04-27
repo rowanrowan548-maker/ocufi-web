@@ -16,7 +16,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
-  Settings, Sun, Moon, Monitor, LogOut, Info, Globe, DollarSign,
+  Settings, Sun, Moon, Monitor, LogOut, Info, Globe, DollarSign, Zap,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { routing } from '@/i18n/routing';
 import { useCurrency, useSetCurrency, type Currency } from '@/lib/currency-store';
+import { useFastMode, useSetFastMode } from '@/lib/buy-prefs-store';
 
 interface Props {
   /** inline 模式:不渲染 dropdown 包装,直接展开内容(给 mobile drawer 用) */
@@ -110,6 +111,45 @@ function SettingsBody() {
       <ThemeRow />
       <LanguageRow />
       <CurrencyRow />
+      <FastModeRow />
+    </div>
+  );
+}
+
+function FastModeRow() {
+  const t = useTranslations();
+  const fastMode = useFastMode();
+  const setFastMode = useSetFastMode();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start gap-2 min-w-0 flex-1">
+        <Zap className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground mt-0.5" />
+        <div className="min-w-0">
+          <div className="text-xs text-muted-foreground truncate">{t('settings.fastMode')}</div>
+          <div className="text-[10px] text-muted-foreground/60 leading-snug truncate">
+            {t('settings.fastModeDesc')}
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={mounted ? fastMode : false}
+        onClick={() => setFastMode(!fastMode)}
+        className={
+          'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ' +
+          ((mounted && fastMode) ? 'bg-success' : 'bg-muted')
+        }
+      >
+        <span
+          className={
+            'inline-block h-4 w-4 rounded-full bg-background shadow transition-transform ' +
+            ((mounted && fastMode) ? 'translate-x-4' : 'translate-x-0.5')
+          }
+        />
+      </button>
     </div>
   );
 }

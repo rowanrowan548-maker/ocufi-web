@@ -10,19 +10,19 @@
  *    unknown 也强制勾选(数据不可用就不静默放行)
  */
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle, AlertOctagon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { QuotePreview, type QuotePreviewData } from './quote-preview';
 import type { OverallRisk, RiskReason } from '@/lib/token-info';
+import { markSkipFor24h } from '@/lib/buy-prefs-store';
 
 const LARGE_AMOUNT_THRESHOLD_SOL = 1;
 const LARGE_HOLD_SEC = 2;
@@ -33,6 +33,12 @@ interface Props {
   kind: 'buy' | 'sell';
   data: QuotePreviewData | null;
   symbol?: string;
+  /** T-925 #46:代币全名 (e.g. "Official Trump") */
+  tokenName?: string;
+  /** T-925 #46:logo URI */
+  tokenLogoUri?: string;
+  /** T-925 #46:完整 mint,显示在副标题(标"合约地址") */
+  mintAddr?: string;
   onConfirm: () => void;
   confirming?: boolean;
   /** 输入端 SOL 金额(用于大额判定);买入是 inputSol,卖出是预计 outSol */
@@ -51,6 +57,9 @@ export function ConfirmDialog({
   kind,
   data,
   symbol,
+  tokenName,
+  tokenLogoUri,
+  mintAddr,
   onConfirm,
   confirming,
   solAmount,
@@ -79,8 +88,13 @@ export function ConfirmDialog({
 
   const ackRequired = !!risk && ACK_REQUIRED.has(risk);
   const [acked, setAcked] = useState(false);
+  // T-925 #48:"下次跳过(24h)"复选框
+  const [dontShow, setDontShow] = useState(false);
   useEffect(() => {
-    if (!open) setAcked(false);
+    if (!open) {
+      setAcked(false);
+      setDontShow(false);
+    }
   }, [open]);
 
   if (!data) return null;
@@ -103,13 +117,41 @@ export function ConfirmDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
+        {/* T-925 #46:头部 — logo + ticker · name + mint subtitle(防钓鱼) */}
         <DialogHeader>
-          <DialogTitle>
-            {kind === 'buy'
-              ? t('trade.confirm.buyTitle', { symbol: symbol ?? '' })
-              : t('trade.confirm.sellTitle', { symbol: symbol ?? '' })}
-          </DialogTitle>
-          <DialogDescription>{t('trade.confirm.notice')}</DialogDescription>
+          <div className="flex items-center gap-3">
+            {tokenLogoUri ? (
+              <Image
+                src={tokenLogoUri}
+                alt={symbol ?? ''}
+                width={40}
+                height={40}
+                className="rounded-full bg-muted flex-shrink-0"
+                unoptimized
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-xs font-bold text-muted-foreground">
+                {(symbol ?? '?').slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-base font-semibold tracking-tight truncate">
+                {kind === 'buy' ? t('trade.confirm.buyTitle', { symbol: symbol ?? '' })
+                  : t('trade.confirm.sellTitle', { symbol: symbol ?? '' })}
+              </div>
+              {tokenName && tokenName !== symbol && (
+                <div className="text-xs text-muted-foreground truncate">{tokenName}</div>
+              )}
+            </div>
+          </div>
+          {mintAddr && (
+            <div className="text-[10px] text-muted-foreground/70 font-mono pt-1">
+              {t('trade.confirm.mintLabel')}: {mintAddr.slice(0, 8)}…{mintAddr.slice(-6)}
+            </div>
+          )}
+          <div className="text-xs text-muted-foreground pt-1">
+            {t('trade.confirm.notice')}
+          </div>
         </DialogHeader>
 
         {/* 高风险 / 未知风险 警告条 */}
@@ -156,6 +198,19 @@ export function ConfirmDialog({
           <QuotePreview data={data} />
         </div>
 
+        {/* T-925 #48:下次跳过(24h)— 仅 buy 路径有意义,sell 风险低不显示 */}
+        {kind === 'buy' && !ackRequired && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={dontShow}
+              onChange={(e) => setDontShow(e.target.checked)}
+              className="accent-primary"
+            />
+            <span>{t('trade.confirm.dontShow24h')}</span>
+          </label>
+        )}
+
         {/* 大额提示 */}
         {isLargeAmount && (
           <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs flex items-start gap-2">
@@ -181,7 +236,10 @@ export function ConfirmDialog({
             {t('common.cancel')}
           </Button>
           <Button
-            onClick={onConfirm}
+            onClick={() => {
+              if (dontShow) markSkipFor24h();
+              onConfirm();
+            }}
             disabled={buttonDisabled}
             className={`flex-1 h-11 sm:h-9 sm:flex-none ${kind === 'sell' ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : ''}`}
           >

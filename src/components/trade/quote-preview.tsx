@@ -25,6 +25,10 @@ export interface QuotePreviewData {
   platformFeeSol?: number;
   /** Solana 网络 Gas 估算上限(SOL) */
   networkFeeMaxSol?: number;
+  /** T-925 #47:当前现货价(USD)— 用于弹窗"当前价"行 */
+  currentPriceUsd?: number;
+  /** T-925 #47:成交后此代币持仓估值(USD)— 用于弹窗"成交后估值"行 */
+  postTradeValueUsd?: number;
 }
 
 interface Props {
@@ -70,6 +74,19 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
           value={`${data.priceImpactPct.toFixed(3)}%`}
           valueClassName={data.priceImpactPct > 5 ? 'text-destructive font-medium' : ''}
         />
+        {/* T-925 #47:当前现货价 + 成交后预估持仓价值 */}
+        {data.currentPriceUsd != null && data.currentPriceUsd > 0 && (
+          <Row
+            label={t('trade.preview.currentPrice')}
+            value={`$${formatPriceUsd(data.currentPriceUsd)}`}
+          />
+        )}
+        {data.postTradeValueUsd != null && data.postTradeValueUsd > 0 && (
+          <Row
+            label={t('trade.preview.postTradeValue')}
+            value={`$${data.postTradeValueUsd.toLocaleString('en-US', { maximumFractionDigits: 2 })}`}
+          />
+        )}
         <Row
           label={t('trade.preview.platformFee')}
           value={
@@ -96,7 +113,9 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
           <div className="flex-1">
             {t('trade.preview.slippageWarn', {
               impact: data.priceImpactPct.toFixed(2),
-              current: (currentBps / 100).toFixed(1),
+              sol: data.payAmount.toFixed(3),
+              loss: estimateLossUsd(data).toFixed(2),
+              suggested: suggestedPct,
             })}
           </div>
           <button
@@ -133,4 +152,30 @@ export function formatAmount(n: number): string {
   if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+/** T-925 #47:USD 单位价格,带亚美分位 / 千分位 */
+function formatPriceUsd(n: number): string {
+  if (!n) return '—';
+  if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (n >= 1) return n.toFixed(2);
+  if (n >= 0.0001) return n.toFixed(6);
+  return n.toPrecision(3);
+}
+
+/** T-925 #51:估算"滑点损失"USD — payAmount 已是 SOL,priceImpactPct% 直接乘 */
+function estimateLossUsd(data: QuotePreviewData): number {
+  if (!data.currentPriceUsd) {
+    // 无价格 fallback:用 SOL 数量 × 假设 $200/SOL × impactPct/100
+    return data.payAmount * 200 * (data.priceImpactPct / 100);
+  }
+  // 用户付出 N SOL,impact% 损失 → N × solUsd × impact/100
+  // payAmount 是 SOL 数(buy)或 token 数(sell),buy 路径下:
+  // sol_lost = payAmount × impactPct / 100;转 USD 需要 SOL 价
+  // 简化:直接用 payAmount × postTradeValue / receiveAmount × impactPct/100
+  // 不再需要 SOL 价(已隐含在 receive 价值里)
+  if (data.postTradeValueUsd && data.receiveAmount > 0) {
+    return data.postTradeValueUsd * (data.priceImpactPct / 100);
+  }
+  return data.payAmount * 200 * (data.priceImpactPct / 100);
 }

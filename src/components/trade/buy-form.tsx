@@ -35,7 +35,8 @@ import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { showBadgeToasts } from '@/lib/badge-toast';
-import { fetchSolUsdPrice } from '@/lib/portfolio';
+import { fetchSolUsdPrice, fetchTokenInfo, type TokenInfo } from '@/lib/portfolio';
+import { shouldSkipBuyConfirm } from '@/lib/buy-prefs-store';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
@@ -130,6 +131,18 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
   const [progressSig, setProgressSig] = useState<string | undefined>(undefined);
   const [progressStartedAt, setProgressStartedAt] = useState<number | undefined>(undefined);
   const [solBalance, setSolBalance] = useState<number | null>(null);
+  // T-925:目标代币元数据(给 ConfirmDialog 头部 + QuotePreview 当前价 / 估值用)
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+
+  useEffect(() => {
+    const m = mint.trim();
+    if (!isValidMint(m)) { setTokenInfo(null); return; }
+    let cancelled = false;
+    fetchTokenInfo(m)
+      .then((info) => { if (!cancelled) setTokenInfo(info); })
+      .catch(() => { if (!cancelled) setTokenInfo(null); });
+    return () => { cancelled = true; };
+  }, [mint]);
 
   // SOL 余额(用于 MAX 按钮);连钱包 + stage 切换时刷
   useEffect(() => {
@@ -191,10 +204,23 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
     setErr(null);
   };
 
+  // T-925 #52:honeypot / blacklist hard-block 代码 → 买入按钮禁用
+  // 不放 ack-then-pass 路径,因为 ack 兜底无法保护蜜罐(签名后即损失)
+  const BLOCK_CODES = ['nonTransferable', 'maliciousCreator', 'balanceMutable', 'highTransferFee'];
+  const blockedReasons = (reasons ?? []).filter((r) => BLOCK_CODES.includes(r.code));
+  const isBlocked = blockedReasons.length > 0;
+  const ackRequired = risk === 'high' || risk === 'critical' || risk === 'unknown';
+
   function openConfirm() {
     if (!quoteData) return;
     if (!wallet.connected || !wallet.publicKey) {
       openWalletModal(true);
+      return;
+    }
+    // T-925 #45:快速模式 / 24h skip → 直接走 doBuy
+    // 不在 ackRequired 风险下走快速路径(老手也不该裸跑高危)
+    if (!ackRequired && shouldSkipBuyConfirm()) {
+      void doBuy();
       return;
     }
     setConfirmOpen(true);
@@ -331,6 +357,11 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
         // 买入收 0.1% SOL fee
         platformFeeSol: quoteData.inputSol * 0.001,
         networkFeeMaxSol,
+        // T-925 #47:当前现货价 + 成交后估值
+        currentPriceUsd: tokenInfo?.priceUsd,
+        postTradeValueUsd: tokenInfo?.priceUsd
+          ? tokenInfo.priceUsd * quoteData.outTokens
+          : undefined,
       }
     : null;
 
@@ -524,6 +555,24 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
             </div>
           )}
 
+          {/* T-925 #52:命中 honeypot/blacklist hard-block 信号 → 红色提示 + 禁用买入 */}
+          {isBlocked && (
+            <div className="rounded-md border border-danger/60 bg-danger/15 p-3 text-xs space-y-1.5">
+              <div className="flex items-start gap-2 text-danger font-medium">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <div>{t('trade.confirm.blocked')}</div>
+              </div>
+              <div className="text-muted-foreground pl-6">{t('trade.confirm.blockedHint')}</div>
+              <ul className="pl-6 space-y-0.5 list-disc list-inside marker:text-danger/60">
+                {blockedReasons.map((r) => (
+                  <li key={r.code} className="text-foreground">
+                    {t(`trade.confirm.highRisk.reasons.${r.code}`)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {!wallet.connected ? (
             <Button onClick={() => openWalletModal(true)} className="w-full" size="lg">
               {t('wallet.connect')}
@@ -533,6 +582,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
               onClick={openConfirm}
               size="lg"
               disabled={
+                isBlocked ||
                 !quoteData ||
                 stage === 'signing' ||
                 stage === 'sending' ||
@@ -556,7 +606,10 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
         onOpenChange={setConfirmOpen}
         kind="buy"
         data={previewData}
-        symbol={mint.trim() ? mint.trim().slice(0, 4) + '…' + mint.trim().slice(-4) : undefined}
+        symbol={tokenInfo?.symbol ?? (mint.trim() ? mint.trim().slice(0, 4) + '…' + mint.trim().slice(-4) : undefined)}
+        tokenName={tokenInfo?.name}
+        tokenLogoUri={tokenInfo?.logoUri}
+        mintAddr={mint.trim() || undefined}
         onConfirm={doBuy}
         confirming={stage === 'signing' || stage === 'sending'}
         solAmount={quoteData?.inputSol}
