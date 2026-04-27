@@ -244,6 +244,13 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
         });
       }
 
+      // 记忆"上次买入量"给移动端快速买入(T-505b)沿用
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('lastBuySolAmount', String(quoteData.inputSol));
+        }
+      } catch { /* localStorage 满 / 隐私模式拒写 */ }
+
       track('swap_success', {
         side: 'buy',
         mint: mint.trim(),

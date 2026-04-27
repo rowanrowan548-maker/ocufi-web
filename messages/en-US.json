@@ -212,7 +212,8 @@
       "trade": "Trade",
       "quickBuy": "Quick Buy",
       "quickBuyAmount": "{amount} SOL",
-      "quickBuyDisabled": "High-risk token requires full review"
+      "quickBuyDisabled": "High-risk token requires full review",
+      "tradeSheetTitle": "Trade"
     },
     "chart": {
       "timeframes": {

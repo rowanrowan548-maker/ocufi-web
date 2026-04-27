@@ -15,14 +15,12 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
-import { Zap } from 'lucide-react';
+import { Zap, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet';
 import { TradeTabs } from './trade-tabs';
 import { QuickBuyConfirm } from './quick-buy-confirm';
@@ -105,12 +103,24 @@ export function MobileActionBar({
       <Sheet open={tradeOpen} onOpenChange={setTradeOpen}>
         <SheetContent
           side="bottom"
+          showCloseButton={false}
           className="h-[85vh] overflow-auto p-0 rounded-t-xl"
         >
-          <SheetHeader>
-            <SheetTitle>{t('trade')}</SheetTitle>
-          </SheetHeader>
-          <div className="p-4 pt-0">
+          {/* 自定义 sticky 顶栏 · 替代 shadcn 默认右上 X(避免被滚动消失 / 视觉不显眼) */}
+          <div className="sticky top-0 z-10 flex items-center justify-between bg-popover/95 backdrop-blur border-b border-border/40 px-4 py-3">
+            <span className="text-base font-medium">
+              {t('tradeSheetTitle')}
+            </span>
+            <button
+              type="button"
+              onClick={() => setTradeOpen(false)}
+              aria-label="Close"
+              className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="p-4">
             <TradeTabs
               mint={mint}
               compact

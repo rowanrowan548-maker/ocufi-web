@@ -171,19 +171,19 @@ export function ConfirmDialog({
           </div>
         )}
 
-        <DialogFooter className="flex gap-2 sm:justify-end">
+        <DialogFooter className="!flex-row gap-2 sm:justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={confirming}
-            className="flex-1 sm:flex-none"
+            className="flex-1 h-11 sm:h-9 sm:flex-none"
           >
             {t('common.cancel')}
           </Button>
           <Button
             onClick={onConfirm}
             disabled={buttonDisabled}
-            className={`flex-1 sm:flex-none ${kind === 'sell' ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : ''}`}
+            className={`flex-1 h-11 sm:h-9 sm:flex-none ${kind === 'sell' ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : ''}`}
           >
             {confirming
               ? t('trade.buttons.signing')
