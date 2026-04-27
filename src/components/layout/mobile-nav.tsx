@@ -69,7 +69,10 @@ export function MobileNav() {
           position: 'fixed',
           top: 0,
           right: 0,
-          bottom: 0,
+          // 关键:不要再用 bottom:0,iOS Safari 在 fixed ancestor 嵌套
+          // flex 滚动有已知坑。改用 100dvh(动态视口单位)
+          // 自动处理 iOS URL bar 收缩。Safari 16+ / Chrome Android 全支持
+          height: '100dvh',
           width: '85vw',
           maxWidth: '340px',
           zIndex: 61,
@@ -81,8 +84,11 @@ export function MobileNav() {
           transition: 'transform 200ms',
           color: '#fafafa',
           isolation: 'isolate',
+          // 统一用 inline,避免 Tailwind className 与 inline 顺序冲突
+          display: 'flex',
+          flexDirection: 'column',
         }}
-        className="lg:hidden flex flex-col"
+        className="lg:hidden"
         aria-hidden={!open}
       >
         <div
@@ -119,19 +125,21 @@ export function MobileNav() {
           </button>
         </div>
 
-        <nav
+        <div
           style={{
+            // flex: '1 1 0%' + minHeight: 0 是 flex child 内嵌套滚动的标准组合
+            flex: '1 1 0%',
+            minHeight: 0,
             overflowY: 'auto',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
             padding: 12,
-            flex: 1,
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
+            // 不在滚动容器上挂 flex layout(避免 iOS Safari fixed-ancestor 嵌套坑)
+            // 内部用 wrapper div 维护 gap 间距
+            display: 'block',
           }}
         >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {NAV_ENTRIES.map((entry, i) => {
             if (entry.type === 'link') {
               return (
@@ -335,7 +343,8 @@ export function MobileNav() {
               GitHub
             </a>
           </div>
-        </nav>
+        </div>
+        </div>
       </aside>
     </>
   );
