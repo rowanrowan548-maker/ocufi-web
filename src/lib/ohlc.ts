@@ -10,10 +10,9 @@
  *  - timeframe 暴露为 'minute_5' 这种 UI 友好枚举,内部转换成 GT 的 path + aggregate
  */
 
-import { fetchTopPool } from './geckoterminal';
+import { fetchTopPool, fetchGtWithRetry } from './geckoterminal';
 
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/solana';
-const FETCH_TIMEOUT_MS = 10_000;
 const CACHE_TTL_MS = 30_000;
 const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 1000;
@@ -110,10 +109,9 @@ export async function fetchOhlc(
 
   const promise = (async () => {
     try {
-      const res = await fetch(url, {
-        cache: 'no-store',
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
+      // 用共享 GT retry helper:429 / 5xx / 网络错自动重试 2 次
+      // 解决 BUG-035(冷数据 mint 直击 GT IP 限速 → 用户看到"图表加载失败"红字)
+      const res = await fetchGtWithRetry(url);
       if (!res.ok) {
         if (cached) return cached.data;     // stale-while-error
         setCache(key, []);

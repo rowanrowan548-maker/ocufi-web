@@ -13,6 +13,51 @@
 const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/solana';
 const FETCH_TIMEOUT_MS = 10_000;
 
+/** GT 限速 / 5xx 重试间隔(ms) · 共 3 次 attempts(首次 + 2 次重试) */
+const GT_RETRY_DELAYS_MS = [600, 1500] as const;
+
+/**
+ * GT API 专用 fetch with retry · 429 / 5xx / 网络错 → 重试,4xx → 立即返
+ *
+ * 给 ohlc.ts 等其他 GT 调用方复用,避免到处复制 retry 模板
+ *
+ * @returns 最后一次的 Response(可能是 4xx,调用方自己处理 ok 检查)
+ *          网络/timeout 全失败时抛错
+ */
+export async function fetchGtWithRetry(url: string): Promise<Response> {
+  let lastErr: unknown;
+  const total = GT_RETRY_DELAYS_MS.length + 1;
+  for (let attempt = 0; attempt < total; attempt++) {
+    try {
+      const res = await fetch(url, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      const isRetryable = res.status === 429 || res.status >= 500;
+      if (!isRetryable) return res;
+      if (attempt < total - 1) {
+        const baseDelay = GT_RETRY_DELAYS_MS[attempt];
+        const jitter = Math.random() * 200;
+        console.warn(
+          `[gt] HTTP ${res.status}, retry ${attempt + 1}/${total - 1} in ${Math.round(baseDelay + jitter)}ms`
+        );
+        await new Promise((r) => setTimeout(r, baseDelay + jitter));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      lastErr = e;
+      if (attempt < total - 1) {
+        const baseDelay = GT_RETRY_DELAYS_MS[attempt];
+        await new Promise((r) => setTimeout(r, baseDelay + Math.random() * 200));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr ?? new Error('fetchGtWithRetry: unreachable');
+}
+
 export interface GTTrade {
   /** 交易方向(对该池基准代币而言) */
   kind: 'buy' | 'sell';
@@ -34,10 +79,9 @@ export async function fetchTopPool(mint: string): Promise<string | null> {
   if (cached && cached.expiresAt > Date.now()) return cached.pool;
 
   try {
-    const res = await fetch(`${GT_BASE}/tokens/${encodeURIComponent(mint)}/pools?page=1`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    const res = await fetchGtWithRetry(
+      `${GT_BASE}/tokens/${encodeURIComponent(mint)}/pools?page=1`
+    );
     if (!res.ok) return null;
     const json = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,10 +102,9 @@ export async function fetchPoolTrades(
   limit = 100
 ): Promise<GTTrade[]> {
   try {
-    const res = await fetch(`${GT_BASE}/pools/${encodeURIComponent(pool)}/trades`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    const res = await fetchGtWithRetry(
+      `${GT_BASE}/pools/${encodeURIComponent(pool)}/trades`
+    );
     if (!res.ok) return [];
     const json = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
