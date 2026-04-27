@@ -213,5 +213,47 @@ export async function buildSwapTxWithFee(
     instructions,
   }).compileToV0Message(alts);
 
-  return new VersionedTransaction(message);
+  const tx = new VersionedTransaction(message);
+
+  // 5. T-810 · tx size 自检(Solana mainnet packet 限制 1232 字节)
+  //    Jupiter `addressLookupTableAddresses` 已经在 step 3 加载并传给 compileToV0Message,
+  //    超限说明 Jupiter 推荐 ALT 已不够 / fee+memo+swap ix 累积过大,需人工调查路由。
+  const txSize = tx.serialize().length;
+  if (txSize > 1232) {
+    console.error(
+      `[swap-with-fee] tx size overflow: ${txSize} bytes (limit 1232) · ` +
+        `inputMint=${quote.inputMint.slice(0, 8)} outputMint=${quote.outputMint.slice(0, 8)} ` +
+        `ALTs=${alts.length} ix=${instructions.length}`
+    );
+    throw new Error('__ERR_TX_SIZE_OVERFLOW');
+  }
+
+  // 6. T-810 · simulateTransaction 自检
+  //    Phantom 红警 "malicious" 真因 = Lighthouse / Blowfish 模拟我们的 tx 失败。
+  //    自检在签名前抓住 budget / ATA / blockhash 类问题,**不让用户签**,避免红警。
+  //    sigVerify=false 因 tx 未签名 · replaceRecentBlockhash=false 用我们刚拿的 blockhash 模拟
+  try {
+    const sim = await connection.simulateTransaction(tx, {
+      sigVerify: false,
+      replaceRecentBlockhash: false,
+      commitment: 'confirmed',
+    });
+    if (sim.value.err) {
+      console.error(
+        '[swap-with-fee] simulation failed · err:',
+        JSON.stringify(sim.value.err),
+        '· logs:',
+        sim.value.logs ?? []
+      );
+      // 不把 raw simulation log 塞 message,只抛 sentinel(T-813 友好化要求)
+      throw new Error('__ERR_TX_SIMULATION_FAIL');
+    }
+  } catch (e) {
+    // 我们自己抛的 sentinel → 透传
+    if (e instanceof Error && e.message === '__ERR_TX_SIMULATION_FAIL') throw e;
+    // RPC 调用本身失败(timeout / 5xx)→ 不拦 swap,让用户继续尝试(simulate 不可用 ≠ tx 必坏)
+    console.warn('[swap-with-fee] simulate RPC unavailable, proceeding without precheck:', e);
+  }
+
+  return tx;
 }

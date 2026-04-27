@@ -13,6 +13,12 @@ export function humanize(e: unknown): string {
   if (msg === '__ERR_BALANCE_DRIFT') {
     return '__ERR_BALANCE_DRIFT';
   }
+  // T-810 · tx 自检主动抛(swap-with-fee.ts):透传 sentinel
+  // - __ERR_TX_SIZE_OVERFLOW:序列化后 > 1232 字节(Solana mainnet packet 限制)
+  // - __ERR_TX_SIMULATION_FAIL:Phantom Lighthouse/Blowfish 模拟失败,继续签会触发红警
+  if (msg === '__ERR_TX_SIZE_OVERFLOW' || msg === '__ERR_TX_SIMULATION_FAIL') {
+    return msg;
+  }
   // 用户在钱包里点了"拒绝"
   if (
     /user rejected/i.test(msg) ||
