@@ -478,7 +478,9 @@
       "noRoute": "Jupiter found no route; this token may have no liquidity",
       "rpcForbidden": "RPC node refused the request; refresh and retry",
       "blockhashExpired": "Network congested; transaction expired. Please retry.",
-      "balanceDrift": "Balance changed; please refresh and place again."
+      "balanceDrift": "Balance changed; please refresh and place again.",
+      "txSimulationFail": "Transaction simulation failed. Please retry or try a different token.",
+      "txSizeOverflow": "Transaction too large. Please reduce amount or try a different token."
     }
   },
   "portfolio": {

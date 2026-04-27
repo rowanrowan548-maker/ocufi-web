@@ -587,6 +587,10 @@ function mapError(t: ReturnType<typeof useTranslations>, raw: string): string {
       return t('trade.errors.blockhashExpired');
     case '__ERR_BALANCE_DRIFT':
       return t('trade.errors.balanceDrift');
+    case '__ERR_TX_SIMULATION_FAIL':
+      return t('trade.errors.txSimulationFail');
+    case '__ERR_TX_SIZE_OVERFLOW':
+      return t('trade.errors.txSizeOverflow');
     default:
       return raw;
   }

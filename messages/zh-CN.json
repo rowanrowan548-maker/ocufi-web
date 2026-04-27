@@ -478,7 +478,9 @@
       "noRoute": "Jupiter 找不到交易路径,这个币可能流动性太低",
       "rpcForbidden": "网络节点拒绝访问,刷新页面重试",
       "blockhashExpired": "网络拥堵导致交易失效,请重试一次",
-      "balanceDrift": "余额已变化,请刷新后重新下单"
+      "balanceDrift": "余额已变化,请刷新后重新下单",
+      "txSimulationFail": "交易预模拟失败,请稍后重试或换 token",
+      "txSizeOverflow": "交易过大,请减小成交量或换 token"
     }
   },
   "portfolio": {
