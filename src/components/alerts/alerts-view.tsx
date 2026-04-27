@@ -47,6 +47,24 @@ export function AlertsView() {
   const [targetUsd, setTargetUsd] = useState('');
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // T-921:输入合法 mint 后拉当前价,placeholder 用 ±5% 而不是裸 0.001
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+
+  useEffect(() => {
+    const m = mint.trim();
+    if (!isValidMint(m)) { setCurrentPrice(null); return; }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      fetchTokenInfo(m)
+        .then((info) => { if (!cancelled) setCurrentPrice(info?.priceUsd ?? null); })
+        .catch(() => { if (!cancelled) setCurrentPrice(null); });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [mint]);
+
+  const targetPlaceholder = currentPrice && currentPrice > 0
+    ? (currentPrice * (direction === 'above' ? 1.05 : 0.95)).toPrecision(4)
+    : '0.001';
 
   useEffect(() => {
     setPermission(getNotifPermission());
@@ -195,7 +213,7 @@ export function AlertsView() {
                 type="number"
                 step="any"
                 min="0"
-                placeholder="0.001"
+                placeholder={targetPlaceholder}
                 value={targetUsd}
                 onChange={(e) => setTargetUsd(e.target.value)}
               />
