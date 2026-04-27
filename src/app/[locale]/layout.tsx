@@ -40,7 +40,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.ocufi.io'),
   title: {
-    default: 'Ocufi · 链上交易,应该回到你手里',
+    default: 'Ocufi · Solana Trading Terminal',
     template: '%s · Ocufi',
   },
   description:
@@ -50,21 +50,39 @@ export const metadata: Metadata = {
     'on-chain', 'crypto', 'wallet', 'open-source',
   ],
   applicationName: 'Ocufi',
+  // T-800:Phantom 客服 Rory 回信 + docs.phantom.com 文档明确,
+  // og:title / og:image / apple-touch-icon 是钱包风控抓取首选源。
+  // 显式声明 absolute URL,绕开钱包爬虫对 dynamic route 的兼容性差异。
   openGraph: {
     type: 'website',
     siteName: 'Ocufi',
-    title: 'Ocufi · 链上交易,应该回到你手里',
+    title: 'Ocufi · Solana Trading Terminal',
     description:
       '非托管 · 0.2% 手续费 · 免费安全审查 · 代码开源。Solana 链上交易终端。',
     url: 'https://www.ocufi.io',
     locale: 'zh_CN',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Ocufi · Solana Trading Terminal',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@Ocufi_io',
     creator: '@Ocufi_io',
-    title: 'Ocufi · 链上交易,应该回到你手里',
+    title: 'Ocufi · Solana Trading Terminal',
     description: 'Lower fees · Transparent pricing · No middleman tax. Solana on-chain.',
+    images: ['/opengraph-image'],
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: [
+      { url: '/apple-icon', sizes: '180x180', type: 'image/png' },
+    ],
   },
   robots: { index: true, follow: true },
 };
