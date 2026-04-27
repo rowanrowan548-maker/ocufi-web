@@ -213,7 +213,11 @@
       "quickBuy": "Quick Buy",
       "quickBuyAmount": "{amount} SOL",
       "quickBuyDisabled": "High-risk token requires full review",
-      "tradeSheetTitle": "Trade"
+      "tradeSheetTitle": "Trade",
+      "quickBuySettings": "Set quick buy amount",
+      "customAmount": "Custom",
+      "amountSavedHint": "Quick buy will use this amount next time",
+      "apply": "Apply"
     },
     "chart": {
       "timeframes": {

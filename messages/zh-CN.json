@@ -213,7 +213,11 @@
       "quickBuy": "快速买入",
       "quickBuyAmount": "{amount} SOL",
       "quickBuyDisabled": "高风险代币需走完整流程",
-      "tradeSheetTitle": "交易"
+      "tradeSheetTitle": "交易",
+      "quickBuySettings": "设置快速买入金额",
+      "customAmount": "自定义",
+      "amountSavedHint": "下次快速买入会用此金额",
+      "apply": "应用"
     },
     "chart": {
       "timeframes": {
