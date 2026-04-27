@@ -109,46 +109,20 @@ async function doFetchTokenDetail(mint: string): Promise<TokenDetail> {
   const d: DexTokenInfo | null = dex;
   const r: RugCheckReport | null = rug;
 
-  // 从 DexScreener 的 response 直接找出 priceChange / volume / txns / pairCreatedAt
-  let priceChange24h: number | undefined;
-  let volume24h: number | undefined;
-  let buys24h: number | undefined;
-  let sells24h: number | undefined;
-  let createdAt: number | undefined;
-  let dexUrl: string | undefined;
-  if (d) {
-    try {
-      const res = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${mint}`,
-        { cache: 'no-store' }
-      );
-      if (res.ok) {
-        const json = await res.json();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pairs: any[] = (json?.pairs ?? []).filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (p: any) => p?.chainId === 'solana' && p?.baseToken?.address === mint
-        );
-        pairs.sort(
-          (a, b) =>
-            Number(b?.liquidity?.usd ?? 0) - Number(a?.liquidity?.usd ?? 0)
-        );
-        const top = pairs[0];
-        if (top) {
-          priceChange24h = Number(top?.priceChange?.h24 ?? 0);
-          volume24h = Number(top?.volume?.h24 ?? 0);
-          buys24h = Number(top?.txns?.h24?.buys ?? 0);
-          sells24h = Number(top?.txns?.h24?.sells ?? 0);
-          createdAt = top?.pairCreatedAt
-            ? Number(top.pairCreatedAt)
-            : undefined;
-          dexUrl = top?.url;
-        }
-      }
-    } catch {
-      /* best-effort */
-    }
-  }
+  // T-705b:之前这里 fetch DexScreener `/latest/dex/tokens/${mint}` 与上面 fetchDexInfo(=portfolio.fetchTokenInfo)
+  // 1:1 重复请求(都打同一 DexScreener endpoint),只为多拿 buys24h / sells24h / dexUrl 三个字段。
+  //   - priceChange24h / volume24h / createdAt → d 已经有(直接用 d 的字段)
+  //   - buys24h / sells24h → 后端 /token/info 代理(GT)token-level 也不给(只在 pool-level 才有),
+  //     如果以后真要,要么改 portfolio.ts 暴露 txns 字段,要么后端代理增强;暂时 undefined,
+  //     info-panel buys/sells row 已 null-guard,优雅降级。
+  //   - dexUrl 前端 grep 无引用,可弃。
+  // 直接复用 d 字段,移除冗余 fetch · 去重一次 DexScreener 直击。
+  const priceChange24h = d?.priceChange24h;
+  const volume24h = d?.volume24h;
+  const buys24h: number | undefined = undefined;
+  const sells24h: number | undefined = undefined;
+  const createdAt = d?.pairCreatedAt;
+  const dexUrl: string | undefined = undefined;
 
   const detail: TokenDetail = {
     mint,
