@@ -43,7 +43,7 @@ export function PortfolioView() {
   const wallet = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
   const { sol, tokens, totalUsd, loading, error, refresh } = usePortfolio();
-  const { costs } = useCostBasis();
+  const { costs, loading: cbLoading, records } = useCostBasis();
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
   // T-900a:时间筛选 state hoist · T-900c 阶段联动 stat 卡 + 表格数据
   const [range, setRange] = useState<'1d' | '7d' | '30d' | 'all'>('all');
@@ -81,7 +81,36 @@ export function PortfolioView() {
     setSnapshots(updated);
   }, [walletAddr, loading, totalUsd]);
 
-  const closed = useMemo(() => getClosedPositions(costs), [costs]);
+  const closedAll = useMemo(() => getClosedPositions(costs), [costs]);
+
+  // T-900c:range → 秒级 cutoff(0 表示 all)
+  const cutoffSec = useMemo(() => {
+    if (range === 'all') return 0;
+    const days = range === '1d' ? 1 : range === '7d' ? 7 : 30;
+    return Math.floor(Date.now() / 1000) - days * 86400;
+  }, [range]);
+
+  // 按 range 过滤的已平仓
+  const closed = useMemo(
+    () => (cutoffSec > 0 ? closedAll.filter((p) => p.closedAt > cutoffSec) : closedAll),
+    [closedAll, cutoffSec]
+  );
+
+  // 按 range 过滤的 tx 记录(给 stat #4 买卖笔数 / 总成交 SOL 用)
+  const recordsInRange = useMemo(
+    () =>
+      cutoffSec > 0
+        ? records.filter((r) => (r.blockTime ?? 0) > cutoffSec)
+        : records,
+    [records, cutoffSec]
+  );
+
+  // 按 range 过滤的总值快照(给 ValueChart)
+  const snapshotsInRange = useMemo(() => {
+    if (cutoffSec <= 0) return snapshots;
+    const cutoffMs = cutoffSec * 1000;
+    return snapshots.filter((s) => s.ts >= cutoffMs);
+  }, [snapshots, cutoffSec]);
 
   // 组装 pie 数据:SOL + 每个 token
   const pieItems = useMemo(() => {
@@ -134,18 +163,23 @@ export function PortfolioView() {
     };
   }, [closed, tokens, costs, solUsdPrice]);
 
-  // T-900a:buy/sell 笔数 + 总成交额(SOL)· 给 stat 卡 #4 用
+  // T-900a/c:buy/sell 笔数 + 总成交额(SOL)· 按 range 过滤
   const tradeStats = useMemo(() => {
     let buyTxCount = 0;
     let sellTxCount = 0;
     let totalVolumeSol = 0;
-    for (const c of costs.values()) {
-      buyTxCount += c.buyCount;
-      sellTxCount += c.sellCount;
-      totalVolumeSol += c.totalBoughtSol + c.totalSoldSol;
+    for (const r of recordsInRange) {
+      if (r.err) continue;
+      if (r.type === 'buy' && r.solAmount > 0) {
+        buyTxCount++;
+        totalVolumeSol += r.solAmount;
+      } else if (r.type === 'sell' && r.solAmount > 0) {
+        sellTxCount++;
+        totalVolumeSol += r.solAmount;
+      }
     }
     return { buyTxCount, sellTxCount, totalVolumeSol };
-  }, [costs]);
+  }, [recordsInRange]);
 
   // T-900a:已节省手续费 · 复用 SavingsCard 计算逻辑
   // ocufi 0.2% · 平均费率 0.5% · 节省 = volumeSol × 0.3%
@@ -277,7 +311,10 @@ export function PortfolioView() {
         </div>
       )}
 
-      {!hasAnyHolding && !loading ? (
+      {/* T-900c:加载骨架屏(钱包连了但数据还没回来) */}
+      {(loading || cbLoading) && !hasAnyHolding ? (
+        <PortfolioSkeleton />
+      ) : !hasAnyHolding ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
             <p className="text-muted-foreground">{t('portfolio.empty')}</p>
@@ -454,8 +491,8 @@ export function PortfolioView() {
             </details>
           )}
 
-          {/* 总资产走势(折叠 · 默认收起 · 数据采集时间长才有意义) */}
-          {snapshots.length >= 2 && (
+          {/* 总资产走势(折叠 · 默认收起 · 数据采集时间长才有意义)· T-900c range 过滤 */}
+          {snapshotsInRange.length >= 2 && (
             <details className="group">
               <summary className="cursor-pointer list-none flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors py-1">
                 <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:-rotate-180" />
@@ -463,7 +500,7 @@ export function PortfolioView() {
               </summary>
               <Card className="mt-2">
                 <CardContent className="pt-6">
-                  <ValueChart snapshots={snapshots} currentTotalUsd={totalUsd} />
+                  <ValueChart snapshots={snapshotsInRange} currentTotalUsd={totalUsd} />
                 </CardContent>
               </Card>
             </details>
@@ -490,7 +527,12 @@ export function PortfolioView() {
               </TabsList>
 
               <TabsContent value="holdings">
-                <HoldingsTable sol={sol} tokens={tokens} costs={costs} />
+                <HoldingsTable
+                  sol={sol}
+                  tokens={tokens}
+                  costs={costs}
+                  cutoffSec={cutoffSec}
+                />
               </TabsContent>
               <TabsContent value="closed">
                 <ClosedPositions list={closed} />
@@ -513,4 +555,40 @@ function shortAddr(s: string): string {
 
 function formatUsd(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// T-900c:加载骨架屏 · 5 张 stat 卡 + 表格 4 行 shimmer
+function PortfolioSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card
+            key={i}
+            className={i === 4 ? 'col-span-2 lg:col-span-1' : ''}
+          >
+            <CardContent className="py-4 space-y-2">
+              <div className="h-2.5 w-16 rounded bg-muted/50 animate-pulse" />
+              <div className="h-6 w-24 rounded bg-muted/60 animate-pulse" />
+              <div className="h-2 w-20 rounded bg-muted/40 animate-pulse" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card className="p-4">
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-muted/50 animate-pulse flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-24 rounded bg-muted/50 animate-pulse" />
+                <div className="h-2 w-32 rounded bg-muted/30 animate-pulse" />
+              </div>
+              <div className="h-4 w-20 rounded bg-muted/50 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
 }

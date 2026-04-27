@@ -30,6 +30,8 @@ interface Props {
   sol: Sol;
   tokens: Token[];
   costs: Map<string, CostEntry>;
+  /** T-900c:秒级 cutoff(0 = 全部);只影响行 realized 显示,unrealized 永远基于当前 */
+  cutoffSec?: number;
 }
 
 interface RowMetrics {
@@ -44,7 +46,7 @@ interface RowMetrics {
   sellCount: number;
 }
 
-export function HoldingsTable({ sol, tokens, costs }: Props) {
+export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
   const t = useTranslations();
   const chain = getCurrentChain();
   const solUsd = sol.amount > 0 ? sol.valueUsd / sol.amount : 0;
@@ -70,14 +72,18 @@ export function HoldingsTable({ sol, tokens, costs }: Props) {
         ? ((tok.priceUsd - avgCostUsd) / avgCostUsd) * 100
         : null;
 
+    // T-900c:range 过滤 — 若该 token 最近一笔 tx 早于 cutoff,本行 realized 显 —
+    // 局限:无 per-sell 时间戳,无法精确分摊到区间内,这里用"区间内有过活动 → 显示全部 realized"近似
+    const inRange = cutoffSec <= 0 || cost.lastTxAt > cutoffSec;
     let realizedSol = 0;
     if (cost.totalSoldTokens > 0 && cost.totalBoughtTokens > 0) {
       const avgBuySol = cost.totalBoughtSol / cost.totalBoughtTokens;
       realizedSol = cost.totalSoldSol - cost.totalSoldTokens * avgBuySol;
     }
-    const realizedUsd = cost.sellCount > 0 && solUsd > 0 ? realizedSol * solUsd : null;
+    const realizedUsd =
+      inRange && cost.sellCount > 0 && solUsd > 0 ? realizedSol * solUsd : null;
     const realizedPct =
-      cost.sellCount > 0 && cost.totalBoughtSol > 0
+      inRange && cost.sellCount > 0 && cost.totalBoughtSol > 0
         ? (realizedSol / cost.totalBoughtSol) * 100
         : null;
 
