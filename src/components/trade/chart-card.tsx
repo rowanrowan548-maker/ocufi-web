@@ -27,6 +27,7 @@ import {
 } from 'lightweight-charts';
 import { fetchOhlc, type Timeframe, type OhlcCandle } from '@/lib/ohlc';
 import { SOL_MINT } from '@/lib/jupiter';
+import { formatPrice } from '@/lib/format';
 
 const UP_COLOR = '#19FB9B';
 const DOWN_COLOR = '#FF3B5C';
@@ -77,6 +78,10 @@ export function ChartCard({ mint }: Props) {
       },
       rightPriceScale: { borderVisible: false },
       timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
+      // T-702:极小价格币(0.00001 量级)右侧 Price Line label 显示 0 → 用零塌缩格式
+      localization: {
+        priceFormatter: (p: number) => formatPrice(p),
+      },
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
@@ -86,6 +91,13 @@ export function ChartCard({ mint }: Props) {
       borderDownColor: DOWN_COLOR,
       wickUpColor: UP_COLOR,
       wickDownColor: DOWN_COLOR,
+      // T-702:custom priceFormat · minMove 1e-9 给极小价格留足精度,
+      // 否则 lightweight-charts 默认 minMove 0.01 会把所有 < 0.005 的价格 round 到 0
+      priceFormat: {
+        type: 'custom',
+        formatter: (p: number) => formatPrice(p),
+        minMove: 0.000000001,
+      },
     });
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
