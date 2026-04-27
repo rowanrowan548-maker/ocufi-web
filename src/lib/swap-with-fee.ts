@@ -168,7 +168,13 @@ export async function buildSwapTxWithFee(
   //   Jupiter swap 实际需要 200K-400K CU,易触发 "Computational budget exceeded"
   //   → simulate 失败 → Phantom 红警(T-810 抓的真因)
   //   保险:扫描 Jupiter 返回的 ix,若缺 SetComputeUnitLimit(discriminator=2),
-  //   手动 unshift 一条 400_000 CU 的 fallback。
+  //   手动 push 一条 1_400_000 CU 的 fallback。
+  //
+  //   T-812-fix(2026-04-28):用户实测 InstructionError [8, "ComputationalBudgetExceeded"],
+  //     原 400K fallback 不够 — ATA create + Token init + Memo 消耗大半 400K,
+  //     Jupiter 主 swap ix 留不到 100K。
+  //     拉到 Solana 单 tx 硬上限 1_400_000 CU(没法再高,>1.4M tx 会被节点拒)
+  //     给 init + swap 都留充足 buffer。
   const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId.toBase58();
   const hasSetUnitLimit = resp.computeBudgetInstructions.some((ix) => {
     if (ix.programId !== COMPUTE_BUDGET_PROGRAM_ID) return false;
@@ -177,9 +183,9 @@ export async function buildSwapTxWithFee(
   });
   if (!hasSetUnitLimit) {
     console.warn(
-      '[swap-with-fee] Jupiter response missing SetComputeUnitLimit, fallback to 400_000 CU'
+      '[swap-with-fee] Jupiter response missing SetComputeUnitLimit, fallback to 1_400_000 CU (Solana hard cap)'
     );
-    instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }));
+    instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }));
   }
   instructions.push(...resp.computeBudgetInstructions.map(jsonToIx));
   if (resp.tokenLedgerInstruction) instructions.push(jsonToIx(resp.tokenLedgerInstruction));
