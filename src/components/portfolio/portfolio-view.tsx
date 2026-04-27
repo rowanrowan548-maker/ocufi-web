@@ -351,8 +351,8 @@ export function PortfolioView() {
 
             {/* T-905a:桌面右上控制区 — 2 行,顶层时间+USD/SOL,底层 3 图标 */}
             <div className="flex flex-col items-stretch lg:items-end gap-2">
-              {/* 顶层:时间筛选 + USD/SOL */}
-              <div className="flex items-center gap-2 justify-end">
+              {/* 顶层:时间筛选 + USD/SOL · 移动端两端分布填满整行,桌面端右对齐 */}
+              <div className="flex items-center gap-2 justify-between lg:justify-end">
                 <Tabs value={range} onValueChange={(v) => v && setRange(v as typeof range)}>
                   <TabsList className="h-8">
                     <TabsTrigger value="1d" className="text-xs px-2.5 h-6">
