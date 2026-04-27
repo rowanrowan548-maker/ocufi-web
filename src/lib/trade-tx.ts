@@ -143,17 +143,45 @@ export interface TxAnalysis {
 }
 
 /**
+ * 单次 attempt 失败后等待时长(ms)· 指数退避
+ * 总 attempts = RETRY_DELAYS_MS.length + 1 = 3 次(首次 + 2 次重试)
+ * 总最坏等待 = 500 + 1500 = 2000ms,加 attempts 自身耗时
+ */
+const ANALYZE_RETRY_DELAYS_MS = [500, 1500] as const;
+
+/** 4xx / 鉴权类错误立即放弃,其余(5xx / network / timeout / 未知)重试 */
+function isRetryableAnalyzeError(msg: string): boolean {
+  if (/\b4\d{2}\b/.test(msg)) return false;
+  if (/unauthorized|forbidden|invalid.*api.*key/i.test(msg)) return false;
+  return true;
+}
+
+/** ±25% jitter,防多请求同步打 RPC */
+function jitterMs(ms: number, pct = 0.25): number {
+  return Math.max(0, Math.floor(ms + (Math.random() * 2 - 1) * ms * pct));
+}
+
+/**
  * 读取成交后的真实变化量
- * 传 signature + 你的 pubkey + 目标 mint → 返回真实数字
+ *
+ * 重试策略(参考后端 T-005 commit 1bbb971):
+ *  - 默认 3 次 attempts(首次 + 2 次重试),间隔 500ms / 1500ms ± 25% jitter
+ *  - null 返回(RPC indexer 还没处理)→ 等待重试
+ *  - 5xx / network / timeout → 重试
+ *  - 4xx / 鉴权错 → 立即放弃返 null
+ *  - 全部 attempts 失败 → 返 null(向后兼容,fee-tracker / 积分上报会用 quote 估值兜底)
+ *
+ * 传 signature + 你的 pubkey + 目标 mint → 返回真实数字 / null
  */
 export async function analyzeTx(
   connection: Connection,
   signature: TransactionSignature,
   owner: PublicKey,
   mint: string,
-  retries = 4
+  retries: number = ANALYZE_RETRY_DELAYS_MS.length + 1
 ): Promise<TxAnalysis | null> {
   let tx: ParsedTransactionWithMeta | null = null;
+  let lastErrMsg = '';
 
   for (let i = 0; i < retries; i++) {
     try {
@@ -162,12 +190,28 @@ export async function analyzeTx(
         commitment: 'confirmed',
       });
       if (tx) break;
-    } catch {
-      // RPC 可能还没索引到,重试
+      // null 返回 = RPC 还没 index,继续 retry(不算错误)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      lastErrMsg = msg;
+      if (!isRetryableAnalyzeError(msg)) {
+        console.warn('[analyzeTx] non-retryable error, aborting:', msg);
+        return null;
+      }
+      console.warn(`[analyzeTx] attempt ${i + 1}/${retries} failed:`, msg);
     }
-    await new Promise((r) => setTimeout(r, 1500));
+    if (i < retries - 1) {
+      const baseDelay =
+        ANALYZE_RETRY_DELAYS_MS[Math.min(i, ANALYZE_RETRY_DELAYS_MS.length - 1)];
+      await new Promise((r) => setTimeout(r, jitterMs(baseDelay)));
+    }
   }
-  if (!tx || !tx.meta) return null;
+  if (!tx || !tx.meta) {
+    if (lastErrMsg) {
+      console.warn(`[analyzeTx] gave up after ${retries} attempts:`, lastErrMsg);
+    }
+    return null;
+  }
 
   const meta = tx.meta;
   const feeSol = (meta.fee ?? 0) / 1e9;
