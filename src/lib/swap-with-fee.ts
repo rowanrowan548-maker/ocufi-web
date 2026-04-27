@@ -193,32 +193,25 @@ export async function buildSwapTxWithFee(
   // 2. 组装 instructions
   const instructions: TransactionInstruction[] = [];
 
-  // T-812 · ComputeBudget fallback:
-  //   `dynamicComputeUnitLimit: true` 让 Jupiter 在 computeBudgetInstructions 返一条
-  //   SetComputeUnitLimit ix。但偶有不返的情况,导致 tx 用 Solana 默认 200K CU,
-  //   Jupiter swap 实际需要 200K-400K CU,易触发 "Computational budget exceeded"
-  //   → simulate 失败 → Phantom 红警(T-810 抓的真因)
-  //   保险:扫描 Jupiter 返回的 ix,若缺 SetComputeUnitLimit(discriminator=2),
-  //   手动 push 一条 1_400_000 CU 的 fallback。
-  //
-  //   T-812-fix(2026-04-28):用户实测 InstructionError [8, "ComputationalBudgetExceeded"],
-  //     原 400K fallback 不够 — ATA create + Token init + Memo 消耗大半 400K,
-  //     Jupiter 主 swap ix 留不到 100K。
-  //     拉到 Solana 单 tx 硬上限 1_400_000 CU(没法再高,>1.4M tx 会被节点拒)
-  //     给 init + swap 都留充足 buffer。
+  // T-812 · ComputeBudget 策略(经过 T-812-fix → T-812-fix2 演进):
+  //   - 经典做法:让 Jupiter 通过 `dynamicComputeUnitLimit: true` 返推荐 SetComputeUnitLimit
+  //   - 实测 Jupiter 给的值不可靠:用户测 USDC 时 Jupiter 返 108_709 CU,实际 swap 用了更多
+  //     → InstructionError [7, "ComputationalBudgetExceeded"] → simulate 失败 → 红警
+  //   - T-812-fix2 决策:**始终强制 1_400_000 CU**(Solana 单 tx 硬上限)
+  //     · 过滤掉 Jupiter 返回的 SetComputeUnitLimit(discriminator=2),
+  //       保留 SetComputeUnitPrice / RequestHeapFrame 等其他 ComputeBudget ix(priority fee 关联)
+  //     · 我们自己 push 一条 setComputeUnitLimit(1_400_000)
+  //   - 副作用:无 — Solana priority fee = consumed_CU × microLamportsPerCU,设大不多收钱
+  //   - 收益:budget 永远够,彻底关掉 ComputationalBudgetExceeded 这类 simulate 失败
   const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId.toBase58();
-  const hasSetUnitLimit = resp.computeBudgetInstructions.some((ix) => {
-    if (ix.programId !== COMPUTE_BUDGET_PROGRAM_ID) return false;
+  const filteredJupiterBudgetIxs = resp.computeBudgetInstructions.filter((ix) => {
+    if (ix.programId !== COMPUTE_BUDGET_PROGRAM_ID) return true;
     const data = Buffer.from(ix.data, 'base64');
-    return data.length > 0 && data[0] === 2; // 2 = SetComputeUnitLimit
+    // discriminator 2 = SetComputeUnitLimit · 滤掉,我们自己写死 1.4M
+    return !(data.length > 0 && data[0] === 2);
   });
-  if (!hasSetUnitLimit) {
-    console.warn(
-      '[swap-with-fee] Jupiter response missing SetComputeUnitLimit, fallback to 1_400_000 CU (Solana hard cap)'
-    );
-    instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }));
-  }
-  instructions.push(...resp.computeBudgetInstructions.map(jsonToIx));
+  instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }));
+  instructions.push(...filteredJupiterBudgetIxs.map(jsonToIx));
   if (resp.tokenLedgerInstruction) instructions.push(jsonToIx(resp.tokenLedgerInstruction));
   instructions.push(...resp.setupInstructions.map(jsonToIx));
 
