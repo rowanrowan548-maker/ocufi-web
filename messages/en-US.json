@@ -504,6 +504,16 @@
       "pnl": "P/L %",
       "value": "Value"
     },
+    "table": {
+      "unrealized": "Unrealized",
+      "realized": "Realized",
+      "totalPnl": "Total P/L",
+      "holdDuration": "Holding",
+      "buySellTxs": "B/S",
+      "actions": "Actions",
+      "buyAction": "Buy",
+      "sellAction": "Sell"
+    },
     "distribution": "Asset distribution",
     "feesTotal": {
       "title": "Lifetime fees",

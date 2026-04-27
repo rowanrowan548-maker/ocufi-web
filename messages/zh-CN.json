@@ -504,6 +504,16 @@
       "pnl": "盈亏%",
       "value": "市值"
     },
+    "table": {
+      "unrealized": "未实现",
+      "realized": "已实现",
+      "totalPnl": "总收益",
+      "holdDuration": "持仓时长",
+      "buySellTxs": "买/卖",
+      "actions": "操作",
+      "buyAction": "买入",
+      "sellAction": "卖出"
+    },
     "distribution": "资产分布",
     "feesTotal": {
       "title": "累计手续费",

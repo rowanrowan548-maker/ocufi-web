@@ -33,6 +33,8 @@ export interface CostEntry {
   sellCount: number;
   /** 最近一笔 tx 的 blockTime(秒) */
   lastTxAt: number;
+  /** 第一笔 buy 的 blockTime(秒)· T-900b 计算持仓时长 */
+  firstBuyAt: number;
 }
 
 export interface ClosedPosition {
@@ -78,6 +80,7 @@ export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
       totalSoldTokens: 0,
       sellCount: 0,
       lastTxAt: 0,
+      firstBuyAt: 0,
     };
     const ts = r.blockTime ?? 0;
 
@@ -95,6 +98,7 @@ export function computeCostBasis(records: TxRecord[]): Map<string, CostEntry> {
         totalBoughtTokens: prev.totalBoughtTokens + r.tokenAmount,
         buyCount: prev.buyCount + 1,
         lastTxAt: Math.max(prev.lastTxAt, ts),
+        firstBuyAt: prev.firstBuyAt > 0 ? prev.firstBuyAt : ts,
       });
     } else if (r.type === 'sell' && r.tokenAmount > 0) {
       const newBalance = Math.max(0, prev.derivedBalance - r.tokenAmount);
