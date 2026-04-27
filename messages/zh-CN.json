@@ -28,7 +28,25 @@
     "badges": "徽章",
     "legal": "法律",
     "comingSoon": "敬请期待",
-    "backHome": "返回交易页"
+    "backHome": "返回交易页",
+    "descriptions": {
+      "trending": "洞察市场趋势,发现热门代币",
+      "watchlist": "创建自选列表,实时追踪动态",
+      "tokenCheck": "输入合约地址,查风险审查",
+      "alerts": "紧跟市场信号,把握买入时机",
+      "limit": "挂单等待价格,自动成交",
+      "copyTrade": "探索链上地址,一键轻松跟单",
+      "smartMoney": "筛选目标代币,发现优质地址",
+      "portfolio": "查看资产分布,盈亏一目了然",
+      "history": "回溯所有交易,统计你的战绩",
+      "badges": "解锁成就徽章,炫耀你的进度",
+      "points": "累计交易积分,排行榜竞争",
+      "invite": "邀请好友交易,共享积分奖励",
+      "docs": "学习 ocufi 全套交易方法",
+      "faq": "解答你的疑问",
+      "status": "实时查看后端服务状态",
+      "legal": "服务条款 / 隐私政策"
+    }
   },
   "comingSoon": {
     "trendingDesc": "实时热门代币榜单 · 按涨幅 / 成交量 / 新币分类。即将上线。",

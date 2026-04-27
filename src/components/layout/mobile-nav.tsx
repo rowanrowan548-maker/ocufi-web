@@ -7,13 +7,21 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X, ChevronDown } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Logo } from '@/components/brand/logo';
 import { NAV_ENTRIES } from './nav-config';
 import { SettingsMenu } from './settings-menu';
 
+type LucideComponent = React.FC<{
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+}>;
+
 export function MobileNav() {
   const t = useTranslations();
+  const IconLib = Icons as unknown as Record<string, LucideComponent>;
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -167,40 +175,95 @@ export function MobileNav() {
                   <ChevronDown className="h-4 w-4 transition-transform group-open:-rotate-180" />
                 </summary>
                 <div style={{ padding: '4px 8px 8px 8px' }}>
-                  {entry.items.map((it) => (
-                    <Link
-                      key={it.href}
-                      href={it.href}
-                      onClick={() => setOpen(false)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 12px',
-                        borderRadius: 6,
-                        fontSize: 14,
-                        color: it.placeholder ? '#71717a' : '#a1a1aa',
-                        textDecoration: 'none',
-                      }}
-                      className="hover:bg-zinc-800/60 hover:!text-foreground"
-                    >
-                      <span>{t(it.labelKey)}</span>
-                      {it.placeholder && (
-                        <span
-                          style={{
-                            fontSize: 9,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            color: '#19FB9B',
-                            fontFamily: 'var(--font-mono)',
-                            opacity: 0.7,
-                          }}
-                        >
-                          {t('nav.comingSoon')}
-                        </span>
-                      )}
-                    </Link>
-                  ))}
+                  {entry.items.map((it) => {
+                    const Icon = it.iconName ? IconLib[it.iconName] : null;
+                    return (
+                      <Link
+                        key={it.href}
+                        href={it.href}
+                        onClick={() => setOpen(false)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                          padding: '10px 12px',
+                          borderRadius: 6,
+                          textDecoration: 'none',
+                          color: '#a1a1aa',
+                        }}
+                        className="hover:bg-zinc-800/60"
+                      >
+                        {Icon && (
+                          <div
+                            style={{
+                              height: 32,
+                              width: 32,
+                              borderRadius: 6,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              marginTop: 2,
+                              backgroundColor: it.placeholder
+                                ? 'rgba(113,113,122,0.18)'
+                                : 'rgba(25,251,155,0.10)',
+                              color: it.placeholder ? '#a1a1aa' : '#19FB9B',
+                            }}
+                          >
+                            <Icon size={16} strokeWidth={1.8} />
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 8,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 500,
+                                color: it.placeholder ? '#a1a1aa' : '#fafafa',
+                              }}
+                            >
+                              {t(it.labelKey)}
+                            </span>
+                            {it.placeholder && (
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
+                                  color: '#19FB9B',
+                                  fontFamily: 'var(--font-mono)',
+                                  opacity: 0.7,
+                                  whiteSpace: 'nowrap',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {t('nav.comingSoon')}
+                              </span>
+                            )}
+                          </div>
+                          {it.descKey && (
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: '#71717a',
+                                marginTop: 2,
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {t(it.descKey)}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </details>
             );

@@ -28,7 +28,25 @@
     "badges": "Badges",
     "legal": "Legal",
     "comingSoon": "Coming Soon",
-    "backHome": "Back to Trade"
+    "backHome": "Back to Trade",
+    "descriptions": {
+      "trending": "Discover trending tokens & market signals",
+      "watchlist": "Create watchlist for real-time tracking",
+      "tokenCheck": "Check contract risk before trading",
+      "alerts": "Follow market signals for timing",
+      "limit": "Place orders, auto-execute at target",
+      "copyTrade": "Track on-chain wallets, one-click copy",
+      "smartMoney": "Filter tokens, find smart wallets",
+      "portfolio": "View assets & PnL at a glance",
+      "history": "Review trades & performance",
+      "badges": "Unlock achievements, show progress",
+      "points": "Earn points, climb the leaderboard",
+      "invite": "Invite friends, share rewards",
+      "docs": "Learn the full Ocufi playbook",
+      "faq": "Answers to common questions",
+      "status": "Check backend service status",
+      "legal": "Terms / Privacy"
+    }
   },
   "comingSoon": {
     "trendingDesc": "Real-time trending token boards · grouped by gainers / volume / new launches. Shipping soon.",
