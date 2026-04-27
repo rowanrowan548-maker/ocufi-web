@@ -8,8 +8,10 @@
  *  - 订单:占位(限价单聚合,Day 13+)
  *  - 持有者:链上 getProgramAccounts 拉前 100,失败回落 RugCheck topHolders
  *  - 风险明细:RugCheck risks
+ *  - 流动性:DexScreener pairs(T-503c · 链上 hook fetchDexPairs)
+ *  - Top 交易者:从已加载 trades 聚合(T-503c · 链上 hook aggregateTraders)
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { translateRiskName, translateRiskDesc } from '@/lib/rugcheck-i18n';
@@ -18,11 +20,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Activity, ListOrdered, Users, AlertTriangle, Wallet, Construction,
   ExternalLink, ArrowUpRight, ArrowDownLeft, Loader2,
+  Droplets, Trophy,
 } from 'lucide-react';
 import type { TokenDetail } from '@/lib/token-info';
 import { getCurrentChain } from '@/config/chains';
 import { fetchMintTrades, type GTTrade } from '@/lib/geckoterminal';
 import { fetchTopHolders, type Holder } from '@/lib/holders';
+import { fetchDexPairs, type DexPairInfo } from '@/lib/dex-pairs';
+import { aggregateTraders, type TraderStats } from '@/lib/top-traders';
+import { formatCompact as formatLibCompact, formatUsdCompact } from '@/lib/format';
 
 interface Props {
   detail: TokenDetail | null;
@@ -75,9 +81,30 @@ export function ActivityBoard({ detail }: Props) {
     return () => { cancelled = true; };
   }, [mint, tab, connection, holders]);
 
+  // ── 流动性:DexScreener pairs(懒加载,切到 tab 才拉) ──
+  const [pairs, setPairs] = useState<DexPairInfo[] | null>(null);
+  const [pairsLoading, setPairsLoading] = useState(false);
+  useEffect(() => {
+    if (!mint || tab !== 'liquidity') return;
+    if (pairs) return; // 已经有数据(可能是 [] 表示已拉但无)
+    let cancelled = false;
+    setPairsLoading(true);
+    fetchDexPairs(mint)
+      .then((p) => { if (!cancelled) setPairs(p); })
+      .finally(() => { if (!cancelled) setPairsLoading(false); });
+    return () => { cancelled = true; };
+  }, [mint, tab, pairs]);
+
+  // ── Top 交易者:从 trades 聚合(无独立 fetch) ──
+  const traders: TraderStats[] = useMemo(
+    () => (trades ? aggregateTraders(trades, 10) : []),
+    [trades],
+  );
+
   // mint 切换重置
   useEffect(() => {
     setHolders(null);
+    setPairs(null);
   }, [mint]);
 
   return (
@@ -91,6 +118,12 @@ export function ActivityBoard({ detail }: Props) {
           <TabBtn value="holders" Icon={Users}>
             {t('holders')}
             {detail?.totalHolders ? ` ${detail.totalHolders.toLocaleString()}` : ''}
+          </TabBtn>
+          <TabBtn value="liquidity" Icon={Droplets}>
+            {t('liquidity')}{pairs?.length ? ` ${pairs.length}` : ''}
+          </TabBtn>
+          <TabBtn value="top-traders" Icon={Trophy}>
+            {t('topTraders')}{traders.length ? ` ${traders.length}` : ''}
           </TabBtn>
           <TabBtn value="risks" Icon={AlertTriangle}>
             {t('risks')}{detail?.risks?.length ? ` ${detail.risks.length}` : ''}
@@ -170,6 +203,26 @@ export function ActivityBoard({ detail }: Props) {
           )}
         </TabsContent>
 
+        {/* ── 流动性 ── */}
+        <TabsContent value="liquidity">
+          <LiquidityTab
+            mint={mint}
+            pairs={pairs}
+            loading={pairsLoading}
+          />
+        </TabsContent>
+
+        {/* ── Top 交易者 ── */}
+        <TabsContent value="top-traders">
+          <TopTradersTab
+            mint={mint}
+            traders={traders}
+            tradesLoading={tradesLoading}
+            tradesLoaded={trades !== null}
+            explorer={chain.explorer}
+          />
+        </TabsContent>
+
         {/* ── 风险明细 ── */}
         <TabsContent value="risks">
           {detail?.risks && detail.risks.length > 0 ? (
@@ -206,6 +259,232 @@ export function ActivityBoard({ detail }: Props) {
     </Card>
   );
 }
+
+// ──────────────────────────────────────────────
+// Liquidity tab
+// ──────────────────────────────────────────────
+
+function LiquidityTab({
+  mint,
+  pairs,
+  loading,
+}: {
+  mint: string | undefined;
+  pairs: DexPairInfo[] | null;
+  loading: boolean;
+}) {
+  const t = useTranslations('trade.activity');
+
+  if (!mint) {
+    return <Empty Icon={Droplets} title={t('empty.liquidity')} subtitle={''} />;
+  }
+  if (loading && !pairs) return <LoadingRow />;
+  if (!pairs || pairs.length === 0) {
+    return <Empty Icon={Droplets} title={t('empty.liquidity')} subtitle={''} />;
+  }
+
+  return (
+    <>
+      {/* 桌面表格 ≥ sm */}
+      <div className="hidden sm:block text-xs max-h-[480px] overflow-y-auto">
+        <div className="grid grid-cols-[1fr_1fr_100px_100px] gap-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium border-b border-border/30 sticky top-0 bg-card">
+          <span>{t('liquidityCols.dex')}</span>
+          <span>{t('liquidityCols.pair')}</span>
+          <span className="text-right">{t('liquidityCols.liquidity')}</span>
+          <span className="text-right">{t('liquidityCols.volume24h')}</span>
+        </div>
+        {pairs.map((p) => (
+          <a
+            key={p.pairAddress}
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="grid grid-cols-[1fr_1fr_100px_100px] gap-2 px-2 py-2 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-b-0"
+          >
+            <span className="flex items-center gap-1 font-medium truncate">
+              {p.dexLabel}
+              <ExternalLink className="h-2.5 w-2.5 opacity-50 flex-shrink-0" />
+            </span>
+            <span className="font-mono text-muted-foreground truncate">{p.pairSymbol}</span>
+            <span className="text-right font-mono">{formatUsdCompact(p.liquidityUsd)}</span>
+            <span className="text-right font-mono text-muted-foreground">
+              {formatUsdCompact(p.volume24h)}
+            </span>
+          </a>
+        ))}
+      </div>
+
+      {/* 移动卡片 < sm */}
+      <div className="sm:hidden space-y-2 max-h-[480px] overflow-y-auto">
+        {pairs.map((p) => (
+          <a
+            key={p.pairAddress}
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col gap-1.5 p-2.5 rounded-md border border-border/40 hover:bg-muted/30 transition-colors text-xs"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1 font-medium">
+                {p.dexLabel}
+                <ExternalLink className="h-2.5 w-2.5 opacity-50" />
+              </span>
+              <span className="font-mono text-muted-foreground truncate">{p.pairSymbol}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="flex flex-col">
+                <span className="text-muted-foreground/60 text-[10px] uppercase tracking-wide">
+                  {t('liquidityCols.liquidity')}
+                </span>
+                <span className="font-mono">{formatUsdCompact(p.liquidityUsd)}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-muted-foreground/60 text-[10px] uppercase tracking-wide">
+                  {t('liquidityCols.volume24h')}
+                </span>
+                <span className="font-mono text-muted-foreground">
+                  {formatUsdCompact(p.volume24h)}
+                </span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────
+// Top Traders tab
+// ──────────────────────────────────────────────
+
+function TopTradersTab({
+  mint,
+  traders,
+  tradesLoading,
+  tradesLoaded,
+  explorer,
+}: {
+  mint: string | undefined;
+  traders: TraderStats[];
+  tradesLoading: boolean;
+  tradesLoaded: boolean;
+  explorer: string;
+}) {
+  const t = useTranslations('trade.activity');
+
+  if (!mint) {
+    return <Empty Icon={Trophy} title={t('empty.traders')} subtitle={''} />;
+  }
+  if (tradesLoading && !tradesLoaded) return <LoadingRow />;
+  if (traders.length === 0) {
+    return <Empty Icon={Trophy} title={t('empty.traders')} subtitle={''} />;
+  }
+
+  return (
+    <>
+      {/* 桌面表格 ≥ sm */}
+      <div className="hidden sm:block text-xs max-h-[480px] overflow-y-auto">
+        <div className="grid grid-cols-[1fr_70px_90px_90px] gap-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium border-b border-border/30 sticky top-0 bg-card">
+          <span>{t('tradersCols.address')}</span>
+          <span className="text-right">{t('tradersCols.buySell')}</span>
+          <span className="text-right">{t('tradersCols.volume')}</span>
+          <span className="text-right">{t('tradersCols.netFlow')}</span>
+        </div>
+        {traders.map((tr) => (
+          <TraderRow key={tr.address} tr={tr} explorer={explorer} />
+        ))}
+      </div>
+
+      {/* 移动卡片 < sm */}
+      <div className="sm:hidden space-y-2 max-h-[480px] overflow-y-auto">
+        {traders.map((tr) => (
+          <TraderCard key={tr.address} tr={tr} explorer={explorer} t={t} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function TraderRow({ tr, explorer }: { tr: TraderStats; explorer: string }) {
+  const netPositive = tr.netUsd >= 0;
+  const netColor = netPositive ? 'text-success' : 'text-danger';
+  return (
+    <a
+      href={`${explorer}/account/${tr.address}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="grid grid-cols-[1fr_70px_90px_90px] gap-2 px-2 py-2 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-b-0"
+    >
+      <span className="font-mono text-muted-foreground/80 truncate flex items-center gap-1">
+        {`${tr.address.slice(0, 6)}…${tr.address.slice(-4)}`}
+        <ExternalLink className="h-2.5 w-2.5 opacity-50 flex-shrink-0" />
+      </span>
+      <span className="text-right font-mono">
+        <span className="text-success">{tr.buyCount}</span>
+        <span className="text-muted-foreground/50">/</span>
+        <span className="text-danger">{tr.sellCount}</span>
+      </span>
+      <span className="text-right font-mono">${formatLibCompact(tr.totalUsdVolume)}</span>
+      <span className={`text-right font-mono ${netColor}`}>
+        {netPositive ? '+' : '−'}${formatLibCompact(Math.abs(tr.netUsd))}
+      </span>
+    </a>
+  );
+}
+
+function TraderCard({
+  tr,
+  explorer,
+  t,
+}: {
+  tr: TraderStats;
+  explorer: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const netPositive = tr.netUsd >= 0;
+  const netColor = netPositive ? 'text-success' : 'text-danger';
+  return (
+    <a
+      href={`${explorer}/account/${tr.address}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex flex-col gap-1.5 p-2.5 rounded-md border border-border/40 hover:bg-muted/30 transition-colors text-xs"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-muted-foreground/80 truncate flex items-center gap-1">
+          {`${tr.address.slice(0, 6)}…${tr.address.slice(-4)}`}
+          <ExternalLink className="h-2.5 w-2.5 opacity-50" />
+        </span>
+        <span className="font-mono">
+          <span className="text-success">{tr.buyCount}</span>
+          <span className="text-muted-foreground/50">/</span>
+          <span className="text-danger">{tr.sellCount}</span>
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-[11px]">
+        <div className="flex flex-col">
+          <span className="text-muted-foreground/60 text-[10px] uppercase tracking-wide">
+            {t('tradersCols.volume')}
+          </span>
+          <span className="font-mono">${formatLibCompact(tr.totalUsdVolume)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-muted-foreground/60 text-[10px] uppercase tracking-wide">
+            {t('tradersCols.netFlow')}
+          </span>
+          <span className={`font-mono ${netColor}`}>
+            {netPositive ? '+' : '−'}${formatLibCompact(Math.abs(tr.netUsd))}
+          </span>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+// ──────────────────────────────────────────────
+// 已有的 TradeRow / HolderRow / 工具函数(原样保留)
+// ──────────────────────────────────────────────
 
 function TradeRow({ tr, explorer }: { tr: GTTrade; explorer: string }) {
   const isBuy = tr.kind === 'buy';
@@ -327,7 +606,7 @@ function Empty({ Icon, title, subtitle }: { Icon: typeof Activity; title: string
     <div className="py-10 text-center">
       <Icon className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
       <div className="text-sm font-medium text-muted-foreground">{title}</div>
-      <div className="text-xs text-muted-foreground/60 mt-1">{subtitle}</div>
+      {subtitle && <div className="text-xs text-muted-foreground/60 mt-1">{subtitle}</div>}
     </div>
   );
 }

@@ -240,6 +240,8 @@
       "orders": "订单",
       "holders": "持有者",
       "risks": "风险明细",
+      "liquidity": "流动性",
+      "topTraders": "Top 交易者",
       "comingSoon": {
         "activity": {
           "title": "成交活动",
@@ -271,6 +273,22 @@
         "owner": "持有者",
         "amount": "持仓",
         "pct": "占比"
+      },
+      "liquidityCols": {
+        "dex": "DEX",
+        "pair": "交易对",
+        "liquidity": "流动性",
+        "volume24h": "24h 量"
+      },
+      "tradersCols": {
+        "address": "地址",
+        "buySell": "买 / 卖",
+        "volume": "成交额",
+        "netFlow": "净流入"
+      },
+      "empty": {
+        "liquidity": "暂无流动性池子数据",
+        "traders": "暂无成交数据"
       }
     },
     "buy": {

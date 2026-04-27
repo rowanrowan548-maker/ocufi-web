@@ -240,6 +240,8 @@
       "orders": "Orders",
       "holders": "Holders",
       "risks": "Risks",
+      "liquidity": "Liquidity",
+      "topTraders": "Top Traders",
       "comingSoon": {
         "activity": {
           "title": "Activity Feed",
@@ -271,6 +273,22 @@
         "owner": "Owner",
         "amount": "Amount",
         "pct": "%"
+      },
+      "liquidityCols": {
+        "dex": "DEX",
+        "pair": "Pair",
+        "liquidity": "Liquidity",
+        "volume24h": "24h Vol"
+      },
+      "tradersCols": {
+        "address": "Address",
+        "buySell": "Buy / Sell",
+        "volume": "Volume",
+        "netFlow": "Net Flow"
+      },
+      "empty": {
+        "liquidity": "No liquidity pools found",
+        "traders": "No trade data"
       }
     },
     "buy": {
