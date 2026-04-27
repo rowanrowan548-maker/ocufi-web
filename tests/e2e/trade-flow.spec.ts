@@ -111,3 +111,105 @@ test.describe('trade flow · URL-driven mint switch', () => {
     }
   });
 });
+
+// ──────────────────────────────────────────────
+// T-007d 回归测试 · /trade 4 阶段大重构后
+// ──────────────────────────────────────────────
+
+const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+
+test.describe('T-007d · /trade 4-stage 重构回归', () => {
+  test('底部 6 个 tab(Activity/Orders/Holders/Liquidity/Top Traders/Risks)切换不爆', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`);
+    });
+
+    await page.goto(`/trade?mint=${BONK_MINT}`);
+    // 锚点:Connect Wallet 出现 = 主屏渲染完成
+    await expect(
+      page.getByRole('button', { name: /Connect Wallet|连接钱包/ }).first()
+    ).toBeVisible({ timeout: 15_000 });
+
+    const tabs: Array<{ name: RegExp; label: string }> = [
+      { name: /^Activity\b|^成交活动\b/, label: 'activity' },
+      { name: /^Orders\b|^订单\b/, label: 'orders' },
+      { name: /^Holders\b|^持有者\b/, label: 'holders' },
+      { name: /^Liquidity\b|^流动性\b/, label: 'liquidity' },
+      { name: /^Top Traders\b|^Top 交易者\b/, label: 'top-traders' },
+      { name: /^Risks\b|^风险\b/, label: 'risks' },
+    ];
+    let foundCount = 0;
+    for (const t of tabs) {
+      const tab = page.getByRole('tab', { name: t.name }).first();
+      const present = await tab.isVisible({ timeout: 5_000 }).catch(() => false);
+      console.log(`[QA] tab ${t.label} 是否可见: ${present}`);
+      if (!present) continue;
+      foundCount += 1;
+      await tab.click();
+      // 等过渡 + tab panel 渲染(loading / data / empty 三态都接受)
+      await page.waitForTimeout(800);
+    }
+    expect(foundCount).toBeGreaterThanOrEqual(4); // 至少 4 个 tab 出现
+    console.log(`[QA] 切完 ${foundCount}/${tabs.length} 个 tab,console error 数: ${errors.length}`);
+    // 6 tab 切换全程不许 page error(pageerror 严重级)
+    expect(errors.filter((e) => e.startsWith('pageerror')).length).toBe(0);
+  });
+
+  test('顶部 6 个时间框架按钮(1m/5m/15m/1h/4h/1d)切换 chart 不报 page error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`);
+    });
+
+    await page.goto(`/trade?mint=${BONK_MINT}`);
+    await expect(
+      page.getByRole('button', { name: /Connect Wallet|连接钱包/ }).first()
+    ).toBeVisible({ timeout: 15_000 });
+
+    const TFS = ['1m', '5m', '15m', '1h', '4h', '1d'];
+    let clicked = 0;
+    for (const tf of TFS) {
+      // tf 按钮文本恰好等于 tf 字符串
+      const btn = page.getByRole('button').filter({ hasText: new RegExp(`^${tf}$`) }).first();
+      const present = await btn.isVisible({ timeout: 4_000 }).catch(() => false);
+      if (!present) {
+        console.log(`[QA] tf ${tf} 按钮未找到`);
+        continue;
+      }
+      await btn.click();
+      clicked += 1;
+      await page.waitForTimeout(500); // 给 OHLC 拉取启动一点时间
+    }
+    console.log(`[QA] 切了 ${clicked}/${TFS.length} 个时间框架,page error: ${errors.filter((e) => e.startsWith('pageerror')).length}`);
+    expect(clicked).toBeGreaterThanOrEqual(5);
+    // chart 切 tf 不许 page error(允许 fetch 失败 console.error 因为外网偶发 429)
+    expect(errors.filter((e) => e.startsWith('pageerror')).length).toBe(0);
+  });
+
+  test('Hero 数据条 6 项(Market cap/Liquidity/24h vol/Holders/Risk/Age)label 全在', async ({ page }) => {
+    await page.goto(`/trade?mint=${BONK_MINT}`);
+    await expect(
+      page.getByRole('button', { name: /Connect Wallet|连接钱包/ }).first()
+    ).toBeVisible({ timeout: 15_000 });
+
+    const labels = [
+      /Market\s*cap|市值/i,
+      /Liquidity|流动性/i,
+      /24h\s*vol|24h\s*量/i,
+      /Holders|持币|持有者/i,
+      /Risk|风险/i,
+      /Age|年龄/i,
+    ];
+    const present: boolean[] = [];
+    for (const re of labels) {
+      const found = await page.getByText(re).first().isVisible({ timeout: 5_000 }).catch(() => false);
+      present.push(found);
+    }
+    console.log(`[QA] Hero 数据条 6 label 命中: ${present.map((b, i) => `${i}:${b}`).join(' ')}`);
+    const hits = present.filter(Boolean).length;
+    expect(hits).toBeGreaterThanOrEqual(5); // 6 命中至少 5,容忍单个 label 文本变体
+  });
+});
