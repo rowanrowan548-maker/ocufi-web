@@ -17,6 +17,7 @@
  */
 import {
   AddressLookupTableAccount,
+  ComputeBudgetProgram,
   Connection,
   PublicKey,
   SystemProgram,
@@ -160,6 +161,26 @@ export async function buildSwapTxWithFee(
 
   // 2. 组装 instructions
   const instructions: TransactionInstruction[] = [];
+
+  // T-812 · ComputeBudget fallback:
+  //   `dynamicComputeUnitLimit: true` 让 Jupiter 在 computeBudgetInstructions 返一条
+  //   SetComputeUnitLimit ix。但偶有不返的情况,导致 tx 用 Solana 默认 200K CU,
+  //   Jupiter swap 实际需要 200K-400K CU,易触发 "Computational budget exceeded"
+  //   → simulate 失败 → Phantom 红警(T-810 抓的真因)
+  //   保险:扫描 Jupiter 返回的 ix,若缺 SetComputeUnitLimit(discriminator=2),
+  //   手动 unshift 一条 400_000 CU 的 fallback。
+  const COMPUTE_BUDGET_PROGRAM_ID = ComputeBudgetProgram.programId.toBase58();
+  const hasSetUnitLimit = resp.computeBudgetInstructions.some((ix) => {
+    if (ix.programId !== COMPUTE_BUDGET_PROGRAM_ID) return false;
+    const data = Buffer.from(ix.data, 'base64');
+    return data.length > 0 && data[0] === 2; // 2 = SetComputeUnitLimit
+  });
+  if (!hasSetUnitLimit) {
+    console.warn(
+      '[swap-with-fee] Jupiter response missing SetComputeUnitLimit, fallback to 400_000 CU'
+    );
+    instructions.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }));
+  }
   instructions.push(...resp.computeBudgetInstructions.map(jsonToIx));
   if (resp.tokenLedgerInstruction) instructions.push(jsonToIx(resp.tokenLedgerInstruction));
   instructions.push(...resp.setupInstructions.map(jsonToIx));
