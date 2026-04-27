@@ -1,62 +1,17 @@
 /**
- * GeckoTerminal API 封装(交易活动 feed)
+ * 交易活动 feed(走 ocufi-api 后端代理)
  *
- * 免费 · 无 key · ~30 req/min(全 IP)
- * 流程:mint → 查最深 pool → 拉该 pool 最近 trades
+ * T-706b:之前直击 api.geckoterminal.com 撞 429 限速 + CORS,console 雪崩。
+ * 改走 `${NEXT_PUBLIC_API_URL}/token/trades?mint=X&limit=Y`(后端 T-706,
+ * 60s + 5min 双层缓存,雪崩锁,stale-while-error;后端做 retry,前端不再做)
  *
- * 安全防护:
- *  - 所有请求 10s timeout
- *  - 缓存 pool 地址 5 分钟
- *  - trades 字段全部经过 Number() 强制类型,防恶意服务端注入
+ * 字段契约(后端已对齐 GTTrade 接口):
+ *  { ok: bool, trades?: GTTrade[], cached?: bool, error?: string }
+ *
+ * 失败降级:返 [](activity-board 已 null-guard)
  */
 
-const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/solana';
 const FETCH_TIMEOUT_MS = 10_000;
-
-/** GT 限速 / 5xx 重试间隔(ms) · 共 3 次 attempts(首次 + 2 次重试) */
-const GT_RETRY_DELAYS_MS = [600, 1500] as const;
-
-/**
- * GT API 专用 fetch with retry · 429 / 5xx / 网络错 → 重试,4xx → 立即返
- *
- * 给 ohlc.ts 等其他 GT 调用方复用,避免到处复制 retry 模板
- *
- * @returns 最后一次的 Response(可能是 4xx,调用方自己处理 ok 检查)
- *          网络/timeout 全失败时抛错
- */
-export async function fetchGtWithRetry(url: string): Promise<Response> {
-  let lastErr: unknown;
-  const total = GT_RETRY_DELAYS_MS.length + 1;
-  for (let attempt = 0; attempt < total; attempt++) {
-    try {
-      const res = await fetch(url, {
-        cache: 'no-store',
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      const isRetryable = res.status === 429 || res.status >= 500;
-      if (!isRetryable) return res;
-      if (attempt < total - 1) {
-        const baseDelay = GT_RETRY_DELAYS_MS[attempt];
-        const jitter = Math.random() * 200;
-        console.warn(
-          `[gt] HTTP ${res.status}, retry ${attempt + 1}/${total - 1} in ${Math.round(baseDelay + jitter)}ms`
-        );
-        await new Promise((r) => setTimeout(r, baseDelay + jitter));
-        continue;
-      }
-      return res;
-    } catch (e) {
-      lastErr = e;
-      if (attempt < total - 1) {
-        const baseDelay = GT_RETRY_DELAYS_MS[attempt];
-        await new Promise((r) => setTimeout(r, baseDelay + Math.random() * 200));
-        continue;
-      }
-      throw e;
-    }
-  }
-  throw lastErr ?? new Error('fetchGtWithRetry: unreachable');
-}
 
 export interface GTTrade {
   /** 交易方向(对该池基准代币而言) */
@@ -71,68 +26,52 @@ export interface GTTrade {
   usdValue: number;
 }
 
-const poolCache = new Map<string, { pool: string; expiresAt: number }>();
-const POOL_TTL_MS = 5 * 60 * 1000;
-
-export async function fetchTopPool(mint: string): Promise<string | null> {
-  const cached = poolCache.get(mint);
-  if (cached && cached.expiresAt > Date.now()) return cached.pool;
-
-  try {
-    const res = await fetchGtWithRetry(
-      `${GT_BASE}/tokens/${encodeURIComponent(mint)}/pools?page=1`
-    );
-    if (!res.ok) return null;
-    const json = await res.json();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pools: any[] = json?.data ?? [];
-    if (pools.length === 0) return null;
-    const top = pools[0];
-    const pool = String(top?.attributes?.address ?? '').trim();
-    if (!pool) return null;
-    poolCache.set(mint, { pool, expiresAt: Date.now() + POOL_TTL_MS });
-    return pool;
-  } catch {
-    return null;
+/** 入口:mint → 一把拉到 trades(失败返回空数组) */
+export async function fetchMintTrades(mint: string, limit = 100): Promise<GTTrade[]> {
+  if (!mint) return [];
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    // 后端未配置 → 不走直击 GT 回落(防 BUG-035 限速复燃),返空
+    console.warn('[gt-trades] NEXT_PUBLIC_API_URL not set, trades disabled');
+    return [];
   }
-}
+  const safeLimit = Math.min(Math.max(1, Math.floor(limit) || 100), 1000);
+  const url =
+    `${apiUrl.replace(/\/$/, '')}/token/trades` +
+    `?mint=${encodeURIComponent(mint)}&limit=${safeLimit}`;
 
-export async function fetchPoolTrades(
-  pool: string,
-  limit = 100
-): Promise<GTTrade[]> {
   try {
-    const res = await fetchGtWithRetry(
-      `${GT_BASE}/pools/${encodeURIComponent(pool)}/trades`
-    );
+    const res = await fetch(url, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
     if (!res.ok) return [];
     const json = await res.json();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const trades: any[] = json?.data ?? [];
+    if (!json || json.ok !== true || !Array.isArray(json.trades)) {
+      const errMsg = json?.error ? String(json.error) : 'unknown';
+      console.warn('[gt-trades] backend error', mint.slice(0, 8), errMsg);
+      return [];
+    }
+    // 后端已经对齐 GTTrade 字段(kind/blockTimestampMs/txSignature/fromAddress/usdValue),
+    // 但保险起见运行时再过一遍类型校验,防服务端字段漂移
     const out: GTTrade[] = [];
-    for (const t of trades.slice(0, limit)) {
-      const a = t?.attributes;
-      if (!a) continue;
-      const tx = String(a.tx_hash ?? '').trim();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const t of json.trades as any[]) {
+      if (!t || typeof t !== 'object') continue;
+      const tx = String(t.txSignature ?? '').trim();
       if (!tx) continue;
       out.push({
-        kind: a.kind === 'buy' ? 'buy' : 'sell',
-        blockTimestampMs: a.block_timestamp ? new Date(a.block_timestamp).getTime() : 0,
+        kind: t.kind === 'sell' ? 'sell' : 'buy',
+        blockTimestampMs: Number(t.blockTimestampMs ?? 0),
         txSignature: tx,
-        fromAddress: String(a.tx_from_address ?? '').trim(),
-        usdValue: Number(a.volume_in_usd ?? 0),
+        fromAddress: String(t.fromAddress ?? '').trim(),
+        usdValue: Number(t.usdValue ?? 0),
       });
     }
     out.sort((a, b) => b.blockTimestampMs - a.blockTimestampMs);
     return out;
-  } catch {
+  } catch (e) {
+    console.warn('[gt-trades] fetch failed', mint.slice(0, 8), e);
     return [];
   }
-}
-
-/** 入口:mint → 一把拉到 trades(失败返回空数组) */
-export async function fetchMintTrades(mint: string, limit = 100): Promise<GTTrade[]> {
-  const pool = await fetchTopPool(mint);
-  if (!pool) return [];
-  return fetchPoolTrades(pool, limit);
 }
