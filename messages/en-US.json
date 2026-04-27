@@ -522,7 +522,7 @@
   "portfolio": {
     "page": {
       "title": "Portfolio",
-      "subtitle": "All SPL tokens in your wallet with live valuation (auto-refreshes every 30s)"
+      "subtitle": "All SPL tokens in your on-chain wallet with live valuation (auto-refreshes every 30s)"
     },
     "totalValue": "Total Value (USD)",
     "walletAddress": "Wallet",
@@ -837,7 +837,7 @@
   "alerts": {
     "page": {
       "title": "Price Alerts",
-      "subtitle": "Get notified when prices hit your target (browser must be open in V1)"
+      "subtitle": "Get notified when prices hit your target · Web / Telegram push coming soon"
     },
     "permission": {
       "title": "Enable browser notifications",
@@ -864,7 +864,7 @@
       "title": "My Alerts",
       "empty": "No alerts yet",
       "refreshHint": "Polls every 30s",
-      "backendHint": "Backend polls every 60s, client syncs every 20s",
+      "backendHint": "Notification delay under 90 seconds",
       "token": "Token",
       "condition": "Trigger",
       "current": "Now",

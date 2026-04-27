@@ -522,7 +522,7 @@
   "portfolio": {
     "page": {
       "title": "我的持仓",
-      "subtitle": "你钱包里所有 SPL 代币 + 实时估值(30 秒自动刷新)"
+      "subtitle": "你链上钱包里所有 SPL 代币 + 实时估值(30 秒自动刷新)"
     },
     "totalValue": "总资产(USD)",
     "walletAddress": "钱包",
@@ -852,7 +852,7 @@
   "alerts": {
     "page": {
       "title": "价格提醒",
-      "subtitle": "到价自动弹窗通知 · 浏览器打开着才工作(V1)"
+      "subtitle": "到价自动弹窗通知 · 支持网页 / TG 推送(即将上线)"
     },
     "permission": {
       "title": "开启浏览器通知",
@@ -879,7 +879,7 @@
       "title": "我的提醒",
       "empty": "还没有设置任何提醒",
       "refreshHint": "30 秒自动轮询",
-      "backendHint": "后端 60 秒一次,前端 20 秒同步",
+      "backendHint": "通知延迟 < 90 秒",
       "token": "代币",
       "condition": "触发条件",
       "current": "当前价",

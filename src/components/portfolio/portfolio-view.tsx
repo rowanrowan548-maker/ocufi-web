@@ -454,8 +454,8 @@ export function PortfolioView() {
                         : 'text-foreground'
                     }`}
                   >
-                    {pnlSummary.realizedUsd >= 0 ? '+' : '-'}$
-                    {formatUsd(Math.abs(pnlSummary.realizedUsd))}
+                    {pnlSummary.realizedUsd >= 0 ? '+' : '-'}
+                    {formatAmount(Math.abs(pnlSummary.realizedUsd), currency, solUsdPrice)}
                   </div>
                   <div className="text-[10px] text-muted-foreground/60 tabular-nums flex flex-col">
                     <span>
@@ -469,8 +469,8 @@ export function PortfolioView() {
                             : ''
                         }
                       >
-                        {pnlSummary.totalUsd >= 0 ? '+' : '-'}$
-                        {formatUsd(Math.abs(pnlSummary.totalUsd))}
+                        {pnlSummary.totalUsd >= 0 ? '+' : '-'}
+                        {formatAmount(Math.abs(pnlSummary.totalUsd), currency, solUsdPrice)}
                       </span>
                     </span>
                     <span>
@@ -484,8 +484,8 @@ export function PortfolioView() {
                             : ''
                         }
                       >
-                        {pnlSummary.unrealizedUsd >= 0 ? '+' : '-'}$
-                        {formatUsd(Math.abs(pnlSummary.unrealizedUsd))}
+                        {pnlSummary.unrealizedUsd >= 0 ? '+' : '-'}
+                        {formatAmount(Math.abs(pnlSummary.unrealizedUsd), currency, solUsdPrice)}
                       </span>
                     </span>
                   </div>
@@ -522,8 +522,8 @@ export function PortfolioView() {
                       </div>
                       <div className="text-[10px] text-muted-foreground/60 font-mono truncate">
                         {topGainers[0].symbol}{' · '}
-                        {topGainers[0].pnlUsd >= 0 ? '+' : '-'}$
-                        {formatUsd(Math.abs(topGainers[0].pnlUsd))}
+                        {topGainers[0].pnlUsd >= 0 ? '+' : '-'}
+                        {formatAmount(Math.abs(topGainers[0].pnlUsd), currency, solUsdPrice)}
                       </div>
                     </>
                   ) : (
@@ -628,8 +628,8 @@ export function PortfolioView() {
                   </div>
                   <div className="text-xl font-bold font-mono text-success tabular-nums leading-tight">
                     {fees.txCount > 0 && savedUsd > 0
-                      ? `+$${formatUsd(savedUsd)}`
-                      : '$0.00'}
+                      ? `+${formatAmount(savedUsd, currency, solUsdPrice)}`
+                      : formatAmount(0, currency, solUsdPrice)}
                   </div>
                   <div className="text-[10px] text-muted-foreground/60">
                     {t('portfolio.stats.savedFeesNote', { n: fees.txCount })}
