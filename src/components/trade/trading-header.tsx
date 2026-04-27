@@ -350,49 +350,52 @@ export function TradingHeader({ mint, detail: detailProp, onSelectMint }: Props)
           )}
         />
 
-        {/* 价格(左大字) + 6 项 vertical 数据(右) */}
-        <div className="mt-3 pt-3 border-t border-border/40 grid grid-cols-[1fr_auto] gap-4">
-          <div className="flex flex-col justify-center gap-1 min-w-0">
-            <span className="text-3xl font-bold font-mono tracking-tight leading-none truncate">
-              ${formatPrice(detail.priceUsd)}
+        {/* 价格行(占满宽 · inline 涨跌 ) */}
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-baseline gap-3 flex-wrap">
+          <span className="text-2xl font-bold font-mono tracking-tight leading-none">
+            ${formatPrice(detail.priceUsd)}
+          </span>
+          {change != null && (
+            <span
+              className={`text-sm font-mono font-medium flex items-center gap-0.5 ${changeColor}`}
+            >
+              {ChangeIcon && <ChangeIcon className="h-3.5 w-3.5" />}
+              {up ? '+' : ''}
+              {change.toFixed(2)}%
             </span>
-            {change != null && (
-              <span
-                className={`text-sm font-mono font-medium flex items-center gap-0.5 ${changeColor}`}
-              >
-                {ChangeIcon && <ChangeIcon className="h-3.5 w-3.5" />}
-                {up ? '+' : ''}
-                {change.toFixed(2)}%
-              </span>
-            )}
-          </div>
+          )}
+        </div>
 
-          <div className="flex flex-col gap-1 text-xs min-w-0 max-w-[55%]">
-            <DataRow
-              label={t('trade.header.dataLabels.marketCap')}
-              value={formatUsdCompact(detail.marketCap)}
-            />
-            <DataRow
-              label={t('trade.header.dataLabels.liquidity')}
-              value={formatUsdCompact(detail.liquidityUsd)}
-            />
-            <DataRow
-              label={t('trade.header.dataLabels.volume24h')}
-              value={formatUsdCompact(detail.volume24h ?? null)}
-            />
-            <DataRow
-              label={t('trade.header.dataLabels.holders')}
-              value={formatCompact(detail.totalHolders ?? null)}
-            />
-            <DataRow
-              label={t('trade.header.dataLabels.risk')}
-              value={<RiskBadge level={risk} label={t(`token.risk.${risk}`)} />}
-            />
-            <DataRow
-              label={t('trade.header.dataLabels.age')}
-              value={formatAge(detail.createdAt, t)}
-            />
+        {/* 数据条 6 项 grid-cols-3 × 2 行 */}
+        <div className="mt-3 pt-3 border-t border-border/40 grid grid-cols-3 gap-3">
+          <DataCell
+            label={t('trade.header.dataLabels.marketCap')}
+            value={formatUsdCompact(detail.marketCap)}
+          />
+          <DataCell
+            label={t('trade.header.dataLabels.liquidity')}
+            value={formatUsdCompact(detail.liquidityUsd)}
+          />
+          <DataCell
+            label={t('trade.header.dataLabels.volume24h')}
+            value={formatUsdCompact(detail.volume24h ?? null)}
+          />
+          <DataCell
+            label={t('trade.header.dataLabels.holders')}
+            value={formatCompact(detail.totalHolders ?? null)}
+          />
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-muted-foreground text-[10px] uppercase tracking-wide">
+              {t('trade.header.dataLabels.risk')}
+            </span>
+            <div className="flex items-center">
+              <RiskBadge level={risk} label={t(`token.risk.${risk}`)} />
+            </div>
           </div>
+          <DataCell
+            label={t('trade.header.dataLabels.age')}
+            value={formatAge(detail.createdAt, t)}
+          />
         </div>
       </Card>
     </>
@@ -406,25 +409,6 @@ function DataCell({ label, value }: { label: string; value: string }) {
         {label}
       </span>
       <span className="text-foreground font-mono text-sm font-medium truncate">
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function DataRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2 min-w-0">
-      <span className="text-muted-foreground text-[10px] uppercase tracking-wide flex-shrink-0">
-        {label}
-      </span>
-      <span className="font-mono font-medium text-foreground text-right truncate min-w-0">
         {value}
       </span>
     </div>

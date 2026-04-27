@@ -26,6 +26,7 @@ import {
   type Time,
 } from 'lightweight-charts';
 import { fetchOhlc, resolvePool, type Timeframe, type OhlcCandle } from '@/lib/ohlc';
+import { SOL_MINT } from '@/lib/jupiter';
 
 const UP_COLOR = '#19FB9B';
 const DOWN_COLOR = '#FF3B5C';
@@ -109,7 +110,8 @@ export function ChartCard({ mint }: Props) {
 
   // ── 2. 解析 mint → pool ──
   useEffect(() => {
-    if (!mint) {
+    if (!mint || mint === SOL_MINT) {
+      // SOL 是基础币,无独立 LP 池(应去 SOL/USDC 等池查 K 线),早走 fallback
       setPool(null);
       setCandles([]);
       return;
@@ -183,6 +185,21 @@ export function ChartCard({ mint }: Props) {
   const showSpinner = (loading || pool === undefined) && candles.length === 0;
   const showEmpty = !loading && pool === null;
   const showError = !loading && errored && candles.length === 0 && pool != null;
+
+  // SOL 基础币无独立 LP 池,K 线请去 SOL/USDC 等池查 → 友好 fallback
+  if (mint === SOL_MINT) {
+    return (
+      <Card className="overflow-hidden p-0">
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-1.5">
+          <LineChart className="h-6 w-6 text-muted-foreground/40 mb-1" />
+          <span className="text-sm font-medium">{t('solBaseFallback')}</span>
+          <span className="text-xs text-muted-foreground/60 px-4 text-center">
+            {t('solBaseHint')}
+          </span>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden p-0">

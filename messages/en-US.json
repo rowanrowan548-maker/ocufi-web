@@ -219,7 +219,9 @@
       },
       "loading": "Loading…",
       "empty": "No data",
-      "error": "Chart failed to load"
+      "error": "Chart failed to load",
+      "solBaseFallback": "SOL is Solana's base asset",
+      "solBaseHint": "View charts via USDC / USDT pairs"
     },
     "trust": {
       "title": "🛡 Safety Signals",
