@@ -201,6 +201,13 @@
       "down": "节点暂不可达,部分功能可能受影响",
       "retry": "重试"
     },
+    "mobileTabs": {
+      "chart": "图表",
+      "detail": "详情",
+      "data": "数据",
+      "risk": "风险",
+      "activity": "活动"
+    },
     "chart": {
       "timeframes": {
         "1m": "1 分钟",

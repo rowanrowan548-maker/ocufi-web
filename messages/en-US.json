@@ -201,6 +201,13 @@
       "down": "Node is unreachable; some features may be affected",
       "retry": "Retry"
     },
+    "mobileTabs": {
+      "chart": "Chart",
+      "detail": "Detail",
+      "data": "Data",
+      "risk": "Risk",
+      "activity": "Activity"
+    },
     "chart": {
       "timeframes": {
         "1m": "1m",

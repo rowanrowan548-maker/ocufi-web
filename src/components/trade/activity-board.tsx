@@ -30,18 +30,28 @@ import { fetchDexPairs, type DexPairInfo } from '@/lib/dex-pairs';
 import { aggregateTraders, type TraderStats } from '@/lib/top-traders';
 import { formatCompact as formatLibCompact, formatUsdCompact } from '@/lib/format';
 
+export type ActivityBoardTab =
+  | 'activity'
+  | 'orders'
+  | 'holders'
+  | 'liquidity'
+  | 'top-traders'
+  | 'risks';
+
 interface Props {
   detail: TokenDetail | null;
+  /** 默认聚焦哪个内 tab(给 T-505a 移动端 5 tab 复用 ActivityBoard 用) */
+  initialTab?: ActivityBoardTab;
 }
 
 const ACTIVITY_REFRESH_MS = 30_000;
 
-export function ActivityBoard({ detail }: Props) {
+export function ActivityBoard({ detail, initialTab }: Props) {
   const t = useTranslations('trade.activity');
   const locale = useLocale();
   const chain = getCurrentChain();
   const { connection } = useConnection();
-  const [tab, setTab] = useState('activity');
+  const [tab, setTab] = useState<ActivityBoardTab>(initialTab ?? 'activity');
 
   const mint = detail?.mint;
 
@@ -109,7 +119,7 @@ export function ActivityBoard({ detail }: Props) {
 
   return (
     <Card className="p-4">
-      <Tabs value={tab} onValueChange={(v) => v && setTab(v)}>
+      <Tabs value={tab} onValueChange={(v) => v && setTab(v as ActivityBoardTab)}>
         <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto overflow-x-auto">
           <TabBtn value="activity" Icon={Activity}>
             {t('activity')}{trades?.length ? ` ${trades.length}` : ''}

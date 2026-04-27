@@ -24,6 +24,7 @@ import { TradeTabs } from './trade-tabs';
 import { TrustSignals } from './trust-signals';
 import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
+import { MobileTabSwitcher, type MobileTab } from './mobile-tab-switcher';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { SOL_MINT } from '@/lib/preset-tokens';
 
@@ -40,6 +41,7 @@ export function TradeScreen() {
   const [mint, setMint] = useState<string>(SOL_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
   const [defaultSide, setDefaultSide] = useState<'buy' | 'sell' | undefined>(undefined);
+  const [mobileTab, setMobileTab] = useState<MobileTab>('chart');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -75,11 +77,8 @@ export function TradeScreen() {
       <TokenSearchCombo value={mint} onSelect={setMint} />
       <TradingHeader mint={mint} detail={detail} />
 
-      <div className="grid lg:grid-cols-[1fr_400px] gap-4 items-start">
-        {/*
-         * 移动端:DOM 顺序 = 显示顺序 → 交易面板第一(用户最常用),其次 K线/活动
-         * 桌面端:lg:order-1/2 把 K线 拉到左,交易面板拉到右
-         */}
+      {/* 桌面 lg+:现有 grid 完全不动(T-501/502/503/504 视觉) */}
+      <div className="hidden lg:grid lg:grid-cols-[1fr_400px] gap-4 items-start">
         <div className="space-y-4 lg:order-2">
           <TrustSignals detail={detail} />
           <TradeTabs
@@ -97,6 +96,28 @@ export function TradeScreen() {
           <ChartCard mint={mint} />
           <ActivityBoard detail={detail} />
         </div>
+      </div>
+
+      {/* 移动 < lg:5 tab 切换布局(T-505a) */}
+      <div className="lg:hidden flex flex-col gap-4">
+        <MobileTabSwitcher value={mobileTab} onChange={setMobileTab} />
+        {mobileTab === 'chart' && <ChartCard mint={mint} />}
+        {mobileTab === 'detail' && (
+          <div className="space-y-4">
+            <TrustSignals detail={detail} />
+            <InfoPanel detail={detail} />
+            <SafetyPanel detail={detail} />
+          </div>
+        )}
+        {mobileTab === 'data' && (
+          <ActivityBoard detail={detail} initialTab="liquidity" />
+        )}
+        {mobileTab === 'risk' && (
+          <ActivityBoard detail={detail} initialTab="risks" />
+        )}
+        {mobileTab === 'activity' && (
+          <ActivityBoard detail={detail} initialTab="activity" />
+        )}
       </div>
     </div>
   );
