@@ -15,12 +15,14 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
-import { Zap, X, Settings2 } from 'lucide-react';
+import { Zap, Settings2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import { TradeTabs } from './trade-tabs';
 import { QuickBuyConfirm } from './quick-buy-confirm';
@@ -144,24 +146,16 @@ export function MobileActionBar({
       <Sheet open={tradeOpen} onOpenChange={setTradeOpen}>
         <SheetContent
           side="bottom"
-          showCloseButton={false}
-          className="h-[85vh] p-0 rounded-t-xl flex flex-col"
+          className="h-[85vh] p-0 rounded-t-xl flex flex-col gap-0"
         >
-          {/* 顶栏固定不滚 · BUG-031b:之前 sticky + 整体 overflow-auto 在长内容下被推走 */}
-          <div className="flex items-center justify-between bg-popover border-b border-border/40 px-4 py-3 flex-shrink-0">
-            <span className="text-base font-medium">
+          {/* BUG-031c:用 shadcn 默认 close button(absolute top-3 right-3,
+              脱离文档流,长内容也永远可见)+ SheetHeader 提供无障碍语义 */}
+          <SheetHeader className="flex flex-row items-center bg-popover border-b border-border/40 px-4 py-3 flex-shrink-0 space-y-0 gap-0 pr-12">
+            <SheetTitle className="text-base">
               {t('tradeSheetTitle')}
-            </span>
-            <button
-              type="button"
-              onClick={() => setTradeOpen(false)}
-              aria-label="Close"
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          {/* 内容区独立滚动,顶栏永远在视口顶 */}
+            </SheetTitle>
+          </SheetHeader>
+          {/* 内容区独立滚动,SheetHeader 永远在视口顶 */}
           <div className="flex-1 overflow-y-auto p-4">
             <TradeTabs
               mint={mint}
@@ -178,20 +172,11 @@ export function MobileActionBar({
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
         <SheetContent
           side="bottom"
-          showCloseButton={false}
-          className="p-0 rounded-t-xl flex flex-col max-h-[60vh]"
+          className="p-0 rounded-t-xl flex flex-col max-h-[60vh] gap-0"
         >
-          <div className="flex items-center justify-between bg-popover border-b border-border/40 px-4 py-3 flex-shrink-0">
-            <span className="text-base font-medium">{t('quickBuySettings')}</span>
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(false)}
-              aria-label="Close"
-              className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <SheetHeader className="flex flex-row items-center bg-popover border-b border-border/40 px-4 py-3 flex-shrink-0 space-y-0 gap-0 pr-12">
+            <SheetTitle className="text-base">{t('quickBuySettings')}</SheetTitle>
+          </SheetHeader>
           <div className="p-4 space-y-4 overflow-y-auto">
             <div className="grid grid-cols-5 gap-2">
               {PRESETS.map((p) => {

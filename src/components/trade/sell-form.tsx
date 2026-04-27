@@ -355,8 +355,8 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
             </div>
           )}
 
-          {/* 数量 + 滑点 + Gas */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* BUG-036:数量全宽,滑点 + Gas 横排 50/50(桌面 + 移动一致) */}
+          <div className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="sell-amount">{t('trade.sell.amount')}</Label>
               <Input
@@ -369,27 +369,29 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                 onChange={(e) => { setTokenAmount(e.target.value); setFullSellRaw(null); resetOnInput(); }}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="sell-slippage">{t('trade.fields.slippage')}</Label>
-              <Select
-                value={String(slippageBps)}
-                onValueChange={(v) => {
-                  setSlippageBps(Number(v));
-                  slippageTouched.current = true;
-                  resetOnInput();
-                }}
-              >
-                <SelectTrigger id="sell-slippage">
-                  {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
-                </SelectTrigger>
-                <SelectContent>
-                  {SLIPPAGE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="sell-slippage">{t('trade.fields.slippage')}</Label>
+                <Select
+                  value={String(slippageBps)}
+                  onValueChange={(v) => {
+                    setSlippageBps(Number(v));
+                    slippageTouched.current = true;
+                    resetOnInput();
+                  }}
+                >
+                  <SelectTrigger id="sell-slippage">
+                    {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SLIPPAGE_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} />
             </div>
-            <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} />
           </div>
 
           {/* 错误 */}
