@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { routing } from '@/i18n/routing';
 import { useCurrency, useSetCurrency, type Currency } from '@/lib/currency-store';
@@ -43,7 +43,9 @@ export function SettingsMenu({ inline }: Props) {
           {wallet.connected && (
             <button
               type="button"
-              onClick={() => wallet.disconnect()}
+              onClick={() => {
+                wallet.disconnect().catch(() => {});
+              }}
               className="w-full flex items-center gap-2 px-2 py-2 rounded text-sm text-danger hover:bg-danger/5"
             >
               <LogOut className="h-4 w-4" />
@@ -72,16 +74,18 @@ export function SettingsMenu({ inline }: Props) {
         <Settings className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72 p-3">
-        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70">
+        <div className="px-1.5 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
           {t('settings.title')}
-        </DropdownMenuLabel>
+        </div>
         <div className="px-1 pb-2">
           <SettingsBody />
         </div>
         <DropdownMenuSeparator className="my-1" />
         {wallet.connected && (
           <DropdownMenuItem
-            onClick={() => wallet.disconnect()}
+            onClick={() => {
+              wallet.disconnect().catch(() => {});
+            }}
             className="cursor-pointer text-danger focus:text-danger"
           >
             <LogOut className="h-4 w-4 mr-2" />
