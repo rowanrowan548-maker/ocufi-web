@@ -15,7 +15,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
-import { Loader2, LineChart } from 'lucide-react';
+import { Loader2, LineChart, RefreshCw } from 'lucide-react';
 import {
   createChart,
   ColorType,
@@ -57,6 +57,8 @@ export function ChartCard({ mint }: Props) {
   const [candles, setCandles] = useState<OhlcCandle[]>([]);
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
+  // T-703:重试按钮 nonce · 递增触发 fetch effect 重跑
+  const [retryNonce, setRetryNonce] = useState(0);
   // BUG-023:strict mode 双 mount 时,第二次 mount 后 series ref 是新的但 candles 没变
   // candle effect 不会重跑 → 空白。chartReady 翻转触发数据 effect 把 candles 推进新 series。
   const [chartReady, setChartReady] = useState(false);
@@ -151,7 +153,7 @@ export function ChartCard({ mint }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [mint, tf]);
+  }, [mint, tf, retryNonce]);
 
   // ── 3. 推数据到 series · deps 含 chartReady,strict mode 第二次 mount 后会重推 ──
   useEffect(() => {
@@ -254,6 +256,15 @@ export function ChartCard({ mint }: Props) {
             <span className="text-xs text-muted-foreground/60 px-4 text-center">
               {t('serviceUnavailableHint')}
             </span>
+            {/* T-703:重试按钮 · pointer-events-auto 覆盖 Overlay 默认 none */}
+            <button
+              type="button"
+              onClick={() => setRetryNonce((n) => n + 1)}
+              className="pointer-events-auto mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border/60 hover:border-primary/40 hover:bg-muted/40 text-xs font-medium text-foreground transition-colors"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              {t('retry')}
+            </button>
           </Overlay>
         )}
       </div>
