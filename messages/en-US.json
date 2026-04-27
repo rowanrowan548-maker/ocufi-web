@@ -286,6 +286,14 @@
         "renounced": "✅ Renounced",
         "active": "⚠️ Active",
         "unknown": "—"
+      },
+      "overall": {
+        "verified": "Verified",
+        "low": "Low risk",
+        "medium": "Moderate risk",
+        "high": "High risk",
+        "critical": "Critical",
+        "unknown": "No data"
       }
     },
     "search": {
@@ -414,8 +422,6 @@
       "max": "MAX"
     },
     "buttons": {
-      "quote": "Get Quote",
-      "quoting": "Quoting…",
       "buy": "Confirm Buy",
       "sell": "Confirm Sell",
       "buyAgain": "Buy Again",
@@ -436,6 +442,7 @@
       "networkFee": "Network gas (max)",
       "slippageWarn": "⚠️ Slippage {impact}% · {sol} SOL ≈ ${loss} USD loss — try {suggested}%",
       "slippageApply": "Raise to {bps}%",
+      "currentSlipGasHint": "Slippage {slippage}% · Priority {gasLabel}",
       "minReceiveTooltip": "Slippage floor at {pct}%",
       "platformFeeTooltip": "Ocufi 0.1% (buy only, direct on-chain transfer, verifiable)",
       "networkFeeTooltip": "Solana network gas + priority fee ceiling — actual cost may be lower",

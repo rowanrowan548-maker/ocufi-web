@@ -286,6 +286,14 @@
         "renounced": "✅ 已放弃",
         "active": "⚠️ 未放弃",
         "unknown": "—"
+      },
+      "overall": {
+        "verified": "已验证",
+        "low": "低风险",
+        "medium": "中等风险",
+        "high": "高风险",
+        "critical": "严重风险",
+        "unknown": "数据不足"
       }
     },
     "search": {
@@ -414,8 +422,6 @@
       "max": "MAX"
     },
     "buttons": {
-      "quote": "查询报价",
-      "quoting": "查询中…",
       "buy": "确认买入",
       "sell": "确认卖出",
       "buyAgain": "再买一单",
@@ -436,6 +442,7 @@
       "networkFee": "网络 Gas(上限)",
       "slippageWarn": "⚠️ 滑点 {impact}% · {sol} SOL 约损失 ${loss} USD,建议改 {suggested}%",
       "slippageApply": "拉到 {bps}%",
+      "currentSlipGasHint": "滑点 {slippage}% · 优先级 {gasLabel}",
       "minReceiveTooltip": "滑点 {pct}% 兜底",
       "platformFeeTooltip": "Ocufi 0.1%(仅买入,自组 tx 直接转入,链上可查)",
       "networkFeeTooltip": "Solana 网络 Gas + 优先费上限,实际可能更低",

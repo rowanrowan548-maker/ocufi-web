@@ -11,6 +11,7 @@
  * V2 接后端 /feedback API 后,可改成站内提交,这里继续保留 GitHub Issue 路径作为公开备案
  */
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MessageSquare, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,9 +22,16 @@ const TWITTER_HANDLE = 'Ocufi_io';
 
 export function FeedbackButton() {
   const t = useTranslations('feedback');
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+
+  // T-926 #44:trade 页隐藏(FAB 遮挡 buy 按钮)。其他页保留。
+  // pathname 形如 /zh-CN/trade,匹配 /trade 段而非 prefix locale
+  if (/^\/[a-z]{2}-[A-Z]{2}\/trade(\/|$|\?)/.test(pathname ?? '')) {
+    return null;
+  }
 
   function submitToGitHub() {
     const title = encodeURIComponent(subject.slice(0, 100) || 'Feedback');

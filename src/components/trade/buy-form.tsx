@@ -432,14 +432,14 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX */}
           {wallet.connected && (
             <div className="flex gap-2 flex-wrap">
-              {[0.1, 0.5, 1].map((v) => (
+              {[0.1, 0.5, 1, 2, 5].map((v) => (
                 <Button
                   key={v}
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
-                  className="text-xs px-3"
+                  className="text-xs px-2.5"
                 >
                   {v} SOL
                 </Button>
@@ -570,6 +570,16 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* T-926 #37:滑点 + Gas 默认值露出按钮上方一行小字 */}
+          {wallet.connected && (
+            <div className="text-[11px] text-muted-foreground/70 font-mono text-center">
+              {t('trade.preview.currentSlipGasHint', {
+                slippage: (slippageBps / 100).toFixed(slippageBps < 100 ? 1 : 0),
+                gasLabel: t(`trade.gas.${gasLevel}`),
+              })}
             </div>
           )}
 

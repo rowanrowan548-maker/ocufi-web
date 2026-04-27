@@ -17,7 +17,7 @@
 import { Lock, Users, Coins, Snowflake } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
-import type { TokenDetail } from '@/lib/token-info';
+import { overallRisk, type TokenDetail, type OverallRisk } from '@/lib/token-info';
 
 type Tone = 'safe' | 'warn' | 'danger' | 'neutral' | 'muted';
 
@@ -41,10 +41,20 @@ export function TrustSignals({ detail }: Props) {
   const mintAuth = authoritySignal(detail?.mintAuthority ?? null, t);
   const freezeAuth = authoritySignal(detail?.freezeAuthority ?? null, t);
 
+  // T-926 #42:总评红绿灯 — 顶部一个 dot + 文字总评,默认展开 4 项
+  const overall = detail ? overallRisk(detail) : 'unknown';
+  const lightInfo = trafficLightInfo(overall);
+
   return (
     <Card className="p-3 sm:p-4">
-      <div className="text-xs font-medium text-foreground/80 mb-3">
-        {t('title')}
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-xs font-medium text-foreground/80">
+          {t('title')}
+        </div>
+        <div className={`flex items-center gap-1.5 text-[11px] font-mono ${lightInfo.colorClass}`}>
+          <span className="text-base leading-none">{lightInfo.emoji}</span>
+          <span>{t(`overall.${overall}`)}</span>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Cell
@@ -125,4 +135,21 @@ function authoritySignal(
   // null / 空字符串 → 已放弃(safe)
   if (!auth) return { text: t('values.renounced'), tone: 'safe' };
   return { text: t('values.active'), tone: 'warn' };
+}
+
+// T-926 #42:overallRisk → 红绿灯 emoji + 颜色
+function trafficLightInfo(risk: OverallRisk): { emoji: string; colorClass: string } {
+  switch (risk) {
+    case 'verified':
+    case 'low':
+      return { emoji: '🟢', colorClass: 'text-success' };
+    case 'medium':
+      return { emoji: '🟡', colorClass: 'text-warning' };
+    case 'high':
+    case 'critical':
+      return { emoji: '🔴', colorClass: 'text-destructive' };
+    case 'unknown':
+    default:
+      return { emoji: '⚪', colorClass: 'text-muted-foreground' };
+  }
 }
