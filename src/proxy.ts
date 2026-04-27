@@ -100,7 +100,9 @@ export default function middleware(request: NextRequest) {
 export const config = {
   // 排除:Next 内部路径 / public/branding/* 静态文件 / api / 各类静态资源 / .html 文件
   // 这些路径不进 middleware,Vercel CDN 直接返回静态文件,不会被 launch 锁拦截
+  // T-821 fix:manifest.webmanifest 被 i18n middleware redirect 到 /<locale>/manifest.webmanifest 致 404
+  // 加排除,让 Next.js 直接命中 src/app/manifest.ts 的根级 static manifest
   matcher: [
-    '/((?!_next/|_vercel/|api/|branding/|favicon\\.ico|sw\\.js|robots\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot|html)$).*)',
+    '/((?!_next/|_vercel/|api/|branding/|favicon\\.ico|sw\\.js|robots\\.txt|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot|html)$).*)',
   ],
 };

@@ -23,7 +23,8 @@ const csp = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: https: blob:",
   // 外部数据源 + Vercel Analytics 上报 endpoint
-  "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  // T-820:补 api.gopluslabs.io(GoPlus token security 二次审查 API)
+  "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://api.gopluslabs.io https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   "frame-src 'self' https://dexscreener.com https://*.dexscreener.com",
   "object-src 'none'",
   "base-uri 'self'",
