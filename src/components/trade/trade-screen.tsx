@@ -74,8 +74,11 @@ export function TradeScreen() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
       <RpcHealthBanner />
-      <TokenSearchCombo value={mint} onSelect={setMint} />
-      <TradingHeader mint={mint} detail={detail} />
+      {/* 桌面端独立选币卡;移动端被 TradingHeader 内嵌的切币 popover 取代 */}
+      <div className="hidden lg:block">
+        <TokenSearchCombo value={mint} onSelect={setMint} />
+      </div>
+      <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
 
       {/* 桌面 lg+:现有 grid 完全不动(T-501/502/503/504 视觉) */}
       <div className="hidden lg:grid lg:grid-cols-[1fr_400px] gap-4 items-start">

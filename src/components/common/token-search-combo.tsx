@@ -22,6 +22,17 @@ interface Props {
   /** 当前选中的 mint(显示当前代币图标 + symbol) */
   value: string;
   onSelect: (mint: string) => void;
+  /**
+   * 自定义 trigger 区域(移动端 Hero 嵌入用)。返回 element,接收
+   * open 状态 + toggle 回调 + 当前选中代币元数据。
+   * 不传则走默认全宽 trigger 按钮(桌面 / 旧用法)。
+   * popover 仍由本组件统一定位渲染(以 containerRef 为 absolute 锚点)。
+   */
+  renderTrigger?: (params: {
+    open: boolean;
+    toggle: () => void;
+    current: TokenInfo | null;
+  }) => React.ReactNode;
 }
 
 function isValidMint(s: string): boolean {
@@ -33,7 +44,7 @@ function isValidMint(s: string): boolean {
   }
 }
 
-export function TokenSearchCombo({ value, onSelect }: Props) {
+export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
   const t = useTranslations('trade.search');
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -134,15 +145,19 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
     setInput('');
   }
 
+  function toggle() {
+    setOpen((o) => !o);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
   return (
     <div ref={containerRef} className="relative w-full">
-      {/* 触发器 · 显示当前代币 + 下拉箭头 */}
+      {renderTrigger ? (
+        renderTrigger({ open, toggle, current })
+      ) : (
       <button
         type="button"
-        onClick={() => {
-          setOpen(!open);
-          setTimeout(() => inputRef.current?.focus(), 50);
-        }}
+        onClick={toggle}
         className="w-full flex items-center gap-3 rounded-md border border-border/60 bg-card px-3 py-2.5 hover:border-primary/40 transition-colors"
       >
         {current ? (
@@ -196,6 +211,7 @@ export function TokenSearchCombo({ value, onSelect }: Props) {
           }`}
         />
       </button>
+      )}
 
       {/* 下拉面板 */}
       {open && (
