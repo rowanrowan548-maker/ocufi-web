@@ -17,10 +17,10 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { RefreshCw, Wallet, AlertCircle } from 'lucide-react';
+import { RefreshCw, Wallet, AlertCircle, Copy, Check, ChevronDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePortfolio } from '@/hooks/use-portfolio';
 import { useCostBasis } from '@/hooks/use-cost-basis';
@@ -36,7 +36,6 @@ import { HoldingsTable } from './holdings-table';
 import { ClosedPositions } from './closed-positions';
 import { AssetPie, AssetPieLegend } from './asset-pie';
 import { ValueChart } from './value-chart';
-import { SavingsCard } from './savings-card';
 import { PnlShareButton } from '@/components/share/pnl-share-button';
 
 export function PortfolioView() {
@@ -46,12 +45,23 @@ export function PortfolioView() {
   const { sol, tokens, totalUsd, loading, error, refresh } = usePortfolio();
   const { costs } = useCostBasis();
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
+  // T-900a:时间筛选 state hoist · T-900c 阶段联动 stat 卡 + 表格数据
+  const [range, setRange] = useState<'1d' | '7d' | '30d' | 'all'>('all');
+  const [copied, setCopied] = useState(false);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [fees, setFees] = useState<FeeTotal>({
     ocufiSol: 0, networkSol: 0, txCount: 0, volumeSol: 0, startedAt: 0, lastAt: 0,
   });
 
   const walletAddr = wallet.publicKey?.toBase58() ?? '';
+
+  async function copyAddr() {
+    try {
+      await navigator.clipboard.writeText(walletAddr);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* */ }
+  }
 
   // 钱包切换时读快照 + 累计手续费
   useEffect(() => {
@@ -124,6 +134,35 @@ export function PortfolioView() {
     };
   }, [closed, tokens, costs, solUsdPrice]);
 
+  // T-900a:buy/sell 笔数 + 总成交额(SOL)· 给 stat 卡 #4 用
+  const tradeStats = useMemo(() => {
+    let buyTxCount = 0;
+    let sellTxCount = 0;
+    let totalVolumeSol = 0;
+    for (const c of costs.values()) {
+      buyTxCount += c.buyCount;
+      sellTxCount += c.sellCount;
+      totalVolumeSol += c.totalBoughtSol + c.totalSoldSol;
+    }
+    return { buyTxCount, sellTxCount, totalVolumeSol };
+  }, [costs]);
+
+  // T-900a:已节省手续费 · 复用 SavingsCard 计算逻辑
+  // ocufi 0.2% · 平均费率 0.5% · 节省 = volumeSol × 0.3%
+  const savedSol =
+    fees.volumeSol > 0 ? fees.volumeSol * 0.003 : 0;
+  const savedUsd = savedSol * solUsdPrice;
+
+  // 胜率
+  const winRatePct =
+    pnlSummary.closedCount > 0
+      ? (pnlSummary.winCount / pnlSummary.closedCount) * 100
+      : 0;
+
+  // 占总值百分比(给 unrealized 卡用)
+  const unrealizedPctOfTotal =
+    totalUsd > 0 ? (pnlSummary.unrealizedUsd / totalUsd) * 100 : 0;
+
   // 未连接
   if (!wallet.connected || !wallet.publicKey) {
     return (
@@ -142,50 +181,94 @@ export function PortfolioView() {
   const hasAnyHolding = sol.amount > 0 || tokens.length > 0;
 
   return (
-    <div className="w-full max-w-5xl space-y-4">
-      {/* 顶部:总值 + 7d/30d 曲线 */}
-      <div className="grid lg:grid-cols-[1fr_1.5fr] gap-4">
-        <Card className="relative overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 opacity-40 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(ellipse 60% 80% at 0% 0%, oklch(0.88 0.25 155 / 8%), transparent 70%)',
-            }}
-          />
-          <CardHeader className="pb-3 relative">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {t('portfolio.totalValue')}
-              </CardTitle>
+    <div className="w-full max-w-6xl space-y-4">
+      {/* T-900a:顶部信息条(钱包 / 总值 / SOL / 币数 / 时间筛选 + 刷新) */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
+            {/* 钱包地址 */}
+            <button
+              type="button"
+              onClick={copyAddr}
+              className="flex items-center gap-2 group min-w-0 hover:bg-muted/40 -m-1 p-1 rounded transition-colors"
+              title={t('wallet.copyAddress')}
+            >
+              <Wallet className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
+              <span className="font-mono text-xs sm:text-sm text-muted-foreground truncate">
+                {shortAddr(walletAddr)}
+              </span>
+              {copied ? (
+                <Check className="h-3 w-3 text-success flex-shrink-0" />
+              ) : (
+                <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground flex-shrink-0" />
+              )}
+            </button>
+            <div className="hidden lg:block h-8 w-px bg-border/40" />
+
+            {/* 总值 + SOL + 币数 横排 */}
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 flex-1">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.totalValue')}
+                </span>
+                <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight">
+                  ${formatUsd(totalUsd)}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.solBalance')}
+                </span>
+                <span className="text-base font-mono font-semibold tabular-nums">
+                  {sol.amount.toFixed(3)}
+                  <span className="text-[10px] text-muted-foreground/60 ml-1">SOL</span>
+                </span>
+                <span className="text-[10px] text-muted-foreground/60 font-mono">
+                  ${formatUsd(sol.valueUsd)}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.tokenCount')}
+                </span>
+                <span className="text-base font-mono font-semibold tabular-nums">
+                  {tokens.length + (sol.amount > 0 ? 1 : 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* 时间筛选 + 刷新 */}
+            <div className="flex items-center gap-2">
+              <Tabs value={range} onValueChange={(v) => v && setRange(v as typeof range)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="1d" className="text-xs px-2.5 h-6">
+                    {t('portfolio.stats.range1d')}
+                  </TabsTrigger>
+                  <TabsTrigger value="7d" className="text-xs px-2.5 h-6">
+                    {t('portfolio.stats.range7d')}
+                  </TabsTrigger>
+                  <TabsTrigger value="30d" className="text-xs px-2.5 h-6">
+                    {t('portfolio.stats.range30d')}
+                  </TabsTrigger>
+                  <TabsTrigger value="all" className="text-xs px-2.5 h-6">
+                    {t('portfolio.stats.rangeAll')}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={refresh}
                 disabled={loading}
-                className="h-8 px-2"
+                className="h-8 w-8 p-0"
+                title={t('portfolio.autoRefreshHint')}
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl sm:text-4xl font-bold font-mono tracking-tight">
-              ${formatUsd(totalUsd)}
-            </div>
-            <div className="text-xs text-muted-foreground mt-2 font-mono">
-              {shortAddr(walletAddr)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <ValueChart snapshots={snapshots} currentTotalUsd={totalUsd} />
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {error && (
         <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
@@ -205,14 +288,136 @@ export function PortfolioView() {
         </Card>
       ) : (
         <>
-          {/* 已节省手续费 · 病毒传播触发点 · 仅在有过成交时显示 */}
-          {fees.txCount > 0 && fees.volumeSol > 0 && (
-            <SavingsCard
-              volumeSol={fees.volumeSol}
-              txCount={fees.txCount}
-              solUsdPrice={solUsdPrice}
-            />
-          )}
+          {/* T-900a:5 张 stat 卡片(grid lg:5 / sm:2) */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* 1. 已实现收益 */}
+            <Card className="hover:border-primary/30 transition-colors">
+              <CardContent className="py-4 space-y-1.5">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.realized')}
+                </div>
+                <div
+                  className={`text-xl font-bold font-mono tabular-nums ${
+                    pnlSummary.realizedUsd > 0
+                      ? 'text-success'
+                      : pnlSummary.realizedUsd < 0
+                      ? 'text-danger'
+                      : 'text-foreground'
+                  }`}
+                >
+                  {pnlSummary.realizedUsd >= 0 ? '+' : '-'}$
+                  {formatUsd(Math.abs(pnlSummary.realizedUsd))}
+                </div>
+                <div className="text-[10px] text-muted-foreground/60">
+                  {pnlSummary.closedCount > 0
+                    ? t('portfolio.stats.winRateDetail', {
+                        win: pnlSummary.winCount,
+                        total: pnlSummary.closedCount,
+                      })
+                    : t('portfolio.stats.noClosedYet')}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 2. 未实现收益 */}
+            <Card className="hover:border-primary/30 transition-colors">
+              <CardContent className="py-4 space-y-1.5">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.unrealized')}
+                </div>
+                <div
+                  className={`text-xl font-bold font-mono tabular-nums ${
+                    pnlSummary.unrealizedUsd > 0
+                      ? 'text-success'
+                      : pnlSummary.unrealizedUsd < 0
+                      ? 'text-danger'
+                      : 'text-foreground'
+                  }`}
+                >
+                  {pnlSummary.unrealizedUsd >= 0 ? '+' : '-'}$
+                  {formatUsd(Math.abs(pnlSummary.unrealizedUsd))}
+                </div>
+                <div className="text-[10px] text-muted-foreground/60 tabular-nums">
+                  {t('portfolio.stats.ofTotal', {
+                    pct: unrealizedPctOfTotal.toFixed(2),
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 3. 胜率 + 进度条 */}
+            <Card className="hover:border-primary/30 transition-colors">
+              <CardContent className="py-4 space-y-1.5">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.winRate')}
+                </div>
+                <div className="text-xl font-bold font-mono tabular-nums">
+                  {pnlSummary.closedCount > 0 ? `${winRatePct.toFixed(0)}%` : '—'}
+                </div>
+                <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+                  <div
+                    className="h-full bg-primary/60 transition-all"
+                    style={{ width: `${pnlSummary.closedCount > 0 ? winRatePct : 0}%` }}
+                  />
+                </div>
+                <div className="text-[10px] text-muted-foreground/60">
+                  {pnlSummary.closedCount > 0
+                    ? t('portfolio.stats.winRateDetail', {
+                        win: pnlSummary.winCount,
+                        total: pnlSummary.closedCount,
+                      })
+                    : t('portfolio.stats.noClosedYet')}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 4. 买入/卖出 */}
+            <Card className="hover:border-primary/30 transition-colors">
+              <CardContent className="py-4 space-y-1.5">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.buySellRatio')}
+                </div>
+                <div className="text-xl font-bold font-mono tabular-nums">
+                  <span className="text-success">{tradeStats.buyTxCount}</span>
+                  <span className="text-muted-foreground/40 mx-1">/</span>
+                  <span className="text-danger">{tradeStats.sellTxCount}</span>
+                </div>
+                <div className="flex h-1 rounded-full overflow-hidden bg-muted/40">
+                  {(() => {
+                    const total = tradeStats.buyTxCount + tradeStats.sellTxCount;
+                    const buyPct = total > 0 ? (tradeStats.buyTxCount / total) * 100 : 50;
+                    return (
+                      <>
+                        <div className="bg-success/60" style={{ width: `${buyPct}%` }} />
+                        <div className="bg-danger/60 flex-1" />
+                      </>
+                    );
+                  })()}
+                </div>
+                <div className="text-[10px] text-muted-foreground/60 tabular-nums">
+                  {tradeStats.totalVolumeSol.toFixed(2)}
+                  <span className="ml-0.5">SOL</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 5. 已节省手续费 */}
+            <Card className="hover:border-primary/30 transition-colors col-span-2 lg:col-span-1">
+              <CardContent className="py-4 space-y-1.5">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {t('portfolio.stats.savedFees')}
+                </div>
+                <div className="text-xl font-bold font-mono text-success tabular-nums">
+                  {fees.txCount > 0 && savedUsd > 0
+                    ? `+$${formatUsd(savedUsd)}`
+                    : '$0.00'}
+                </div>
+                <div className="text-[10px] text-muted-foreground/60">
+                  {t('portfolio.stats.savedFeesNote', { n: fees.txCount })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* 分享我的战绩 · 有平仓 OR 有持仓时才显示 */}
           {(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0 && (
@@ -229,67 +434,39 @@ export function PortfolioView() {
             </div>
           )}
 
-          {/* 资产分布 */}
+          {/* 资产分布(折叠 details · 默认收起) */}
           {pieItems.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.distribution')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid sm:grid-cols-[180px_1fr] gap-6 items-center">
-                  <div className="flex items-center justify-center">
-                    <AssetPie items={pieItems} totalUsd={totalUsd} size={180} />
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors py-1">
+                <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:-rotate-180" />
+                {t('portfolio.distribution')}
+              </summary>
+              <Card className="mt-2">
+                <CardContent className="pt-4">
+                  <div className="grid sm:grid-cols-[180px_1fr] gap-6 items-center">
+                    <div className="flex items-center justify-center">
+                      <AssetPie items={pieItems} totalUsd={totalUsd} size={180} />
+                    </div>
+                    <AssetPieLegend items={pieItems} totalUsd={totalUsd} />
                   </div>
-                  <AssetPieLegend items={pieItems} totalUsd={totalUsd} />
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </details>
           )}
 
-          {/* 累计手续费 · 透明展示我们和网络收了你多少 */}
-          {fees.txCount > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {t('portfolio.feesTotal.title')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3 sm:gap-6">
-                  <div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      {t('portfolio.feesTotal.ocufi')}
-                    </div>
-                    <div className="text-base sm:text-lg font-mono font-semibold mt-1">
-                      {fees.ocufiSol.toFixed(6)}
-                      <span className="text-[10px] text-muted-foreground/60 ml-1">SOL</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      {t('portfolio.feesTotal.network')}
-                    </div>
-                    <div className="text-base sm:text-lg font-mono font-semibold mt-1">
-                      {fees.networkSol.toFixed(6)}
-                      <span className="text-[10px] text-muted-foreground/60 ml-1">SOL</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      {t('portfolio.feesTotal.txCount')}
-                    </div>
-                    <div className="text-base sm:text-lg font-mono font-semibold mt-1 tabular-nums">
-                      {fees.txCount}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-[10px] text-muted-foreground/70 mt-3">
-                  {t('portfolio.feesTotal.note')}
-                </div>
-              </CardContent>
-            </Card>
+          {/* 总资产走势(折叠 · 默认收起 · 数据采集时间长才有意义) */}
+          {snapshots.length >= 2 && (
+            <details className="group">
+              <summary className="cursor-pointer list-none flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors py-1">
+                <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:-rotate-180" />
+                {t('portfolio.chart.title')}
+              </summary>
+              <Card className="mt-2">
+                <CardContent className="pt-6">
+                  <ValueChart snapshots={snapshots} currentTotalUsd={totalUsd} />
+                </CardContent>
+              </Card>
+            </details>
           )}
 
           {/* Tabs:持仓 / 已平仓 */}

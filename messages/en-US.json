@@ -547,6 +547,25 @@
         "title": "Collecting data",
         "subtitle": "{count} more visit(s) to start charting — history is stored only in your browser, never uploaded"
       }
+    },
+    "stats": {
+      "range1d": "1D",
+      "range7d": "7D",
+      "range30d": "30D",
+      "rangeAll": "All",
+      "solBalance": "SOL balance",
+      "tokenCount": "Tokens held",
+      "realized": "Realized PnL",
+      "unrealized": "Unrealized PnL",
+      "ofTotal": "{pct}% of total",
+      "winRate": "Win rate",
+      "winRateDetail": "{win} wins / {total} closed",
+      "noClosedYet": "No closed positions yet",
+      "buySellRatio": "Buy / Sell",
+      "buyTxs": "Buys {n}",
+      "sellTxs": "Sells {n}",
+      "savedFees": "Fees saved",
+      "savedFeesNote": "vs 0.5% avg · {n} trades"
     }
   },
   "token": {

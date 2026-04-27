@@ -547,6 +547,25 @@
         "title": "数据采集中",
         "subtitle": "再用 {count} 次后即可看到曲线 — 历史只在你浏览器本地存,不上送服务器"
       }
+    },
+    "stats": {
+      "range1d": "1日",
+      "range7d": "7日",
+      "range30d": "30日",
+      "rangeAll": "全部",
+      "solBalance": "SOL 余额",
+      "tokenCount": "持仓代币",
+      "realized": "已实现收益",
+      "unrealized": "未实现收益",
+      "ofTotal": "占总值 {pct}%",
+      "winRate": "胜率",
+      "winRateDetail": "{win} 胜 / {total} 平仓",
+      "noClosedYet": "尚无平仓",
+      "buySellRatio": "买入 / 卖出",
+      "buyTxs": "买 {n}",
+      "sellTxs": "卖 {n}",
+      "savedFees": "已节省手续费",
+      "savedFeesNote": "对比平均费率 0.5% · {n} 笔成交"
     }
   },
   "token": {
