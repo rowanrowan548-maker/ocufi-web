@@ -296,12 +296,12 @@ export function PortfolioView() {
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   {t('portfolio.totalValue')}
                 </span>
-                <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight">
+                <span className="text-3xl sm:text-4xl font-bold tabular-nums leading-none">
                   {unit === 'USD'
                     ? `$${formatUsd(totalUsd)}`
                     : `${formatSol(solUsdPrice > 0 ? totalUsd / solUsdPrice : 0)} `}
                   {unit === 'SOL' && (
-                    <span className="text-base text-muted-foreground/60">SOL</span>
+                    <span className="text-base font-semibold text-muted-foreground/60 ml-1">SOL</span>
                   )}
                 </span>
               </div>
@@ -362,7 +362,7 @@ export function PortfolioView() {
                   onClick={refresh}
                   disabled={loading}
                   className="h-8 w-8 p-0"
-                  title={t('portfolio.autoRefreshHint')}
+                  title={t('portfolio.refreshNow')}
                 >
                   <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 </Button>
@@ -696,7 +696,11 @@ export function PortfolioView() {
       )}
 
       <div className="text-xs text-muted-foreground text-center pt-2">
-        {t('portfolio.autoRefreshHint')}
+        {t.rich('portfolio.autoRefreshHint', {
+          icon: () => (
+            <RefreshCw className="inline-block h-3.5 w-3.5 mx-0.5 align-text-bottom" />
+          ),
+        })}
       </div>
     </div>
   );

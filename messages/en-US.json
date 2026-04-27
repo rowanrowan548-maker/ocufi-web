@@ -495,7 +495,8 @@
     "empty": "No tokens in your wallet yet",
     "goTrade": "Go buy something",
     "viewOnExplorer": "View on Solscan",
-    "autoRefreshHint": "Auto-refreshes every 30s · click 🔄 to refresh manually",
+    "autoRefreshHint": "Auto-refreshes every 30s · click {icon} to refresh manually",
+    "refreshNow": "Refresh now",
     "columns": {
       "token": "Token",
       "amount": "Amount",

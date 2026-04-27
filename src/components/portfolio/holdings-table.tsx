@@ -141,9 +141,14 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
               <TableRow className="opacity-60 hover:opacity-100">
                 <TableCell>
                   <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
-                      ◎
-                    </div>
+                    <Image
+                      src="/branding/sol.png"
+                      alt="SOL"
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 rounded-full flex-shrink-0"
+                      unoptimized
+                    />
                     <div>
                       <div className="font-medium text-[13px] leading-tight">SOL</div>
                       <div className="text-[10px] text-muted-foreground">Solana</div>
@@ -275,9 +280,14 @@ function SolCard({ sol }: { sol: Sol }) {
     <div className="rounded-lg border border-border/40 p-3 bg-card">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            ◎
-          </div>
+          <Image
+            src="/branding/sol.png"
+            alt="SOL"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full flex-shrink-0"
+            unoptimized
+          />
           <div className="min-w-0">
             <div className="font-medium text-sm">SOL</div>
             <div className="text-[10px] text-muted-foreground">Solana</div>
