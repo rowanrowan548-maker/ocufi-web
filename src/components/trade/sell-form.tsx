@@ -407,8 +407,8 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
             </div>
           )}
 
-          {/* 报价预览 */}
-          {previewData && stage !== 'done' && (
+          {/* 报价预览 · BUG-037:有报价显示 QuotePreview,无报价显示引导卡 */}
+          {previewData && stage !== 'done' ? (
             <QuotePreview
               data={previewData}
               currentSlippageBps={slippageBps}
@@ -418,6 +418,10 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                 resetOnInput();
               }}
             />
+          ) : stage !== 'done' && stage !== 'error' && (
+            <div className="rounded-lg border border-dashed bg-muted/10 p-4 text-xs text-muted-foreground/70 text-center">
+              {t('trade.preview.placeholderSell')}
+            </div>
           )}
 
           {/* 成交结果 */}

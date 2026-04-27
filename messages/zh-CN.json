@@ -396,7 +396,17 @@
       "slippageApply": "拉到 {bps}%",
       "minReceiveTooltip": "滑点 {pct}% 兜底",
       "platformFeeTooltip": "Ocufi 0.1%(仅买入,自组 tx 直接转入,链上可查)",
-      "networkFeeTooltip": "Solana 网络 Gas + 优先费上限,实际可能更低"
+      "networkFeeTooltip": "Solana 网络 Gas + 优先费上限,实际可能更低",
+      "placeholderBuy": "💡 输入 SOL 数量或点击 0.1 / 0.5 / 1 快捷按钮查看实时报价",
+      "placeholderSell": "💡 输入卖出数量或点击 25% / 50% / 100% 快捷按钮查看实时报价",
+      "limitOrderTitle": "限价单预览",
+      "limitOrderTargetPrice": "目标价",
+      "limitOrderEstimatedFill": "预计成交",
+      "limitOrderCurrentPrice": "当前市价",
+      "limitOrderPriceDiff": "价格差",
+      "limitOrderJupiterFee": "Jupiter 限价费",
+      "limitOrderMinHint": "最小订单 $5 USD · 当前估值 ${value}",
+      "limitOrderPlaceholder": "💡 输入数量与目标价查看预计成交"
     },
     "confirm": {
       "buyTitle": "确认买入 {symbol}",

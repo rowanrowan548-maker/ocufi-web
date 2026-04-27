@@ -396,7 +396,17 @@
       "slippageApply": "Raise to {bps}%",
       "minReceiveTooltip": "Slippage floor at {pct}%",
       "platformFeeTooltip": "Ocufi 0.1% (buy only, direct on-chain transfer, verifiable)",
-      "networkFeeTooltip": "Solana network gas + priority fee ceiling — actual cost may be lower"
+      "networkFeeTooltip": "Solana network gas + priority fee ceiling — actual cost may be lower",
+      "placeholderBuy": "💡 Enter SOL amount or click 0.1 / 0.5 / 1 to see live quote",
+      "placeholderSell": "💡 Enter sell amount or click 25% / 50% / 100% to see live quote",
+      "limitOrderTitle": "Limit order preview",
+      "limitOrderTargetPrice": "Target price",
+      "limitOrderEstimatedFill": "Estimated fill",
+      "limitOrderCurrentPrice": "Current market",
+      "limitOrderPriceDiff": "Price diff",
+      "limitOrderJupiterFee": "Jupiter limit fee",
+      "limitOrderMinHint": "Min order $5 USD · current ≈ ${value}",
+      "limitOrderPlaceholder": "💡 Enter amount and target price to see estimated fill"
     },
     "confirm": {
       "buyTitle": "Confirm buy {symbol}",

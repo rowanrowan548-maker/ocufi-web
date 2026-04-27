@@ -430,7 +430,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
             </div>
           )}
 
-          {previewData && stage !== 'done' && (
+          {previewData && stage !== 'done' ? (
             <QuotePreview
               data={previewData}
               currentSlippageBps={slippageBps}
@@ -440,6 +440,11 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 resetOnInput();
               }}
             />
+          ) : stage !== 'done' && stage !== 'error' && (
+            // BUG-037:默认空 amount 时显示引导卡,告知用户报价就在这里
+            <div className="rounded-lg border border-dashed bg-muted/10 p-4 text-xs text-muted-foreground/70 text-center">
+              {t('trade.preview.placeholderBuy')}
+            </div>
           )}
 
           {result && stage === 'done' && (

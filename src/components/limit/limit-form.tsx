@@ -39,6 +39,8 @@ import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
+import { fetchTokenInfo, fetchSolUsdPrice, type TokenInfo } from '@/lib/portfolio';
+import { LimitPreview, LimitPreviewPlaceholder } from './limit-preview';
 
 type Side = 'buy' | 'sell';
 type Stage = 'idle' | 'submitting' | 'signing' | 'confirming' | 'done' | 'error';
@@ -88,6 +90,29 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
 
   const tokenBalance = useTokenBalance(side === 'sell' && mint.trim() ? mint.trim() : null);
 
+  // BUG-037:拉 token 市价 + SOL/USD 价 · 给 LimitPreview 算价格差 + $5 USD 阈值
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+  const [solUsdPrice, setSolUsdPrice] = useState<number | null>(null);
+  useEffect(() => {
+    const m = mint.trim();
+    if (!isValidMint(m)) {
+      setTokenInfo(null);
+      return;
+    }
+    let cancelled = false;
+    fetchTokenInfo(m)
+      .then((i) => { if (!cancelled) setTokenInfo(i); })
+      .catch(() => { if (!cancelled) setTokenInfo(null); });
+    return () => { cancelled = true; };
+  }, [mint]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchSolUsdPrice()
+      .then((p) => { if (!cancelled) setSolUsdPrice(p); })
+      .catch(() => { /* 失败时 USD 估值不显示,不阻塞预览 */ });
+    return () => { cancelled = true; };
+  }, []);
+
   // 预览:另一侧的数量
   const amt = Number(amount);
   const price = Number(targetPrice);
@@ -97,6 +122,16 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
         ? amt / price       // 预计买到几枚
         : amt * price       // 预计收到几个 SOL
       : 0;
+
+  // 订单 USD 估值:买 = SOL 数 × SOL/USD;卖 = token 数 × 当前 SOL 价 × SOL/USD
+  const orderUsdValue =
+    solUsdPrice != null && amt > 0
+      ? side === 'buy'
+        ? amt * solUsdPrice
+        : tokenInfo?.priceNative != null
+          ? amt * tokenInfo.priceNative * solUsdPrice
+          : null
+      : null;
 
   const resetOnInput = () => {
     if (stage === 'done' || stage === 'error') setStage('idle');
@@ -183,8 +218,6 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
   }
 
   const amountLabel = side === 'buy' ? t('limit.amountBuy') : t('limit.amountSell');
-  const estimatedLabel =
-    side === 'buy' ? t('limit.estimatedBuy') : t('limit.estimatedSell');
   const busy = stage === 'submitting' || stage === 'signing' || stage === 'confirming';
 
   const showSideTabs = sideProp == null;
@@ -262,13 +295,19 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
         </Select>
       </div>
 
-      {estimated > 0 && (
-        <div className="rounded-lg border bg-muted/30 p-3 text-sm flex justify-between">
-          <span className="text-muted-foreground">{estimatedLabel}</span>
-          <span className="font-mono font-medium">
-            {formatAmount(estimated)} {side === 'buy' ? '枚' : 'SOL'}
-          </span>
-        </div>
+      {/* BUG-037:统一限价单预览卡 · 与 QuotePreview 视觉一致 */}
+      {amt > 0 && price > 0 ? (
+        <LimitPreview
+          side={side}
+          symbol={tokenInfo?.symbol ?? ''}
+          amount={amt}
+          targetPrice={price}
+          estimated={estimated}
+          marketPrice={tokenInfo?.priceNative ?? null}
+          orderUsdValue={orderUsdValue}
+        />
+      ) : (
+        <LimitPreviewPlaceholder />
       )}
 
       {err && (
@@ -349,12 +388,6 @@ function isValidMint(s: string): boolean {
   } catch {
     return false;
   }
-}
-
-function formatAmount(n: number): string {
-  if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
-  if (n >= 0.0001) return n.toFixed(6);
-  return n.toFixed(9);
 }
 
 function mapError(t: ReturnType<typeof useTranslations>, raw: string): string {
