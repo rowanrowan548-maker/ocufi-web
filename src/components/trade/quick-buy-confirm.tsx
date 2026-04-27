@@ -14,7 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
 
 import { getCurrentChain } from '@/config/chains';
@@ -30,6 +30,7 @@ import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
+import { showBadgeToasts } from '@/lib/badge-toast';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { recordFee } from '@/lib/fee-tracker';
 import { ConfirmDialog } from './confirm-dialog';
@@ -67,6 +68,7 @@ export function QuickBuyConfirm({
   reasons,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -203,7 +205,18 @@ export function QuickBuyConfirm({
         const usdValue = await fetchSolUsdPrice()
           .then((p) => (p > 0 ? p * solSpent : undefined))
           .catch(() => undefined);
-        claimPoints(wallet.publicKey.toBase58(), sig, usdValue).catch(() => {});
+        claimPoints(wallet.publicKey.toBase58(), sig, usdValue)
+          .then((res) => {
+            if (res.newBadges?.length) {
+              showBadgeToasts({
+                badges: res.newBadges,
+                locale,
+                unlockedTitle: t('badges.toast.unlocked'),
+                goBadgesLabel: t('badges.toast.viewAll'),
+              });
+            }
+          })
+          .catch(() => {});
       }
 
       onOpenChange(false);

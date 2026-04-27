@@ -58,11 +58,21 @@ export async function fetchPrice(mint: string): Promise<ApiTokenPrice> {
 
 // ─── Day 10 points ───
 
+export interface ClaimedBadge {
+  code: string;
+  nameZh: string;
+  nameEn: string;
+  icon: string;
+  rarity: 'common' | 'uncommon' | 'legendary';
+}
+
 export interface ClaimResult {
   ok: boolean;
   amount_awarded: number;
   new_balance: number;
   message: string;
+  /** T-906b · 后端在 claim 后评估新获得的徽章塞回 response */
+  newBadges?: ClaimedBadge[];
 }
 
 export async function claimPoints(
@@ -210,6 +220,68 @@ export interface InviteLeaderboardResp {
 
 export async function fetchInviteLeaderboard(limit = 10): Promise<InviteLeaderboardResp> {
   return apiFetch(`/invite/leaderboard?limit=${limit}`);
+}
+
+// ─── T-906 badges ───
+
+export type BadgeRarity = 'common' | 'uncommon' | 'legendary';
+
+export interface BadgeDef {
+  code: string;
+  nameZh: string;
+  nameEn: string;
+  descriptionZh: string;
+  descriptionEn: string;
+  icon: string;
+  rarity: BadgeRarity;
+  sortOrder: number;
+}
+
+export interface BadgesAllResp {
+  ok: boolean;
+  badges: BadgeDef[];
+}
+
+export async function fetchAllBadges(): Promise<BadgesAllResp> {
+  return apiFetch<BadgesAllResp>('/badges/all');
+}
+
+export interface UserBadgeEarned {
+  code: string;
+  earnedAt: string;
+  txSignature: string | null;
+}
+
+export interface BadgeProgress {
+  swapCount: number;
+  inviteCount: number;
+  totalVolumeSol: number;
+  registrationOrder: number;
+}
+
+export interface BadgesMeResp {
+  ok: boolean;
+  earned: UserBadgeEarned[];
+  progress: BadgeProgress | Record<string, never>;
+}
+
+export async function fetchMyBadges(wallet: string): Promise<BadgesMeResp> {
+  return apiFetch<BadgesMeResp>(`/badges/me?wallet=${wallet}`);
+}
+
+export interface BadgeLeaderRow {
+  wallet: string;
+  count: number;
+  score: number;
+}
+
+export interface BadgesLeaderboardResp {
+  ok: boolean;
+  leaderboard: BadgeLeaderRow[];
+}
+
+export async function fetchBadgesLeaderboard(limit = 20): Promise<BadgesLeaderboardResp> {
+  return apiFetch<BadgesLeaderboardResp>(`/badges/leaderboard?limit=${limit}`);
 }
 
 // ─── Admin stats(密码保护) ───

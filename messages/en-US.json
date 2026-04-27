@@ -1195,9 +1195,26 @@
   },
   "badges": {
     "title": "My Badges",
-    "subtitle": "Unlock on-chain activity badges · full system coming soon",
+    "subtitle": "Unlock on-chain activity badges · earn by trading",
     "comingSoon": "Coming Soon",
-    "note": "The full badge system (on-chain activity tracking + leaderboard + share card) will launch after V1 public release.",
+    "connect": "Connect your wallet to see your badges",
+    "earned": "Earned",
+    "earnedSummary": "{earned} / {total} earned",
+    "empty": "Unlock badges",
+    "backToPortfolio": "Back to portfolio",
+    "note": "Badge system evolving · feedback on TG / Discord",
+    "leaderboard": {
+      "title": "Badges Leaderboard",
+      "rank": "Rank",
+      "wallet": "Wallet",
+      "count": "Badges",
+      "score": "Score",
+      "empty": "Leaderboard empty · waiting for first unlocks"
+    },
+    "toast": {
+      "unlocked": "Badge unlocked",
+      "viewAll": "View all"
+    },
     "list": {
       "earlyBird": { "name": "Early Bird" },
       "firstTrade": { "name": "First Trade" },

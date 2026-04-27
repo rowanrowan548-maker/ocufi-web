@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Loader2, AlertCircle, CheckCircle2, ExternalLink, Wallet } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
+import { showBadgeToasts } from '@/lib/badge-toast';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
@@ -85,6 +86,7 @@ interface SellFormProps {
 
 export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormProps = {}) {
   const t = useTranslations();
+  const locale = useLocale();
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -258,7 +260,18 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
         const usdValue = await fetchSolUsdPrice()
           .then((p) => p > 0 ? p * actualSol : undefined)
           .catch(() => undefined);
-        claimPoints(wallet.publicKey.toBase58(), sig, usdValue).catch(() => {});
+        claimPoints(wallet.publicKey.toBase58(), sig, usdValue)
+          .then((res) => {
+            if (res.newBadges?.length) {
+              showBadgeToasts({
+                badges: res.newBadges,
+                locale,
+                unlockedTitle: t('badges.toast.unlocked'),
+                goBadgesLabel: t('badges.toast.viewAll'),
+              });
+            }
+          })
+          .catch(() => {});
       }
     } catch (e: unknown) {
       const reason = humanize(e);

@@ -43,6 +43,8 @@ import {
   type TopGainer,
 } from './stat-charts';
 import { PnlShareButton } from '@/components/share/pnl-share-button';
+import { BadgeIcon } from '@/components/badges/badge-icon';
+import { useBadges, type EarnedBadge } from '@/hooks/use-badges';
 
 export function PortfolioView() {
   const t = useTranslations();
@@ -50,6 +52,8 @@ export function PortfolioView() {
   const { setVisible: openWalletModal } = useWalletModal();
   const { sol, tokens, totalUsd, loading, error, refresh } = usePortfolio();
   const { costs, loading: cbLoading, records } = useCostBasis();
+  // T-906b · 顶部 mini badge wall 数据
+  const { earned: earnedBadges } = useBadges(wallet.publicKey?.toBase58() ?? null);
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
   // T-903:顶层双 tab 盈亏分析 / 资产组合
   const [topTab, setTopTab] = useState<'pnl' | 'portfolio'>('pnl');
@@ -297,6 +301,8 @@ export function PortfolioView() {
                   refresh={refresh}
                   refreshTooltip={`${t('portfolio.refreshNow')} · ${t('portfolio.stats.updatedAgo', { ago: updatedAgo })}`}
                   badgesTooltip={t('portfolio.badgesEntry')}
+                  earnedBadges={earnedBadges}
+                  badgesEmptyLabel={t('badges.empty')}
                   showShare={(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0}
                   shareProps={{
                     realizedUsd: pnlSummary.realizedUsd,
@@ -387,6 +393,8 @@ export function PortfolioView() {
                   refresh={refresh}
                   refreshTooltip={`${t('portfolio.refreshNow')} · ${t('portfolio.stats.updatedAgo', { ago: updatedAgo })}`}
                   badgesTooltip={t('portfolio.badgesEntry')}
+                  earnedBadges={earnedBadges}
+                  badgesEmptyLabel={t('badges.empty')}
                   showShare={(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0}
                   shareProps={{
                     realizedUsd: pnlSummary.realizedUsd,
@@ -723,12 +731,14 @@ export function PortfolioView() {
   );
 }
 
-// T-905a:复用图标组(桌面底层 + 移动钱包行)— 刷新 / 徽章 / 分享
+// T-905a/T-906b:复用图标组 — 刷新 / 徽章 mini wall(0 → CTA / 已得 → BadgeIcon 横排) / 分享
 function ActionIcons({
   loading,
   refresh,
   refreshTooltip,
   badgesTooltip,
+  earnedBadges,
+  badgesEmptyLabel,
   showShare,
   shareProps,
 }: {
@@ -736,6 +746,8 @@ function ActionIcons({
   refresh: () => void;
   refreshTooltip: string;
   badgesTooltip: string;
+  earnedBadges: EarnedBadge[];
+  badgesEmptyLabel: string;
   showShare: boolean;
   shareProps: {
     realizedUsd: number;
@@ -759,13 +771,32 @@ function ActionIcons({
       >
         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
       </Button>
-      <Link
-        href="/badges"
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-        title={badgesTooltip}
-      >
-        <Award className="h-4 w-4" />
-      </Link>
+      {earnedBadges.length > 0 ? (
+        <Link
+          href="/badges"
+          className="inline-flex items-center gap-0.5 px-1.5 h-8 rounded-md hover:bg-muted/40 transition-colors"
+          title={badgesTooltip}
+        >
+          {earnedBadges.slice(0, 3).map((b) => (
+            <BadgeIcon
+              key={b.code}
+              icon={b.icon}
+              rarity={b.rarity}
+              earned
+              size={24}
+            />
+          ))}
+        </Link>
+      ) : (
+        <Link
+          href="/badges"
+          className="inline-flex items-center gap-1 px-2 h-8 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          title={badgesTooltip}
+        >
+          <Award className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{badgesEmptyLabel}</span>
+        </Link>
+      )}
       {showShare && <PnlShareButton compact {...shareProps} />}
     </>
   );

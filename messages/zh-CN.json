@@ -1210,9 +1210,26 @@
   },
   "badges": {
     "title": "我的徽章",
-    "subtitle": "解锁 Ocufi 链上活跃徽章 · 完整系统即将上线",
+    "subtitle": "解锁 Ocufi 链上活跃徽章 · 完成交易即可获得",
     "comingSoon": "敬请期待",
-    "note": "完整徽章系统(链上活跃数据 + 排行榜 + 分享卡)将在 V1 公开发布后上线。",
+    "connect": "连接钱包查看你的徽章",
+    "earned": "已获得",
+    "earnedSummary": "已获得 {earned} / {total}",
+    "empty": "解锁徽章",
+    "backToPortfolio": "返回持仓",
+    "note": "徽章系统正在不断完善 · 反馈请加 TG / Discord",
+    "leaderboard": {
+      "title": "徽章排行榜",
+      "rank": "排名",
+      "wallet": "钱包",
+      "count": "徽章数",
+      "score": "加权分",
+      "empty": "排行榜空,等首批徽章解锁"
+    },
+    "toast": {
+      "unlocked": "新徽章解锁",
+      "viewAll": "查看全部"
+    },
     "list": {
       "earlyBird": { "name": "早鸟" },
       "firstTrade": { "name": "首单" },

@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL, PublicKey, VersionedTransaction } from '@solana/web3.js';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import {
   Loader2, AlertCircle, CheckCircle2, ExternalLink, Shield,
@@ -37,6 +37,7 @@ import { signAndSendTx, confirmTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
+import { showBadgeToasts } from '@/lib/badge-toast';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { fetchTokenInfo, fetchSolUsdPrice, type TokenInfo } from '@/lib/portfolio';
@@ -65,6 +66,7 @@ interface Props {
 
 export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }: Props = {}) {
   const t = useTranslations();
+  const locale = useLocale();
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -206,7 +208,18 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
       setStage('done');
       track('limit_order_created', { side, mint: m, signature: sigStr });
       if (isApiConfigured() && wallet.publicKey) {
-        claimPoints(wallet.publicKey.toBase58(), sigStr).catch(() => {});
+        claimPoints(wallet.publicKey.toBase58(), sigStr)
+          .then((res) => {
+            if (res.newBadges?.length) {
+              showBadgeToasts({
+                badges: res.newBadges,
+                locale,
+                unlockedTitle: t('badges.toast.unlocked'),
+                goBadgesLabel: t('badges.toast.viewAll'),
+              });
+            }
+          })
+          .catch(() => {});
       }
       onCreated?.();
     } catch (e: unknown) {
