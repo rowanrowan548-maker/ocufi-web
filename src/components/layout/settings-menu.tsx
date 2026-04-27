@@ -151,7 +151,7 @@ function LanguageRow() {
   }
 
   return (
-    <SettingRow icon={Globe} label={t('settings.language')}>
+    <SettingRow icon={Globe} label={t('settings.language.title')}>
       <Segmented
         options={routing.locales.map((l) => ({
           value: l,

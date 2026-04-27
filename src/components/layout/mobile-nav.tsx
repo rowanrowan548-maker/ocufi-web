@@ -122,8 +122,11 @@ export function MobileNav() {
         <nav
           style={{
             overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
             padding: 12,
             flex: 1,
+            minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
