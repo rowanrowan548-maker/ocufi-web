@@ -314,6 +314,15 @@ export function MobileNav() {
               𝕏 Twitter
             </a>
             <a
+              href="https://t.me/+HucmvmOx2IswZDBl"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'none' }}
+              className="hover:!text-foreground"
+            >
+              Telegram
+            </a>
+            <a
               href="https://github.com/rowanrowan548-maker/ocufi-web"
               target="_blank"
               rel="noopener noreferrer"

@@ -47,3 +47,8 @@ export const PRESET_ALL = Array.from(
 export const PRESET_BLUE_CHIPS = PRESET_MAJORS;
 
 export const SOL_MINT = 'So11111111111111111111111111111111111111112';
+export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
+// /trade 默认 mint 用 USDC — SOL 自身没 GeckoTerminal pool,K 线空白
+// USDC 在 SOL/USDC pair 上 K 线立刻可见,体验流畅
+export const DEFAULT_TRADE_MINT = USDC_MINT;

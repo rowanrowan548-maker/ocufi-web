@@ -141,15 +141,21 @@ export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
     return [...localFiltered, ...remoteOnly];
   }, [localFiltered, remoteHits]);
 
-  const inputIsMint = isValidMint(input.trim());
-  const showRawMintOption =
-    inputIsMint && !filtered.some((t) => t.mint === input.trim());
-
   function handleSelect(mint: string) {
     onSelect(mint);
     setOpen(false);
     setInput('');
   }
+
+  // T-912 Range 4:输入完整合法 mint → 立即 onSelect 跳转,不需点"使用此地址"
+  // 仅在不在常用列表时触发(常用列表项让用户主动选,看价格 + 信息再决定)
+  useEffect(() => {
+    const trimmed = input.trim();
+    if (!isValidMint(trimmed)) return;
+    if (filtered.some((t) => t.mint === trimmed)) return;
+    handleSelect(trimmed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, filtered]);
 
   function toggle() {
     setOpen((o) => !o);
@@ -248,27 +254,8 @@ export function TokenSearchCombo({ value, onSelect, renderTrigger }: Props) {
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {/* 自定义 mint 兜底 */}
-            {showRawMintOption && (
-              <button
-                type="button"
-                onClick={() => handleSelect(input.trim())}
-                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left border-b border-border/40"
-              >
-                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Search className="h-3 w-3 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{t('useRaw')}</div>
-                  <div className="text-[10px] text-muted-foreground font-mono truncate">
-                    {input.trim()}
-                  </div>
-                </div>
-              </button>
-            )}
-
-            {/* 候选列表 */}
-            {filtered.length === 0 && !showRawMintOption ? (
+            {/* 候选列表 · 输入合法 mint 时由上方 useEffect 自动 onSelect 跳转,无需"使用此地址"按钮 */}
+            {filtered.length === 0 ? (
               remoteLoading ? (
                 <div className="py-8 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
                   <Loader2 className="h-3 w-3 animate-spin" />

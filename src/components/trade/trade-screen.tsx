@@ -27,7 +27,7 @@ import { SafetyPanel } from './safety-panel';
 import { MobileTabSwitcher, type MobileTab } from './mobile-tab-switcher';
 import { MobileActionBar } from './mobile-action-bar';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
-import { SOL_MINT } from '@/lib/preset-tokens';
+import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
 
 function isValidMint(s: string): boolean {
   try {
@@ -72,7 +72,7 @@ function buildFallbackDetail(mint: string): TokenDetail {
 }
 
 export function TradeScreen() {
-  const [mint, setMint] = useState<string>(SOL_MINT);
+  const [mint, setMint] = useState<string>(DEFAULT_TRADE_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
   const [defaultSide, setDefaultSide] = useState<'buy' | 'sell' | undefined>(undefined);
   const [mobileTab, setMobileTab] = useState<MobileTab>('chart');
@@ -90,7 +90,7 @@ export function TradeScreen() {
     if (typeof window === 'undefined') return;
     if (!isValidMint(mint)) return;
     const url = new URL(window.location.href);
-    if (mint === SOL_MINT) url.searchParams.delete('mint');
+    if (mint === DEFAULT_TRADE_MINT) url.searchParams.delete('mint');
     else url.searchParams.set('mint', mint);
     window.history.replaceState({}, '', url.toString());
   }, [mint]);

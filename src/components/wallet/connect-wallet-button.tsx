@@ -143,18 +143,20 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        aria-label={shortAddr(addr)}
         className={
-          'inline-flex items-center justify-center gap-2 rounded-md border border-border/60 bg-card ' +
+          'inline-flex items-center justify-center rounded-md border border-border/60 bg-card ' +
           'text-foreground hover:bg-accent hover:border-primary/40 ' +
           'transition-colors font-medium focus-visible:outline-none ' +
           'focus-visible:ring-2 focus-visible:ring-ring ' +
-          'h-9 pl-2 pr-3 text-sm'
+          // T-912 移动端 < sm 只显头像 36x36 圆,>= sm 头像 + 地址 + 余额
+          'h-9 w-9 sm:w-auto sm:h-9 sm:gap-2 sm:pl-2 sm:pr-3 text-sm'
         }
       >
         <WalletAvatar address={addr} size={20} />
-        <span className="font-mono text-xs">{shortAddr(addr)}</span>
+        <span className="hidden sm:inline font-mono text-xs">{shortAddr(addr)}</span>
         {balance !== null && (
-          <span className="font-mono text-xs text-muted-foreground border-l border-border/60 pl-2">
+          <span className="hidden sm:inline font-mono text-xs text-muted-foreground border-l border-border/60 pl-2">
             {balance.toFixed(3)} {chain.nativeSymbol}
           </span>
         )}
