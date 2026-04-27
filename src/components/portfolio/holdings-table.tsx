@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/table';
 import { getCurrentChain } from '@/config/chains';
 import type { CostEntry } from '@/lib/cost-basis';
+import { useCurrency } from '@/lib/currency-store';
+import { formatAmount as fmtAmount } from '@/lib/format';
 
 interface Sol { amount: number; valueUsd: number; }
 interface Token {
@@ -49,6 +51,7 @@ interface RowMetrics {
 export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
   const t = useTranslations();
   const chain = getCurrentChain();
+  const currency = useCurrency();
   const solUsd = sol.amount > 0 ? sol.valueUsd / sol.amount : 0;
   const nowSec = Math.floor(Date.now() / 1000);
 
@@ -108,7 +111,7 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
     <>
       {/* 移动卡片视图 (< sm) */}
       <div className="grid grid-cols-1 gap-2 sm:hidden">
-        {sol.amount > 0 && <SolCard sol={sol} />}
+        {sol.amount > 0 && <SolCard sol={sol} currency={currency} solUsd={solUsd} />}
         {tokens.map((tok) => (
           <TokenCard
             key={tok.mint}
@@ -116,6 +119,8 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
             m={metrics(tok)}
             t={t}
             chain={chain}
+            currency={currency}
+            solUsd={solUsd}
           />
         ))}
       </div>
@@ -159,7 +164,9 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
                 <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden md:table-cell">—</TableCell>
                 <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden lg:table-cell">—</TableCell>
                 <TableCell className="text-right font-mono">
-                  <div className="font-medium text-[13px] leading-tight">${formatUsd(sol.valueUsd)}</div>
+                  <div className="font-medium text-[13px] leading-tight">
+                    {fmtAmount(sol.valueUsd, currency, solUsd)}
+                  </div>
                   <div className="text-[10px] text-muted-foreground">{formatAmount(sol.amount)}</div>
                 </TableCell>
                 <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden md:table-cell">—</TableCell>
@@ -219,7 +226,7 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     <div className="font-medium text-[13px] leading-tight">
-                      {tok.valueUsd > 0 ? `$${formatUsd(tok.valueUsd)}` : '—'}
+                      {tok.valueUsd > 0 ? fmtAmount(tok.valueUsd, currency, solUsd) : '—'}
                     </div>
                     <div className="text-[10px] text-muted-foreground">
                       {formatAmount(tok.amount)}
@@ -275,7 +282,15 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
 
 // ── Mobile cards ─────────────────────────────────────────────
 
-function SolCard({ sol }: { sol: Sol }) {
+function SolCard({
+  sol,
+  currency,
+  solUsd,
+}: {
+  sol: Sol;
+  currency: ReturnType<typeof useCurrency>;
+  solUsd: number;
+}) {
   return (
     <div className="rounded-lg border border-border/40 p-3 bg-card">
       <div className="flex items-center justify-between gap-3">
@@ -295,7 +310,7 @@ function SolCard({ sol }: { sol: Sol }) {
         </div>
         <div className="text-right">
           <div className="font-mono font-medium text-sm">
-            ${formatUsd(sol.valueUsd)}
+            {fmtAmount(sol.valueUsd, currency, solUsd)}
           </div>
           <div className="text-[10px] text-muted-foreground font-mono">
             {formatAmount(sol.amount)}
@@ -311,11 +326,15 @@ function TokenCard({
   m,
   t,
   chain,
+  currency,
+  solUsd,
 }: {
   tok: Token;
   m: RowMetrics;
   t: ReturnType<typeof useTranslations>;
   chain: ReturnType<typeof getCurrentChain>;
+  currency: ReturnType<typeof useCurrency>;
+  solUsd: number;
 }) {
   return (
     <div className="rounded-lg border border-border/40 p-3 bg-card space-y-2.5">
@@ -350,7 +369,7 @@ function TokenCard({
         </Link>
         <div className="text-right flex-shrink-0">
           <div className="font-mono font-medium text-sm">
-            {tok.valueUsd > 0 ? `$${formatUsd(tok.valueUsd)}` : '—'}
+            {tok.valueUsd > 0 ? fmtAmount(tok.valueUsd, currency, solUsd) : '—'}
           </div>
           <div className="text-[10px] text-muted-foreground font-mono">
             {formatAmount(tok.amount)}

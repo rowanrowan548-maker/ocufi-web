@@ -5,7 +5,9 @@
  * - formatCompact: 1234 → 1.23K / 1.2M / 4.5B 简写
  * - formatUsdCompact: 上行加 $
  * - formatAge: ms 时间戳 → 相对时间 i18n key 调用
+ * - formatAmount: T-908b 全站货币切换 USD ↔ SOL 转换 + 前后缀
  */
+import type { Currency } from './currency-store';
 
 /** 价格显示 · 大数纯整数,小数零塌缩(0.0₄8575) */
 export function formatPrice(n: number | null | undefined): string {
@@ -37,6 +39,49 @@ export function formatCompact(n: number | null | undefined): string {
 export function formatUsdCompact(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return '—';
   return `$${formatCompact(n)}`;
+}
+
+/**
+ * T-908b · 按当前货币单位渲染金额
+ *
+ * @param usd 美元金额(原始数据全部以 USD 存)
+ * @param currency 当前显示单位(从 useCurrency())
+ * @param solUsd 当前 SOL/USD 价格(用于 USD → SOL 换算)
+ * @returns 带前缀符号的字符串(`$1,234.56` 或 `5.234 SOL` · 失效返 `—`)
+ */
+export function formatAmount(
+  usd: number | null | undefined,
+  currency: Currency,
+  solUsd: number,
+): string {
+  if (usd == null || !Number.isFinite(usd)) return '—';
+  if (currency === 'USD') {
+    return `$${usd.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+  // SOL 显示
+  if (!(solUsd > 0)) return '—';
+  const sol = usd / solUsd;
+  let body: string;
+  if (Math.abs(sol) >= 100) body = sol.toFixed(2);
+  else if (Math.abs(sol) >= 1) body = sol.toFixed(3);
+  else if (Math.abs(sol) >= 0.0001) body = sol.toFixed(4);
+  else body = sol.toFixed(6);
+  return `${body} SOL`;
+}
+
+/** T-908b · 简写版(给 stat 卡 / 大数字用,$1.2M / 0.5K SOL) */
+export function formatAmountCompact(
+  usd: number | null | undefined,
+  currency: Currency,
+  solUsd: number,
+): string {
+  if (usd == null || !Number.isFinite(usd)) return '—';
+  if (currency === 'USD') return `$${formatCompact(usd)}`;
+  if (!(solUsd > 0)) return '—';
+  return `${formatCompact(usd / solUsd)} SOL`;
 }
 
 /** 相对时间(ms 时间戳),走 i18n token.age.* */

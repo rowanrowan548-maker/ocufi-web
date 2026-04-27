@@ -22,27 +22,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { routing } from '@/i18n/routing';
-
-const CURRENCY_KEY = 'ocufi.currency';
-type Currency = 'USD' | 'SOL';
-
-function readCurrency(): Currency {
-  if (typeof window === 'undefined') return 'USD';
-  const v = window.localStorage.getItem(CURRENCY_KEY);
-  return v === 'SOL' ? 'SOL' : 'USD';
-}
-
-function writeCurrency(c: Currency) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(CURRENCY_KEY, c);
-    window.dispatchEvent(new Event('ocufi:currency-change'));
-  } catch {
-    /* ignore */
-  }
-}
+import { useCurrency, useSetCurrency, type Currency } from '@/lib/currency-store';
 
 interface Props {
   /** inline 模式:不渲染 dropdown 包装,直接展开内容(给 mobile drawer 用) */
@@ -182,14 +163,10 @@ function LanguageRow() {
 
 function CurrencyRow() {
   const t = useTranslations();
-  const [currency, setCurrency] = useState<Currency>('USD');
-  useEffect(() => {
-    setCurrency(readCurrency());
-  }, []);
-  function update(c: Currency) {
-    setCurrency(c);
-    writeCurrency(c);
-  }
+  const currency = useCurrency();
+  const setCurrency = useSetCurrency();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <SettingRow icon={DollarSign} label={t('settings.currency')}>
       <Segmented
@@ -197,8 +174,8 @@ function CurrencyRow() {
           { value: 'USD', label: 'USD' },
           { value: 'SOL', label: 'SOL' },
         ]}
-        value={currency}
-        onChange={(v) => update(v as Currency)}
+        value={mounted ? currency : 'USD'}
+        onChange={(v) => setCurrency(v as Currency)}
       />
     </SettingRow>
   );

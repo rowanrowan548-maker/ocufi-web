@@ -45,6 +45,8 @@ import {
 import { PnlShareButton } from '@/components/share/pnl-share-button';
 import { BadgeIcon } from '@/components/badges/badge-icon';
 import { useBadges, type EarnedBadge } from '@/hooks/use-badges';
+import { useCurrency } from '@/lib/currency-store';
+import { formatAmount } from '@/lib/format';
 
 export function PortfolioView() {
   const t = useTranslations();
@@ -59,8 +61,8 @@ export function PortfolioView() {
   const [topTab, setTopTab] = useState<'pnl' | 'portfolio'>('pnl');
   // T-900a:时间筛选 state hoist · T-900c 阶段联动 stat 卡 + 表格数据
   const [range, setRange] = useState<'1d' | '7d' | '30d' | 'all'>('all');
-  // T-902:USD/SOL 单位切换(默认 USD)
-  const [unit, setUnit] = useState<'USD' | 'SOL'>('USD');
+  // T-908b · 全站货币(替换 T-902 局部 unit)· 顶部局部 toggle 已删
+  const currency = useCurrency();
   // T-902:刷新时间戳,用来显示「更新于 X 秒前」
   const [lastRefreshAt, setLastRefreshAt] = useState(() => Date.now());
   const [refreshTick, setRefreshTick] = useState(0);
@@ -325,12 +327,7 @@ export function PortfolioView() {
                   {t('portfolio.totalValue')}
                 </span>
                 <span className="text-3xl sm:text-4xl font-bold tabular-nums leading-none">
-                  {unit === 'USD'
-                    ? `$${formatUsd(totalUsd)}`
-                    : `${formatSol(solUsdPrice > 0 ? totalUsd / solUsdPrice : 0)} `}
-                  {unit === 'SOL' && (
-                    <span className="text-base font-semibold text-muted-foreground/60 ml-1">SOL</span>
-                  )}
+                  {formatAmount(totalUsd, currency, solUsdPrice)}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -372,16 +369,6 @@ export function PortfolioView() {
                     </TabsTrigger>
                     <TabsTrigger value="all" className="text-xs px-2.5 h-6">
                       {t('portfolio.stats.rangeAll')}
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                <Tabs value={unit} onValueChange={(v) => v && setUnit(v as typeof unit)}>
-                  <TabsList className="h-8">
-                    <TabsTrigger value="USD" className="text-xs px-2 h-6 data-[selected=true]:bg-success/15 data-[selected=true]:text-success">
-                      USD
-                    </TabsTrigger>
-                    <TabsTrigger value="SOL" className="text-xs px-2 h-6 data-[selected=true]:bg-success/15 data-[selected=true]:text-success">
-                      SOL
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -810,11 +797,6 @@ function formatUsd(n: number): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatSol(n: number): string {
-  if (n >= 100) return n.toFixed(2);
-  if (n >= 1) return n.toFixed(3);
-  return n.toFixed(4);
-}
 
 // T-900c:加载骨架屏 · 5 张 stat 卡 + 表格 4 行 shimmer
 function PortfolioSkeleton() {
