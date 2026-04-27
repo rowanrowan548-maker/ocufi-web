@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
 import { TokenSearchCombo } from '@/components/common/token-search-combo';
+import { RpcHealthBanner } from '@/components/common/rpc-health-banner';
 import { TradingHeader } from './trading-header';
 import { ChartCard } from './chart-card';
 import { ActivityBoard } from './activity-board';
@@ -70,6 +71,7 @@ export function TradeScreen() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+      <RpcHealthBanner />
       <TokenSearchCombo value={mint} onSelect={setMint} />
       <TradingHeader mint={mint} detail={detail} />
 

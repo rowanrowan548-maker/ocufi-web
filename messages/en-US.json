@@ -196,6 +196,11 @@
         "age": "Age"
       }
     },
+    "rpcHealth": {
+      "slow": "Network node is responding slowly",
+      "down": "Node is unreachable; some features may be affected",
+      "retry": "Retry"
+    },
     "chart": {
       "timeframes": {
         "1m": "1m",
