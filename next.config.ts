@@ -25,7 +25,8 @@ const csp = [
   // 外部数据源 + Vercel Analytics 上报 endpoint
   // T-820:补 api.gopluslabs.io(GoPlus token security 二次审查 API)
   "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://api.gopluslabs.io https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app https://va.vercel-scripts.com https://vitals.vercel-insights.com",
-  "frame-src 'self' https://dexscreener.com https://*.dexscreener.com",
+  // T-708:K 线换 GT embed iframe,放行 geckoterminal.com 嵌入
+  "frame-src 'self' https://dexscreener.com https://*.dexscreener.com https://www.geckoterminal.com",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",

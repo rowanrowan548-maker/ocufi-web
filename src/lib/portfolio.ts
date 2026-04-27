@@ -99,6 +99,8 @@ export interface TokenInfo {
   logoUri?: string;
   /** pair 创建时间(ms),用于 NEW 标签 */
   pairCreatedAt?: number;
+  /** T-708:深度最高 pair 的链上地址 · 给 chart-card GT iframe 拼 URL */
+  topPoolAddress?: string;
 }
 
 /**
@@ -150,6 +152,9 @@ function pairsToTokenInfo(mint: string, allPairs: any[]): TokenInfo | null {
     volume24h: Number(top.volume?.h24 ?? 0) || undefined,
     logoUri: safeUrl(top.info?.imageUrl),
     pairCreatedAt: top.pairCreatedAt ? Number(top.pairCreatedAt) : undefined,
+    topPoolAddress: typeof top.pairAddress === 'string' && top.pairAddress
+      ? top.pairAddress
+      : undefined,
   };
 }
 
