@@ -59,7 +59,7 @@ describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
         [1700000000, 1, 1.1, 0.9, 1.05, 100],
       ]),
     );
-    const c = await fetchOhlc('pool-time-sec', 'minute_1', 100);
+    const c = await fetchOhlc('mint-time-sec', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700000000);
   });
@@ -70,7 +70,7 @@ describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
         [1700000000123, 1, 1.1, 0.9, 1.05, 100],
       ]),
     );
-    const c = await fetchOhlc('pool-time-ms', 'minute_1', 100);
+    const c = await fetchOhlc('mint-time-ms', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700000000); // floor(1700000000123 / 1000)
   });
@@ -85,7 +85,7 @@ describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
         [1700000300, 1, 1.1, 0.9, 1.05, 100], // 唯一合法
       ]),
     );
-    const c = await fetchOhlc('pool-time-bad', 'minute_1', 100);
+    const c = await fetchOhlc('mint-time-bad', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700000300);
   });
@@ -99,7 +99,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
         [1700001060, 1, 1.1, 0.9, 1.05, 100], // 合法
       ]),
     );
-    const c = await fetchOhlc('pool-bug26-open', 'minute_1', 100);
+    const c = await fetchOhlc('mint-bug26-open', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700001060);
   });
@@ -111,7 +111,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
         [1700002060, 1, 1.1, 0.9, 1.05, 100],
       ]),
     );
-    const c = await fetchOhlc('pool-bug26-close', 'minute_1', 100);
+    const c = await fetchOhlc('mint-bug26-close', 'minute_1', 100);
     // 锁定当前 broken 行为:Number(null) = 0 → isFinite(0) = true → 不跳
     // 期望(BUG-026 修后):c.length === 1,只保留 1700002060
     expect(c).toHaveLength(2);
@@ -125,7 +125,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
         [1700002560, 1, 1.1, 0.9, 1.05, 100],
       ]),
     );
-    const c = await fetchOhlc('pool-bug26-close-str', 'minute_1', 100);
+    const c = await fetchOhlc('mint-bug26-close-str', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700002560);
   });
@@ -138,7 +138,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
         [1700003060, 1, 1.1, 0.9, 1.05, 100], // 合法
       ]),
     );
-    const c = await fetchOhlc('pool-bug26-high', 'minute_1', 100);
+    const c = await fetchOhlc('mint-bug26-high', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700003060);
   });
@@ -150,7 +150,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
         [1700004060, 1, 1.1, 0.9, 1.05, 100], // 合法
       ]),
     );
-    const c = await fetchOhlc('pool-bug26-low', 'minute_1', 100);
+    const c = await fetchOhlc('mint-bug26-low', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700004060);
   });
@@ -161,7 +161,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
         [1700005000, 1, 1.1, 0.9, 1.05, 'xyz'],
       ]),
     );
-    const c = await fetchOhlc('pool-bug26-vol', 'minute_1', 100);
+    const c = await fetchOhlc('mint-bug26-vol', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].volume).toBe(0);
   });
@@ -176,7 +176,7 @@ describe('fetchOhlc · 严格递增去重 + 排序', () => {
         [1700100000, 1, 1, 1, 1, 100], // 旧
       ]),
     );
-    const c = await fetchOhlc('pool-sort', 'minute_1', 100);
+    const c = await fetchOhlc('mint-sort', 'minute_1', 100);
     expect(c).toHaveLength(3);
     expect(c[0].time).toBe(1700100000);
     expect(c[1].time).toBe(1700100100);
@@ -191,7 +191,7 @@ describe('fetchOhlc · 严格递增去重 + 排序', () => {
         [1700200060, 1, 1, 1, 3.0, 300],
       ]),
     );
-    const c = await fetchOhlc('pool-dedup', 'minute_1', 100);
+    const c = await fetchOhlc('mint-dedup', 'minute_1', 100);
     expect(c).toHaveLength(2);
     expect(c[0].time).toBe(1700200000);
     // 第一条 close 取 1.0(锁定 dedup 用 first-wins 而非 last-wins · 见 ohlc.ts:142-147)
@@ -206,7 +206,7 @@ describe('fetchOhlc · 严格递增去重 + 排序', () => {
         [1700300060, 1, 1, 1, 1, 100],
       ]),
     );
-    const c = await fetchOhlc('pool-short', 'minute_1', 100);
+    const c = await fetchOhlc('mint-short', 'minute_1', 100);
     expect(c).toHaveLength(1);
     expect(c[0].time).toBe(1700300060);
   });
@@ -215,7 +215,7 @@ describe('fetchOhlc · 严格递增去重 + 排序', () => {
 describe('fetchOhlc · 网络失败 stale-while-error', () => {
   it('fetch reject → 返回 [](无旧缓存时)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('network'));
-    const c = await fetchOhlc('pool-net-fail-fresh', 'minute_1', 100);
+    const c = await fetchOhlc('mint-net-fail-fresh', 'minute_1', 100);
     expect(c).toEqual<OhlcCandle[]>([]);
   });
 
@@ -225,7 +225,7 @@ describe('fetchOhlc · 网络失败 stale-while-error', () => {
       status: 500,
       text: async () => 'oops',
     } as unknown as Response);
-    const c = await fetchOhlc('pool-http-500', 'minute_1', 100);
+    const c = await fetchOhlc('mint-http-500', 'minute_1', 100);
     expect(c).toEqual<OhlcCandle[]>([]);
   });
 });
@@ -233,13 +233,19 @@ describe('fetchOhlc · 网络失败 stale-while-error', () => {
 describe('fetchOhlc · T-700b 后端代理 ok=false 降级', () => {
   it('后端返 { ok: false, error: "rate_limit" } → 返回 []', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockBackendError('rate_limit'));
-    const c = await fetchOhlc('pool-rate-limit', 'minute_1', 100);
+    const c = await fetchOhlc('mint-rate-limit', 'minute_1', 100);
     expect(c).toEqual<OhlcCandle[]>([]);
   });
 
   it('后端返 { ok: false, error: "upstream_5xx" } → 返回 []', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockBackendError('upstream_5xx'));
-    const c = await fetchOhlc('pool-upstream-5xx', 'minute_1', 100);
+    const c = await fetchOhlc('mint-upstream-5xx', 'minute_1', 100);
+    expect(c).toEqual<OhlcCandle[]>([]);
+  });
+
+  it('后端返 { ok: false, error: "no_pool" } → 返回 [](T-700b-fix:无 LP token)', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockBackendError('no_pool'));
+    const c = await fetchOhlc('mint-no-pool', 'minute_1', 100);
     expect(c).toEqual<OhlcCandle[]>([]);
   });
 
@@ -248,19 +254,20 @@ describe('fetchOhlc · T-700b 后端代理 ok=false 降级', () => {
       ok: true,
       json: async () => ({ ok: true }),
     } as unknown as Response);
-    const c = await fetchOhlc('pool-no-list', 'minute_1', 100);
+    const c = await fetchOhlc('mint-no-list', 'minute_1', 100);
     expect(c).toEqual<OhlcCandle[]>([]);
   });
 
-  it('请求 URL 走 NEXT_PUBLIC_API_URL/chart/ohlc(不再直击 GT)', async () => {
+  it('请求 URL 走 NEXT_PUBLIC_API_URL/chart/ohlc?mint=...(T-700b-fix:不再传 pool)', async () => {
     const fetchMock = (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
       mockBackendResponse([[1700700000, 1, 1, 1, 1, 100]]),
     );
-    await fetchOhlc('pool-url-check', 'hour_4', 50);
+    await fetchOhlc('mint-url-check', 'hour_4', 50);
     expect(fetchMock).toHaveBeenCalledOnce();
     const calledUrl = String(fetchMock.mock.calls[0][0]);
     expect(calledUrl).toContain('/chart/ohlc');
-    expect(calledUrl).toContain('pool=pool-url-check');
+    expect(calledUrl).toContain('mint=mint-url-check');
+    expect(calledUrl).not.toContain('pool=');
     expect(calledUrl).toContain('tf=hour_4');
     expect(calledUrl).toContain('limit=50');
     expect(calledUrl).not.toContain('api.geckoterminal.com');

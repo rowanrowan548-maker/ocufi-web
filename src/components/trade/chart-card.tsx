@@ -3,8 +3,8 @@
 /**
  * K 线卡 · TradingView Lightweight Charts 自渲染
  *
- * 走链上 hook fetchOhlc + resolvePool(GeckoTerminal OHLC,30s 缓存,
- * 失败 stale-while-error → []),替代之前的 DexScreener iframe。
+ * T-700b/fix:走 ocufi-api 后端代理 `/chart/ohlc?mint=...`(后端处理 mint→pool 解析 + 60s 缓存)
+ * 前端再叠 30s 缓存,失败 stale-while-error → [],替代之前的 DexScreener iframe。
  *
  * - 6 时间框架切换:1m / 5m / 15m / 1h / 4h / 1d(默认 4h)
  * - K线 + Volume 双轴(Volume 占下 25%)
@@ -25,7 +25,7 @@ import {
   type ISeriesApi,
   type Time,
 } from 'lightweight-charts';
-import { fetchOhlc, resolvePool, type Timeframe, type OhlcCandle } from '@/lib/ohlc';
+import { fetchOhlc, type Timeframe, type OhlcCandle } from '@/lib/ohlc';
 import { SOL_MINT } from '@/lib/jupiter';
 
 const UP_COLOR = '#19FB9B';
@@ -53,8 +53,6 @@ export function ChartCard({ mint }: Props) {
   const volumeRef = useRef<ISeriesApi<'Histogram'> | null>(null);
 
   const [tf, setTf] = useState<Timeframe>('hour_4');
-  // pool 三态:undefined = 解析中 · null = 无 LP · string = pool 地址
-  const [pool, setPool] = useState<string | null | undefined>(mint ? undefined : null);
   const [candles, setCandles] = useState<OhlcCandle[]>([]);
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -113,36 +111,20 @@ export function ChartCard({ mint }: Props) {
     };
   }, []);
 
-  // ── 2. 解析 mint → pool ──
+  // ── 2. 拉 OHLC(T-700b-fix:直接传 mint 给后端,后端处理 mint→pool 解析) ──
   useEffect(() => {
     if (!mint || mint === SOL_MINT) {
       // SOL 是基础币,无独立 LP 池(应去 SOL/USDC 等池查 K 线),早走 fallback
-      setPool(null);
       setCandles([]);
-      return;
-    }
-    setPool(undefined);
-    setCandles([]);
-    setErrored(false);
-    let cancelled = false;
-    resolvePool(mint).then((p) => {
-      if (!cancelled) setPool(p);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [mint]);
-
-  // ── 3. 拉 OHLC ──
-  useEffect(() => {
-    if (!pool) {
-      setCandles([]);
+      setLoading(false);
+      setErrored(false);
       return;
     }
     let cancelled = false;
     setLoading(true);
     setErrored(false);
-    fetchOhlc(pool, tf)
+    setCandles([]);
+    fetchOhlc(mint, tf)
       .then((c) => {
         if (cancelled) return;
         setCandles(c);
@@ -157,9 +139,9 @@ export function ChartCard({ mint }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [pool, tf]);
+  }, [mint, tf]);
 
-  // ── 4. 推数据到 series · deps 含 chartReady,strict mode 第二次 mount 后会重推 ──
+  // ── 3. 推数据到 series · deps 含 chartReady,strict mode 第二次 mount 后会重推 ──
   useEffect(() => {
     if (!chartReady) return;
     const candleSeries = candleRef.current;
@@ -188,14 +170,13 @@ export function ChartCard({ mint }: Props) {
     }
   }, [candles, chartReady]);
 
-  // BUG-024:三态严格区分
-  // - showSpinner:在拉(loading 或 pool 还没解析)且无数据可显
+  // BUG-024:三态严格区分(T-700b-fix:pool 解析在后端,前端不再跟踪)
+  // - showSpinner:fetch 中且无数据可显
   // - showError:fetch catch 抛错(errored=true)
-  // - showEmpty:无 LP(pool=null)或 GT 真无数据(candles 空且未错)
-  const showSpinner = (loading || pool === undefined) && candles.length === 0;
+  // - showEmpty:fetch 完成但无 LP / 无数据(后端 ok=false 或返空 ohlcv_list 都走这)
+  const showSpinner = loading && candles.length === 0;
   const showError = !loading && errored && candles.length === 0;
-  const showEmpty =
-    !loading && !errored && candles.length === 0 && pool !== undefined;
+  const showEmpty = !loading && !errored && candles.length === 0;
 
   // SOL 基础币无独立 LP 池,K 线请去 SOL/USDC 等池查 → 友好 fallback
   if (mint === SOL_MINT) {

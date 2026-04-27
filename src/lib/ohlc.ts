@@ -2,18 +2,18 @@
  * OHLC 数据获取(/trade chart-card 用 lightweight-charts 自渲染时拉)
  *
  * T-700b:已从直击 GeckoTerminal 改成走 ocufi-api 后端代理 `/chart/ohlc`
+ * T-700b-fix:再优化签名 `fetchOhlc(mint, tf, limit)`,后端处理 mint→pool 解析
  *  - 后端单 IP 打 GT,所有用户共享 60s 缓存,GT 免费层 30 req/min 撞不破
  *  - 前端再叠 30s 缓存,双层 cache 进一步降低后端压力
  *  - 后端透传 GT 原始 ohlcv_list,parser 不变(BUG-026 finite 校验仍生效)
  *  - 后端总返 200 + `{ok: bool, ohlcv_list?, error?}`,ok=false 时降级返 [](或 stale)
+ *  - resolvePool 已删除 — 解析逻辑转移到后端,前端不再关心 pool 地址
  *
  * 关键约束:
  *  - lightweight-charts 要求 time 是 unix seconds(不是 ms)
  *  - GeckoTerminal 返回 desc(新到旧),lightweight-charts 要求 asc,需要 reverse
  *  - timeframe 暴露为 'minute_5' 这种 UI 友好枚举,后端 enum 同名(直接透传)
  */
-
-import { fetchTopPool } from './geckoterminal';
 
 const CACHE_TTL_MS = 30_000;
 const DEFAULT_LIMIT = 200;
@@ -42,8 +42,8 @@ export interface OhlcCandle {
 const cache = new Map<string, { data: OhlcCandle[]; expiresAt: number }>();
 const inflight = new Map<string, Promise<OhlcCandle[]>>();
 
-function cacheKey(pool: string, tf: Timeframe, limit: number): string {
-  return `${pool}::${tf}::${limit}`;
+function cacheKey(mint: string, tf: Timeframe, limit: number): string {
+  return `${mint}::${tf}::${limit}`;
 }
 
 function setCache(key: string, data: OhlcCandle[]) {
@@ -64,33 +64,24 @@ function normalizeTime(ts: unknown): number {
 }
 
 /**
- * 把 mint 解析到主流动性池(GeckoTerminal 第 1 条 pool)
+ * 拉某 token 的 OHLC 数据,转成 lightweight-charts 兼容格式
  *
- * 复用 geckoterminal.ts 的 fetchTopPool — 已自带 5 分钟池缓存 + 失败返回 null
+ * T-700b-fix:签名从 (pool, tf) 改成 (mint, tf),后端处理 mint→pool 解析
  *
- * @returns pool 地址(base58)或 null(无 LP / API 失败)
- */
-export async function resolvePool(mint: string): Promise<string | null> {
-  return fetchTopPool(mint);
-}
-
-/**
- * 拉某 pool 的 OHLC 数据,转成 lightweight-charts 兼容格式
- *
- * @param pool      pool 地址(由 resolvePool 拿到)
+ * @param mint      token mint 地址(base58)
  * @param timeframe UI 枚举('minute_5' / 'hour_4' / 'day_1' …)
  * @param limit     返回 candle 数,默认 200,GT max 1000
- * @returns         OhlcCandle[](time 升序;失败 / 无数据返回 [])
+ * @returns         OhlcCandle[](time 升序;失败 / 无 LP / 无数据返回 [])
  */
 export async function fetchOhlc(
-  pool: string,
+  mint: string,
   timeframe: Timeframe,
   limit: number = DEFAULT_LIMIT
 ): Promise<OhlcCandle[]> {
-  if (!pool) return [];
+  if (!mint) return [];
   const safeLimit = Math.min(Math.max(1, Math.floor(limit) || DEFAULT_LIMIT), MAX_LIMIT);
 
-  const key = cacheKey(pool, timeframe, safeLimit);
+  const key = cacheKey(mint, timeframe, safeLimit);
   const cached = getCached(key);
   if (cached?.fresh) return cached.data;
 
@@ -106,7 +97,7 @@ export async function fetchOhlc(
   }
   const url =
     `${apiUrl.replace(/\/$/, '')}/chart/ohlc` +
-    `?pool=${encodeURIComponent(pool)}&tf=${encodeURIComponent(timeframe)}&limit=${safeLimit}`;
+    `?mint=${encodeURIComponent(mint)}&tf=${encodeURIComponent(timeframe)}&limit=${safeLimit}`;
 
   const promise = (async () => {
     try {
@@ -124,7 +115,7 @@ export async function fetchOhlc(
       // ok=false → 降级(rate_limit / upstream_5xx / invalid_pool / timeout)
       if (!json || json.ok !== true || !Array.isArray(json.ohlcv_list)) {
         const errMsg = json?.error ? String(json.error) : 'unknown';
-        console.warn('[ohlc] backend error', pool.slice(0, 8), timeframe, errMsg);
+        console.warn('[ohlc] backend error', mint.slice(0, 8), timeframe, errMsg);
         if (cached) return cached.data;     // stale-while-error
         setCache(key, []);
         return [];
@@ -157,7 +148,7 @@ export async function fetchOhlc(
       }
       if (dropped > 0) {
         console.warn(
-          `[ohlc] ${pool.slice(0, 8)} ${timeframe}: dropped ${dropped}/${list.length} non-finite candles`
+          `[ohlc] ${mint.slice(0, 8)} ${timeframe}: dropped ${dropped}/${list.length} non-finite candles`
         );
       }
       // GT 返回 desc(新到旧),lightweight-charts 要求 asc,reverse 一次
@@ -173,7 +164,7 @@ export async function fetchOhlc(
       setCache(key, dedup);
       return dedup;
     } catch (e) {
-      console.warn('[ohlc] fetch failed', pool.slice(0, 8), timeframe, e);
+      console.warn('[ohlc] fetch failed', mint.slice(0, 8), timeframe, e);
       if (cached) return cached.data;       // stale-while-error
       return [];
     } finally {
