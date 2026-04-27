@@ -3,11 +3,17 @@ import { fetchOhlc, type OhlcCandle } from '@/lib/ohlc';
 
 /**
  * T-504a fetchOhlc · BUG-026 实证 + 时间戳归一 + 严格递增去重
+ * T-700b:数据源从直击 GT 改成走后端代理 `/chart/ohlc`,响应格式扁平化
+ *   旧: { data: { attributes: { ohlcv_list: [...] } } }
+ *   新: { ok: true, ohlcv_list: [...], cached: bool, fetched_at: number }
+ *   错: { ok: false, error: 'rate_limit' | 'upstream_5xx' | ... }
  *
  * ohlc.ts 把 parsing 逻辑封在 fetchOhlc 内部(没单独 export normalizeTime / parseOhlcv),
  * 只能 mock 全局 fetch 端到端测。
  *
  * 模块级 `cache` Map 跨测试可能污染,每个测试用 unique pool/tf/limit 三元组绕开。
+ *
+ * vitest 在 vitest.config 已设 NEXT_PUBLIC_API_URL,fetchOhlc 才会走后端路径(否则直接返 [])。
  */
 
 interface OhlcvRow {
@@ -20,17 +26,26 @@ interface OhlcvRow {
   5: number | string | null | undefined;
 }
 
-function mockGtResponse(rows: Array<unknown[]>): Response {
+function mockBackendResponse(rows: Array<unknown[]>): Response {
   return {
     ok: true,
-    json: async () => ({
-      data: { attributes: { ohlcv_list: rows } },
-    }),
+    json: async () => ({ ok: true, ohlcv_list: rows, cached: false, fetched_at: 1700000000 }),
+  } as unknown as Response;
+}
+
+function mockBackendError(error: string): Response {
+  return {
+    ok: true, // 后端契约:HTTP 一律 200,错误走 ok:false
+    json: async () => ({ ok: false, error }),
   } as unknown as Response;
 }
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
+  // 没设 NEXT_PUBLIC_API_URL 时 fetchOhlc 直接返 [],测试场景需要任意值激活后端路径
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000';
+  }
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -40,7 +55,7 @@ afterEach(() => {
 describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
   it('seconds 时间戳(< 1e12)→ 直接保留', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700000000, 1, 1.1, 0.9, 1.05, 100],
       ]),
     );
@@ -51,7 +66,7 @@ describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
 
   it('ms 时间戳(> 1e12)→ 自动除 1000 转 seconds', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700000000123, 1, 1.1, 0.9, 1.05, 100],
       ]),
     );
@@ -62,7 +77,7 @@ describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
 
   it('time = 0 / 负值 / 非数 → 跳过该 candle', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [0, 1, 1, 1, 1, 100],
         [-1, 1, 1, 1, 1, 100],
         ['abc', 1, 1, 1, 1, 100],
@@ -79,7 +94,7 @@ describe('fetchOhlc · 时间戳归一(seconds vs ms)', () => {
 describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
   it('open 是 NaN(非数字符串)→ 跳过 candle ✅(已实现)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700001000, 'NaN-open', 1.1, 0.9, 1.05, 100],
         [1700001060, 1, 1.1, 0.9, 1.05, 100], // 合法
       ]),
@@ -91,7 +106,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
 
   it('close 是 null → 当前 NOT 跳过(Number(null)=0 通过 isFinite,真 bug · BUG-026 加强)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700002000, 1, 1.1, 0.9, null, 100],
         [1700002060, 1, 1.1, 0.9, 1.05, 100],
       ]),
@@ -105,7 +120,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
 
   it('close 是字符串 "abc" → 跳过 ✅(NaN 被 isFinite 挡住)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700002500, 1, 1.1, 0.9, 'abc', 100],
         [1700002560, 1, 1.1, 0.9, 1.05, 100],
       ]),
@@ -118,7 +133,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
   // BUG-026 已修(ohlc.ts:134-144):high/low/open/close 任一非 finite -> drop
   it('high 是 "abc"(NaN)→ candle 被 drop ✅(BUG-026 已修)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700003000, 1, 'abc', 0.9, 1.05, 100],
         [1700003060, 1, 1.1, 0.9, 1.05, 100], // 合法
       ]),
@@ -130,7 +145,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
 
   it('low 是 Infinity → candle 被 drop ✅(BUG-026 已修)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700004000, 1, 1.1, Infinity, 1.05, 100],
         [1700004060, 1, 1.1, 0.9, 1.05, 100], // 合法
       ]),
@@ -142,7 +157,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
 
   it('volume 非数 → fallback 到 0 ✅(已实现)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700005000, 1, 1.1, 0.9, 1.05, 'xyz'],
       ]),
     );
@@ -155,7 +170,7 @@ describe('fetchOhlc · BUG-026 NaN 过滤(实证当前行为)', () => {
 describe('fetchOhlc · 严格递增去重 + 排序', () => {
   it('GT 倒序(desc)返回 → 输出按时间 asc', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700100200, 1, 1, 1, 1, 100], // 新
         [1700100100, 1, 1, 1, 1, 100],
         [1700100000, 1, 1, 1, 1, 100], // 旧
@@ -170,7 +185,7 @@ describe('fetchOhlc · 严格递增去重 + 排序', () => {
 
   it('同时间戳重复 → 只保留第一条(避免 lightweight-charts assertion)', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700200000, 1, 1, 1, 1.0, 100],
         [1700200000, 1, 1, 1, 2.0, 200], // 同 time,close/volume 不同
         [1700200060, 1, 1, 1, 3.0, 300],
@@ -186,7 +201,7 @@ describe('fetchOhlc · 严格递增去重 + 排序', () => {
 
   it('行长度不足 6 → 跳过', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
-      mockGtResponse([
+      mockBackendResponse([
         [1700300000, 1, 1, 1] as unknown as OhlcvRow, // 只有 4 列
         [1700300060, 1, 1, 1, 1, 100],
       ]),
@@ -212,5 +227,42 @@ describe('fetchOhlc · 网络失败 stale-while-error', () => {
     } as unknown as Response);
     const c = await fetchOhlc('pool-http-500', 'minute_1', 100);
     expect(c).toEqual<OhlcCandle[]>([]);
+  });
+});
+
+describe('fetchOhlc · T-700b 后端代理 ok=false 降级', () => {
+  it('后端返 { ok: false, error: "rate_limit" } → 返回 []', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockBackendError('rate_limit'));
+    const c = await fetchOhlc('pool-rate-limit', 'minute_1', 100);
+    expect(c).toEqual<OhlcCandle[]>([]);
+  });
+
+  it('后端返 { ok: false, error: "upstream_5xx" } → 返回 []', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockBackendError('upstream_5xx'));
+    const c = await fetchOhlc('pool-upstream-5xx', 'minute_1', 100);
+    expect(c).toEqual<OhlcCandle[]>([]);
+  });
+
+  it('后端返 { ok: true } 但缺 ohlcv_list → 返回 [](防御性,后端契约外)', async () => {
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    } as unknown as Response);
+    const c = await fetchOhlc('pool-no-list', 'minute_1', 100);
+    expect(c).toEqual<OhlcCandle[]>([]);
+  });
+
+  it('请求 URL 走 NEXT_PUBLIC_API_URL/chart/ohlc(不再直击 GT)', async () => {
+    const fetchMock = (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockBackendResponse([[1700700000, 1, 1, 1, 1, 100]]),
+    );
+    await fetchOhlc('pool-url-check', 'hour_4', 50);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const calledUrl = String(fetchMock.mock.calls[0][0]);
+    expect(calledUrl).toContain('/chart/ohlc');
+    expect(calledUrl).toContain('pool=pool-url-check');
+    expect(calledUrl).toContain('tf=hour_4');
+    expect(calledUrl).toContain('limit=50');
+    expect(calledUrl).not.toContain('api.geckoterminal.com');
   });
 });

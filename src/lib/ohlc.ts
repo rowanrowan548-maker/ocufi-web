@@ -1,18 +1,20 @@
 /**
- * GeckoTerminal OHLC(/trade chart-card 用 lightweight-charts 自渲染时拉)
+ * OHLC 数据获取(/trade chart-card 用 lightweight-charts 自渲染时拉)
  *
- * API: GET /networks/solana/pools/{pool}/ohlcv/{timeframe_path}?aggregate=N&limit=L&currency=usd
- * Docs: https://www.geckoterminal.com/dex-api
+ * T-700b:已从直击 GeckoTerminal 改成走 ocufi-api 后端代理 `/chart/ohlc`
+ *  - 后端单 IP 打 GT,所有用户共享 60s 缓存,GT 免费层 30 req/min 撞不破
+ *  - 前端再叠 30s 缓存,双层 cache 进一步降低后端压力
+ *  - 后端透传 GT 原始 ohlcv_list,parser 不变(BUG-026 finite 校验仍生效)
+ *  - 后端总返 200 + `{ok: bool, ohlcv_list?, error?}`,ok=false 时降级返 [](或 stale)
  *
  * 关键约束:
  *  - lightweight-charts 要求 time 是 unix seconds(不是 ms)
  *  - GeckoTerminal 返回 desc(新到旧),lightweight-charts 要求 asc,需要 reverse
- *  - timeframe 暴露为 'minute_5' 这种 UI 友好枚举,内部转换成 GT 的 path + aggregate
+ *  - timeframe 暴露为 'minute_5' 这种 UI 友好枚举,后端 enum 同名(直接透传)
  */
 
-import { fetchTopPool, fetchGtWithRetry } from './geckoterminal';
+import { fetchTopPool } from './geckoterminal';
 
-const GT_BASE = 'https://api.geckoterminal.com/api/v2/networks/solana';
 const CACHE_TTL_MS = 30_000;
 const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 1000;
@@ -35,14 +37,7 @@ export interface OhlcCandle {
   volume: number;
 }
 
-const TIMEFRAME_MAP: Record<Timeframe, { path: 'minute' | 'hour' | 'day'; aggregate: number }> = {
-  minute_1: { path: 'minute', aggregate: 1 },
-  minute_5: { path: 'minute', aggregate: 5 },
-  minute_15: { path: 'minute', aggregate: 15 },
-  hour_1: { path: 'hour', aggregate: 1 },
-  hour_4: { path: 'hour', aggregate: 4 },
-  day_1: { path: 'day', aggregate: 1 },
-};
+// T-700b:timeframe path/aggregate 映射移到后端,前端透传 enum 字符串
 
 const cache = new Map<string, { data: OhlcCandle[]; expiresAt: number }>();
 const inflight = new Map<string, Promise<OhlcCandle[]>>();
@@ -102,36 +97,68 @@ export async function fetchOhlc(
   const existing = inflight.get(key);
   if (existing) return existing;
 
-  const tfCfg = TIMEFRAME_MAP[timeframe];
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    // 后端未配置 → 没法走代理,直接返空(不再回落直击 GT,避免 BUG-035 限速问题复燃)
+    console.warn('[ohlc] NEXT_PUBLIC_API_URL not set, OHLC disabled');
+    setCache(key, []);
+    return [];
+  }
   const url =
-    `${GT_BASE}/pools/${encodeURIComponent(pool)}/ohlcv/${tfCfg.path}` +
-    `?aggregate=${tfCfg.aggregate}&limit=${safeLimit}&currency=usd`;
+    `${apiUrl.replace(/\/$/, '')}/chart/ohlc` +
+    `?pool=${encodeURIComponent(pool)}&tf=${encodeURIComponent(timeframe)}&limit=${safeLimit}`;
 
   const promise = (async () => {
     try {
-      // 用共享 GT retry helper:429 / 5xx / 网络错自动重试 2 次
-      // 解决 BUG-035(冷数据 mint 直击 GT IP 限速 → 用户看到"图表加载失败"红字)
-      const res = await fetchGtWithRetry(url);
+      // T-700b:走后端代理。后端做了 60s 缓存 + 重试 + 限速治理,前端不需要再 retry
+      // 用 AbortSignal.timeout 防后端挂死(后端默认 8s,前端宽 2s)
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000), cache: 'no-store' });
       if (!res.ok) {
-        if (cached) return cached.data;     // stale-while-error
+        // 后端 5xx / 网络层失败 → stale-while-error
+        if (cached) return cached.data;
         setCache(key, []);
         return [];
       }
       const json = await res.json();
+      // 后端契约:总返 200 + { ok: bool, ohlcv_list?, error?, cached?, fetched_at? }
+      // ok=false → 降级(rate_limit / upstream_5xx / invalid_pool / timeout)
+      if (!json || json.ok !== true || !Array.isArray(json.ohlcv_list)) {
+        const errMsg = json?.error ? String(json.error) : 'unknown';
+        console.warn('[ohlc] backend error', pool.slice(0, 8), timeframe, errMsg);
+        if (cached) return cached.data;     // stale-while-error
+        setCache(key, []);
+        return [];
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const list: any[] = json?.data?.attributes?.ohlcv_list ?? [];
+      const list: any[] = json.ohlcv_list;
       const candles: OhlcCandle[] = [];
+      let dropped = 0;
       for (const row of list) {
-        if (!Array.isArray(row) || row.length < 6) continue;
+        if (!Array.isArray(row) || row.length < 6) { dropped++; continue; }
         const time = normalizeTime(row[0]);
-        if (time === 0) continue;
+        if (time === 0) { dropped++; continue; }
         const open = Number(row[1]);
         const high = Number(row[2]);
         const low = Number(row[3]);
         const close = Number(row[4]);
         const volume = Number(row[5]);
-        if (!Number.isFinite(open) || !Number.isFinite(close)) continue;
+        // BUG-026 修:OHLC 全 4 字段必须 finite,任一 NaN/Infinity 跳过该 candle
+        // 防 lightweight-charts 抛错 / 渲染异常(GT 偶发对极端 price 返非 finite)
+        if (
+          !Number.isFinite(open) ||
+          !Number.isFinite(high) ||
+          !Number.isFinite(low) ||
+          !Number.isFinite(close)
+        ) {
+          dropped++;
+          continue;
+        }
         candles.push({ time, open, high, low, close, volume: Number.isFinite(volume) ? volume : 0 });
+      }
+      if (dropped > 0) {
+        console.warn(
+          `[ohlc] ${pool.slice(0, 8)} ${timeframe}: dropped ${dropped}/${list.length} non-finite candles`
+        );
       }
       // GT 返回 desc(新到旧),lightweight-charts 要求 asc,reverse 一次
       candles.sort((a, b) => a.time - b.time);
