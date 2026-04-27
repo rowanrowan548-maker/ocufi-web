@@ -1,73 +1,239 @@
 'use client';
 
 /**
- * K 线卡 · DexScreener iframe
+ * K 线卡 · TradingView Lightweight Charts 自渲染
  *
- * 性能:不等 fetchTokenDetail 完成(被 RugCheck 15s 超时拖慢)
- *      只要有 mint 就立即 build URL,iframe 直接加载
- * 安全:sandbox 限制 iframe 不能跳父窗口/读 cookie/弹弹窗
+ * 走链上 hook fetchOhlc + resolvePool(GeckoTerminal OHLC,30s 缓存,
+ * 失败 stale-while-error → []),替代之前的 DexScreener iframe。
+ *
+ * - 6 时间框架切换:1m / 5m / 15m / 1h / 4h / 1d(默认 4h)
+ * - K线 + Volume 双轴(Volume 占下 25%)
+ * - 阳绿 #19FB9B / 阴红 #FF3B5C(品牌色)
+ * - autoSize 自动响应容器宽度变化
+ * - 切 mint / 切 tf 时清旧数据再拉
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
-import { LineChart, Loader2 } from 'lucide-react';
+import { Loader2, LineChart } from 'lucide-react';
+import {
+  createChart,
+  ColorType,
+  CandlestickSeries,
+  HistogramSeries,
+  type IChartApi,
+  type ISeriesApi,
+  type Time,
+} from 'lightweight-charts';
+import { fetchOhlc, resolvePool, type Timeframe, type OhlcCandle } from '@/lib/ohlc';
+
+const UP_COLOR = '#19FB9B';
+const DOWN_COLOR = '#FF3B5C';
+const VOLUME_SCALE_ID = 'volume';
+
+const TIMEFRAMES: { tf: Timeframe; key: '1m' | '5m' | '15m' | '1h' | '4h' | '1d' }[] = [
+  { tf: 'minute_1', key: '1m' },
+  { tf: 'minute_5', key: '5m' },
+  { tf: 'minute_15', key: '15m' },
+  { tf: 'hour_1', key: '1h' },
+  { tf: 'hour_4', key: '4h' },
+  { tf: 'day_1', key: '1d' },
+];
 
 interface Props {
   mint?: string | null;
 }
 
 export function ChartCard({ mint }: Props) {
-  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const t = useTranslations('trade.chart');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const candleRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const volumeRef = useRef<ISeriesApi<'Histogram'> | null>(null);
 
-  // mint 切换时重置 loading 状态
+  const [tf, setTf] = useState<Timeframe>('hour_4');
+  // pool 三态:undefined = 解析中 · null = 无 LP · string = pool 地址
+  const [pool, setPool] = useState<string | null | undefined>(mint ? undefined : null);
+  const [candles, setCandles] = useState<OhlcCandle[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errored, setErrored] = useState(false);
+
+  // ── 1. 初始化 chart(挂载一次) ──
   useEffect(() => {
-    setIframeLoaded(false);
+    const container = containerRef.current;
+    if (!container) return;
+
+    const chart = createChart(container, {
+      autoSize: true,
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: 'rgba(161, 161, 170, 0.85)',
+      },
+      grid: {
+        vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+      },
+      rightPriceScale: { borderVisible: false },
+      timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
+    });
+
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: UP_COLOR,
+      downColor: DOWN_COLOR,
+      borderUpColor: UP_COLOR,
+      borderDownColor: DOWN_COLOR,
+      wickUpColor: UP_COLOR,
+      wickDownColor: DOWN_COLOR,
+    });
+
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: VOLUME_SCALE_ID,
+      color: UP_COLOR,
+    });
+    chart.priceScale(VOLUME_SCALE_ID).applyOptions({
+      scaleMargins: { top: 0.75, bottom: 0 },
+    });
+
+    chartRef.current = chart;
+    candleRef.current = candleSeries;
+    volumeRef.current = volumeSeries;
+
+    return () => {
+      chart.remove();
+      chartRef.current = null;
+      candleRef.current = null;
+      volumeRef.current = null;
+    };
+  }, []);
+
+  // ── 2. 解析 mint → pool ──
+  useEffect(() => {
+    if (!mint) {
+      setPool(null);
+      setCandles([]);
+      return;
+    }
+    setPool(undefined);
+    setCandles([]);
+    setErrored(false);
+    let cancelled = false;
+    resolvePool(mint).then((p) => {
+      if (!cancelled) setPool(p);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [mint]);
 
-  if (!mint) {
-    return <Placeholder text="loading…" Icon={Loader2} spin />;
-  }
+  // ── 3. 拉 OHLC ──
+  useEffect(() => {
+    if (!pool) {
+      setCandles([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setErrored(false);
+    fetchOhlc(pool, tf)
+      .then((c) => {
+        if (cancelled) return;
+        setCandles(c);
+        if (c.length === 0) setErrored(true);
+      })
+      .catch(() => {
+        if (!cancelled) setErrored(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pool, tf]);
 
-  // DexScreener 自带 mint→pair 重定向,直接构 URL,免去等 detail.dexUrl
-  const src = `https://dexscreener.com/solana/${encodeURIComponent(mint)}?embed=1&theme=dark&trades=0&info=0`;
+  // ── 4. 推数据到 series ──
+  useEffect(() => {
+    const candleSeries = candleRef.current;
+    const volumeSeries = volumeRef.current;
+    const chart = chartRef.current;
+    if (!candleSeries || !volumeSeries || !chart) return;
+
+    candleSeries.setData(
+      candles.map((c) => ({
+        time: c.time as Time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      })),
+    );
+    volumeSeries.setData(
+      candles.map((c) => ({
+        time: c.time as Time,
+        value: c.volume,
+        color: c.close >= c.open ? `${UP_COLOR}66` : `${DOWN_COLOR}66`,
+      })),
+    );
+    if (candles.length > 0) {
+      chart.timeScale().fitContent();
+    }
+  }, [candles]);
+
+  const showSpinner = (loading || pool === undefined) && candles.length === 0;
+  const showEmpty = !loading && pool === null;
+  const showError = !loading && errored && candles.length === 0 && pool != null;
 
   return (
-    <Card className="overflow-hidden p-0 relative">
-      {!iframeLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm pointer-events-none">
-          <div className="text-muted-foreground text-sm flex items-center gap-2">
+    <Card className="overflow-hidden p-0">
+      {/* 工具栏:6 个时间框架 */}
+      <div className="flex items-center gap-1 px-3 py-2 border-b border-border/40 overflow-x-auto">
+        {TIMEFRAMES.map(({ tf: t2, key }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTf(t2)}
+            className={`px-2 py-1 rounded-md text-[11px] font-mono font-medium whitespace-nowrap transition-colors ${
+              tf === t2
+                ? 'bg-primary/15 text-primary'
+                : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+            }`}
+          >
+            {t(`timeframes.${key}`)}
+          </button>
+        ))}
+      </div>
+
+      {/* 图表容器 */}
+      <div className="relative h-[420px] sm:h-[480px]">
+        <div ref={containerRef} className="w-full h-full" />
+        {showSpinner && (
+          <Overlay>
             <Loader2 className="h-4 w-4 animate-spin" />
-            loading chart…
-          </div>
-        </div>
-      )}
-      <iframe
-        src={src}
-        className="w-full h-[420px] sm:h-[480px] border-0"
-        title="DexScreener chart"
-        // 防 iframe 越权:不允许 top-navigation / form / 同源访问父窗口
-        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-        referrerPolicy="no-referrer"
-        onLoad={() => setIframeLoaded(true)}
-      />
+            <span>{t('loading')}</span>
+          </Overlay>
+        )}
+        {showEmpty && (
+          <Overlay>
+            <LineChart className="h-4 w-4" />
+            <span>{t('empty')}</span>
+          </Overlay>
+        )}
+        {showError && (
+          <Overlay>
+            <LineChart className="h-4 w-4" />
+            <span>{t('error')}</span>
+          </Overlay>
+        )}
+      </div>
     </Card>
   );
 }
 
-function Placeholder({
-  text,
-  Icon,
-  spin,
-}: {
-  text: string;
-  Icon: typeof LineChart;
-  spin?: boolean;
-}) {
+function Overlay({ children }: { children: React.ReactNode }) {
   return (
-    <Card className="h-[420px] sm:h-[480px] flex items-center justify-center">
-      <div className="text-muted-foreground text-sm flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${spin ? 'animate-spin' : ''}`} />
-        {text}
-      </div>
-    </Card>
+    <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm pointer-events-none text-muted-foreground text-sm gap-2">
+      {children}
+    </div>
   );
 }

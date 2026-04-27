@@ -196,6 +196,19 @@
         "age": "Age"
       }
     },
+    "chart": {
+      "timeframes": {
+        "1m": "1m",
+        "5m": "5m",
+        "15m": "15m",
+        "1h": "1h",
+        "4h": "4h",
+        "1d": "1d"
+      },
+      "loading": "Loading…",
+      "empty": "No data",
+      "error": "Chart failed to load"
+    },
     "trust": {
       "title": "🛡 Safety Signals",
       "labels": {
