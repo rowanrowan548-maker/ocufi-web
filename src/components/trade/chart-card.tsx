@@ -218,20 +218,30 @@ export function ChartCard({ mint }: Props) {
         <div ref={containerRef} className="w-full h-full" />
         {showSpinner && (
           <Overlay>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>{t('loading')}</span>
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">{t('loading')}</span>
           </Overlay>
         )}
         {showEmpty && (
           <Overlay>
-            <LineChart className="h-4 w-4" />
-            <span>{t('empty')}</span>
+            <LineChart className="h-6 w-6 text-muted-foreground/40" />
+            <span className="text-sm font-medium text-muted-foreground">
+              {t('noCandles')}
+            </span>
+            <span className="text-xs text-muted-foreground/60 px-4 text-center">
+              {t('noCandlesHint')}
+            </span>
           </Overlay>
         )}
         {showError && (
           <Overlay>
-            <LineChart className="h-4 w-4" />
-            <span>{t('error')}</span>
+            <LineChart className="h-6 w-6 text-muted-foreground/40" />
+            <span className="text-sm font-medium text-muted-foreground">
+              {t('serviceUnavailable')}
+            </span>
+            <span className="text-xs text-muted-foreground/60 px-4 text-center">
+              {t('serviceUnavailableHint')}
+            </span>
           </Overlay>
         )}
       </div>
@@ -241,7 +251,7 @@ export function ChartCard({ mint }: Props) {
 
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm pointer-events-none text-muted-foreground text-sm gap-2">
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/80 backdrop-blur-sm pointer-events-none gap-1.5">
       {children}
     </div>
   );

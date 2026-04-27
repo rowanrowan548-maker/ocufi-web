@@ -230,6 +230,10 @@
       },
       "loading": "Loading…",
       "empty": "No data",
+      "noCandles": "No chart data",
+      "noCandlesHint": "This token may have no active liquidity pool",
+      "serviceUnavailable": "Chart service temporarily unavailable",
+      "serviceUnavailableHint": "Please refresh and try again",
       "error": "Chart failed to load",
       "solBaseFallback": "SOL is Solana's base asset",
       "solBaseHint": "View charts via USDC / USDT pairs"

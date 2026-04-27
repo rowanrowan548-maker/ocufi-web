@@ -231,6 +231,10 @@
       "loading": "加载中…",
       "empty": "暂无数据",
       "error": "图表加载失败",
+      "noCandles": "暂无 K 线数据",
+      "noCandlesHint": "该代币可能无活跃流动性池",
+      "serviceUnavailable": "图表服务暂时不可用",
+      "serviceUnavailableHint": "请刷新重试",
       "solBaseFallback": "SOL 是 Solana 基础币",
       "solBaseHint": "K 线请在 USDC / USDT 等交易对中查看"
     },
