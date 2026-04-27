@@ -17,7 +17,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { RefreshCw, Wallet, AlertCircle, Copy, Check } from 'lucide-react';
+import { RefreshCw, Wallet, AlertCircle, Copy, Check, Award } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -271,24 +271,46 @@ export function PortfolioView() {
       <Card>
         <CardContent className="py-4">
           <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
-            {/* 钱包地址 */}
-            <button
-              type="button"
-              onClick={copyAddr}
-              className="flex items-center gap-2 group min-w-0 hover:bg-muted/40 -m-1 p-1 rounded transition-colors"
-              title={t('wallet.copyAddress')}
-            >
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
-              <span className="font-mono text-xs sm:text-sm text-muted-foreground truncate">
-                {shortAddr(walletAddr)}
-              </span>
-              {copied ? (
-                <Check className="h-3 w-3 text-success flex-shrink-0" />
-              ) : (
-                <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground flex-shrink-0" />
-              )}
-            </button>
-            <div className="hidden lg:block h-8 w-px bg-border/40" />
+            {/* T-905a:移动端钱包行 — wallet 左 + 3 图标右,填补右侧空白 */}
+            <div className="flex items-center justify-between gap-2 lg:contents">
+              {/* 钱包地址 */}
+              <button
+                type="button"
+                onClick={copyAddr}
+                className="flex items-center gap-2 group min-w-0 hover:bg-muted/40 -m-1 p-1 rounded transition-colors"
+                title={t('wallet.copyAddress')}
+              >
+                <Wallet className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
+                <span className="font-mono text-xs sm:text-sm text-muted-foreground truncate">
+                  {shortAddr(walletAddr)}
+                </span>
+                {copied ? (
+                  <Check className="h-3 w-3 text-success flex-shrink-0" />
+                ) : (
+                  <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground flex-shrink-0" />
+                )}
+              </button>
+              {/* 移动端 only · 3 图标右排 */}
+              <div className="flex items-center gap-1 lg:hidden">
+                <ActionIcons
+                  loading={loading}
+                  refresh={refresh}
+                  refreshTooltip={`${t('portfolio.refreshNow')} · ${t('portfolio.stats.updatedAgo', { ago: updatedAgo })}`}
+                  badgesTooltip={t('portfolio.badgesEntry')}
+                  showShare={(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0}
+                  shareProps={{
+                    realizedUsd: pnlSummary.realizedUsd,
+                    unrealizedUsd: pnlSummary.unrealizedUsd,
+                    totalUsd: pnlSummary.totalUsd,
+                    totalPct: pnlSummary.totalPct,
+                    winCount: pnlSummary.winCount,
+                    closedCount: pnlSummary.closedCount,
+                    rangeLabel: range === 'all' ? 'All-time' : `Last ${range}`,
+                  }}
+                />
+              </div>
+              <div className="hidden lg:block h-8 w-px bg-border/40" />
+            </div>
 
             {/* 总值 + SOL + 币数 横排 */}
             <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 flex-1">
@@ -327,9 +349,10 @@ export function PortfolioView() {
               </div>
             </div>
 
-            {/* T-902:右上角控制区 — 时间筛选 + USD/SOL + 刷新 + 分享 */}
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
+            {/* T-905a:桌面右上控制区 — 2 行,顶层时间+USD/SOL,底层 3 图标 */}
+            <div className="flex flex-col items-stretch lg:items-end gap-2">
+              {/* 顶层:时间筛选 + USD/SOL */}
+              <div className="flex items-center gap-2 justify-end">
                 <Tabs value={range} onValueChange={(v) => v && setRange(v as typeof range)}>
                   <TabsList className="h-8">
                     <TabsTrigger value="1d" className="text-xs px-2.5 h-6">
@@ -348,40 +371,34 @@ export function PortfolioView() {
                 </Tabs>
                 <Tabs value={unit} onValueChange={(v) => v && setUnit(v as typeof unit)}>
                   <TabsList className="h-8">
-                    <TabsTrigger value="USD" className="text-xs px-2 h-6">
+                    <TabsTrigger value="USD" className="text-xs px-2 h-6 data-[selected=true]:bg-success/15 data-[selected=true]:text-success">
                       USD
                     </TabsTrigger>
-                    <TabsTrigger value="SOL" className="text-xs px-2 h-6">
+                    <TabsTrigger value="SOL" className="text-xs px-2 h-6 data-[selected=true]:bg-success/15 data-[selected=true]:text-success">
                       SOL
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={refresh}
-                  disabled={loading}
-                  className="h-8 w-8 p-0"
-                  title={t('portfolio.refreshNow')}
-                >
-                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                </Button>
-                {(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0 && (
-                  <PnlShareButton
-                    compact
-                    realizedUsd={pnlSummary.realizedUsd}
-                    unrealizedUsd={pnlSummary.unrealizedUsd}
-                    totalUsd={pnlSummary.totalUsd}
-                    totalPct={pnlSummary.totalPct}
-                    winCount={pnlSummary.winCount}
-                    closedCount={pnlSummary.closedCount}
-                    rangeLabel={range === 'all' ? 'All-time' : `Last ${range}`}
-                  />
-                )}
               </div>
-              <span className="text-[10px] text-muted-foreground/50 font-mono tabular-nums pr-1">
-                {t('portfolio.stats.updatedAgo', { ago: updatedAgo })}
-              </span>
+              {/* 底层:桌面 only · 3 图标 — 移动端图标已在钱包行 */}
+              <div className="hidden lg:flex items-center gap-1 justify-end">
+                <ActionIcons
+                  loading={loading}
+                  refresh={refresh}
+                  refreshTooltip={`${t('portfolio.refreshNow')} · ${t('portfolio.stats.updatedAgo', { ago: updatedAgo })}`}
+                  badgesTooltip={t('portfolio.badgesEntry')}
+                  showShare={(closed.length > 0 || tokens.length > 0) && solUsdPrice > 0}
+                  shareProps={{
+                    realizedUsd: pnlSummary.realizedUsd,
+                    unrealizedUsd: pnlSummary.unrealizedUsd,
+                    totalUsd: pnlSummary.totalUsd,
+                    totalPct: pnlSummary.totalPct,
+                    winCount: pnlSummary.winCount,
+                    closedCount: pnlSummary.closedCount,
+                    rangeLabel: range === 'all' ? 'All-time' : `Last ${range}`,
+                  }}
+                />
+              </div>
             </div>
           </div>
         </CardContent>
@@ -703,6 +720,54 @@ export function PortfolioView() {
         })}
       </div>
     </div>
+  );
+}
+
+// T-905a:复用图标组(桌面底层 + 移动钱包行)— 刷新 / 徽章 / 分享
+function ActionIcons({
+  loading,
+  refresh,
+  refreshTooltip,
+  badgesTooltip,
+  showShare,
+  shareProps,
+}: {
+  loading: boolean;
+  refresh: () => void;
+  refreshTooltip: string;
+  badgesTooltip: string;
+  showShare: boolean;
+  shareProps: {
+    realizedUsd: number;
+    unrealizedUsd: number;
+    totalUsd: number;
+    totalPct: number;
+    winCount: number;
+    closedCount: number;
+    rangeLabel: string;
+  };
+}) {
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={refresh}
+        disabled={loading}
+        className="h-8 w-8 p-0"
+        title={refreshTooltip}
+      >
+        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+      </Button>
+      <Link
+        href="/badges"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+        title={badgesTooltip}
+      >
+        <Award className="h-4 w-4" />
+      </Link>
+      {showShare && <PnlShareButton compact {...shareProps} />}
+    </>
   );
 }
 

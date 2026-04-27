@@ -497,6 +497,7 @@
     "viewOnExplorer": "View on Solscan",
     "autoRefreshHint": "Auto-refreshes every 30s · click {icon} to refresh manually",
     "refreshNow": "Refresh now",
+    "badgesEntry": "My badges",
     "columns": {
       "token": "Token",
       "amount": "Amount",
@@ -1190,6 +1191,19 @@
         "disclaimer": "Disclaimer"
       },
       "previewHint": "Have an access key? Append <key>?preview=YOUR_KEY</key> to the URL."
+    }
+  },
+  "badges": {
+    "title": "My Badges",
+    "subtitle": "Unlock on-chain activity badges · full system coming soon",
+    "comingSoon": "Coming Soon",
+    "note": "The full badge system (on-chain activity tracking + leaderboard + share card) will launch after V1 public release.",
+    "list": {
+      "earlyBird": { "name": "Early Bird" },
+      "firstTrade": { "name": "First Trade" },
+      "hundredTrades": { "name": "100 Trades" },
+      "inviteKing": { "name": "Invite King" },
+      "pnlKing": { "name": "PnL King" }
     }
   }
 }

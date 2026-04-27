@@ -497,6 +497,7 @@
     "viewOnExplorer": "在 Solscan 查看",
     "autoRefreshHint": "每 30 秒自动刷新 · 点右上角 {icon} 手动刷新",
     "refreshNow": "立即刷新",
+    "badgesEntry": "我的徽章",
     "columns": {
       "token": "代币",
       "amount": "数量",
@@ -1205,6 +1206,19 @@
         "disclaimer": "免责"
       },
       "previewHint": "有访问密钥?在 URL 后加 <key>?preview=你的密钥</key>"
+    }
+  },
+  "badges": {
+    "title": "我的徽章",
+    "subtitle": "解锁 Ocufi 链上活跃徽章 · 完整系统即将上线",
+    "comingSoon": "敬请期待",
+    "note": "完整徽章系统(链上活跃数据 + 排行榜 + 分享卡)将在 V1 公开发布后上线。",
+    "list": {
+      "earlyBird": { "name": "早鸟" },
+      "firstTrade": { "name": "首单" },
+      "hundredTrades": { "name": "百单达成" },
+      "inviteKing": { "name": "拉新王" },
+      "pnlKing": { "name": "PnL 王" }
     }
   }
 }
