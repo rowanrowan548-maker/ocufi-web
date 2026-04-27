@@ -34,6 +34,7 @@ import { readFees, type FeeTotal } from '@/lib/fee-tracker';
 
 import { HoldingsTable } from './holdings-table';
 import { ClosedPositions } from './closed-positions';
+import { AssetPie, AssetPieLegend } from './asset-pie';
 import {
   DailyPnlBars,
   TopGainerBars,
@@ -50,6 +51,8 @@ export function PortfolioView() {
   const { sol, tokens, totalUsd, loading, error, refresh } = usePortfolio();
   const { costs, loading: cbLoading, records } = useCostBasis();
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
+  // T-903:顶层双 tab 盈亏分析 / 资产组合
+  const [topTab, setTopTab] = useState<'pnl' | 'portfolio'>('pnl');
   // T-900a:时间筛选 state hoist · T-900c 阶段联动 stat 卡 + 表格数据
   const [range, setRange] = useState<'1d' | '7d' | '30d' | 'all'>('all');
   // T-902:USD/SOL 单位切换(默认 USD)
@@ -404,7 +407,23 @@ export function PortfolioView() {
           </CardContent>
         </Card>
       ) : (
-        <>
+        <Tabs value={topTab} onValueChange={(v) => v && setTopTab(v as typeof topTab)}>
+          <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-3 h-auto">
+            <TabsTrigger
+              value="pnl"
+              className="px-0 py-2 rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary text-muted-foreground text-sm"
+            >
+              {t('portfolio.topTabs.pnl')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="portfolio"
+              className="px-0 py-2 rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary text-muted-foreground text-sm"
+            >
+              {t('portfolio.topTabs.portfolio')}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pnl" className="space-y-4">
           {/* T-900a/T-901:5 张 stat 卡片(grid lg:5 / sm:2)· 每张加 mini 可视化 */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {/* 1. 已实现收益 + 7 日柱状图 */}
@@ -648,7 +667,32 @@ export function PortfolioView() {
               </TabsContent>
             </Tabs>
           </Card>
-        </>
+          </TabsContent>
+
+          {/* T-903:资产组合 tab — AssetPie + 持仓 table 简化视图 */}
+          <TabsContent value="portfolio" className="space-y-4">
+            {pieItems.length > 0 && (
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="grid sm:grid-cols-[180px_1fr] gap-6 items-center">
+                    <div className="flex items-center justify-center">
+                      <AssetPie items={pieItems} totalUsd={totalUsd} size={180} />
+                    </div>
+                    <AssetPieLegend items={pieItems} totalUsd={totalUsd} />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            <Card className="p-4">
+              <HoldingsTable
+                sol={sol}
+                tokens={tokens}
+                costs={costs}
+                cutoffSec={cutoffSec}
+              />
+            </Card>
+          </TabsContent>
+        </Tabs>
       )}
 
       <div className="text-xs text-muted-foreground text-center pt-2">

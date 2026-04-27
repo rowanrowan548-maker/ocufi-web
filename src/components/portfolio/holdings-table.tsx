@@ -120,47 +120,54 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
         ))}
       </div>
 
-      {/* 桌面表格 (>= sm) */}
+      {/* 桌面表格 (>= sm) · T-903 行密度 / SOL 行弱化 */}
       <div className="hidden sm:block overflow-x-auto">
-        <Table className="min-w-[960px]">
+        <Table className="min-w-[960px] [&_td]:py-2.5 [&_th]:py-2 [&_tr]:hover:bg-muted/40">
           <TableHeader>
             <TableRow>
-              <TableHead>{t('portfolio.columns.token')}</TableHead>
-              <TableHead className="text-right">{t('portfolio.table.unrealized')}</TableHead>
-              <TableHead className="text-right hidden md:table-cell">{t('portfolio.table.realized')}</TableHead>
-              <TableHead className="text-right hidden lg:table-cell">{t('portfolio.table.totalPnl')}</TableHead>
-              <TableHead className="text-right">{t('portfolio.columns.value')}</TableHead>
-              <TableHead className="text-right hidden md:table-cell">{t('portfolio.table.holdDuration')}</TableHead>
-              <TableHead className="text-right hidden lg:table-cell">{t('portfolio.table.buySellTxs')}</TableHead>
-              <TableHead className="text-right hidden lg:table-cell">{t('portfolio.columns.avgCost')}</TableHead>
-              <TableHead className="text-right w-[110px]">{t('portfolio.table.actions')}</TableHead>
+              <TableHead className="text-[11px] uppercase tracking-wider text-muted-foreground/70">{t('portfolio.columns.token')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70">{t('portfolio.table.unrealized')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">{t('portfolio.table.realized')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">{t('portfolio.table.totalPnl')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70">{t('portfolio.columns.value')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">{t('portfolio.table.holdDuration')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">{t('portfolio.table.buySellTxs')}</TableHead>
+              <TableHead className="text-right text-[11px] uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">{t('portfolio.columns.avgCost')}</TableHead>
+              <TableHead className="text-right w-[110px] text-[11px] uppercase tracking-wider text-muted-foreground/70">{t('portfolio.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sol.amount > 0 && (
-              <TableRow>
+              <TableRow className="opacity-60 hover:opacity-100">
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
                       ◎
                     </div>
                     <div>
-                      <div className="font-medium">SOL</div>
-                      <div className="text-xs text-muted-foreground">Solana</div>
+                      <div className="font-medium text-[13px] leading-tight">SOL</div>
+                      <div className="text-[10px] text-muted-foreground">Solana</div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-mono text-muted-foreground text-xs">—</TableCell>
-                <TableCell className="text-right font-mono text-muted-foreground text-xs hidden md:table-cell">—</TableCell>
-                <TableCell className="text-right font-mono text-muted-foreground text-xs hidden lg:table-cell">—</TableCell>
+                <TableCell className="text-right font-mono text-muted-foreground text-[11px]">—</TableCell>
+                <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden md:table-cell">—</TableCell>
+                <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden lg:table-cell">—</TableCell>
                 <TableCell className="text-right font-mono">
-                  <div className="font-medium">${formatUsd(sol.valueUsd)}</div>
+                  <div className="font-medium text-[13px] leading-tight">${formatUsd(sol.valueUsd)}</div>
                   <div className="text-[10px] text-muted-foreground">{formatAmount(sol.amount)}</div>
                 </TableCell>
-                <TableCell className="text-right font-mono text-muted-foreground text-xs hidden md:table-cell">—</TableCell>
-                <TableCell className="text-right font-mono text-muted-foreground text-xs hidden lg:table-cell">—</TableCell>
-                <TableCell className="text-right font-mono text-muted-foreground text-xs hidden lg:table-cell">—</TableCell>
-                <TableCell className="text-right" />
+                <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden md:table-cell">—</TableCell>
+                <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden lg:table-cell">—</TableCell>
+                <TableCell className="text-right font-mono text-muted-foreground text-[11px] hidden lg:table-cell">—</TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    href="/trade"
+                    className="inline-flex items-center gap-1 px-2 h-6 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  >
+                    {t('portfolio.table.goTrade')}
+                  </Link>
+                </TableCell>
               </TableRow>
             )}
             {tokens.map((tok) => {
@@ -170,26 +177,26 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
                   <TableCell>
                     <Link
                       href={`/trade?mint=${tok.mint}`}
-                      className="flex items-center gap-3 hover:bg-muted/50 -mx-4 -my-2 px-4 py-2 rounded transition-colors"
+                      className="flex items-center gap-2.5 hover:bg-muted/50 -mx-3 -my-1.5 px-3 py-1.5 rounded transition-colors"
                     >
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                         {tok.logoUri ? (
                           <Image
                             src={tok.logoUri}
                             alt={tok.symbol}
-                            width={32}
-                            height={32}
+                            width={28}
+                            height={28}
                             className="object-cover"
                             unoptimized
                           />
                         ) : (
-                          <span className="text-xs font-bold text-muted-foreground">
+                          <span className="text-[11px] font-bold text-muted-foreground">
                             {tok.symbol.slice(0, 2).toUpperCase()}
                           </span>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium truncate">{tok.symbol}</div>
+                        <div className="font-medium text-[13px] leading-tight truncate">{tok.symbol}</div>
                         <div className="text-[10px] text-muted-foreground font-mono truncate">
                           {tok.mint.slice(0, 4)}…{tok.mint.slice(-4)}
                         </div>
@@ -206,22 +213,22 @@ export function HoldingsTable({ sol, tokens, costs, cutoffSec = 0 }: Props) {
                     <PnlCell usd={m.totalUsd} pct={null} />
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    <div className="font-medium">
+                    <div className="font-medium text-[13px] leading-tight">
                       {tok.valueUsd > 0 ? `$${formatUsd(tok.valueUsd)}` : '—'}
                     </div>
                     <div className="text-[10px] text-muted-foreground">
                       {formatAmount(tok.amount)}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell">
+                  <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
                     {m.holdSec != null ? formatDuration(m.holdSec) : '—'}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs hidden lg:table-cell">
+                  <TableCell className="text-right font-mono text-[11px] hidden lg:table-cell">
                     <span className="text-success">{m.buyCount}</span>
                     <span className="text-muted-foreground/40 mx-0.5">|</span>
                     <span className="text-danger">{m.sellCount}</span>
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs text-muted-foreground hidden lg:table-cell">
+                  <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden lg:table-cell">
                     {m.avgCostUsd != null ? `$${formatPrice(m.avgCostUsd)}` : '—'}
                   </TableCell>
                   <TableCell className="text-right">

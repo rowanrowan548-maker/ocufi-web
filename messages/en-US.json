@@ -512,7 +512,8 @@
       "buySellTxs": "B/S",
       "actions": "Actions",
       "buyAction": "Buy",
-      "sellAction": "Sell"
+      "sellAction": "Sell",
+      "goTrade": "Trade"
     },
     "distribution": "Asset distribution",
     "feesTotal": {
@@ -534,6 +535,10 @@
     "tabs": {
       "holdings": "Holdings",
       "closed": "Closed"
+    },
+    "topTabs": {
+      "pnl": "P/L Analysis",
+      "portfolio": "Portfolio"
     },
     "closed": {
       "summary": "Total realized P/L",

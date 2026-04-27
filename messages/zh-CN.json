@@ -512,7 +512,8 @@
       "buySellTxs": "买/卖",
       "actions": "操作",
       "buyAction": "买入",
-      "sellAction": "卖出"
+      "sellAction": "卖出",
+      "goTrade": "前往交易"
     },
     "distribution": "资产分布",
     "feesTotal": {
@@ -534,6 +535,10 @@
     "tabs": {
       "holdings": "当前持仓",
       "closed": "已平仓"
+    },
+    "topTabs": {
+      "pnl": "盈亏分析",
+      "portfolio": "资产组合"
     },
     "closed": {
       "summary": "累计已实现盈亏",
