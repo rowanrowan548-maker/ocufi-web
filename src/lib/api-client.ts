@@ -334,6 +334,25 @@ export async function claimInviteRebate(
   });
 }
 
+// T-985c · /pool/stats-1h 1 小时聚合 + 买卖力量(后端已 ship)
+export interface PoolStats1h {
+  ok: boolean;
+  buy_count: number;
+  buy_volume_usd: number;
+  sell_count: number;
+  sell_volume_usd: number;
+  net_volume_usd: number;
+  total_volume_usd: number;
+  fetched_at?: number | null;
+  cached?: boolean;
+  error?: string | null;
+  retry_after?: number | null;
+}
+
+export async function fetchPoolStats1h(pool: string): Promise<PoolStats1h> {
+  return apiFetch(`/pool/stats-1h?pool=${encodeURIComponent(pool)}`);
+}
+
 // T-980-118 · /docs · /faq 全文搜索(后端 T-952 已 ship)
 export interface SearchHit {
   id: string;

@@ -465,6 +465,13 @@
       "connectWallet": "Connect wallet to see this token's PnL",
       "noActivity": "No trades yet"
     },
+    "poolStats": {
+      "totalVolume": "1h volume",
+      "netVolume": "1h net",
+      "buys": "Buys",
+      "sells": "Sells",
+      "unavailable": "1h pool stats unavailable"
+    },
     "preview": {
       "pay": "You pay",
       "receive": "You receive",

@@ -465,6 +465,13 @@
       "connectWallet": "连钱包后显示该币的盈亏",
       "noActivity": "尚未交易"
     },
+    "poolStats": {
+      "totalVolume": "1h 总成交额",
+      "netVolume": "1h 净成交",
+      "buys": "买",
+      "sells": "卖",
+      "unavailable": "暂无 1h 池子数据"
+    },
     "preview": {
       "pay": "支付",
       "receive": "预计收到",
