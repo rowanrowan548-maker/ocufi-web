@@ -16,6 +16,8 @@ import { NAV_ENTRIES } from './nav-config';
  */
 export async function SiteHeader() {
   const t = await getTranslations();
+  // T-963 · 中文 locale 显"天眼"小字 · en-US 返空字符串 → 不渲染
+  const brandTagline = t('nav.brandTagline');
 
   // T-940 R1:iOS Safari 安全区(notch / 动态岛 / URL bar)— 防止 sticky 顶部 nav 被遮
   return (
@@ -25,8 +27,16 @@ export async function SiteHeader() {
     >
       <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-6 min-w-0">
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-1.5 flex-shrink-0" aria-label="Ocufi">
             <Logo variant="full" size={50} />
+            {brandTagline && (
+              <span
+                className="hidden sm:inline-block text-[11px] tracking-[0.15em] text-muted-foreground/80 border-l border-border/60 pl-1.5 leading-tight"
+                aria-hidden="true"
+              >
+                {brandTagline}
+              </span>
+            )}
           </Link>
           {/* 桌面 nav · 5 entries */}
           <nav className="hidden lg:flex items-center gap-5 text-sm">

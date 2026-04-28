@@ -1,9 +1,12 @@
 {
   "brand": {
     "name": "Ocufi",
-    "tagline": "Non-custodial · Low-fee · Transparent · Open-source Solana trading terminal"
+    "subtitle": "",
+    "tagline": "Non-custodial · Low-fee · Transparent · Open-source Solana trading terminal",
+    "footerSignature": ""
   },
   "nav": {
+    "brandTagline": "",
     "home": "Home",
     "trade": "Trade",
     "watchlist": "Watchlist",

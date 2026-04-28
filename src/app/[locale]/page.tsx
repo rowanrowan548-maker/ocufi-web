@@ -247,9 +247,14 @@ export default async function Landing({
             </div>
           </div>
 
-          {/* 底部 */}
+          {/* 底部 · T-963:中文 locale 加 "@ocufi 天眼" 签名(en-US 空) */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px] text-muted-foreground/70 pt-6 border-t border-border/40 font-mono">
-            <div>© {new Date().getFullYear()} Ocufi · {chain.name} · v0.4</div>
+            <div>
+              © {new Date().getFullYear()} Ocufi · {chain.name} · v0.4
+              {t('brand.footerSignature') && (
+                <span className="ml-2 text-muted-foreground/60">· {t('brand.footerSignature')}</span>
+              )}
+            </div>
             <div>{t('landing.footer.poweredBy')}</div>
           </div>
         </div>

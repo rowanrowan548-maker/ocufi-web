@@ -1,9 +1,12 @@
 {
   "brand": {
     "name": "Ocufi",
-    "tagline": "非托管 · 低手续费 · 透明 · 开源的 Solana 交易终端"
+    "subtitle": "天眼",
+    "tagline": "非托管 · 低手续费 · 透明 · 开源的 Solana 交易终端",
+    "footerSignature": "@ocufi 天眼"
   },
   "nav": {
+    "brandTagline": "天眼",
     "home": "首页",
     "trade": "交易",
     "watchlist": "自选",
@@ -57,7 +60,7 @@
   "landing": {
     "badge": "非托管 · 开源",
     "hero": {
-      "title": "链上交易,应该回到你手里",
+      "title": "Ocufi 天眼 · 链上交易,你看得见的每一笔",
       "subtitle": "更低的手续费 · 更透明的价格 · 更少的中间人。我们还在成长,但每一步都从用户出发。",
       "tagline": "0.2% 手续费 · 链上最低",
       "searchPlaceholder": "粘贴 Solana 合约地址,例如 So111…1112",
