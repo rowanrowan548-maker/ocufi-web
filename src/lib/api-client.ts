@@ -255,9 +255,24 @@ export async function bindInvite(
 
 export interface InviteeRow {
   address: string;
+  /** T-945 #113 · 后端脱敏短地址 */
+  address_short?: string;
   status: 'pending' | 'activated';
   contributed_points: number;
   joined_at: string;
+  /** T-945 #116 · L1 直接邀请 / L2 二级邀请 */
+  level?: number;
+}
+
+/** T-945 #112 · 返佣数字卡需要的字段 */
+export interface RebateSummary {
+  inviteCount: number;
+  activatedCount: number;
+  totalRebatePoints: number;
+  totalRebateSol: number;
+  totalRebateUsd: number;
+  claimableSol: number;
+  pendingClaimSol: number;
 }
 
 export interface InviteMeResp {
@@ -266,10 +281,35 @@ export interface InviteMeResp {
   activated_count: number;
   earned_points: number;
   invitees: InviteeRow[];
+  /** T-945 #112 · 返佣 · 旧后端无此字段 */
+  rebate?: RebateSummary;
 }
 
 export async function fetchInviteMe(address: string): Promise<InviteMeResp> {
   return apiFetch(`/invite/me?address=${address}`);
+}
+
+// T-945 #114 · 申请返佣提现
+export interface InviteClaimResp {
+  ok: boolean;
+  claim_id?: number | null;
+  amount_sol?: number | null;
+  amount_points?: number | null;
+  status?: string | null;
+  error?: string | null;
+}
+
+export async function claimInviteRebate(
+  address: string,
+  amountSol?: number,
+): Promise<InviteClaimResp> {
+  return apiFetch('/invite/claim', {
+    method: 'POST',
+    body: JSON.stringify({
+      address,
+      ...(amountSol != null ? { amount_sol: amountSol } : {}),
+    }),
+  });
 }
 
 export interface InviteLeaderRow {

@@ -3,20 +3,20 @@
 /**
  * 邀请仪表盘 /invite
  *
- * V1 内容:
- *  - 我的邀请码 + 一键复制 + 分享 Twitter
- *  - 核心数据(已邀请 / 已激活 / 累计邀请积分)— 后端就绪后接真,目前 mock 0
- *  - 被邀请人列表 — 后端就绪后接,目前 empty state
- *  - 全站邀请 Top 10 — 后端就绪后接,目前 empty state
- *
- * 机制说明区:解释邀请规则 / 激活门槛 / 10% 积分分成
+ * T-941 升级:
+ *  - #110 邀请码 v2 8 字符大写(lib/invite.ts 已升 + maxLength 8)
+ *  - #111 分享 Dialog(Twitter / TG / QR / 复制)
+ *  - #112 数字卡:已邀请 N 人 / 累计返佣 X SOL ($Y) / 待提现 X SOL [一键提现]
+ *  - #113 下线列表:钱包(截断)/ 加入时间 / 累计贡献(SOL)/ 状态
+ *  - #114 一键提现按钮 → POST /invite/claim
+ *  - #115 Twitter 预制推文已含 Ocufi_io @ + 0.2% + ref code
  */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
-import { Copy, Check, Share2, Wallet, Trophy, Users, Sparkles, Info } from 'lucide-react';
+import { Copy, Check, Wallet, Trophy, Users, Sparkles, Info, Coins, ArrowDownToLine } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,22 +25,19 @@ import {
 } from '@/components/ui/table';
 import { inviteCodeFor, readCachedMyCode, cacheMyCode, buildInviteUrl } from '@/lib/invite';
 import {
-  fetchInviteMe, fetchInviteLeaderboard, isApiConfigured,
-  type InviteeRow as ApiInviteeRow, type InviteLeaderRow,
+  fetchInviteMe, fetchInviteLeaderboard, claimInviteRebate, isApiConfigured,
+  type InviteeRow as ApiInviteeRow, type InviteLeaderRow, type RebateSummary,
 } from '@/lib/api-client';
 import { toast } from 'sonner';
-
-interface InviteStats {
-  invited: number;
-  activated: number;
-  earnedPoints: number;
-}
+import { ShareDialog } from './share-dialog';
 
 interface InviteeRow {
   address: string;
+  addressShort: string;
   status: 'pending' | 'activated';
   contributedPoints: number;
   joinedAt: number; // ms
+  level: number;
 }
 
 interface LeaderRow {
@@ -50,6 +47,19 @@ interface LeaderRow {
   points: number;
 }
 
+const EMPTY_REBATE: RebateSummary = {
+  inviteCount: 0,
+  activatedCount: 0,
+  totalRebatePoints: 0,
+  totalRebateSol: 0,
+  totalRebateUsd: 0,
+  claimableSol: 0,
+  pendingClaimSol: 0,
+};
+
+// 后端 1_000_000 points ≈ 1 SOL · 与 ocufi-api/services 同步
+const REBATE_SOL_PER_POINT = 1 / 1_000_000;
+
 export function InviteScreen() {
   const t = useTranslations('invite');
   const wallet = useWallet();
@@ -58,11 +68,12 @@ export function InviteScreen() {
   const [myCode, setMyCode] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const [stats, setStats] = useState<InviteStats>({ invited: 0, activated: 0, earnedPoints: 0 });
+  const [rebate, setRebate] = useState<RebateSummary>(EMPTY_REBATE);
   const [invitees, setInvitees] = useState<InviteeRow[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
+  const [claiming, setClaiming] = useState(false);
 
-  // 邀请码:先用本地 SHA-256 算出来即时显示,后端 /invite/me 返回更权威值再覆盖
+  // 邀请码:先用本地 SHA-256 算出来即时显示(v2 8 字符),后端 /invite/me 返回更权威值再覆盖
   useEffect(() => {
     if (!wallet.publicKey) { setMyCode(''); return; }
     const addr = wallet.publicKey.toBase58();
@@ -83,17 +94,21 @@ export function InviteScreen() {
       .then((r) => {
         if (cancelled) return;
         if (r.code) setMyCode(r.code);
-        setStats({
-          invited: r.invited_count,
-          activated: r.activated_count,
-          earnedPoints: r.earned_points,
+        setRebate(r.rebate ?? {
+          ...EMPTY_REBATE,
+          inviteCount: r.invited_count,
+          activatedCount: r.activated_count,
+          totalRebatePoints: r.earned_points,
+          totalRebateSol: r.earned_points * REBATE_SOL_PER_POINT,
         });
         setInvitees(
           r.invitees.map((row: ApiInviteeRow) => ({
             address: row.address,
+            addressShort: row.address_short || `${row.address.slice(0, 4)}…${row.address.slice(-4)}`,
             status: row.status,
             contributedPoints: row.contributed_points,
             joinedAt: new Date(row.joined_at).getTime(),
+            level: row.level ?? 1,
           })),
         );
       })
@@ -105,7 +120,7 @@ export function InviteScreen() {
         setLeaderboard(
           r.items.map((row: InviteLeaderRow) => ({
             rank: row.rank,
-            address: row.wallet_short,  // 后端已脱敏
+            address: row.wallet_short,
             activated: row.activated,
             points: row.points,
           })),
@@ -125,18 +140,38 @@ export function InviteScreen() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error('复制失败,可手动选择');
+      toast.error(t('copyFailed'));
     }
   }
 
-  function shareTwitter() {
-    if (!inviteUrl) return;
-    const text = t('shareText');
-    const tweetUrl =
-      `https://twitter.com/intent/tweet` +
-      `?text=${encodeURIComponent(text + '\n\n')}` +
-      `&url=${encodeURIComponent(inviteUrl)}`;
-    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+  // T-941 #114 · 一键提现
+  async function handleClaim() {
+    if (!wallet.publicKey || claiming) return;
+    if (rebate.claimableSol <= 0) {
+      toast.error(t('claim.nothingToClaim'));
+      return;
+    }
+    setClaiming(true);
+    try {
+      const r = await claimInviteRebate(wallet.publicKey.toBase58());
+      if (r.ok) {
+        toast.success(t('claim.success', { sol: r.amount_sol?.toFixed(4) ?? '0' }));
+        // 乐观刷新:claimableSol → 0,pendingClaimSol += amt
+        setRebate((p) => ({
+          ...p,
+          claimableSol: 0,
+          pendingClaimSol: p.pendingClaimSol + (r.amount_sol ?? 0),
+        }));
+      } else {
+        const reason = r.error ?? 'unknown';
+        toast.error(t('claim.failed', { reason }));
+      }
+    } catch (e) {
+      console.warn('[invite] claim failed', e);
+      toast.error(t('claim.failed', { reason: 'network' }));
+    } finally {
+      setClaiming(false);
+    }
   }
 
   // 未连钱包
@@ -188,6 +223,7 @@ export function InviteScreen() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              {/* T-941 #110 · v2 8 字符大写 */}
               <div className="font-mono text-3xl sm:text-4xl font-bold tracking-widest">
                 {myCode || '—'}
               </div>
@@ -201,31 +237,51 @@ export function InviteScreen() {
                 {copied ? <Check className="h-3.5 w-3.5 mr-1.5 text-success" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
                 {copied ? t('myCode.copied') : t('myCode.copy')}
               </Button>
-              <Button onClick={shareTwitter} size="sm" className="flex-1">
-                <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                {t('myCode.shareTwitter')}
-              </Button>
+              {/* T-941 #111 · 分享 Dialog · Twitter / TG / QR / 复制 */}
+              <ShareDialog inviteUrl={inviteUrl} code={myCode} />
             </div>
           </CardContent>
         </Card>
 
-        {/* 核心数据 3 栏 */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* T-941 #112 · 3 数字卡:已邀请 / 累计返佣 / 待提现 + 一键提现 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatCard
             Icon={Users}
-            label={t('stats.invited')}
-            value={stats.invited.toString()}
+            label={t('stats.invitedLabel')}
+            value={t('stats.invitedValue', { n: rebate.inviteCount })}
+            sub={t('stats.activatedSub', { n: rebate.activatedCount })}
           />
           <StatCard
-            Icon={Sparkles}
-            label={t('stats.activated')}
-            value={stats.activated.toString()}
+            Icon={Coins}
+            label={t('stats.rebateLabel')}
+            value={`${rebate.totalRebateSol.toFixed(4)} SOL`}
+            sub={`≈ $${rebate.totalRebateUsd.toFixed(2)}`}
           />
-          <StatCard
-            Icon={Trophy}
-            label={t('stats.earnedPoints')}
-            value={stats.earnedPoints.toLocaleString()}
-          />
+          {/* 待提现 + 一键提现按钮 */}
+          <Card>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <ArrowDownToLine className="h-3 w-3" />
+                {t('stats.claimableLabel')}
+              </div>
+              <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums">
+                {rebate.claimableSol.toFixed(4)} SOL
+              </div>
+              {rebate.pendingClaimSol > 0 && (
+                <div className="text-[10px] text-warning">
+                  {t('stats.pendingSub', { sol: rebate.pendingClaimSol.toFixed(4) })}
+                </div>
+              )}
+              <Button
+                onClick={handleClaim}
+                size="sm"
+                disabled={claiming || rebate.claimableSol < 0.001}
+                className="w-full h-8 text-xs"
+              >
+                {claiming ? t('claim.processing') : t('claim.button')}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* 机制说明 */}
@@ -247,7 +303,7 @@ export function InviteScreen() {
           </CardContent>
         </Card>
 
-        {/* 我邀请的人 */}
+        {/* T-941 #113 · 我邀请的人(钱包/加入时间/累计贡献 SOL/状态)*/}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -262,42 +318,48 @@ export function InviteScreen() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <Table className="min-w-[420px]">
+                <Table className="min-w-[480px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('myInvitees.cols.address')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t('myInvitees.cols.joinedAt')}</TableHead>
+                      <TableHead className="text-right">{t('myInvitees.cols.contributedSol')}</TableHead>
                       <TableHead className="text-right">{t('myInvitees.cols.status')}</TableHead>
-                      <TableHead className="text-right">{t('myInvitees.cols.points')}</TableHead>
-                      <TableHead className="text-right hidden sm:table-cell">
-                        {t('myInvitees.cols.joinedAt')}
-                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invitees.map((row) => (
-                      <TableRow key={row.address}>
-                        <TableCell className="font-mono text-xs">
-                          {row.address.slice(0, 4)}…{row.address.slice(-4)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={`text-[10px] font-medium px-2 py-0.5 rounded ${
-                              row.status === 'activated'
-                                ? 'bg-success/15 text-success'
-                                : 'bg-muted text-muted-foreground'
-                            }`}
-                          >
-                            {row.status === 'activated' ? t('myInvitees.activated') : t('myInvitees.pending')}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-xs">
-                          {row.contributedPoints > 0 ? `+${row.contributedPoints.toLocaleString()}` : '—'}
-                        </TableCell>
-                        <TableCell className="text-right text-[10px] text-muted-foreground hidden sm:table-cell">
-                          {formatDate(row.joinedAt)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {invitees.map((row) => {
+                      const sol = row.contributedPoints * REBATE_SOL_PER_POINT;
+                      return (
+                        <TableRow key={row.address}>
+                          <TableCell className="font-mono text-xs">
+                            {row.addressShort}
+                            {row.level > 1 && (
+                              <span className="ml-1.5 text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground/70">
+                                L{row.level}
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell text-[10px] text-muted-foreground">
+                            {formatDate(row.joinedAt)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-xs">
+                            {sol > 0 ? `${sol.toFixed(4)}` : '—'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span
+                              className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                                row.status === 'activated'
+                                  ? 'bg-success/15 text-success'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {row.status === 'activated' ? t('myInvitees.activated') : t('myInvitees.pending')}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -356,7 +418,14 @@ export function InviteScreen() {
   );
 }
 
-function StatCard({ Icon, label, value }: { Icon: typeof Users; label: string; value: string }) {
+function StatCard({
+  Icon, label, value, sub,
+}: {
+  Icon: typeof Users;
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <Card>
       <CardContent className="p-4 space-y-1.5">
@@ -365,6 +434,7 @@ function StatCard({ Icon, label, value }: { Icon: typeof Users; label: string; v
           {label}
         </div>
         <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums">{value}</div>
+        {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
       </CardContent>
     </Card>
   );

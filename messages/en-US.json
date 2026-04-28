@@ -1120,6 +1120,7 @@
       "subtitle": "Bring friends · earn 10% of their trade points forever"
     },
     "shareText": "I'm trading on Solana with Ocufi — only 0.1% fee (vs 1% on competitors). Come save with me:",
+    "copyFailed": "Copy failed — please select manually",
     "notConnected": {
       "title": "Connect wallet to see your invite code",
       "subtitle": "Code is derived from your wallet address — same wallet, same code, always",
@@ -1131,10 +1132,33 @@
       "copied": "Copied",
       "shareTwitter": "Share to Twitter"
     },
+    "share": {
+      "open": "Share",
+      "title": "Share your invite link",
+      "qrHint": "Scan with your phone camera",
+      "wechatHint": "WeChat blocks direct links — screenshot the QR or copy the URL to share",
+      "copyUrl": "Copy URL",
+      "copied": "Copied",
+      "twitterTemplate": "Trading on Solana with @Ocufi_io · 0.2% fee (vs 1% elsewhere) · self-custody · the lowest on chain — join with my code (ref={code}):",
+      "telegramTemplate": "Ocufi · Solana on-chain trading · 0.2% fee · self-custody · join with my invite code: {code}"
+    },
     "stats": {
       "invited": "Invited",
       "activated": "Activated",
-      "earnedPoints": "Invite points"
+      "earnedPoints": "Invite points",
+      "invitedLabel": "Invited",
+      "invitedValue": "{n} people",
+      "activatedSub": "{n} activated",
+      "rebateLabel": "Total rebate",
+      "claimableLabel": "Claimable",
+      "pendingSub": "Pending {sol} SOL"
+    },
+    "claim": {
+      "button": "Claim",
+      "processing": "Submitting…",
+      "nothingToClaim": "Nothing to claim yet",
+      "success": "Requested {sol} SOL · arrives after on-chain transfer",
+      "failed": "Claim failed: {reason}"
     },
     "howItWorks": {
       "title": "How it works",
@@ -1156,6 +1180,7 @@
         "address": "Wallet",
         "status": "Status",
         "points": "Earned",
+        "contributedSol": "Earned (SOL)",
         "joinedAt": "Joined"
       }
     },
