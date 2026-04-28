@@ -25,12 +25,17 @@ export async function SiteHeader() {
       className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4">
-        <div className="flex items-center gap-6 min-w-0">
+      <div className="mx-auto flex h-11 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-4">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-1.5 flex-shrink-0" aria-label="Ocufi">
-            <Logo variant="full" size={50} />
-            {/* T-973-fix · 回滚到附属字 + 颜色提亮一档(text-foreground/65)
-                T-973 26px 同级双标视觉太抢 · 用户实测后回原 12px 附属位置 · 只把灰度调亮一档 */}
+            {/* T-977c · mobile 32 / sm+ 50(网格密度上升,移动 header 总高 64→44px) */}
+            <span className="sm:hidden">
+              <Logo variant="full" size={32} />
+            </span>
+            <span className="hidden sm:inline-flex">
+              <Logo variant="full" size={50} />
+            </span>
+            {/* T-973-fix · 回滚到附属字 + 颜色提亮一档(text-foreground/65) */}
             {brandTagline && (
               <span
                 className="hidden sm:inline-block text-[12px] tracking-[0.15em] text-foreground/65 border-l border-border/60 pl-1.5 leading-tight"

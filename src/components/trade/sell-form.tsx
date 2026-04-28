@@ -332,7 +332,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           </CardHeader>
         )}
 
-        <CardContent className="space-y-4">
+        <CardContent className={compact ? 'space-y-2 p-2' : 'space-y-4'}>
           {mintProp == null && (
             <div className="space-y-2">
               <Label htmlFor="sell-mint">{t('trade.fields.mint')}</Label>
@@ -366,9 +366,9 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
             )}
           </div>
 
-          {/* 快捷百分比 */}
+          {/* 快捷百分比 · T-977c · compact 收紧 */}
           {balance.amount != null && balance.amount > 0 && (
-            <div className="flex gap-2 flex-wrap">
+            <div className={compact ? 'grid grid-cols-4 gap-1' : 'flex gap-2 flex-wrap'}>
               {PCT_BUTTONS.map((pct) => (
                 <Button
                   key={pct}
@@ -376,7 +376,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                   variant="outline"
                   size="sm"
                   onClick={() => setPct(pct)}
-                  className="text-xs px-3"
+                  className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-3'}
                 >
                   {pct}%
                 </Button>
@@ -385,9 +385,9 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           )}
 
           {/* BUG-036:数量全宽,滑点 + Gas 横排 50/50(桌面 + 移动一致) */}
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="sell-amount">{t('trade.sell.amount')}</Label>
+          <div className={compact ? 'space-y-1.5' : 'space-y-3'}>
+            <div className={compact ? 'space-y-1' : 'space-y-2'}>
+              <Label htmlFor="sell-amount" className={compact ? 'text-[11px]' : undefined}>{t('trade.sell.amount')}</Label>
               <Input
                 id="sell-amount"
                 type="number"
@@ -396,11 +396,12 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                 placeholder="0"
                 value={tokenAmount}
                 onChange={(e) => { setTokenAmount(e.target.value); setFullSellRaw(null); resetOnInput(); }}
+                className={compact ? 'h-8 text-sm' : undefined}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="sell-slippage">{t('trade.fields.slippage')}</Label>
+            <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'}>
+              <div className={compact ? 'space-y-1' : 'space-y-2'}>
+                <Label htmlFor="sell-slippage" className={compact ? 'text-[11px]' : undefined}>{t('trade.fields.slippage')}</Label>
                 <Select
                   value={String(slippageBps)}
                   onValueChange={(v) => {
@@ -409,7 +410,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                     resetOnInput();
                   }}
                 >
-                  <SelectTrigger id="sell-slippage">
+                  <SelectTrigger id="sell-slippage" className={compact ? 'h-8 text-xs' : undefined}>
                     {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
                   </SelectTrigger>
                   <SelectContent>
@@ -426,7 +427,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                   </div>
                 )}
               </div>
-              <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} />
+              <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} compact={compact} />
             </div>
           </div>
 
