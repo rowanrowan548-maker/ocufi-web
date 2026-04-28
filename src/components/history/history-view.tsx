@@ -7,7 +7,7 @@
  * 空数据     → 空状态
  * 有数据     → 表格:时间 / 类型 / 代币 / 数量 / SOL / Solscan
  */
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
+import { fetchSolUsdPrice } from '@/lib/portfolio';
 
 export function HistoryView() {
   const t = useTranslations();
@@ -83,6 +84,8 @@ export function HistoryView() {
           </CardContent>
         </Card>
       ) : (
+        <>
+        <HistoryStats24h records={records} />
         <Card className="overflow-x-auto">
           <Table className="min-w-[1000px]">
             <TableHeader>
@@ -108,7 +111,89 @@ export function HistoryView() {
             </TableBody>
           </Table>
         </Card>
+        </>
       )}
+    </div>
+  );
+}
+
+// T-HIST-94 · 24h 聚合卡 · 4 数字横排
+// 数据 100% 本地计算(filter past 24h then reduce),不打后端
+function HistoryStats24h({ records }: { records: EnrichedTxRecord[] }) {
+  const t = useTranslations();
+  const [solUsd, setSolUsd] = useState<number | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchSolUsdPrice().then((p) => { if (alive) setSolUsd(p); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const stats = useMemo(() => {
+    const now = Date.now() / 1000;
+    const cutoff = now - 86400;
+    const recent = records.filter((r) => !r.err && (r.blockTime ?? 0) > cutoff);
+    const trades = recent.filter((r) => r.type === 'buy' || r.type === 'sell');
+    const count = trades.length;
+    const volumeSol = trades.reduce((s, r) => s + (r.solAmount || 0), 0);
+    const buyTotalSol = trades.filter((r) => r.type === 'buy').reduce((s, r) => s + (r.solAmount || 0), 0);
+    const sellTotalSol = trades.filter((r) => r.type === 'sell').reduce((s, r) => s + (r.solAmount || 0), 0);
+    const netSol = sellTotalSol - buyTotalSol;
+    const feeSol = recent.reduce(
+      (s, r) => s + (r.feeSol || 0) + (r.priorityFeeSol || 0) + (r.gasFeeSol || 0),
+      0,
+    );
+    return { count, volumeSol, netSol, feeSol };
+  }, [records]);
+
+  const sol = solUsd ?? 0;
+  const fmtUsd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  const fmtSol = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 4 })}`;
+
+  return (
+    <Card>
+      <CardContent className="p-3 sm:p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <Stat label={t('history.stats.count')} value={String(stats.count)} sub={t('history.stats.last24h')} />
+          <Stat
+            label={t('history.stats.volume')}
+            value={solUsd ? fmtUsd(stats.volumeSol * sol) : `${fmtSol(stats.volumeSol)} SOL`}
+            sub={solUsd ? `${fmtSol(stats.volumeSol)} SOL` : t('history.stats.last24h')}
+          />
+          <Stat
+            label={t('history.stats.pnl')}
+            value={solUsd ? fmtUsd(stats.netSol * sol) : `${fmtSol(stats.netSol)} SOL`}
+            sub={solUsd ? `${fmtSol(stats.netSol)} SOL` : t('history.stats.netFlow')}
+            tone={stats.netSol > 0 ? 'pos' : stats.netSol < 0 ? 'neg' : undefined}
+          />
+          <Stat
+            label={t('history.stats.fees')}
+            value={solUsd ? fmtUsd(stats.feeSol * sol) : `${fmtSol(stats.feeSol)} SOL`}
+            sub={solUsd ? `${fmtSol(stats.feeSol)} SOL` : t('history.stats.last24h')}
+          />
+        </div>
+        {!solUsd && (
+          <div className="mt-2 text-[10px] text-muted-foreground/60 text-right">
+            {t('history.stats.usdPending')}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Stat({
+  label, value, sub, tone,
+}: { label: string; value: string; sub?: string; tone?: 'pos' | 'neg' }) {
+  const toneClass =
+    tone === 'pos' ? 'text-emerald-500' :
+    tone === 'neg' ? 'text-red-500' :
+    'text-foreground';
+  return (
+    <div className="flex flex-col gap-0.5 min-w-0">
+      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">{label}</span>
+      <span className={`text-base sm:text-lg font-semibold tabular-nums truncate ${toneClass}`}>{value}</span>
+      {sub && <span className="text-[10px] text-muted-foreground/60 tabular-nums truncate">{sub}</span>}
     </div>
   );
 }

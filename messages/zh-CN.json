@@ -1163,6 +1163,15 @@
     "notConnected": "连接钱包才能看到成交记录",
     "empty": "还没有成交记录",
     "countHint": "共 {n} 笔",
+    "stats": {
+      "count": "笔数",
+      "volume": "总额",
+      "pnl": "净流向",
+      "fees": "手续费",
+      "last24h": "近 24h",
+      "netFlow": "卖 − 买",
+      "usdPending": "USD 价格加载中…"
+    },
     "columns": {
       "time": "时间",
       "type": "类型",

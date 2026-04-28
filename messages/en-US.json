@@ -1148,6 +1148,15 @@
     "notConnected": "Connect your wallet to see transaction history",
     "empty": "No transactions yet",
     "countHint": "{n} transactions",
+    "stats": {
+      "count": "Trades",
+      "volume": "Volume",
+      "pnl": "Net Flow",
+      "fees": "Fees",
+      "last24h": "Last 24h",
+      "netFlow": "Sells − Buys",
+      "usdPending": "Loading USD price…"
+    },
     "columns": {
       "time": "Time",
       "type": "Type",
