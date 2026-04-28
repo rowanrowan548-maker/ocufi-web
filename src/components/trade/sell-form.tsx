@@ -39,6 +39,7 @@ import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
+import { pushTradeNotification } from '@/lib/notification-store';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
@@ -239,6 +240,16 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
         mint: mint.trim(),
         sol: actualSol,
         tokens: quoteData.tokenAmount,
+        signature: sig,
+      });
+
+      // T-942 #56 · 持久化卖出留痕
+      pushTradeNotification({
+        side: 'sell',
+        mint: mint.trim(),
+        symbol: mint.trim().slice(0, 4) + '…' + mint.trim().slice(-4),
+        amountSol: actualSol,
+        amountTokens: quoteData.tokenAmount,
         signature: sig,
       });
 

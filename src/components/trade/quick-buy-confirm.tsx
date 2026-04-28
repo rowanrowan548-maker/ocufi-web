@@ -33,6 +33,8 @@ import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { showBadgeToasts } from '@/lib/badge-toast';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { recordFee } from '@/lib/fee-tracker';
+import { useFavorites } from '@/lib/favorites';
+import { pushTradeNotification } from '@/lib/notification-store';
 import { ConfirmDialog } from './confirm-dialog';
 import { formatAmount, type QuotePreviewData } from './quote-preview';
 import type { OverallRisk, RiskReason } from '@/lib/token-info';
@@ -72,6 +74,7 @@ export function QuickBuyConfirm({
   const chain = getCurrentChain();
   const { connection } = useConnection();
   const wallet = useWallet();
+  const { add: addFavorite } = useFavorites();
 
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -185,6 +188,19 @@ export function QuickBuyConfirm({
         tokens: actualTokens,
         signature: sig,
         mode: 'quick',
+      });
+
+      // T-942 #57 · 成交后自动加自选
+      addFavorite(mint);
+
+      // T-942 #56 · 持久化交易留痕
+      pushTradeNotification({
+        side: 'buy',
+        mint,
+        symbol: symbol ?? '?',
+        amountSol: solSpent,
+        amountTokens: actualTokens,
+        signature: sig,
       });
 
       toast.success(

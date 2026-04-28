@@ -9,6 +9,8 @@ import { useEffect, useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'ocufi.favorites';
 const STORAGE_EVENT = 'ocufi-favorites-changed';
+/** T-942 #55 · UI 上限,防膨胀和"1/50"显示 */
+export const MAX_FAVORITES = 50;
 
 function readStorage(): string[] {
   if (typeof window === 'undefined') return [];
@@ -56,7 +58,9 @@ export function useFavorites() {
     if (!mint || mint.length < 32 || mint.length > 44) return;
     const cur = readStorage();
     if (cur.includes(mint)) return;
-    writeStorage([mint, ...cur]);
+    // 超 50 上限就丢最早的(防止 watchlist 无限膨胀)
+    const next = [mint, ...cur].slice(0, MAX_FAVORITES);
+    writeStorage(next);
   }, []);
 
   const remove = useCallback((mint: string) => {

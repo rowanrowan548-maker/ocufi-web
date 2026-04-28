@@ -1250,7 +1250,24 @@
   "watchlist": {
     "page": {
       "title": "我的自选",
-      "subtitle": "你已收藏 {count} 个代币 · 点星标可移除"
+      "subtitle": "你已收藏 {count} 个代币 · 点星标可移除",
+      "subtitleCapped": "已收藏 {count} / {max} 个代币 · 点星标可移除"
+    },
+    "summary": {
+      "portfolio": "我的钱包",
+      "viewAll": "查看完整持仓",
+      "lastTrade": {
+        "buy": "上一笔买入",
+        "sell": "上一笔卖出",
+        "empty": {
+          "label": "暂无交易",
+          "hint": "在 /trade 完成第一笔交易后会显示在这里"
+        }
+      }
+    },
+    "actions": {
+      "quickBuyTitle": "快速买入 {sol} SOL · 用默认参数(滑点 + 优先费)",
+      "sellMaxTitle": "去交易页一键 Max 卖出"
     },
     "empty": {
       "title": "还没有自选代币",
@@ -1262,6 +1279,8 @@
       "name": "代币",
       "price": "价格",
       "change": "24h 涨跌",
+      "costBasis": "持仓 / 成本",
+      "unrealized": "浮盈亏",
       "volume": "24h 成交量",
       "action": "操作"
     }

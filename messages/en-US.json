@@ -1235,7 +1235,24 @@
   "watchlist": {
     "page": {
       "title": "My Watchlist",
-      "subtitle": "{count} tokens starred · click the star to remove"
+      "subtitle": "{count} tokens starred · click the star to remove",
+      "subtitleCapped": "{count} / {max} tokens starred · click the star to remove"
+    },
+    "summary": {
+      "portfolio": "My wallet",
+      "viewAll": "View full portfolio",
+      "lastTrade": {
+        "buy": "Last buy",
+        "sell": "Last sell",
+        "empty": {
+          "label": "No trades yet",
+          "hint": "Your first trade will appear here"
+        }
+      }
+    },
+    "actions": {
+      "quickBuyTitle": "Quick buy {sol} SOL · with your default slippage + priority fee",
+      "sellMaxTitle": "Open trade page · sell Max"
     },
     "empty": {
       "title": "No favorite tokens yet",
@@ -1247,6 +1264,8 @@
       "name": "Token",
       "price": "Price",
       "change": "24h Change",
+      "costBasis": "Holdings / Cost",
+      "unrealized": "Unrealized P/L",
       "volume": "24h Volume",
       "action": "Action"
     }

@@ -37,6 +37,8 @@ import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { showBadgeToasts } from '@/lib/badge-toast';
 import { fetchSolUsdPrice, fetchTokenInfo, type TokenInfo } from '@/lib/portfolio';
 import { shouldSkipBuyConfirm, useDefaultGasLevel, useBuyAmounts } from '@/lib/buy-prefs-store';
+import { useFavorites } from '@/lib/favorites';
+import { pushTradeNotification } from '@/lib/notification-store';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
@@ -116,6 +118,8 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
   const [gasLevel, setGasLevel] = useState<GasLevel>(defaultGas);
   // T-929-cont #144:从 buy-prefs-store 读快捷买入金额预设
   const buyAmounts = useBuyAmounts();
+  // T-942 #57 · 成交即自动加 watchlist
+  const { add: addFavorite } = useFavorites();
   // 用户是否手动调过滑点:调过就别用推荐值覆盖
   const slippageTouched = useRef(false);
 
@@ -288,6 +292,19 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
         mint: mint.trim(),
         sol: solSpent,
         tokens: actualTokens,
+        signature: sig,
+      });
+
+      // T-942 #57 · 成交后自动加自选(已在自选中也无副作用)
+      addFavorite(mint.trim());
+
+      // T-942 #56 · 持久化交易留痕(给 /watchlist 顶部"上一笔交易"用)
+      pushTradeNotification({
+        side: 'buy',
+        mint: mint.trim(),
+        symbol: tokenInfo?.symbol ?? '?',
+        amountSol: solSpent,
+        amountTokens: actualTokens,
         signature: sig,
       });
 
