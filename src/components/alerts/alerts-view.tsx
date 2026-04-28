@@ -172,23 +172,24 @@ export function AlertsView() {
     );
   }
 
-  // 未连钱包
-  if (!connected || !publicKey) {
-    return (
-      <Card className="max-w-xl">
-        <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-          <Wallet className="h-12 w-12 text-muted-foreground" />
-          <p className="text-muted-foreground">{t('alerts.connectToUse')}</p>
-          <Button onClick={() => openWalletModal(true)}>{t('wallet.connect')}</Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // T-974 BUG-037 · 未连钱包不直接挡 · 显教育态 form(mode toggle 可见 + 按钮 disabled tooltip)
   return (
     <div className="w-full max-w-4xl space-y-6">
+      {/* 未连钱包教育态 banner */}
+      {(!connected || !publicKey) && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4 flex items-center gap-3">
+            <Wallet className="h-5 w-5 text-primary flex-shrink-0" />
+            <div className="flex-1 text-sm">
+              <div className="font-medium">{t('alerts.connectToUse')}</div>
+              <div className="text-muted-foreground text-xs mt-0.5">{t('alerts.connectEducational')}</div>
+            </div>
+            <Button size="sm" onClick={() => openWalletModal(true)}>{t('wallet.connect')}</Button>
+          </CardContent>
+        </Card>
+      )}
       {/* T-931b · TG 绑定状态 banner(连钱包后才显示) */}
-      <TgBindBanner />
+      {connected && publicKey && <TgBindBanner />}
 
       {/* 通知权限条 */}
       {permission !== 'granted' && permission !== 'unsupported' && (
@@ -375,15 +376,30 @@ export function AlertsView() {
             </div>
           )}
 
-          <Button onClick={submit} disabled={submitting} className="w-full">
+          {/* T-974 BUG-037 · 未连钱包 disabled + tooltip */}
+          <Button
+            onClick={() => {
+              if (!connected || !publicKey) {
+                openWalletModal(true);
+                return;
+              }
+              submit();
+            }}
+            disabled={submitting}
+            title={!connected ? t('alerts.connectFirstTip') : undefined}
+            className="w-full"
+          >
             {submitting ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('common.loading')}</>
+            ) : !connected ? (
+              t('alerts.connectFirst')
             ) : t('alerts.form.submit')}
           </Button>
         </CardContent>
       </Card>
 
-      {/* 列表 */}
+      {/* 列表 · 未连钱包不显 · 没东西可列 */}
+      {connected && publicKey && (
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{t('alerts.list.title')}</h2>
@@ -529,6 +545,7 @@ export function AlertsView() {
           </Card>
         )}
       </div>
+      )}
     </div>
   );
 }

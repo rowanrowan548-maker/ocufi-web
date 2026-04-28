@@ -1026,6 +1026,9 @@
       "submit": "Create alert"
     },
     "connectToUse": "Connect your wallet to manage alerts",
+    "connectEducational": "Connect wallet to save alerts to cloud · Preview the form without connecting",
+    "connectFirstTip": "Connect wallet first to create alert",
+    "connectFirst": "Connect wallet to create",
     "notif": {
       "hit": "Current ${price} · click to view"
     },
@@ -1203,12 +1206,15 @@
     "notConnected": {
       "title": "Connect wallet to see your invite code",
       "subtitle": "Code is derived from your wallet address — same wallet, same code, always",
-      "connect": "Connect wallet"
+      "connect": "Connect wallet",
+      "educational": "Codes are derived from wallet addresses · Connect to share your real invite link and earn rebates",
+      "shareTooltip": "Connect wallet first to share your invite code"
     },
     "myCode": {
       "label": "My invite code",
       "copy": "Copy link",
       "copied": "Copied",
+      "share": "Share",
       "shareTwitter": "Share to Twitter"
     },
     "share": {

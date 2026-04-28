@@ -1041,6 +1041,9 @@
       "submit": "创建提醒"
     },
     "connectToUse": "连接钱包后才能管理你的提醒",
+    "connectEducational": "连钱包后才能保存提醒到云端 · 不连也可以预览表单",
+    "connectFirstTip": "连钱包后创建提醒",
+    "connectFirst": "连钱包后创建",
     "notif": {
       "hit": "当前 ${price} · 点击查看详情"
     },
@@ -1218,12 +1221,15 @@
     "notConnected": {
       "title": "连接钱包查看你的邀请码",
       "subtitle": "邀请码由钱包地址确定 · 同钱包永远同码",
-      "connect": "连接钱包"
+      "connect": "连接钱包",
+      "educational": "邀请码由钱包地址确定 · 连钱包后即可分享真实邀请链接获得返佣",
+      "shareTooltip": "连钱包后才能分享你的邀请码"
     },
     "myCode": {
       "label": "我的邀请码",
       "copy": "复制链接",
       "copied": "已复制",
+      "share": "分享",
       "shareTwitter": "分享到 Twitter"
     },
     "share": {

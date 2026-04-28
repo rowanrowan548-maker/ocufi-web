@@ -174,27 +174,8 @@ export function InviteScreen() {
     }
   }
 
-  // 未连钱包
-  if (!wallet.connected || !wallet.publicKey) {
-    return (
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-16">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-            <Wallet className="h-12 w-12 text-muted-foreground" />
-            <div className="space-y-1">
-              <div className="text-base font-semibold">{t('notConnected.title')}</div>
-              <div className="text-xs text-muted-foreground">
-                {t('notConnected.subtitle')}
-              </div>
-            </div>
-            <Button onClick={() => openWalletModal(true)}>
-              {t('notConnected.connect')}
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+  // T-974 BUG-039 · 未连钱包教育态:dummy 数字卡 + 分享按钮 disabled tooltip + 推文模板 placeholder
+  const notConnected = !wallet.connected || !wallet.publicKey;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -205,6 +186,24 @@ export function InviteScreen() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </header>
+
+        {/* T-974 BUG-039 · 未连钱包教育态 banner */}
+        {notConnected && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="py-4 flex items-center gap-3">
+              <Wallet className="h-5 w-5 text-primary flex-shrink-0" />
+              <div className="flex-1 text-sm">
+                <div className="font-medium">{t('notConnected.title')}</div>
+                <div className="text-muted-foreground text-xs mt-0.5">
+                  {t('notConnected.educational')}
+                </div>
+              </div>
+              <Button size="sm" onClick={() => openWalletModal(true)}>
+                {t('notConnected.connect')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 我的邀请码 · 大卡 */}
         <Card className="relative overflow-hidden border-primary/30">
@@ -223,22 +222,40 @@ export function InviteScreen() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-              {/* T-941 #110 · v2 8 字符大写 */}
-              <div className="font-mono text-3xl sm:text-4xl font-bold tracking-widest">
-                {myCode || '—'}
+              {/* T-941 #110 · v2 8 字符大写 · T-974 BUG-039 未连钱包占位 ABCD1234 */}
+              <div className={`font-mono text-3xl sm:text-4xl font-bold tracking-widest ${notConnected ? 'text-muted-foreground/40' : ''}`}>
+                {notConnected ? 'ABCD1234' : (myCode || '—')}
               </div>
               <div className="text-[11px] font-mono text-muted-foreground/70 break-all">
-                {inviteUrl}
+                {notConnected ? buildInviteUrl('ABCD1234') : inviteUrl}
               </div>
             </div>
 
             <div className="flex gap-2 pt-1">
-              <Button onClick={copyUrl} variant="outline" size="sm" className="flex-1">
+              <Button
+                onClick={copyUrl}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                disabled={notConnected}
+                title={notConnected ? t('notConnected.shareTooltip') : undefined}
+              >
                 {copied ? <Check className="h-3.5 w-3.5 mr-1.5 text-success" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
                 {copied ? t('myCode.copied') : t('myCode.copy')}
               </Button>
-              {/* T-941 #111 · 分享 Dialog · Twitter / TG / QR / 复制 */}
-              <ShareDialog inviteUrl={inviteUrl} code={myCode} />
+              {/* T-941 #111 · 分享 Dialog · T-974 BUG-039 未连钱包用 disabled placeholder 替代 */}
+              {notConnected ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  title={t('notConnected.shareTooltip')}
+                >
+                  {t('myCode.share')}
+                </Button>
+              ) : (
+                <ShareDialog inviteUrl={inviteUrl} code={myCode} />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -275,7 +292,8 @@ export function InviteScreen() {
               <Button
                 onClick={handleClaim}
                 size="sm"
-                disabled={claiming || rebate.claimableSol < 0.001}
+                disabled={notConnected || claiming || rebate.claimableSol < 0.001}
+                title={notConnected ? t('notConnected.shareTooltip') : undefined}
                 className="w-full h-8 text-xs"
               >
                 {claiming ? t('claim.processing') : t('claim.button')}
