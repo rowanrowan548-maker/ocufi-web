@@ -212,6 +212,10 @@
       "invite": {
         "title": "Invite",
         "desc": "Bring friends · share points"
+      },
+      "badges": {
+        "title": "Badges",
+        "desc": "Unlock achievements · show progress"
       }
     }
   },

@@ -17,8 +17,12 @@ import { NAV_ENTRIES } from './nav-config';
 export async function SiteHeader() {
   const t = await getTranslations();
 
+  // T-940 R1:iOS Safari 安全区(notch / 动态岛 / URL bar)— 防止 sticky 顶部 nav 被遮
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur">
+    <header
+      className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">

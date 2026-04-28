@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Link from 'next/link';
 import {
   Shield, ArrowRight,
-  LineChart, Star, Wallet, FileText, Trophy, Users,
+  LineChart, Star, Wallet, Award, Trophy, Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getCurrentChain } from '@/config/chains';
@@ -28,11 +28,13 @@ export default async function Landing({
     { href: '/token', Icon: Shield, key: 'tokenCheck' },
     { href: '/watchlist', Icon: Star, key: 'watchlist' },
   ] as const;
+  // T-940 R2:删 limit(限价单已整合进 /trade 内 tab,Landing 不该再露出)
+  // 用 /badges 替补(徽章系统已 ship,门面更亮)
   const secondaryFuncs = [
-    { href: '/limit', Icon: FileText, key: 'limit' },
     { href: '/points', Icon: Trophy, key: 'points' },
     { href: '/invite', Icon: Users, key: 'invite' },
     { href: '/portfolio', Icon: Wallet, key: 'portfolio' },
+    { href: '/badges', Icon: Award, key: 'badges' },
   ] as const;
 
   return (
