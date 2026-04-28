@@ -606,7 +606,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           )}
 
           {!wallet.connected ? (
-            <Button onClick={() => openWalletModal(true)} className="w-full" size="lg">
+            <Button onClick={() => openWalletModal(true)} className="w-full h-14 sm:h-11 text-base sm:text-sm font-semibold" size="lg">
               {t('wallet.connect')}
             </Button>
           ) : (
@@ -621,7 +621,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 stage === 'confirming' ||
                 stage === 'done'
               }
-              className="w-full"
+              className="w-full h-14 sm:h-11 text-base sm:text-sm font-semibold"
             >
               {stage === 'signing' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.signing')}</>}
               {stage === 'sending' && <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('trade.buttons.sending')}</>}

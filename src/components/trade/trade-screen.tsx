@@ -118,7 +118,11 @@ export function TradeScreen() {
       <div className="hidden lg:block">
         <TokenSearchCombo value={mint} onSelect={setMint} />
       </div>
-      <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
+
+      {/* T-962:移动端 TradingHeader sticky top + 桌面正常流 */}
+      <div className="lg:static lg:bg-transparent lg:backdrop-blur-none sticky top-0 lg:top-auto z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 lg:mx-0 lg:px-0 py-2 lg:py-0 bg-background/95 backdrop-blur lg:backdrop-blur-none">
+        <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
+      </div>
 
       {/* 桌面 lg+:现有 grid 完全不动(T-501/502/503/504 视觉) */}
       <div className="hidden lg:grid lg:grid-cols-[1fr_400px] gap-4 items-start">
@@ -141,26 +145,68 @@ export function TradeScreen() {
         </div>
       </div>
 
-      {/* 移动 < lg:5 tab 切换布局(T-505a)+ 底部 CTA(T-505b)留 pb-20 防遮挡 */}
-      <div className="lg:hidden flex flex-col gap-4 pb-20">
-        <MobileTabSwitcher value={mobileTab} onChange={setMobileTab} />
-        {mobileTab === 'chart' && <ChartCard mint={mint} />}
-        {mobileTab === 'detail' && (
-          <div className="space-y-4">
-            <TrustSignals detail={detail} />
-            <InfoPanel detail={detail} />
-            <SafetyPanel detail={detail} />
+      {/* T-962 移动端 < lg 重构:
+          1. 安全审查(红绿灯)始终可见
+          2. 折叠式 K 线(默认收起)
+          3. 主操作 BuyForm/SellForm panel
+          4. 数据 / 活动 tabs 推到底部
+          底部 MobileActionBar 仍保留快买入口 · pb-20 防遮挡 */}
+      <div className="lg:hidden flex flex-col gap-3 pb-20">
+        {/* T-962 #6 · 安全审查浮在 buy form 上方(红绿灯标)*/}
+        <TrustSignals detail={detail} />
+
+        {/* T-962 #1 · K 线折叠(默认收起)· details/summary 原生组件,无 JS 状态 */}
+        <details className="group rounded-lg border border-border/40 bg-card/40 [&[open]]:bg-card">
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium flex items-center justify-between gap-2 list-none [&::-webkit-details-marker]:hidden">
+            <span className="inline-flex items-center gap-2">
+              <span>📈 K 线</span>
+              <span className="text-[10px] text-muted-foreground/60">
+                {detail?.priceUsd ? `$${detail.priceUsd < 1 ? detail.priceUsd.toPrecision(4) : detail.priceUsd.toFixed(2)}` : ''}
+              </span>
+            </span>
+            <span className="text-xs text-muted-foreground group-open:hidden">▼</span>
+            <span className="text-xs text-muted-foreground hidden group-open:inline">▲</span>
+          </summary>
+          <div className="p-2">
+            <ChartCard mint={mint} />
           </div>
-        )}
-        {mobileTab === 'data' && (
-          <ActivityBoard detail={detail} initialTab="liquidity" />
-        )}
-        {mobileTab === 'risk' && (
-          <ActivityBoard detail={detail} initialTab="risks" />
-        )}
-        {mobileTab === 'activity' && (
-          <ActivityBoard detail={detail} initialTab="activity" />
-        )}
+        </details>
+
+        {/* T-962 #2-#5 · 主操作 panel(buy/sell 表单 inline · 抽屉感由 MobileActionBar 浮按钮触发完整 sheet)*/}
+        <TradeTabs
+          mint={mint}
+          compact
+          risk={detail ? overallRisk(detail) : undefined}
+          reasons={detail ? riskReasons(detail) : undefined}
+          defaultSide={defaultSide}
+          onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+        />
+
+        {/* 数据 / 持有 / 风险 / 活动 — 折叠 tabs 推到底部 */}
+        <div className="space-y-2">
+          <MobileTabSwitcher value={mobileTab} onChange={setMobileTab} />
+          {mobileTab === 'chart' && (
+            <div className="text-[11px] text-muted-foreground/60 text-center py-4">
+              {/* chart tab 此处空,因 K 线已上移到折叠组件 */}
+              ↑ K 线已上移
+            </div>
+          )}
+          {mobileTab === 'detail' && (
+            <div className="space-y-3">
+              <InfoPanel detail={detail} />
+              <SafetyPanel detail={detail} />
+            </div>
+          )}
+          {mobileTab === 'data' && (
+            <ActivityBoard detail={detail} initialTab="liquidity" />
+          )}
+          {mobileTab === 'risk' && (
+            <ActivityBoard detail={detail} initialTab="risks" />
+          )}
+          {mobileTab === 'activity' && (
+            <ActivityBoard detail={detail} initialTab="activity" />
+          )}
+        </div>
       </div>
 
       {/* 移动端底部固定双按钮 CTA(T-505b · 仅 lg:hidden) */}
