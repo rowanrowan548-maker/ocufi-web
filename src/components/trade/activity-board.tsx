@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Activity, ListOrdered, Users, AlertTriangle, Wallet, Construction,
   ExternalLink, ArrowUpRight, ArrowDownLeft, Loader2,
-  Droplets, Trophy,
+  Droplets, Trophy, Eye,
 } from 'lucide-react';
 import type { TokenDetail } from '@/lib/token-info';
 import { getCurrentChain } from '@/config/chains';
@@ -36,7 +36,10 @@ export type ActivityBoardTab =
   | 'holders'
   | 'liquidity'
   | 'top-traders'
-  | 'risks';
+  | 'risks'
+  // T-OKX-4A · OKX 7 tab 新增
+  | 'watching'      // 关注地址
+  | 'my-positions'; // 我的持仓
 
 interface Props {
   detail: TokenDetail | null;
@@ -131,17 +134,27 @@ export function ActivityBoard({ detail, initialTab, tabs }: Props) {
   return (
     <Card className="p-4">
       <Tabs value={tab} onValueChange={(v) => v && setTab(v as ActivityBoardTab)}>
+        {/* T-OKX-4A · OKX 7 tab 顺序:交易活动 / 盈利地址 / 持币地址 / 关注地址 / 流动性 / 我的持仓 / 我的订单 · 桌面 lg+ 应用 · 移动通过 tabs prop 限制 */}
         <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto overflow-x-auto">
           {showTab('activity') && (
             <TabBtn value="activity" Icon={Activity}>
               {t('activity')}{trades?.length ? ` ${trades.length}` : ''}
             </TabBtn>
           )}
-          {showTab('orders') && <TabBtn value="orders" Icon={ListOrdered}>{t('orders')}</TabBtn>}
+          {showTab('top-traders') && (
+            <TabBtn value="top-traders" Icon={Trophy}>
+              {t('profitAddrs')}{traders.length ? ` ${traders.length}` : ''}
+            </TabBtn>
+          )}
           {showTab('holders') && (
             <TabBtn value="holders" Icon={Users}>
               {t('holders')}
               {detail?.totalHolders ? ` ${detail.totalHolders.toLocaleString()}` : ''}
+            </TabBtn>
+          )}
+          {showTab('watching') && (
+            <TabBtn value="watching" Icon={Eye}>
+              {t('watching')}
             </TabBtn>
           )}
           {showTab('liquidity') && (
@@ -149,10 +162,13 @@ export function ActivityBoard({ detail, initialTab, tabs }: Props) {
               {t('liquidity')}{pairs?.length ? ` ${pairs.length}` : ''}
             </TabBtn>
           )}
-          {showTab('top-traders') && (
-            <TabBtn value="top-traders" Icon={Trophy}>
-              {t('topTraders')}{traders.length ? ` ${traders.length}` : ''}
+          {showTab('my-positions') && (
+            <TabBtn value="my-positions" Icon={Wallet}>
+              {t('myPositions')}
             </TabBtn>
+          )}
+          {showTab('orders') && (
+            <TabBtn value="orders" Icon={ListOrdered}>{t('myOrders')}</TabBtn>
           )}
           {showTab('risks') && (
             <TabBtn value="risks" Icon={AlertTriangle}>
@@ -243,7 +259,7 @@ export function ActivityBoard({ detail, initialTab, tabs }: Props) {
           />
         </TabsContent>
 
-        {/* ── Top 交易者 ── */}
+        {/* ── 盈利地址(原 Top 交易者) ── */}
         <TabsContent value="top-traders">
           <TopTradersTab
             mint={mint}
@@ -252,6 +268,16 @@ export function ActivityBoard({ detail, initialTab, tabs }: Props) {
             tradesLoaded={trades !== null}
             explorer={chain.explorer}
           />
+        </TabsContent>
+
+        {/* ── T-OKX-4A · 关注地址 · 占位(待用户标记钱包功能 ship) ── */}
+        <TabsContent value="watching">
+          <Empty Icon={Eye} title={t('comingSoon.watching.title')} subtitle={t('comingSoon.watching.subtitle')} />
+        </TabsContent>
+
+        {/* ── T-OKX-4A · 我的持仓 · 占位(WalletTokenStats 已在右栏 · 此处可深化) ── */}
+        <TabsContent value="my-positions">
+          <Empty Icon={Wallet} title={t('comingSoon.myPositions.title')} subtitle={t('comingSoon.myPositions.subtitle')} />
         </TabsContent>
 
         {/* ── 风险明细 ── */}

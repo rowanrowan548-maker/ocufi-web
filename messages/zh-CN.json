@@ -370,24 +370,36 @@
       "viewExplorer": "查看 Solscan"
     },
     "activity": {
-      "activity": "成交活动",
+      "activity": "交易活动",
       "orders": "订单",
-      "holders": "持有者",
+      "myOrders": "我的订单",
+      "holders": "持币地址",
       "risks": "风险明细",
       "liquidity": "流动性",
       "topTraders": "Top 交易者",
+      "profitAddrs": "盈利地址",
+      "watching": "关注地址",
+      "myPositions": "我的持仓",
       "comingSoon": {
         "activity": {
-          "title": "成交活动",
+          "title": "交易活动",
           "subtitle": "实时链上买卖记录,即将上线"
         },
         "orders": {
-          "title": "订单",
+          "title": "我的订单",
           "subtitle": "你对这个币的限价单 / DCA,即将上线"
         },
         "holders": {
-          "title": "持有者",
+          "title": "持币地址",
           "subtitle": "暂无持有者数据"
+        },
+        "watching": {
+          "title": "关注地址",
+          "subtitle": "标记你想关注的钱包,跟随它们的交易动作"
+        },
+        "myPositions": {
+          "title": "我的持仓",
+          "subtitle": "右栏「我的持仓盈亏」已显基础数据 · 此处后续接深度持仓分析"
         }
       },
       "noRisks": {

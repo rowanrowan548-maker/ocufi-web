@@ -372,22 +372,34 @@
     "activity": {
       "activity": "Activity",
       "orders": "Orders",
+      "myOrders": "My orders",
       "holders": "Holders",
       "risks": "Risks",
       "liquidity": "Liquidity",
       "topTraders": "Top Traders",
+      "profitAddrs": "Profit addrs",
+      "watching": "Watching",
+      "myPositions": "My positions",
       "comingSoon": {
         "activity": {
           "title": "Activity Feed",
           "subtitle": "Real-time on-chain swap stream — coming soon"
         },
         "orders": {
-          "title": "Your Orders",
+          "title": "My Orders",
           "subtitle": "Limit / DCA orders for this token — coming soon"
         },
         "holders": {
           "title": "Holders",
           "subtitle": "No holder data available"
+        },
+        "watching": {
+          "title": "Watching",
+          "subtitle": "Tag wallets you want to follow and track their trades"
+        },
+        "myPositions": {
+          "title": "My Positions",
+          "subtitle": "Right rail \"My PnL\" shows basic stats; deeper analytics here later"
         }
       },
       "noRisks": {
