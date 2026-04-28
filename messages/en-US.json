@@ -473,6 +473,7 @@
       "platformFeeTooltip": "Ocufi 0.1% (buy only, direct on-chain transfer, verifiable)",
       "networkFeeTooltip": "Solana network gas + priority fee ceiling — actual cost may be lower",
       "placeholderBuy": "💡 Enter SOL amount or click 0.1 / 0.5 / 1 to see live quote",
+      "detailsButton": "Details",
       "placeholderSell": "💡 Enter sell amount or click 25% / 50% / 100% to see live quote",
       "limitOrderTitle": "Limit order preview",
       "limitOrderTargetPrice": "Target price",

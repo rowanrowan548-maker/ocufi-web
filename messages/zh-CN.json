@@ -473,6 +473,7 @@
       "platformFeeTooltip": "Ocufi 0.1%(仅买入,自组 tx 直接转入,链上可查)",
       "networkFeeTooltip": "Solana 网络 Gas + 优先费上限,实际可能更低",
       "placeholderBuy": "💡 输入 SOL 数量或点击 0.1 / 0.5 / 1 快捷按钮查看实时报价",
+      "detailsButton": "详情",
       "placeholderSell": "💡 输入卖出数量或点击 25% / 50% / 100% 快捷按钮查看实时报价",
       "limitOrderTitle": "限价单预览",
       "limitOrderTargetPrice": "目标价",

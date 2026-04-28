@@ -443,6 +443,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           {previewData && stage !== 'done' ? (
             <QuotePreview
               data={previewData}
+              compact={compact}
               currentSlippageBps={slippageBps}
               onApplySlippage={(bps) => {
                 setSlippageBps(bps);

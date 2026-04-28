@@ -10,8 +10,9 @@
  *  - Solana 网络 Gas 估算
  *  - 滑点超阈警告 + 一键拉
  */
-import { AlertTriangle, ArrowDown } from 'lucide-react';
+import { AlertTriangle, ArrowDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 export interface QuotePreviewData {
   payAmount: number;
@@ -37,9 +38,11 @@ interface Props {
   currentSlippageBps?: number;
   /** 应用推荐滑点的回调 */
   onApplySlippage?: (bps: number) => void;
+  /** T-977e · 紧凑模式 · 1 行摘要 + 详情 Popover · 不撑开父容器 */
+  compact?: boolean;
 }
 
-export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Props) {
+export function QuotePreview({ data, currentSlippageBps, onApplySlippage, compact }: Props) {
   const t = useTranslations();
 
   const currentBps = currentSlippageBps ?? 0;
@@ -48,6 +51,103 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
     currentBps > 0 && data.priceImpactPct > currentPct * 0.5 + 0.1;
   const suggestedPct = Math.max(2, Math.ceil(data.priceImpactPct * 2));
   const suggestedBps = Math.min(suggestedPct * 100, 1000);
+
+  const detailRows = (
+    <div className="space-y-1.5">
+      <Row
+        label={t('trade.preview.minReceive')}
+        value={data.minReceiveLabel}
+        tooltip={t('trade.preview.minReceiveTooltip', { pct: currentPct.toFixed(2) })}
+      />
+      <Row
+        label={t('trade.preview.priceImpact')}
+        value={`${data.priceImpactPct.toFixed(3)}%`}
+        valueClassName={data.priceImpactPct > 5 ? 'text-destructive font-medium' : ''}
+      />
+      {/* T-925 #47:当前现货价 + 成交后预估持仓价值 */}
+      {data.currentPriceUsd != null && data.currentPriceUsd > 0 && (
+        <Row
+          label={t('trade.preview.currentPrice')}
+          value={`$${formatPriceUsd(data.currentPriceUsd)}`}
+        />
+      )}
+      {data.postTradeValueUsd != null && data.postTradeValueUsd > 0 && (
+        <Row
+          label={t('trade.preview.postTradeValue')}
+          value={`$${data.postTradeValueUsd.toLocaleString('en-US', { maximumFractionDigits: 2 })}`}
+        />
+      )}
+      <Row
+        label={t('trade.preview.platformFee')}
+        value={
+          data.platformFeeSol != null && data.platformFeeSol > 0
+            ? `${data.platformFeeSol.toFixed(6)} SOL`
+            : t('trade.preview.platformFeeNone')
+        }
+        tooltip={t('trade.preview.platformFeeTooltip')}
+      />
+      <Row
+        label={t('trade.preview.networkFee')}
+        value={
+          data.networkFeeMaxSol != null
+            ? `≤ ${data.networkFeeMaxSol.toFixed(6)} SOL`
+            : '—'
+        }
+        tooltip={t('trade.preview.networkFeeTooltip')}
+      />
+    </div>
+  );
+
+  const slippageWarnBanner = showSlippageWarn && suggestedBps > currentBps && onApplySlippage ? (
+    <div className="flex items-start gap-2 p-2 rounded-md bg-warning/10 border border-warning/30 text-xs text-amber-700 dark:text-amber-400">
+      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        {t('trade.preview.slippageWarn', {
+          impact: data.priceImpactPct.toFixed(2),
+          sol: data.payAmount.toFixed(3),
+          loss: estimateLossUsd(data).toFixed(2),
+          suggested: suggestedPct,
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={() => onApplySlippage(suggestedBps)}
+        className="font-medium underline underline-offset-2 hover:no-underline flex-shrink-0"
+      >
+        {t('trade.preview.slippageApply', { bps: suggestedPct })}
+      </button>
+    </div>
+  ) : null;
+
+  // T-977e · 紧凑模式: 1 行摘要 "支付 X → 预计收到 Y" + 详情 Popover
+  if (compact) {
+    return (
+      <div className="space-y-1.5">
+        <div className="rounded-md border bg-muted/30 p-2 flex items-center gap-1.5 text-[11px]">
+          <span className="font-mono font-medium truncate">{data.payLabel}</span>
+          <ArrowDown className="h-3 w-3 text-muted-foreground flex-shrink-0 -rotate-90" />
+          <span className="font-mono font-medium truncate flex-1">{data.receiveLabel}</span>
+          <Popover>
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-0.5 rounded-md border border-primary/40 bg-primary/10 text-primary px-1.5 py-0.5 text-[10px] font-medium hover:bg-primary/20 transition-colors flex-shrink-0"
+                >
+                  {t('trade.preview.detailsButton')}
+                  <ChevronUp className="h-2.5 w-2.5" />
+                </button>
+              }
+            />
+            <PopoverContent className="w-64 text-xs">
+              {detailRows}
+            </PopoverContent>
+          </Popover>
+        </div>
+        {slippageWarnBanner}
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
@@ -63,70 +163,11 @@ export function QuotePreview({ data, currentSlippageBps, onApplySlippage }: Prop
         <span className="font-mono font-medium">{data.receiveLabel}</span>
       </div>
 
-      <div className="border-t pt-2 space-y-1.5">
-        <Row
-          label={t('trade.preview.minReceive')}
-          value={data.minReceiveLabel}
-          tooltip={t('trade.preview.minReceiveTooltip', { pct: currentPct.toFixed(2) })}
-        />
-        <Row
-          label={t('trade.preview.priceImpact')}
-          value={`${data.priceImpactPct.toFixed(3)}%`}
-          valueClassName={data.priceImpactPct > 5 ? 'text-destructive font-medium' : ''}
-        />
-        {/* T-925 #47:当前现货价 + 成交后预估持仓价值 */}
-        {data.currentPriceUsd != null && data.currentPriceUsd > 0 && (
-          <Row
-            label={t('trade.preview.currentPrice')}
-            value={`$${formatPriceUsd(data.currentPriceUsd)}`}
-          />
-        )}
-        {data.postTradeValueUsd != null && data.postTradeValueUsd > 0 && (
-          <Row
-            label={t('trade.preview.postTradeValue')}
-            value={`$${data.postTradeValueUsd.toLocaleString('en-US', { maximumFractionDigits: 2 })}`}
-          />
-        )}
-        <Row
-          label={t('trade.preview.platformFee')}
-          value={
-            data.platformFeeSol != null && data.platformFeeSol > 0
-              ? `${data.platformFeeSol.toFixed(6)} SOL`
-              : t('trade.preview.platformFeeNone')
-          }
-          tooltip={t('trade.preview.platformFeeTooltip')}
-        />
-        <Row
-          label={t('trade.preview.networkFee')}
-          value={
-            data.networkFeeMaxSol != null
-              ? `≤ ${data.networkFeeMaxSol.toFixed(6)} SOL`
-              : '—'
-          }
-          tooltip={t('trade.preview.networkFeeTooltip')}
-        />
+      <div className="border-t pt-2">
+        {detailRows}
       </div>
 
-      {showSlippageWarn && suggestedBps > currentBps && onApplySlippage && (
-        <div className="flex items-start gap-2 p-2 rounded-md bg-warning/10 border border-warning/30 text-xs text-amber-700 dark:text-amber-400">
-          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            {t('trade.preview.slippageWarn', {
-              impact: data.priceImpactPct.toFixed(2),
-              sol: data.payAmount.toFixed(3),
-              loss: estimateLossUsd(data).toFixed(2),
-              suggested: suggestedPct,
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={() => onApplySlippage(suggestedBps)}
-            className="font-medium underline underline-offset-2 hover:no-underline flex-shrink-0"
-          >
-            {t('trade.preview.slippageApply', { bps: suggestedPct })}
-          </button>
-        </div>
-      )}
+      {slippageWarnBanner}
     </div>
   );
 }

@@ -526,6 +526,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           {previewData && stage !== 'done' ? (
             <QuotePreview
               data={previewData}
+              compact={compact}
               currentSlippageBps={slippageBps}
               onApplySlippage={(bps) => {
                 setSlippageBps(bps);
