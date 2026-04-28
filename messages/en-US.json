@@ -826,6 +826,12 @@
       "notHelpful": "No",
       "recorded": "Recorded, thanks for the feedback"
     },
+    "search": {
+      "placeholder": "Search FAQ… (press / or ⌘K)",
+      "clear": "Clear",
+      "searching": "Searching…",
+      "noResults": "No results for \"{q}\""
+    },
     "items": [
       {
         "group": "Trading",

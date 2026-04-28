@@ -826,6 +826,12 @@
       "notHelpful": "没用",
       "recorded": "已记录,谢谢反馈"
     },
+    "search": {
+      "placeholder": "搜索问题…(快捷键 / 或 ⌘K)",
+      "clear": "清空",
+      "searching": "搜索中…",
+      "noResults": "「{q}」没找到相关问题"
+    },
     "items": [
       {
         "group": "交易",

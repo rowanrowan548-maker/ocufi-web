@@ -46,6 +46,28 @@ export function FaqView() {
     setVotes(loadVotes());
   }, []);
 
+  // T-FAQ-124 · 监听 hash · faq-search 跳锚点时展开 + 滚到对应 item
+  useEffect(() => {
+    function applyHash() {
+      const m = window.location.hash.match(/^#faq-item-(\d+)$/);
+      if (!m) return;
+      const idx = Number(m[1]);
+      if (!Number.isFinite(idx) || idx < 0) return;
+      setOpenIdx(idx);
+      // 等 React 把 open 状态画完再滚,sticky 顶部预留 ~96px
+      window.requestAnimationFrame(() => {
+        const el = document.getElementById(`faq-item-${idx}`);
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - 96;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      });
+    }
+    applyHash();
+    window.addEventListener('hashchange', applyHash);
+    return () => window.removeEventListener('hashchange', applyHash);
+  }, []);
+
   const handleVote = (faqId: string, vote: Vote) => {
     if (votes[faqId]) return;
     const next = { ...votes, [faqId]: vote };
@@ -71,7 +93,8 @@ export function FaqView() {
               return (
                 <div
                   key={idx}
-                  className="rounded-lg border bg-card overflow-hidden"
+                  id={`faq-item-${idx}`}
+                  className="rounded-lg border bg-card overflow-hidden scroll-mt-24"
                 >
                   <button
                     type="button"
