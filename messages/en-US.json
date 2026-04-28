@@ -419,7 +419,20 @@
       "solAmount": "SOL amount",
       "slippage": "Slippage",
       "slippageWarn": "{pct}% slippage is risky · sandwich / heavy loss possible",
-      "gas": "Priority"
+      "gas": "Priority",
+      "priority": "Priority"
+    },
+    "priority": {
+      "pilot": "Pilot",
+      "p1": "P1",
+      "p2": "P2",
+      "p3": "P3"
+    },
+    "autoSell": {
+      "label": "Auto-create sell alert after fill",
+      "target": "Target gain",
+      "created": "Alert set at +{pct}% target · you'll be notified at price",
+      "failed": "Auto-sell alert failed · add manually on /alerts"
     },
     "gas": {
       "normal": "Normal",

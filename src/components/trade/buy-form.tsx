@@ -33,7 +33,7 @@ import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
 import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
-import { claimPoints, isApiConfigured } from '@/lib/api-client';
+import { claimPoints, createAlert, isApiConfigured } from '@/lib/api-client';
 import { showBadgeToasts } from '@/lib/badge-toast';
 import { fetchSolUsdPrice, fetchTokenInfo, type TokenInfo } from '@/lib/portfolio';
 import { shouldSkipBuyConfirm, useDefaultGasLevel, useBuyAmounts } from '@/lib/buy-prefs-store';
@@ -42,6 +42,8 @@ import { pushTradeNotification } from '@/lib/notification-store';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
+import { PriorityTierToggle, PRIORITY_TIER_TO_GAS_LEVEL } from './priority-tier-toggle';
+import type { PriorityTier } from '@/lib/priority-fees';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
@@ -113,6 +115,11 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
     if (m && m.length >= 32) setMint(m);
   }, []);
   const [slippageBps, setSlippageBps] = useState(100);
+  // T-985d · 桌面 4 档 PriorityTier 状态(默认 P1 = 标准/fast)
+  const [priorityTier, setPriorityTier] = useState<PriorityTier>('p1');
+  // T-985d · 自动卖出(桌面)· checkbox + 目标涨幅 % · 成交后挂 notify alert
+  const [autoSell, setAutoSell] = useState(false);
+  const [autoSellPct, setAutoSellPct] = useState('50');
   // T-929-cont #143:从 buy-prefs-store 读默认优先费(用户偏好)
   const defaultGas = useDefaultGasLevel();
   const [gasLevel, setGasLevel] = useState<GasLevel>(defaultGas);
@@ -351,6 +358,26 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           })
           .catch(() => {});
       }
+
+      // T-985d · 自动卖出 · 成交后挂 notify alert(price ≥ buy_price × (1 + pct/100))
+      if (autoSell && wallet.publicKey && tokenInfo?.priceUsd && tokenInfo.priceUsd > 0) {
+        const pct = Number(autoSellPct);
+        if (Number.isFinite(pct) && pct > 0) {
+          const targetUsd = tokenInfo.priceUsd * (1 + pct / 100);
+          createAlert(
+            wallet.publicKey.toBase58(),
+            mint.trim(),
+            tokenInfo.symbol,
+            'above',
+            targetUsd,
+            { cooldownMinutes: 60, action: 'notify' },
+          ).then(() => {
+            toast.success(t('trade.autoSell.created', { pct: pct.toString() }));
+          }).catch(() => {
+            toast.error(t('trade.autoSell.failed'));
+          });
+        }
+      }
     } catch (e: unknown) {
       const reason = humanize(e);
       const friendly = mapError(t, reason);
@@ -472,7 +499,18 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                   </div>
                 )}
               </div>
-              <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} compact={compact} />
+              {compact ? (
+                <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} compact />
+              ) : (
+                <PriorityTierToggle
+                  id="buy-priority"
+                  value={priorityTier}
+                  onChange={(t) => {
+                    setPriorityTier(t);
+                    setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -514,6 +552,34 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 )}
               </Button>
             </div>
+          )}
+
+          {/* T-985d · 自动卖出(桌面仅显)· 成交后挂 notify alert */}
+          {!compact && wallet.connected && (
+            <label className="flex items-center gap-2 select-none cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoSell}
+                onChange={(e) => setAutoSell(e.target.checked)}
+                className="accent-primary h-4 w-4"
+              />
+              <span className="text-xs">{t('trade.autoSell.label')}</span>
+              {autoSell && (
+                <>
+                  <Input
+                    type="number"
+                    step="1"
+                    min="1"
+                    max="1000"
+                    value={autoSellPct}
+                    onChange={(e) => setAutoSellPct(e.target.value)}
+                    className="h-7 w-16 text-xs"
+                    aria-label={t('trade.autoSell.target')}
+                  />
+                  <span className="text-xs text-muted-foreground">%</span>
+                </>
+              )}
+            </label>
           )}
 
           {err && (

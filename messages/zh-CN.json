@@ -419,7 +419,20 @@
       "solAmount": "SOL 数量",
       "slippage": "滑点",
       "slippageWarn": "{pct}% 滑点偏高 · 可能被三明治攻击或巨亏",
-      "gas": "优先级"
+      "gas": "优先级",
+      "priority": "优先级"
+    },
+    "priority": {
+      "pilot": "Pilot",
+      "p1": "P1",
+      "p2": "P2",
+      "p3": "P3"
+    },
+    "autoSell": {
+      "label": "成交后自动设置卖出提醒",
+      "target": "目标涨幅",
+      "created": "已挂目标涨幅 {pct}% 的提醒,到价时通知你",
+      "failed": "自动卖出提醒挂载失败 · 可去 /alerts 手动添加"
     },
     "gas": {
       "normal": "普通",
