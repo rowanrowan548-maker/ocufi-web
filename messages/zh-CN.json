@@ -815,6 +815,11 @@
       "title": "常见问题",
       "subtitle": "最近 Ocufi 收到的高频疑问"
     },
+    "cta": {
+      "title": "找不到答案?",
+      "subtitle": "加 Telegram 群直接问开发者,实时回复 / 反馈 Bug / 看其他人在聊什么。",
+      "button": "加 TG 群提问"
+    },
     "items": [
       {
         "group": "交易",

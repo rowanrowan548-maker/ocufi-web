@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Send } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface FaqItem {
   group: string;
@@ -57,6 +60,25 @@ export function FaqView() {
           </div>
         </section>
       ))}
+
+      <Card className="p-6 sm:p-8 text-center bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/30">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-12 w-12 rounded-full bg-primary/15 flex items-center justify-center">
+            <Send className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="text-base sm:text-lg font-semibold">{t('cta.title')}</h3>
+          <p className="text-sm text-muted-foreground max-w-md">{t('cta.subtitle')}</p>
+          <a
+            href="https://t.me/+HucmvmOx2IswZDBl"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ size: 'lg' }), 'mt-2 gap-2')}
+          >
+            <Send className="h-4 w-4" />
+            {t('cta.button')}
+          </a>
+        </div>
+      </Card>
     </div>
   );
 }

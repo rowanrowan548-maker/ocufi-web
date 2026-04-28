@@ -815,6 +815,11 @@
       "title": "FAQ",
       "subtitle": "Quick answers to what people actually ask"
     },
+    "cta": {
+      "title": "Can't find an answer?",
+      "subtitle": "Join our Telegram group — devs reply directly, share bugs, see what others are asking.",
+      "button": "Ask on Telegram"
+    },
     "items": [
       {
         "group": "Trading",
