@@ -27,6 +27,8 @@ export default async function DocsPage({
   setRequestLocale(locale);
   const t = await getTranslations('docs');
 
+  // T-980-119 · 按用户痛点优先级重排:第一笔交易 → 钱包 → 卖出 → 限价 → 安全 → 自选
+  // 不动文案(i18n bodyKey 不变),只调顺序 + 加 TOC
   const sections: Array<{
     /** T-980-118 · 锚点 ID · DocsSearch 跳转目标(BE → FE 映射用) */
     id: string;
@@ -39,15 +41,6 @@ export default async function DocsPage({
     image?: { src?: string; altKey: string; aspect?: '16/9' | '4/3' };
   }> = [
     {
-      id: 'section-connect',
-      Icon: Wallet,
-      titleKey: 'connect.title',
-      bodyKey: 'connect.body',
-      href: '/portfolio',
-      cta: 'connect.cta',
-      image: { altKey: 'connect.imageAlt' },
-    },
-    {
       id: 'section-buy',
       Icon: ShoppingCart,
       titleKey: 'buy.title',
@@ -55,6 +48,15 @@ export default async function DocsPage({
       href: '/trade',
       cta: 'buy.cta',
       image: { altKey: 'buy.imageAlt' },
+    },
+    {
+      id: 'section-connect',
+      Icon: Wallet,
+      titleKey: 'connect.title',
+      bodyKey: 'connect.body',
+      href: '/portfolio',
+      cta: 'connect.cta',
+      image: { altKey: 'connect.imageAlt' },
     },
     {
       id: 'section-sell',
@@ -106,6 +108,25 @@ export default async function DocsPage({
 
         {/* T-980-118 · sticky 全文搜索框(后端 /search/docs)+ Cmd+K */}
         <DocsSearch />
+
+        {/* T-980-119 · TOC 目录 · 按用户痛点优先级排序的快速跳转 */}
+        <nav aria-label={t('toc')} className="rounded-lg border border-border/40 bg-card/40 p-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground/70 mb-2 font-medium">
+            {t('toc')}
+          </div>
+          <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm list-decimal list-inside">
+            {sections.map((s, i) => (
+              <li key={i}>
+                <a
+                  href={`#${s.id}`}
+                  className="text-foreground/80 hover:text-primary hover:underline transition-colors"
+                >
+                  {t(s.titleKey)}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
 
         <div className="space-y-4">
           {sections.map((s, i) => (

@@ -1158,6 +1158,7 @@
   "docs": {
     "title": "Docs",
     "subtitle": "Get up and running with Ocufi in 5 minutes",
+    "toc": "Contents",
     "search": {
       "placeholder": "Search docs (slippage / limit / alerts…) · ⌘K",
       "searching": "Searching…",

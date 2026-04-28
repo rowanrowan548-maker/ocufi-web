@@ -1173,6 +1173,7 @@
   "docs": {
     "title": "使用文档",
     "subtitle": "5 分钟上手 Ocufi · 链上交易完整流程",
+    "toc": "目录",
     "search": {
       "placeholder": "搜索文档(滑点 / 限价 / 提醒…)· ⌘K",
       "searching": "搜索中…",
