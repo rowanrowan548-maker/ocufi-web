@@ -42,6 +42,7 @@ import { useTokenBalance } from '@/hooks/use-token-balance';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { fetchTokenInfo, fetchSolUsdPrice, type TokenInfo } from '@/lib/portfolio';
 import { LimitPreview, LimitPreviewPlaceholder } from './limit-preview';
+import { FaqHelpIcon } from '@/components/faq/faq-help-icon';
 
 type Side = 'buy' | 'sell';
 type Stage = 'idle' | 'submitting' | 'signing' | 'confirming' | 'done' | 'error';
@@ -272,7 +273,10 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="limit-price">{t('limit.targetPrice')}</Label>
+          <Label htmlFor="limit-price" className="inline-flex items-center gap-1">
+            {t('limit.targetPrice')}
+            <FaqHelpIcon topic="limit-fill" label={t('limit.targetPrice')} />
+          </Label>
           <Input
             id="limit-price"
             type="number"

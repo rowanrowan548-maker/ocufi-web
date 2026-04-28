@@ -49,6 +49,7 @@ import { ShareTradeButton } from '@/components/share/share-trade-button';
 import { toast } from 'sonner';
 import type { OverallRisk, RiskReason } from '@/lib/token-info';
 import { rawGreaterOrEqualToOne, rawToUiFixed, rawToUiNumber } from '@/lib/raw-amount';
+import { FaqHelpIcon } from '@/components/faq/faq-help-icon';
 
 type Stage = 'idle' | 'quoting' | 'quoted' | 'signing' | 'sending' | 'confirming' | 'done' | 'error';
 
@@ -401,7 +402,10 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
             </div>
             <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'}>
               <div className={compact ? 'space-y-1' : 'space-y-2'}>
-                <Label htmlFor="sell-slippage" className={compact ? 'text-[11px]' : undefined}>{t('trade.fields.slippage')}</Label>
+                <Label htmlFor="sell-slippage" className={`${compact ? 'text-[11px]' : ''} inline-flex items-center gap-1`}>
+                  {t('trade.fields.slippage')}
+                  {!compact && <FaqHelpIcon topic="slippage" label={t('trade.fields.slippageHelp')} />}
+                </Label>
                 <Select
                   value={String(slippageBps)}
                   onValueChange={(v) => {

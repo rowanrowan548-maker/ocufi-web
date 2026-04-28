@@ -39,6 +39,7 @@ import { track } from '@/lib/analytics';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { TgBindBanner } from './tg-bind-banner';
 import { DocsHelpIcon } from '@/components/docs/docs-help-icon';
+import { FaqHelpIcon } from '@/components/faq/faq-help-icon';
 
 export function AlertsView() {
   const t = useTranslations();
@@ -260,7 +261,7 @@ export function AlertsView() {
             <div className="space-y-2">
               <Label htmlFor="alert-target" className="inline-flex items-center gap-1">
                 {t('alerts.form.target')}
-                <DocsHelpIcon target="section-limit" label={t('alerts.form.targetHelp')} />
+                <FaqHelpIcon topic="alert-notify" label={t('alerts.form.targetHelp')} />
               </Label>
               <Input
                 id="alert-target"
@@ -279,7 +280,7 @@ export function AlertsView() {
           <div className="space-y-2">
             <Label className="inline-flex items-center gap-1">
               {t('alerts.mode.label')}
-              <DocsHelpIcon target="section-limit" label={t('alerts.mode.help')} />
+              <FaqHelpIcon topic="limit-fill" label={t('alerts.mode.help')} />
             </Label>
             <div className="grid grid-cols-2 gap-2">
               <button
