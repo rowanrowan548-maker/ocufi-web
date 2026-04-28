@@ -1432,7 +1432,17 @@
       "processing": "提交中…",
       "nothingToClaim": "暂无可提现金额",
       "success": "已申请提现 {sol} SOL · 链上转账后到账",
-      "failed": "提现失败:{reason}"
+      "successWithTx": "提现成功 {sol} SOL · 链上 {tx}…",
+      "pendingSettlement": "已申请 {sol} SOL · 链上结算中(预计几小时,可关闭页面)",
+      "failed": "提现失败:{reason}",
+      "errors": {
+        "vault_not_configured": "金库未配置 · 联系客服",
+        "rate_limited": "提现过于频繁 · 稍后再试",
+        "no_rebate_yet": "还没有可提现的返佣",
+        "below_min_claim": "金额低于最低提现门槛(0.001 SOL)",
+        "exceeds_claimable": "申请金额超过可领额度",
+        "network_error": "网络错误 · 检查连接后重试"
+      }
     },
     "regenerate": {
       "title": "邀请码已升级为 8 字符",

@@ -25,12 +25,13 @@ import {
 } from '@/components/ui/table';
 import { inviteCodeFor, readCachedMyCode, cacheMyCode, buildInviteUrl } from '@/lib/invite';
 import {
-  fetchInviteMe, fetchInviteLeaderboard, claimInviteRebate, regenerateInviteCode, isApiConfigured,
+  fetchInviteMe, fetchInviteLeaderboard, regenerateInviteCode, isApiConfigured,
   type InviteeRow as ApiInviteeRow, type InviteLeaderRow, type RebateSummary,
 } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { ShareDialog } from './share-dialog';
 import { DownstreamList } from './downstream-list';
+import { claimInviteRebate } from '@/lib/invite-claim';
 
 interface InviteeRow {
   address: string;
@@ -147,7 +148,7 @@ export function InviteScreen() {
     }
   }
 
-  // T-941 #114 · 一键提现
+  // T-941 #114 + T-INV-114-fe · 一键提现 · 用 lib helper 三态处理
   async function handleClaim() {
     if (!wallet.publicKey || claiming) return;
     if (rebate.claimableSol <= 0) {
@@ -158,7 +159,16 @@ export function InviteScreen() {
     try {
       const r = await claimInviteRebate(wallet.publicKey.toBase58());
       if (r.ok) {
-        toast.success(t('claim.success', { sol: r.amount_sol?.toFixed(4) ?? '0' }));
+        const amt = r.amount_sol?.toFixed(4) ?? '0';
+        if (r.pending_chain_settlement) {
+          // 后端记账成,链上代签未跑(当前永远走这)
+          toast.success(t('claim.pendingSettlement', { sol: amt }));
+        } else if (r.tx_signature) {
+          // 后端代签 ship 后 · 真实 tx 签名
+          toast.success(t('claim.successWithTx', { sol: amt, tx: r.tx_signature.slice(0, 8) }));
+        } else {
+          toast.success(t('claim.success', { sol: amt }));
+        }
         // 乐观刷新:claimableSol → 0,pendingClaimSol += amt
         setRebate((p) => ({
           ...p,
@@ -166,8 +176,14 @@ export function InviteScreen() {
           pendingClaimSol: p.pendingClaimSol + (r.amount_sol ?? 0),
         }));
       } else {
-        const reason = r.error ?? 'unknown';
-        toast.error(t('claim.failed', { reason }));
+        const reason = r.error ?? 'unknown_error';
+        // 已知 sentinel 走特定文案 · 否则透传 reason
+        const knownReasons = [
+          'vault_not_configured', 'rate_limited', 'no_rebate_yet',
+          'below_min_claim', 'exceeds_claimable', 'network_error',
+        ];
+        const tKey = knownReasons.includes(reason) ? `claim.errors.${reason}` : 'claim.failed';
+        toast.error(knownReasons.includes(reason) ? t(tKey) : t('claim.failed', { reason }));
       }
     } catch (e) {
       console.warn('[invite] claim failed', e);

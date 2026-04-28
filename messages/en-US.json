@@ -1417,7 +1417,17 @@
       "processing": "Submitting…",
       "nothingToClaim": "Nothing to claim yet",
       "success": "Requested {sol} SOL · arrives after on-chain transfer",
-      "failed": "Claim failed: {reason}"
+      "successWithTx": "Claimed {sol} SOL · tx {tx}…",
+      "pendingSettlement": "Requested {sol} SOL · on-chain settlement in progress (a few hours, you can close the page)",
+      "failed": "Claim failed: {reason}",
+      "errors": {
+        "vault_not_configured": "Vault not configured · contact support",
+        "rate_limited": "Too many claims · try again later",
+        "no_rebate_yet": "No rebate available to claim",
+        "below_min_claim": "Below minimum claim threshold (0.001 SOL)",
+        "exceeds_claimable": "Amount exceeds claimable balance",
+        "network_error": "Network error · check connection and retry"
+      }
     },
     "regenerate": {
       "title": "Invite code upgraded to 8 chars",
