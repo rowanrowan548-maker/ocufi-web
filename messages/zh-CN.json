@@ -886,6 +886,27 @@
       "title": "价格提醒",
       "subtitle": "到价自动弹窗通知 · 支持网页 / TG 推送(即将上线)"
     },
+    "tgBind": {
+      "unboundTitle": "💬 没绑 Telegram?",
+      "unboundDesc": "提醒只在浏览器开着才工作 — 绑定 TG 后到价自动推送",
+      "unboundCta": "绑定 TG",
+      "boundTitle": "✅ 已绑定 Telegram",
+      "boundDesc": "@{username} · 价格提醒会推送到 TG",
+      "boundUnknown": "已绑定 · 价格提醒会推送到 TG",
+      "unbind": "解绑",
+      "dialog": {
+        "title": "绑定 Telegram",
+        "desc": "三步绑完,以后到价自动推送 TG",
+        "step1": "1. 在 Telegram 找 @Ocufi_bot(点下方按钮直达)",
+        "step2": "2. 给 bot 发(可一键复制):",
+        "step3": "3. 等几秒后回到这里看绑定状态(自动刷新)",
+        "openTg": "在 Telegram 中打开",
+        "copyCmd": "复制",
+        "copied": "已复制",
+        "checkingStatus": "检测中…",
+        "close": "关闭"
+      }
+    },
     "permission": {
       "title": "开启浏览器通知",
       "hint": "点允许,到价时即使 tab 在后台也会弹出通知",

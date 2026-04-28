@@ -34,6 +34,7 @@ import {
 import { usePriceAlerts } from '@/hooks/use-price-alerts';
 import { track } from '@/lib/analytics';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
+import { TgBindBanner } from './tg-bind-banner';
 
 export function AlertsView() {
   const t = useTranslations();
@@ -141,6 +142,9 @@ export function AlertsView() {
 
   return (
     <div className="w-full max-w-4xl space-y-6">
+      {/* T-931b · TG 绑定状态 banner(连钱包后才显示) */}
+      <TgBindBanner />
+
       {/* 通知权限条 */}
       {permission !== 'granted' && permission !== 'unsupported' && (
         <Card className="border-warning/30 bg-amber-500/5">

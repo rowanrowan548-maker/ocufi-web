@@ -160,6 +160,18 @@ export async function ackAlert(wallet: string, id: number): Promise<void> {
   await apiFetch(`/alerts/${id}/ack?wallet=${wallet}`, { method: 'POST' });
 }
 
+// ─── T-931b TG binding(后端 T-931 ship 后启用) ───
+// 若后端没暴露则 fetch 抛 404,前端 catch 退到 localStorage fallback
+export interface TgBindingStatus {
+  bound: boolean;
+  tg_username?: string | null;
+  bound_at?: string | null;
+}
+
+export async function fetchTgBinding(wallet: string): Promise<TgBindingStatus> {
+  return apiFetch(`/alerts/tg-binding?wallet=${wallet}`);
+}
+
 // ─── Day 11 invite ───
 
 export interface InviteRegisterResp {

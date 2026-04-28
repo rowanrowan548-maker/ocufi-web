@@ -871,6 +871,27 @@
       "title": "Price Alerts",
       "subtitle": "Get notified when prices hit your target · Web / Telegram push coming soon"
     },
+    "tgBind": {
+      "unboundTitle": "💬 Telegram not connected",
+      "unboundDesc": "Alerts only fire while your browser is open — connect TG to push price alerts directly",
+      "unboundCta": "Connect TG",
+      "boundTitle": "✅ Telegram connected",
+      "boundDesc": "@{username} · Price alerts will push to your TG",
+      "boundUnknown": "Connected · Price alerts will push to your TG",
+      "unbind": "Disconnect",
+      "dialog": {
+        "title": "Connect Telegram",
+        "desc": "Three steps, then alerts push straight to TG",
+        "step1": "1. Open @Ocufi_bot on Telegram (tap below)",
+        "step2": "2. Send this command (one-click copy):",
+        "step3": "3. Come back — status will refresh automatically",
+        "openTg": "Open in Telegram",
+        "copyCmd": "Copy",
+        "copied": "Copied",
+        "checkingStatus": "Checking…",
+        "close": "Close"
+      }
+    },
     "permission": {
       "title": "Enable browser notifications",
       "hint": "Allow notifications so alerts pop up even with the tab in background",
