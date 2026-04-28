@@ -358,6 +358,23 @@ export async function fetchPoolStats1h(pool: string): Promise<PoolStats1h> {
   return apiFetch(`/pool/stats-1h?pool=${encodeURIComponent(pool)}`);
 }
 
+// T-OKX-1C-be · 6 项审计字段(Top 10 / 老鼠仓 / 开发者 / 捆绑 / 狙击 / LP burn)
+export interface TokenAuditCard {
+  ok: boolean;
+  top10_pct?: number | null;            // 0-100
+  rat_warehouse_pct?: number | null;    // 0-100
+  dev_status?: 'cleared' | 'holding' | 'active' | null;
+  bundle_pct?: number | null;           // 0-100
+  sniper_pct?: number | null;           // 0-100
+  lp_burn_pct?: number | null;          // 0-100
+  cached?: boolean;
+  error?: string | null;
+}
+
+export async function fetchTokenAuditCard(mint: string): Promise<TokenAuditCard> {
+  return apiFetch(`/token/audit-card?mint=${encodeURIComponent(mint)}`);
+}
+
 // T-980-118 · /docs · /faq 全文搜索(后端 T-952 已 ship)
 export interface SearchHit {
   id: string;

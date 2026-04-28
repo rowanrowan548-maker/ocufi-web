@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { TokenInfo } from '@/lib/portfolio';
+import { AuditCards } from './audit-cards';
 
 interface Props {
   mint: string;
@@ -105,9 +106,9 @@ function DetailPanel({ mint, detail }: { mint: string; detail: TokenInfo | null 
         </div>
       )}
 
-      {/* T-OKX-1C-fe 占位 · 后端 /token/audit-card ship 后接入 */}
-      <div className="text-[10px] text-muted-foreground/50 pt-1.5 border-t border-border/40">
-        {t('auditCardPending')}
+      {/* T-OKX-1C-fe · 6 项审计卡(后端 /token/audit-card a668538) */}
+      <div className="pt-1.5 border-t border-border/40">
+        <AuditCards mint={mint} />
       </div>
     </div>
   );

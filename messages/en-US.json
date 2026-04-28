@@ -540,6 +540,19 @@
       "devTokensPending": "Empty · Other tokens by dev (pending backend)",
       "sameNamePending": "Empty · Same-name tokens to avoid phishing (pending backend)"
     },
+    "audit": {
+      "top10": "Top 10",
+      "rats": "Rats",
+      "dev": "Dev",
+      "bundle": "Bundlers",
+      "sniper": "Snipers",
+      "lpBurn": "LP burn",
+      "devStatus": {
+        "cleared": "Cleared",
+        "holding": "Holding",
+        "active": "Active"
+      }
+    },
     "preview": {
       "pay": "You pay",
       "receive": "You receive",

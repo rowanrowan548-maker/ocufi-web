@@ -540,6 +540,19 @@
       "devTokensPending": "暂无 · 开发者其他代币列表(待后端)",
       "sameNamePending": "暂无 · 同名代币防钓鱼(待后端)"
     },
+    "audit": {
+      "top10": "Top 10",
+      "rats": "老鼠仓",
+      "dev": "开发者",
+      "bundle": "捆绑交易",
+      "sniper": "狙击手",
+      "lpBurn": "烧池子",
+      "devStatus": {
+        "cleared": "清仓",
+        "holding": "持有",
+        "active": "活跃"
+      }
+    },
     "preview": {
       "pay": "支付",
       "receive": "预计收到",
