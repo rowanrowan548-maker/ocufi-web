@@ -24,8 +24,8 @@ import { TradeTabs } from './trade-tabs';
 import { TrustSignals } from './trust-signals';
 import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
-import { MobileTabSwitcher, type MobileTab } from './mobile-tab-switcher';
 import { MobileActionBar } from './mobile-action-bar';
+import { MobileDataColumn } from './mobile-data-column';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
 import { ErrorBoundary } from '@/components/common/error-boundary';
@@ -76,7 +76,6 @@ export function TradeScreen() {
   const [mint, setMint] = useState<string>(DEFAULT_TRADE_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
   const [defaultSide, setDefaultSide] = useState<'buy' | 'sell' | undefined>(undefined);
-  const [mobileTab, setMobileTab] = useState<MobileTab>('chart');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -148,68 +147,41 @@ export function TradeScreen() {
         </div>
       </div>
 
-      {/* T-962 移动端 < lg 重构:
-          1. 安全审查(红绿灯)始终可见
-          2. 折叠式 K 线(默认收起)
-          3. 主操作 BuyForm/SellForm panel
-          4. 数据 / 活动 tabs 推到底部
+      {/* T-977 · OKX 风格移动端一屏密度
+          1. TrustSignals 红绿灯保留(顶)
+          2. K 线 always visible · aspect-[16/9] 视觉占比 30%(不再折叠)
+          3. grid-cols-2:左 buy form / 右 MobileDataColumn 紧凑数据列
+          4. 底部 ActivityBoard 持仓/订单/活动 tab(全宽)
+          5. 删 MobileTabSwitcher 5 tab(数据已挪到右栏)
           底部 MobileActionBar 仍保留快买入口 · pb-20 防遮挡 */}
-      <div className="lg:hidden flex flex-col gap-3 pb-20">
-        {/* T-962 #6 · 安全审查浮在 buy form 上方(红绿灯标)*/}
+      <div className="lg:hidden flex flex-col gap-2 pb-20">
+        {/* T-977 #6 · 安全审查红绿灯(继续浮在最上)*/}
         <TrustSignals detail={detail} />
 
-        {/* T-962 #1 · K 线折叠(默认收起)· details/summary 原生组件,无 JS 状态 */}
-        <details className="group rounded-lg border border-border/40 bg-card/40 [&[open]]:bg-card">
-          <summary className="cursor-pointer px-3 py-2 text-sm font-medium flex items-center justify-between gap-2 list-none [&::-webkit-details-marker]:hidden">
-            <span className="inline-flex items-center gap-2">
-              <span>📈 K 线</span>
-              <span className="text-[10px] text-muted-foreground/60">
-                {detail?.priceUsd ? `$${detail.priceUsd < 1 ? detail.priceUsd.toPrecision(4) : detail.priceUsd.toFixed(2)}` : ''}
-              </span>
-            </span>
-            <span className="text-xs text-muted-foreground group-open:hidden">▼</span>
-            <span className="text-xs text-muted-foreground hidden group-open:inline">▲</span>
-          </summary>
-          <div className="p-2">
-            <ChartCard mint={mint} />
-          </div>
-        </details>
-
-        {/* T-962 #2-#5 · 主操作 panel(buy/sell 表单 inline · 抽屉感由 MobileActionBar 浮按钮触发完整 sheet)*/}
-        <TradeTabs
-          mint={mint}
-          compact
-          risk={detail ? overallRisk(detail) : undefined}
-          reasons={detail ? riskReasons(detail) : undefined}
-          defaultSide={defaultSide}
-          onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
-        />
-
-        {/* 数据 / 持有 / 风险 / 活动 — 折叠 tabs 推到底部 */}
-        <div className="space-y-2">
-          <MobileTabSwitcher value={mobileTab} onChange={setMobileTab} />
-          {mobileTab === 'chart' && (
-            <div className="text-[11px] text-muted-foreground/60 text-center py-4">
-              {/* chart tab 此处空,因 K 线已上移到折叠组件 */}
-              ↑ K 线已上移
-            </div>
-          )}
-          {mobileTab === 'detail' && (
-            <div className="space-y-3">
-              <InfoPanel detail={detail} />
-              <SafetyPanel detail={detail} />
-            </div>
-          )}
-          {mobileTab === 'data' && (
-            <ActivityBoard detail={detail} initialTab="liquidity" />
-          )}
-          {mobileTab === 'risk' && (
-            <ActivityBoard detail={detail} initialTab="risks" />
-          )}
-          {mobileTab === 'activity' && (
-            <ActivityBoard detail={detail} initialTab="activity" />
-          )}
+        {/* T-977 #2 · K 线常驻 · aspect-[16/9] 占视口约 30% */}
+        <div className="rounded-lg border border-border/40 overflow-hidden">
+          <ChartCard mint={mint} />
         </div>
+
+        {/* T-977 #3 · 50/50 双栏:左买入 / 右数据 */}
+        <div className="grid grid-cols-2 gap-2 items-start">
+          <div className="min-w-0">
+            <TradeTabs
+              mint={mint}
+              compact
+              risk={detail ? overallRisk(detail) : undefined}
+              reasons={detail ? riskReasons(detail) : undefined}
+              defaultSide={defaultSide}
+              onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+            />
+          </div>
+          <div className="min-w-0">
+            <MobileDataColumn detail={detail} />
+          </div>
+        </div>
+
+        {/* T-977 #4 · 底部活动 tab(持有/活动/风险 全宽 · ActivityBoard 内含 3 内 tab) */}
+        <ActivityBoard detail={detail} />
       </div>
 
       {/* 移动端底部固定双按钮 CTA(T-505b · 仅 lg:hidden) */}
