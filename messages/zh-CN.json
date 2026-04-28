@@ -607,6 +607,17 @@
       "viewAll": "查看全部",
       "empty": "还没有成交记录"
     },
+    "export": {
+      "button": "导出",
+      "csv": {
+        "title": "标准 CSV",
+        "desc": "全部交易 · 用 Excel/Numbers 打开"
+      },
+      "tax": {
+        "title": "Token Tax(报税)",
+        "desc": "通用税务格式 · 兼容 CoinTracker / Koinly"
+      }
+    },
     "notConnected": "连接钱包后才能看到你的持仓",
     "empty": {
       "title": "未发现 SPL 代币持仓",

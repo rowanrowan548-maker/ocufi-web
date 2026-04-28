@@ -607,6 +607,17 @@
       "viewAll": "View all",
       "empty": "No trades yet"
     },
+    "export": {
+      "button": "Export",
+      "csv": {
+        "title": "Standard CSV",
+        "desc": "All trades · Open in Excel/Numbers"
+      },
+      "tax": {
+        "title": "Token Tax (CoinTracker / Koinly)",
+        "desc": "Generic tax format · CoinTracker / Koinly compatible"
+      }
+    },
     "notConnected": "Connect your wallet to see holdings",
     "empty": {
       "title": "No SPL holdings detected",

@@ -34,6 +34,7 @@ import { readFees, type FeeTotal } from '@/lib/fee-tracker';
 
 import { HoldingsTable } from './holdings-table';
 import { RecentTradesMini } from './recent-trades-mini';
+import { ExportButton } from './export-button';
 import { ClosedPositions } from './closed-positions';
 import { AssetPie, AssetPieLegend } from './asset-pie';
 import {
@@ -315,6 +316,7 @@ export function PortfolioView() {
               </div>
               {/* 移动端 only · 3 图标右排 */}
               <div className="flex items-center gap-1 lg:hidden">
+                <ExportButton />
                 <ActionIcons
                   loading={loading}
                   refresh={refresh}
@@ -392,6 +394,7 @@ export function PortfolioView() {
               </div>
               {/* 底层:桌面 only · 3 图标 — 移动端图标已在钱包行 */}
               <div className="hidden lg:flex items-center gap-1 justify-end">
+                <ExportButton />
                 <ActionIcons
                   loading={loading}
                   refresh={refresh}
