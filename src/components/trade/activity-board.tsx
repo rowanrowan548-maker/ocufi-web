@@ -133,6 +133,9 @@ export function ActivityBoard({ detail, initialTab, tabs }: Props) {
 
   return (
     <Card className="p-4">
+      {/* T-OKX-4B · 桌面 lg+ 顶部 toolbar · USD/SOL · 面板视图 · 一键买卖 · 分享 */}
+      <ActivityToolbar mint={mint} className="hidden lg:flex" />
+
       <Tabs value={tab} onValueChange={(v) => v && setTab(v as ActivityBoardTab)}>
         {/* T-OKX-4A · OKX 7 tab 顺序:交易活动 / 盈利地址 / 持币地址 / 关注地址 / 流动性 / 我的持仓 / 我的订单 · 桌面 lg+ 应用 · 移动通过 tabs prop 限制 */}
         <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto overflow-x-auto">
@@ -664,6 +667,75 @@ function Empty({ Icon, title, subtitle }: { Icon: typeof Activity; title: string
       <Icon className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
       <div className="text-sm font-medium text-muted-foreground">{title}</div>
       {subtitle && <div className="text-xs text-muted-foreground/60 mt-1">{subtitle}</div>}
+    </div>
+  );
+}
+
+// T-OKX-4B · ActivityBoard 顶部 OKX 风 toolbar
+// USD/SOL 单位 toggle(占位 · GT trades 默认 USD,内部翻译需要 SOL price 重算)
+// 面板视图 · 一键买卖 · 分享 — 全占位等需求明确再 wire
+function ActivityToolbar({ mint, className = '' }: { mint?: string; className?: string }) {
+  const t = useTranslations('trade.activity.toolbar');
+  const [unit, setUnit] = useState<'usd' | 'sol'>('usd');
+  return (
+    <div className={`items-center gap-2 pb-3 border-b border-border/40 mb-3 text-[11px] ${className}`}>
+      {/* USD / SOL toggle */}
+      <div className="inline-flex rounded border border-border/40 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setUnit('usd')}
+          className={`px-2 py-0.5 transition-colors ${
+            unit === 'usd'
+              ? 'bg-primary text-primary-foreground font-medium'
+              : 'text-muted-foreground hover:bg-muted/40'
+          }`}
+        >
+          USD
+        </button>
+        <button
+          type="button"
+          onClick={() => setUnit('sol')}
+          className={`px-2 py-0.5 transition-colors ${
+            unit === 'sol'
+              ? 'bg-primary text-primary-foreground font-medium'
+              : 'text-muted-foreground hover:bg-muted/40'
+          }`}
+        >
+          SOL
+        </button>
+      </div>
+      <span className="text-muted-foreground/40">·</span>
+      <button
+        type="button"
+        className="text-muted-foreground/70 hover:text-foreground transition-colors"
+        title={t('panelView')}
+      >
+        {t('panelView')}
+      </button>
+      <span className="text-muted-foreground/40">·</span>
+      <button
+        type="button"
+        className="text-muted-foreground/70 hover:text-foreground transition-colors"
+        title={t('quickTrade')}
+      >
+        {t('quickTrade')}
+      </button>
+      <span className="text-muted-foreground/40 ml-auto">·</span>
+      {mint && (
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof navigator !== 'undefined' && navigator.share) {
+              navigator.share({ url: `${window.location.origin}/trade?mint=${mint}` }).catch(() => {});
+            } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+              navigator.clipboard.writeText(`${window.location.origin}/trade?mint=${mint}`).catch(() => {});
+            }
+          }}
+          className="text-muted-foreground/70 hover:text-foreground transition-colors"
+        >
+          {t('share')}
+        </button>
+      )}
     </div>
   );
 }

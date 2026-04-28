@@ -380,6 +380,11 @@
       "profitAddrs": "盈利地址",
       "watching": "关注地址",
       "myPositions": "我的持仓",
+      "toolbar": {
+        "panelView": "面板视图",
+        "quickTrade": "一键买卖",
+        "share": "分享"
+      },
       "comingSoon": {
         "activity": {
           "title": "交易活动",

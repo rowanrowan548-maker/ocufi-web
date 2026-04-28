@@ -380,6 +380,11 @@
       "profitAddrs": "Profit addrs",
       "watching": "Watching",
       "myPositions": "My positions",
+      "toolbar": {
+        "panelView": "Panel view",
+        "quickTrade": "Quick trade",
+        "share": "Share"
+      },
       "comingSoon": {
         "activity": {
           "title": "Activity Feed",
