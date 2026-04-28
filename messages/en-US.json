@@ -417,6 +417,7 @@
       "mint": "Token mint address",
       "solAmount": "SOL amount",
       "slippage": "Slippage",
+      "slippageWarn": "{pct}% slippage is risky · sandwich / heavy loss possible",
       "gas": "Priority"
     },
     "gas": {

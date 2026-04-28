@@ -445,6 +445,13 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                     ))}
                   </SelectContent>
                 </Select>
+                {/* T-965 #168 · 滑点 > 10% 时红色警告 */}
+                {slippageBps > 1000 && (
+                  <div className="text-[10px] text-danger flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    {t('trade.fields.slippageWarn', { pct: (slippageBps / 100).toFixed(0) })}
+                  </div>
+                )}
               </div>
               <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} />
             </div>

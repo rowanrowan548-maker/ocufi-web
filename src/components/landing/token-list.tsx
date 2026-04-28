@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
+import { SkeletonRow } from '@/components/ui/skeleton';
 import { PRESET_MAJORS, SOL_MINT, USDC_MINT } from '@/lib/preset-tokens';
 import { useFavorites } from '@/lib/favorites';
 import {
@@ -250,8 +251,8 @@ export function TokenList() {
                 loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={10} className="h-12 text-center text-muted-foreground text-xs">
-                        ⌛ {t('loading')}
+                      <TableCell colSpan={10} className="px-3">
+                        <SkeletonRow cols={5} />
                       </TableCell>
                     </TableRow>
                   ))
@@ -283,9 +284,15 @@ export function TokenList() {
         {/* 移动端卡片 */}
         <div className="sm:hidden space-y-2">
           {rows.length === 0 ? (
-            <Card className="p-6 text-center text-xs text-muted-foreground">
-              {loading ? `⌛ ${t('loading')}` : (tab === 'fav' ? t('emptyFav') : t('empty'))}
-            </Card>
+            loading ? (
+              <Card className="p-3">
+                <SkeletonRow cols={3} />
+              </Card>
+            ) : (
+              <Card className="p-6 text-center text-xs text-muted-foreground">
+                {tab === 'fav' ? t('emptyFav') : t('empty')}
+              </Card>
+            )
           ) : rows.map((it) => (
             <MobileCard
               key={it.mint}

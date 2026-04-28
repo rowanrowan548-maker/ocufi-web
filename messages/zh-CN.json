@@ -417,6 +417,7 @@
       "mint": "代币合约地址 (mint)",
       "solAmount": "SOL 数量",
       "slippage": "滑点",
+      "slippageWarn": "{pct}% 滑点偏高 · 可能被三明治攻击或巨亏",
       "gas": "优先级"
     },
     "gas": {

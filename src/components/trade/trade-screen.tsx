@@ -28,6 +28,7 @@ import { MobileTabSwitcher, type MobileTab } from './mobile-tab-switcher';
 import { MobileActionBar } from './mobile-action-bar';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
+import { ErrorBoundary } from '@/components/common/error-boundary';
 
 function isValidMint(s: string): boolean {
   try {
@@ -128,14 +129,16 @@ export function TradeScreen() {
       <div className="hidden lg:grid lg:grid-cols-[1fr_400px] gap-4 items-start">
         <div className="space-y-4 lg:order-2">
           <TrustSignals detail={detail} />
-          <TradeTabs
-            mint={mint}
-            compact
-            risk={detail ? overallRisk(detail) : undefined}
-            reasons={detail ? riskReasons(detail) : undefined}
-            defaultSide={defaultSide}
-            onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
-          />
+          <ErrorBoundary>
+            <TradeTabs
+              mint={mint}
+              compact
+              risk={detail ? overallRisk(detail) : undefined}
+              reasons={detail ? riskReasons(detail) : undefined}
+              defaultSide={defaultSide}
+              onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+            />
+          </ErrorBoundary>
           <InfoPanel detail={detail} />
           <SafetyPanel detail={detail} />
         </div>

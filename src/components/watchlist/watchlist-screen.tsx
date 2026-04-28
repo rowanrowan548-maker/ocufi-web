@@ -32,6 +32,7 @@ import { useFavorites, MAX_FAVORITES } from '@/lib/favorites';
 import { useCostBasis } from '@/hooks/use-cost-basis';
 import { useTradeNotifications } from '@/lib/notification-store';
 import { QuickBuyConfirm } from '@/components/trade/quick-buy-confirm';
+import { SkeletonRow } from '@/components/ui/skeleton';
 import { getCurrentChain } from '@/config/chains';
 
 const QUICK_BUY_SOL = 0.1;
@@ -231,8 +232,10 @@ export function WatchlistScreen() {
             </div>
           </Card>
         ) : loading && rows.length === 0 ? (
-          <Card className="p-12 text-center text-sm text-muted-foreground">
-            ⌛ loading…
+          <Card className="p-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonRow key={i} cols={4} />
+            ))}
           </Card>
         ) : (
           <Card className="overflow-x-auto">
