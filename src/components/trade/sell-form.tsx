@@ -39,6 +39,8 @@ import { fetchSolUsdPrice } from '@/lib/portfolio';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
+import { PriorityTierToggle, PRIORITY_TIER_TO_GAS_LEVEL } from './priority-tier-toggle';
+import type { PriorityTier } from '@/lib/priority-fees';
 import { pushTradeNotification } from '@/lib/notification-store';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
@@ -104,6 +106,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
   }, [mintProp]);
   const [slippageBps, setSlippageBps] = useState(500); // meme 默认 5%,合法 mint 输入后会按推荐值自动调
   const [gasLevel, setGasLevel] = useState<GasLevel>('fast');
+  const [priorityTier, setPriorityTier] = useState<PriorityTier>('p1');
   const slippageTouched = useRef(false);
 
   // 合法 mint 输入后,按 token 类型应用推荐滑点(稳定币/蓝筹/meme 分档)
@@ -431,7 +434,20 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                   </div>
                 )}
               </div>
-              <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} compact={compact} />
+              {/* T-OKX-1A · 卖侧也接 4 档 OKX 风优先费 · lg+ 显新 4 档 · <lg 显单档 */}
+              <div className="hidden lg:block">
+                <PriorityTierToggle
+                  id="sell-priority"
+                  value={priorityTier}
+                  onChange={(t) => {
+                    setPriorityTier(t);
+                    setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
+                  }}
+                />
+              </div>
+              <div className="lg:hidden">
+                <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} compact={compact} />
+              </div>
             </div>
           </div>
 

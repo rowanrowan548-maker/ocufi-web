@@ -72,7 +72,17 @@ export function WalletTokenStats({ mint, tokenPriceUsd }: Props) {
       : undefined;
 
   return (
-    <Card className="p-3" title={tooltip}>
+    <Card className="p-3 space-y-2" title={tooltip}>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+          {t('sectionTitle')}
+        </span>
+        {muted && (
+          <span className="text-[10px] text-muted-foreground/60">
+            {!connected ? t('connectWallet') : t('noActivity')}
+          </span>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Stat label={t('totalBuy')} value={formatUsd(boughtUsd)} muted={muted} />
         <Stat label={t('totalSell')} value={formatUsd(soldUsd)} muted={muted} />

@@ -56,21 +56,35 @@ export function PoolStatsOneHour({ mint }: Props) {
     return () => { cancelled = true; if (timer) clearInterval(timer); };
   }, [pool]);
 
-  // 加载/错误态:3 灰条 skeleton
+  // T-OKX-1A · 统一 section header · 3 态都显
+  const SectionHeader = (
+    <div className="flex items-center justify-between text-[11px]">
+      <span className="font-medium text-muted-foreground uppercase tracking-wider">
+        {t('sectionTitle')}
+      </span>
+    </div>
+  );
+
   if (pool === undefined || (loading && !stats)) {
     return (
-      <Card className="p-3 space-y-1.5">
-        <div className="h-3 w-full bg-muted/40 animate-pulse rounded" />
-        <div className="h-3 w-3/4 bg-muted/40 animate-pulse rounded" />
-        <div className="h-3 w-2/3 bg-muted/40 animate-pulse rounded" />
+      <Card className="p-3 space-y-2">
+        {SectionHeader}
+        <div className="space-y-1.5">
+          <div className="h-3 w-full bg-muted/40 animate-pulse rounded" />
+          <div className="h-3 w-3/4 bg-muted/40 animate-pulse rounded" />
+          <div className="h-3 w-2/3 bg-muted/40 animate-pulse rounded" />
+        </div>
       </Card>
     );
   }
 
   if (pool === null || !stats || !stats.ok) {
     return (
-      <Card className="p-3 text-[11px] text-muted-foreground/60 text-center">
-        {t('unavailable')}
+      <Card className="p-3 space-y-2">
+        {SectionHeader}
+        <div className="text-[11px] text-muted-foreground/60 text-center py-2">
+          {t('unavailable')}
+        </div>
       </Card>
     );
   }
@@ -80,27 +94,30 @@ export function PoolStatsOneHour({ mint }: Props) {
   const netCls = net >= 0 ? 'text-success' : 'text-destructive';
 
   return (
-    <Card className="p-3 space-y-1.5">
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="text-muted-foreground">{t('totalVolume')}</span>
-        <span className="font-mono font-semibold tabular-nums">{formatUsd(stats.total_volume_usd)}</span>
-      </div>
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="text-muted-foreground inline-flex items-center gap-1">
-          <NetIcon className={`h-3 w-3 ${netCls}`} />
-          {t('netVolume')}
-        </span>
-        <span className={`font-mono font-semibold tabular-nums ${netCls}`}>
-          {net >= 0 ? '+' : ''}{formatUsd(net)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-border/40">
-        <span className="text-success font-mono tabular-nums">
-          {t('buys')} {stats.buy_count} / {formatUsd(stats.buy_volume_usd)}
-        </span>
-        <span className="text-destructive font-mono tabular-nums">
-          {t('sells')} {stats.sell_count} / {formatUsd(stats.sell_volume_usd)}
-        </span>
+    <Card className="p-3 space-y-2">
+      {SectionHeader}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="text-muted-foreground">{t('totalVolume')}</span>
+          <span className="font-mono font-semibold tabular-nums">{formatUsd(stats.total_volume_usd)}</span>
+        </div>
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="text-muted-foreground inline-flex items-center gap-1">
+            <NetIcon className={`h-3 w-3 ${netCls}`} />
+            {t('netVolume')}
+          </span>
+          <span className={`font-mono font-semibold tabular-nums ${netCls}`}>
+            {net >= 0 ? '+' : ''}{formatUsd(net)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-border/40">
+          <span className="text-success font-mono tabular-nums">
+            {t('buys')} {stats.buy_count} / {formatUsd(stats.buy_volume_usd)}
+          </span>
+          <span className="text-destructive font-mono tabular-nums">
+            {t('sells')} {stats.sell_count} / {formatUsd(stats.sell_volume_usd)}
+          </span>
+        </div>
       </div>
     </Card>
   );

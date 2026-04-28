@@ -504,9 +504,8 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                   </div>
                 )}
               </div>
-              {compact ? (
-                <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} compact />
-              ) : (
+              {/* T-OKX-1A · CSS 响应式替代 compact prop · lg+ 4 档 OKX 风 · <lg 单档(空间不够) */}
+              <div className="hidden lg:block">
                 <PriorityTierToggle
                   id="buy-priority"
                   value={priorityTier}
@@ -515,7 +514,10 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                     setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
                   }}
                 />
-              )}
+              </div>
+              <div className="lg:hidden">
+                <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} compact />
+              </div>
             </div>
           </div>
 
@@ -559,9 +561,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
             </div>
           )}
 
-          {/* T-985d · 自动卖出(桌面仅显)· 成交后挂 notify alert */}
-          {!compact && wallet.connected && (
-            <label className="flex items-center gap-2 select-none cursor-pointer">
+          {/* T-985d · 自动卖出 · T-OKX-1A 改 CSS 响应式 · lg+ 才显(空间够) */}
+          {wallet.connected && (
+            <label className="hidden lg:flex items-center gap-2 select-none cursor-pointer">
               <input
                 type="checkbox"
                 checked={autoSell}

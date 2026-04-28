@@ -488,16 +488,18 @@
       "confirming": "链上确认…"
     },
     "walletStats": {
+      "sectionTitle": "我的持仓盈亏",
       "totalBuy": "总买入",
       "totalSell": "总卖出",
       "balance": "余额",
       "totalPnl": "总收益",
-      "connectWallet": "连钱包后显示该币的盈亏",
+      "connectWallet": "连钱包后显示",
       "noActivity": "尚未交易"
     },
     "poolStats": {
-      "totalVolume": "1h 总成交额",
-      "netVolume": "1h 净成交",
+      "sectionTitle": "1h 池子聚合",
+      "totalVolume": "总成交额",
+      "netVolume": "净成交",
       "buys": "买",
       "sells": "卖",
       "unavailable": "暂无 1h 池子数据"
