@@ -8,10 +8,10 @@
  * 下 :
  *   左 :ChartCard(K 线 · 桌面 lg+ 高 560px)
  *        ActivityBoard(活动 / 订单 / 持有者 / 流动 / Top / 风险 tabs)
- *   右 :TrustSignals(精华安全信号)
- *        TradeTabs(Buy/Sell × 市价/限价)
+ *   右 :TradeTabs(Buy/Sell × 市价/限价)
  *
  * T-984c · 桌面已删 InfoPanel(已搬到 trading-header)+ SafetyPanel(TrustSignals 替代)
+ * T-985a · 桌面再删 TrustSignals(信息冗余 trading-header 风险标签 + ActivityBoard 风险 tab)
  * 移动端走 T-977 a-g 双栏 OKX 一屏密度
  */
 import { useEffect, useState } from 'react';
@@ -23,7 +23,6 @@ import { TradingHeader } from './trading-header';
 import { ChartCard } from './chart-card';
 import { ActivityBoard } from './activity-board';
 import { TradeTabs } from './trade-tabs';
-import { TrustSignals } from './trust-signals';
 import { MobileActionBar } from './mobile-action-bar';
 import { MobileDataColumn } from './mobile-data-column';
 import { MiniTradeFlow } from './mini-trade-flow';
@@ -125,11 +124,10 @@ export function TradeScreen() {
         <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
       </div>
 
-      {/* T-984c · 桌面右栏删 InfoPanel(行情数据)+ SafetyPanel(安全核查)
-          字段已在 trading-header 横排 + TrustSignals(右上"安全信号"简略)展示 · 不再重复 */}
+      {/* T-984c · 删 InfoPanel + SafetyPanel(已并入 trading-header + TrustSignals)
+          T-985a · 桌面右栏再删 TrustSignals · 风险信息已在 trading-header 横排"风险"标签 + ActivityBoard "风险" tab 重复 · OKX 也无此卡 */}
       <div className="hidden lg:grid lg:grid-cols-[1fr_400px] gap-4 items-start">
         <div className="space-y-4 lg:order-2">
-          <TrustSignals detail={detail} />
           <ErrorBoundary>
             <TradeTabs
               mint={mint}
