@@ -178,7 +178,12 @@ function HistoryRow({
                 </span>
               )}
             </div>
-            <span className="text-sm font-medium truncate max-w-[140px]">{r.tokenSymbol}</span>
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span className="text-sm font-medium truncate max-w-[100px]">{r.tokenSymbol}</span>
+              <span className="text-[10px] font-mono text-muted-foreground/60 tabular-nums">
+                ·{r.tokenMint.slice(-4)}
+              </span>
+            </span>
           </Link>
         ) : r.solAmount > 0 ? (
           <div className="flex items-center gap-2">
