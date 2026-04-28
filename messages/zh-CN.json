@@ -602,6 +602,11 @@
     },
     "totalValue": "总资产(USD)",
     "walletAddress": "钱包",
+    "recentTrades": {
+      "title": "最近成交",
+      "viewAll": "查看全部",
+      "empty": "还没有成交记录"
+    },
     "notConnected": "连接钱包后才能看到你的持仓",
     "empty": {
       "title": "未发现 SPL 代币持仓",

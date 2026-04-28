@@ -602,6 +602,11 @@
     },
     "totalValue": "Total Value (USD)",
     "walletAddress": "Wallet",
+    "recentTrades": {
+      "title": "Recent Trades",
+      "viewAll": "View all",
+      "empty": "No trades yet"
+    },
     "notConnected": "Connect your wallet to see holdings",
     "empty": {
       "title": "No SPL holdings detected",

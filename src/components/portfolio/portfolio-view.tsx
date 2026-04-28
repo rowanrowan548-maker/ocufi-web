@@ -33,6 +33,7 @@ import {
 import { readFees, type FeeTotal } from '@/lib/fee-tracker';
 
 import { HoldingsTable } from './holdings-table';
+import { RecentTradesMini } from './recent-trades-mini';
 import { ClosedPositions } from './closed-positions';
 import { AssetPie, AssetPieLegend } from './asset-pie';
 import {
@@ -414,6 +415,9 @@ export function PortfolioView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* T-PF-81 · 最近 5 笔成交快览 */}
+      <RecentTradesMini />
 
       {error && (
         <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
