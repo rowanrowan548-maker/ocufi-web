@@ -84,7 +84,7 @@ export function HistoryView() {
         </Card>
       ) : (
         <Card className="overflow-x-auto">
-          <Table className="min-w-[760px]">
+          <Table className="min-w-[1000px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('history.columns.time')}</TableHead>
@@ -93,6 +93,11 @@ export function HistoryView() {
                 <TableHead>{t('history.columns.token')}</TableHead>
                 <TableHead className="text-right">{t('history.columns.tokenAmount')}</TableHead>
                 <TableHead className="text-right">{t('history.columns.solAmount')}</TableHead>
+                {/* T-929-cont #91:成交价 / 滑点 / 优先费 / Gas 4 列 */}
+                <TableHead className="text-right hidden md:table-cell">{t('history.columns.execPrice')}</TableHead>
+                <TableHead className="text-right hidden md:table-cell">{t('history.columns.slippage')}</TableHead>
+                <TableHead className="text-right hidden md:table-cell">{t('history.columns.priorityFee')}</TableHead>
+                <TableHead className="text-right hidden md:table-cell">{t('history.columns.gasFee')}</TableHead>
                 <TableHead className="font-mono text-[11px]">{t('history.columns.signature')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -197,6 +202,19 @@ function HistoryRow({
       </TableCell>
       <TableCell className="text-right font-mono text-sm text-muted-foreground">
         {r.tokenMint && r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
+      </TableCell>
+      {/* T-929-cont #91:成交价 / 滑点 / 优先费 / Gas */}
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+        {r.executionPriceUsd != null ? formatAmount(r.executionPriceUsd) : '—'}
+      </TableCell>
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+        {r.actualSlippageBps != null ? `${(r.actualSlippageBps / 100).toFixed(2)}%` : '—'}
+      </TableCell>
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+        {r.priorityFeeSol != null ? `${r.priorityFeeSol.toFixed(6)}` : '—'}
+      </TableCell>
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+        {r.gasFeeSol != null ? `${r.gasFeeSol.toFixed(6)}` : '—'}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">

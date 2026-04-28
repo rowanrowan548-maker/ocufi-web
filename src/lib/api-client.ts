@@ -180,6 +180,39 @@ export async function ackAlert(wallet: string, id: number): Promise<void> {
   await apiFetch(`/alerts/${id}/ack?wallet=${wallet}`, { method: 'POST' });
 }
 
+// ─── T-935 后端 /history(成交价 / 滑点 / 优先费 / Gas) ───
+// 后端缓存 60s · 失败 200+ok:false · 前端只读不破坏现有 Helius 直连分类逻辑
+
+export interface ApiHistoryRecord {
+  tx_signature: string;
+  status: 'success' | 'failed';
+  timestamp: number | null;          // unix sec
+  type?: string | null;              // 后端类型(可能不同于前端分类)
+  source?: string | null;
+  gas_lamports?: number | null;
+  priority_fee_lamports?: number | null;
+  input_mint?: string | null;
+  input_amount?: number | null;
+  output_mint?: string | null;
+  output_amount?: number | null;
+  actual_slippage_bps?: number | null; // V1 多为 null
+}
+
+export interface ApiHistoryResponse {
+  ok: boolean;
+  records?: ApiHistoryRecord[];
+  error?: string;
+}
+
+export async function fetchHistoryEnriched(
+  wallet: string,
+  limit = 100
+): Promise<ApiHistoryRecord[]> {
+  const r = await apiFetch<ApiHistoryResponse>(`/history?wallet=${wallet}&limit=${limit}`);
+  if (!r.ok) return [];
+  return r.records ?? [];
+}
+
 // ─── T-931b TG binding(后端 T-931 ship 后启用) ───
 // 若后端没暴露则 fetch 抛 404,前端 catch 退到 localStorage fallback
 export interface TgBindingStatus {

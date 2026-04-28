@@ -876,11 +876,28 @@
       "chain": "当前链",
       "rpc": "RPC 节点",
       "version": "版本",
+      "commit": "Commit",
+      "lastUpdate": "最后更新",
       "api": "后端 API",
       "apiOk": "在线",
       "apiDown": "不可达",
       "apiChecking": "检测中…",
       "apiUnconfigured": "未配置"
+    },
+    "gasDefault": {
+      "title": "默认优先费",
+      "desc": "下单时默认选哪一档(可在 buy form 临时切换)"
+    },
+    "buyAmounts": {
+      "title": "默认买入金额预设",
+      "desc": "/trade 页快捷买入按钮 3 档(SOL),你可以按交易习惯定制",
+      "preset": "预设 {n}"
+    },
+    "confirmDialog": {
+      "title": "二次确认弹窗",
+      "desc": "买入前是否弹出确认窗(关闭 = 快速模式,直接走签名)",
+      "on": "开启 · 安全(默认)",
+      "off": "关闭 · 快速模式"
     },
     "save": "保存",
     "saved": "已保存",
@@ -1016,6 +1033,10 @@
       "token": "代币",
       "tokenAmount": "代币数量",
       "solAmount": "SOL",
+      "execPrice": "成交价",
+      "slippage": "滑点",
+      "priorityFee": "优先费",
+      "gasFee": "Gas",
       "signature": "Tx"
     },
     "status": {

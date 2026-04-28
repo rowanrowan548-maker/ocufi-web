@@ -36,7 +36,7 @@ import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
 import { showBadgeToasts } from '@/lib/badge-toast';
 import { fetchSolUsdPrice, fetchTokenInfo, type TokenInfo } from '@/lib/portfolio';
-import { shouldSkipBuyConfirm } from '@/lib/buy-prefs-store';
+import { shouldSkipBuyConfirm, useDefaultGasLevel, useBuyAmounts } from '@/lib/buy-prefs-store';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
@@ -111,7 +111,11 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
     if (m && m.length >= 32) setMint(m);
   }, []);
   const [slippageBps, setSlippageBps] = useState(100);
-  const [gasLevel, setGasLevel] = useState<GasLevel>('fast');
+  // T-929-cont #143:从 buy-prefs-store 读默认优先费(用户偏好)
+  const defaultGas = useDefaultGasLevel();
+  const [gasLevel, setGasLevel] = useState<GasLevel>(defaultGas);
+  // T-929-cont #144:从 buy-prefs-store 读快捷买入金额预设
+  const buyAmounts = useBuyAmounts();
   // 用户是否手动调过滑点:调过就别用推荐值覆盖
   const slippageTouched = useRef(false);
 
@@ -432,9 +436,10 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX */}
           {wallet.connected && (
             <div className="flex gap-2 flex-wrap">
-              {[0.1, 0.5, 1, 2, 5].map((v) => (
+              {/* T-929-cont #144:用 buy-prefs-store 的预设(默认 0.1/0.5/1)+ 固定 2/5 SOL */}
+              {[...buyAmounts, 2, 5].map((v, i) => (
                 <Button
-                  key={v}
+                  key={`${v}-${i}`}
                   type="button"
                   variant="outline"
                   size="sm"

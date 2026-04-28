@@ -46,6 +46,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // T-929-cont #148:把 Vercel 注入的 git/build env 镜像到 NEXT_PUBLIC_* 给 client 用
+  // 本地 / 非 Vercel 环境裸跑这些 env 为 undefined,settings UI fallback 不显示
+  env: {
+    NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA ?? '',
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
   async headers() {
     return [
       {

@@ -861,11 +861,28 @@
       "chain": "Chain",
       "rpc": "RPC endpoint",
       "version": "Version",
+      "commit": "Commit",
+      "lastUpdate": "Last update",
       "api": "Backend API",
       "apiOk": "online",
       "apiDown": "unreachable",
       "apiChecking": "checking…",
       "apiUnconfigured": "not configured"
+    },
+    "gasDefault": {
+      "title": "Default priority fee",
+      "desc": "Pre-selected priority tier on buy (still adjustable per trade)"
+    },
+    "buyAmounts": {
+      "title": "Default buy amount presets",
+      "desc": "Three quick-amount chips on /trade (SOL). Customize to your style.",
+      "preset": "Preset {n}"
+    },
+    "confirmDialog": {
+      "title": "Buy confirmation dialog",
+      "desc": "Show the second-step confirmation before signing (off = fast mode)",
+      "on": "On · Safe (default)",
+      "off": "Off · Fast mode"
     },
     "save": "Save",
     "saved": "Saved",
@@ -1001,6 +1018,10 @@
       "token": "Token",
       "tokenAmount": "Amount",
       "solAmount": "SOL",
+      "execPrice": "Exec Price",
+      "slippage": "Slippage",
+      "priorityFee": "Priority",
+      "gasFee": "Gas",
       "signature": "Tx"
     },
     "status": {

@@ -26,6 +26,12 @@ import { routing } from '@/i18n/routing';
 import { isApiConfigured, pingHealth, fetchUser, setUserEmail } from '@/lib/api-client';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Input } from '@/components/ui/input';
+import {
+  useDefaultGasLevel, useSetDefaultGasLevel,
+  useBuyAmounts, useSetBuyAmounts,
+  useFastMode, useSetFastMode,
+} from '@/lib/buy-prefs-store';
+import type { GasLevel } from '@/lib/jupiter';
 
 const SLIPPAGE_OPTIONS = [
   { value: '30', label: '0.3%' },
@@ -45,6 +51,15 @@ export function SettingsView({ locale }: { locale: string }) {
 
   const { publicKey } = useWallet();
   const [slippage, setSlippage] = useState<SlippageProfile>(DEFAULT_SLIPPAGE);
+  // T-929-cont:#143 默认优先费 / #144 默认买入金额 / #146 二次确认弹窗
+  const defaultGas = useDefaultGasLevel();
+  const setDefaultGas = useSetDefaultGasLevel();
+  const buyAmounts = useBuyAmounts();
+  const setBuyAmounts = useSetBuyAmounts();
+  const fastMode = useFastMode();
+  const setFastMode = useSetFastMode();
+  const [storeMounted, setStoreMounted] = useState(false);
+  useEffect(() => setStoreMounted(true), []);
   const [saved, setSaved] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'ok' | 'down' | 'unconfigured'>(
     isApiConfigured() ? 'checking' : 'unconfigured'
@@ -175,6 +190,103 @@ export function SettingsView({ locale }: { locale: string }) {
         </CardContent>
       </Card>
 
+      {/* T-929-cont #143 · 默认优先费 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.gasDefault.title')}</CardTitle>
+          <CardDescription>{t('settings.gasDefault.desc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={storeMounted ? defaultGas : 'fast'}
+            onValueChange={(v) => { if (v) setDefaultGas(v as GasLevel); }}
+          >
+            <SelectTrigger className="max-w-xs">
+              {t(`trade.gas.${storeMounted ? defaultGas : 'fast'}`)}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="normal">{t('trade.gas.normal')}</SelectItem>
+              <SelectItem value="fast">{t('trade.gas.fast')}</SelectItem>
+              <SelectItem value="turbo">{t('trade.gas.turbo')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* T-929-cont #144 · 默认买入金额 3 档 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.buyAmounts.title')}</CardTitle>
+          <CardDescription>{t('settings.buyAmounts.desc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3 max-w-md">
+            {buyAmounts.map((v, i) => (
+              <div key={i} className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  {t('settings.buyAmounts.preset', { n: i + 1 })}
+                </Label>
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.001"
+                    value={storeMounted ? v : ''}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      if (!Number.isFinite(n) || n <= 0) return;
+                      const next = [...buyAmounts] as [number, number, number];
+                      next[i] = n;
+                      setBuyAmounts(next);
+                    }}
+                    className="font-mono text-sm"
+                  />
+                  <span className="text-xs text-muted-foreground">SOL</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* T-929-cont #146 · 二次确认弹窗 on/off(联动 fastMode) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('settings.confirmDialog.title')}</CardTitle>
+          <CardDescription>{t('settings.confirmDialog.desc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={storeMounted ? !fastMode : true}
+            onClick={() => setFastMode(!fastMode)}
+            className={
+              'inline-flex items-center gap-3 px-4 h-10 rounded-md border border-border/60 bg-card hover:border-primary/40 transition-colors'
+            }
+          >
+            <span
+              className={
+                'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ' +
+                ((storeMounted && !fastMode) ? 'bg-success' : 'bg-muted')
+              }
+            >
+              <span
+                className={
+                  'inline-block h-4 w-4 rounded-full bg-background shadow transition-transform ' +
+                  ((storeMounted && !fastMode) ? 'translate-x-4' : 'translate-x-0.5')
+                }
+              />
+            </span>
+            <span className="text-sm">
+              {storeMounted && !fastMode
+                ? t('settings.confirmDialog.on')
+                : t('settings.confirmDialog.off')}
+            </span>
+          </button>
+        </CardContent>
+      </Card>
+
       {/* 邮箱(Day 11 预留,不发) */}
       {isApiConfigured() && publicKey && (
         <Card>
@@ -216,7 +328,13 @@ export function SettingsView({ locale }: { locale: string }) {
             value={maskRpcUrl(chain.rpcUrl)}
             mono
           />
-          <InfoRow label={t('settings.about.version')} value="v0.3" />
+          <InfoRow label={t('settings.about.version')} value={BUILD_VERSION} />
+          {BUILD_COMMIT && (
+            <InfoRow label={t('settings.about.commit')} value={BUILD_COMMIT.slice(0, 7)} mono />
+          )}
+          {BUILD_TIME && (
+            <InfoRow label={t('settings.about.lastUpdate')} value={formatBuildTime(BUILD_TIME)} />
+          )}
           <InfoRow
             label={t('settings.about.api')}
             value={
@@ -306,4 +424,19 @@ function maskRpcUrl(url: string): string {
   } catch {
     return url;
   }
+}
+
+// T-929-cont #148:版本号 + commit hash + build time
+// Vercel 自动注入 NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA 和 NEXT_PUBLIC_VERCEL_GIT_COMMIT_REF;
+// next.config.ts 也镜像同名公开 env(本地开发时可裸跑无值)
+const BUILD_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || 'v0.4';
+const BUILD_COMMIT = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_GIT_SHA || '';
+const BUILD_TIME = process.env.NEXT_PUBLIC_BUILD_TIME || '';
+
+function formatBuildTime(ts: string): string {
+  if (!ts) return '—';
+  // 后端注入可能是 ISO / unix · ts 兜底原文
+  const d = Number.isFinite(Number(ts)) ? new Date(Number(ts)) : new Date(ts);
+  if (Number.isNaN(d.getTime())) return ts;
+  return d.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 }
