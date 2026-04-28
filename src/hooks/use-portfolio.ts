@@ -13,6 +13,7 @@ import {
   fetchTokensInfoBatch,
   fetchSolUsdPrice,
   type TokenInfo,
+  SOL_MINT,
 } from '@/lib/portfolio';
 
 export interface PortfolioToken {
@@ -80,16 +81,23 @@ export function usePortfolio(): PortfolioState {
         ]);
         if (cancelled) return;
 
-        const solAmount = lamports / LAMPORTS_PER_SOL;
+        // T-PF-129 · WSOL 余额并入 SOL 显示 · WSOL 不单独占行
+        // (jupiter swap 留下的 WSOL 临时账户经济上等同 SOL)
+        const wsolEntry = walletTokens.find((t) => t.mint === SOL_MINT);
+        const wsolAmount = wsolEntry?.amount ?? 0;
+        const nonWsolTokens = walletTokens.filter((t) => t.mint !== SOL_MINT);
+
+        const nativeSolAmount = lamports / LAMPORTS_PER_SOL;
+        const solAmount = nativeSolAmount + wsolAmount;
         const solValueUsd = solAmount * solUsd;
 
         // 查每个 token 的价格/符号
-        const infos = walletTokens.length
-          ? await fetchTokensInfoBatch(walletTokens.map((t) => t.mint))
+        const infos = nonWsolTokens.length
+          ? await fetchTokensInfoBatch(nonWsolTokens.map((t) => t.mint))
           : new Map<string, TokenInfo>();
         if (cancelled) return;
 
-        const tokens: PortfolioToken[] = walletTokens.map((wt) => {
+        const tokens: PortfolioToken[] = nonWsolTokens.map((wt) => {
           const info = infos.get(wt.mint);
           const priceUsd = info?.priceUsd ?? 0;
           return {
