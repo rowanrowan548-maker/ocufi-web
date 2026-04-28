@@ -231,7 +231,16 @@
     "address": "Address",
     "copyAddress": "Copy address",
     "copied": "Copied",
-    "viewExplorer": "View on Solscan"
+    "viewExplorer": "View on Solscan",
+    "errors": {
+      "notReady": "Wallet extension not ready · Refresh and try again",
+      "notInstalled": "No wallet detected · Install Phantom or Solflare extension first",
+      "timeout": "Connection timed out · Check your wallet popup or network",
+      "userRejected": "Connection request rejected",
+      "disconnect": "Wallet disconnected",
+      "connectFailed": "Connection failed: {reason}",
+      "generic": "Wallet error: {reason}"
+    }
   },
   "mobile": {
     "title": "Open in your wallet's in-app browser",

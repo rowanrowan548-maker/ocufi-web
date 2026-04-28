@@ -1,0 +1,43 @@
+/**
+ * T-INV-165 · @solana/wallet-adapter-react-ui 的 modal CSS 覆盖
+ *
+ * 默认样式背景纯黑半透明 · 图标 24/48 大小不一致
+ * 这里:
+ *  · backdrop-blur-md(玻璃感)
+ *  · 钱包列表行图标统一 32px
+ *  · 按钮 hover 加微动效
+ *  · 圆角和 padding 微调,符合 shadcn 整体风格
+ */
+
+/* 背景遮罩 · 加 blur */
+.wallet-adapter-modal-overlay,
+.wallet-adapter-modal-wrapper-no-logo,
+.wallet-adapter-modal {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* 模态容器 · 圆角和 padding 微调 */
+.wallet-adapter-modal-wrapper {
+  border-radius: 12px !important;
+  padding: 16px !important;
+}
+
+/* 钱包列表 · 行内图标统一 32px */
+.wallet-adapter-modal-list .wallet-adapter-button .wallet-adapter-button-start-icon,
+.wallet-adapter-modal-list .wallet-adapter-button img,
+.wallet-adapter-modal-list .wallet-adapter-button svg {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* 按钮 hover 微动效 */
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  transform: translateY(-1px);
+  transition: transform 120ms ease-out, background-color 120ms ease-out;
+}
+
+/* 按钮基础态 transition */
+.wallet-adapter-modal-list .wallet-adapter-button {
+  transition: transform 120ms ease-out, background-color 120ms ease-out;
+}
