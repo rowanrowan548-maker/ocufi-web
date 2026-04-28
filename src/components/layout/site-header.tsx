@@ -27,13 +27,13 @@ export async function SiteHeader() {
     >
       <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-6 min-w-0">
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0" aria-label="Ocufi">
+          <Link href="/" className="flex items-center gap-1.5 flex-shrink-0" aria-label="Ocufi">
             <Logo variant="full" size={50} />
-            {/* T-973 · "天眼"提权:同级双标 · Ocufi 字标 ~36px,天眼用 65-70% ≈ 24-26px */}
+            {/* T-973-fix · 回滚到附属字 + 颜色提亮一档(text-foreground/65)
+                T-973 26px 同级双标视觉太抢 · 用户实测后回原 12px 附属位置 · 只把灰度调亮一档 */}
             {brandTagline && (
               <span
-                className="hidden sm:inline-block font-heading font-bold text-foreground border-l border-border/60 pl-2 leading-tight"
-                style={{ fontSize: 26, letterSpacing: '-0.01em' }}
+                className="hidden sm:inline-block text-[12px] tracking-[0.15em] text-foreground/65 border-l border-border/60 pl-1.5 leading-tight"
                 aria-hidden="true"
               >
                 {brandTagline}
