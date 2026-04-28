@@ -26,9 +26,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
-import { Loader2, LineChart } from 'lucide-react';
+import { Loader2, LineChart, TrendingUp } from 'lucide-react';
 import { fetchTokenInfo } from '@/lib/portfolio';
 import { SOL_MINT } from '@/lib/jupiter';
+
+type ChartType = 'price' | 'market_cap';
 
 interface Props {
   mint?: string | null;
@@ -42,6 +44,8 @@ export function ChartCard({ mint }: Props) {
   );
   const [loading, setLoading] = useState(false);
   const [errored, setErrored] = useState(false);
+  // T-OKX-3 · Price / 市值 toggle(GT iframe 支持的唯一动态参数)
+  const [chartType, setChartType] = useState<ChartType>('price');
 
   // mint → topPoolAddress(复用 portfolio.fetchTokenInfo,30s 缓存自带,无新外部请求)
   useEffect(() => {
@@ -93,15 +97,50 @@ export function ChartCard({ mint }: Props) {
 
   const iframeSrc = showIframe
     ? `https://www.geckoterminal.com/solana/pools/${pool}` +
-      `?embed=1&info=0&swaps=0&grayscale=0&light_chart=0`
+      `?embed=1&info=0&swaps=0&grayscale=0&light_chart=0&chart_type=${chartType}`
     : null;
 
   return (
     <Card className="overflow-hidden p-0">
+      {/* T-OKX-3 · OKX 风 toolbar · 价格/市值 functional toggle + Dev Buys 静态标签 */}
+      {showIframe && (
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 border-b border-border/40 bg-card/60 text-[11px]">
+          <div className="inline-flex rounded border border-border/40 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setChartType('price')}
+              className={`px-2 py-0.5 transition-colors ${
+                chartType === 'price'
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'text-muted-foreground hover:bg-muted/40'
+              }`}
+            >
+              {t('toolbar.price')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartType('market_cap')}
+              className={`px-2 py-0.5 transition-colors ${
+                chartType === 'market_cap'
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'text-muted-foreground hover:bg-muted/40'
+              }`}
+            >
+              {t('toolbar.marketCap')}
+            </button>
+          </div>
+          <span className="text-muted-foreground/40">·</span>
+          <span className="inline-flex items-center gap-1 text-muted-foreground/70">
+            <TrendingUp className="h-3 w-3" />
+            {t('toolbar.devBuys')}
+          </span>
+          <span className="text-muted-foreground/40 ml-auto">{t('toolbar.gtNote')}</span>
+        </div>
+      )}
       <div className="relative h-[420px] sm:h-[480px] lg:h-[560px]">
         {iframeSrc && (
           <iframe
-            key={pool}
+            key={`${pool}-${chartType}`}
             src={iframeSrc}
             className="w-full h-full border-0"
             allow="clipboard-write"

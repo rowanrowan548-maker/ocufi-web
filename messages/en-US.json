@@ -314,7 +314,13 @@
       "retry": "Retry",
       "error": "Chart failed to load",
       "solBaseFallback": "SOL is Solana's base asset",
-      "solBaseHint": "View charts via USDC / USDT pairs"
+      "solBaseHint": "View charts via USDC / USDT pairs",
+      "toolbar": {
+        "price": "Price",
+        "marketCap": "Market cap",
+        "devBuys": "Dev Buys",
+        "gtNote": "USD/SOL · timeframe → inside GT chart"
+      }
     },
     "trust": {
       "title": "🛡 Safety Signals",
