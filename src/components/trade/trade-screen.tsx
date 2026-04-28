@@ -4,13 +4,15 @@
  * 交易页主屏 · 整合布局
  *
  * 上 : Combo 选币
- * 中 : TradingHeader(紧凑)
+ * 中 : TradingHeader(T-984b 桌面横排 7 字段 / 移动紧凑)
  * 下 :
- *   左 :ChartCard(K 线)
- *        ActivityBoard(活动 / 订单 / 持有者 / 风险 tabs)
- *   右 :TradeTabs(Buy/Sell × 市价/限价)
- *        InfoPanel(行情数据)
- *        SafetyPanel(安全核查)
+ *   左 :ChartCard(K 线 · 桌面 lg+ 高 560px)
+ *        ActivityBoard(活动 / 订单 / 持有者 / 流动 / Top / 风险 tabs)
+ *   右 :TrustSignals(精华安全信号)
+ *        TradeTabs(Buy/Sell × 市价/限价)
+ *
+ * T-984c · 桌面已删 InfoPanel(已搬到 trading-header)+ SafetyPanel(TrustSignals 替代)
+ * 移动端走 T-977 a-g 双栏 OKX 一屏密度
  */
 import { useEffect, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
@@ -22,8 +24,6 @@ import { ChartCard } from './chart-card';
 import { ActivityBoard } from './activity-board';
 import { TradeTabs } from './trade-tabs';
 import { TrustSignals } from './trust-signals';
-import { InfoPanel } from './info-panel';
-import { SafetyPanel } from './safety-panel';
 import { MobileActionBar } from './mobile-action-bar';
 import { MobileDataColumn } from './mobile-data-column';
 import { MiniTradeFlow } from './mini-trade-flow';
@@ -125,7 +125,8 @@ export function TradeScreen() {
         <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
       </div>
 
-      {/* 桌面 lg+:现有 grid 完全不动(T-501/502/503/504 视觉) */}
+      {/* T-984c · 桌面右栏删 InfoPanel(行情数据)+ SafetyPanel(安全核查)
+          字段已在 trading-header 横排 + TrustSignals(右上"安全信号"简略)展示 · 不再重复 */}
       <div className="hidden lg:grid lg:grid-cols-[1fr_400px] gap-4 items-start">
         <div className="space-y-4 lg:order-2">
           <TrustSignals detail={detail} />
@@ -139,8 +140,6 @@ export function TradeScreen() {
               onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
             />
           </ErrorBoundary>
-          <InfoPanel detail={detail} />
-          <SafetyPanel detail={detail} />
         </div>
         <div className="min-w-0 space-y-4 lg:order-1">
           <ChartCard mint={mint} />

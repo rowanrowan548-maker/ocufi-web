@@ -98,7 +98,7 @@ export function ChartCard({ mint }: Props) {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="relative h-[420px] sm:h-[480px]">
+      <div className="relative h-[420px] sm:h-[480px] lg:h-[560px]">
         {iframeSrc && (
           <iframe
             key={pool}
