@@ -876,6 +876,17 @@
       "title": "Price Alerts",
       "subtitle": "Get notified when prices hit your target · Web / Telegram push coming soon"
     },
+    "cooldown": {
+      "label": "Cooldown",
+      "minutes": "{n} min",
+      "hint": "How long before the same alert can fire again (anti-spam)",
+      "watching": "✓ Watching",
+      "inCooldown": "⏳ Cooldown ({n}m left)",
+      "paused": "Paused",
+      "pause": "Pause",
+      "resume": "Resume",
+      "fired": "Fired {n} times"
+    },
     "tgBind": {
       "unboundTitle": "💬 Telegram not connected",
       "unboundDesc": "Alerts only fire while your browser is open — connect TG to push price alerts directly",
@@ -1198,6 +1209,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "close": "Close",
+    "delete": "Delete",
     "comingSoon": "Coming Soon"
   },
   "legal": {

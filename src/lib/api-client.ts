@@ -131,20 +131,40 @@ export interface ApiPriceAlert {
   triggered_price_usd: number | null;
   acknowledged: boolean;
   created_at: string;
+  // T-932a 字段(后端已 ship)· 老数据可能 null,前端兜底默认值
+  is_active?: boolean;
+  cooldown_minutes?: number;     // 30 / 60 / 120
+  last_fired_at?: string | null;
+  fire_count?: number;
 }
+
+export type CooldownMinutes = 30 | 60 | 120;
 
 export async function createAlert(
   wallet: string,
   mint: string,
   symbol: string,
   direction: 'above' | 'below',
-  targetUsd: number
+  targetUsd: number,
+  cooldownMinutes: CooldownMinutes = 60
 ): Promise<ApiPriceAlert> {
   return apiFetch('/alerts', {
     method: 'POST',
     body: JSON.stringify({
       wallet, mint, symbol, direction, target_usd: targetUsd,
+      cooldown_minutes: cooldownMinutes,
     }),
+  });
+}
+
+export async function patchAlert(
+  wallet: string,
+  id: number,
+  patch: { is_active?: boolean; cooldown_minutes?: CooldownMinutes }
+): Promise<ApiPriceAlert> {
+  return apiFetch(`/alerts/${id}?wallet=${wallet}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
   });
 }
 

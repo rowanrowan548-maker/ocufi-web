@@ -891,6 +891,17 @@
       "title": "价格提醒",
       "subtitle": "到价自动弹窗通知 · 支持网页 / TG 推送(即将上线)"
     },
+    "cooldown": {
+      "label": "冷却时长",
+      "minutes": "{n} 分钟",
+      "hint": "触发后多久不再重复推送(防刷屏)",
+      "watching": "✓ 监控中",
+      "inCooldown": "⏳ 冷却中(剩 {n} 分钟)",
+      "paused": "已暂停",
+      "pause": "暂停",
+      "resume": "恢复监控",
+      "fired": "已触发 {n} 次"
+    },
     "tgBind": {
       "unboundTitle": "💬 没绑 Telegram?",
       "unboundDesc": "提醒只在浏览器开着才工作 — 绑定 TG 后到价自动推送",
@@ -1213,6 +1224,7 @@
     "cancel": "取消",
     "confirm": "确认",
     "close": "关闭",
+    "delete": "删除",
     "comingSoon": "即将上线"
   },
   "legal": {

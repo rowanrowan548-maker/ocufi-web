@@ -11,6 +11,7 @@ import { PublicKey } from '@solana/web3.js';
 import Link from 'next/link';
 import {
   Bell, BellOff, AlertCircle, Trash2, CheckCircle2, Loader2, Wallet,
+  Pause, Play, Clock,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,8 @@ import {
 } from '@/lib/alerts';
 import { fetchTokenInfo } from '@/lib/portfolio';
 import {
-  createAlert, deleteAlert, isApiConfigured,
+  createAlert, deleteAlert, patchAlert, isApiConfigured,
+  type CooldownMinutes,
 } from '@/lib/api-client';
 import { usePriceAlerts } from '@/hooks/use-price-alerts';
 import { track } from '@/lib/analytics';
@@ -46,6 +48,7 @@ export function AlertsView() {
   const [mint, setMint] = useState('');
   const [direction, setDirection] = useState<'above' | 'below'>('above');
   const [targetUsd, setTargetUsd] = useState('');
+  const [cooldownMinutes, setCooldownMinutes] = useState<CooldownMinutes>(60);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // T-921:输入合法 mint 后拉当前价,placeholder 用 ±5% 而不是裸 0.001
@@ -94,8 +97,8 @@ export function AlertsView() {
         setSubmitErr(t('alerts.errors.tokenNotFound'));
         return;
       }
-      await createAlert(publicKey.toBase58(), m, info.symbol, direction, target);
-      track('price_alert_created', { mint: m, direction, targetUsd: target });
+      await createAlert(publicKey.toBase58(), m, info.symbol, direction, target, cooldownMinutes);
+      track('price_alert_created', { mint: m, direction, targetUsd: target, cooldownMinutes });
       setMint('');
       setTargetUsd('');
       refresh();
@@ -111,6 +114,17 @@ export function AlertsView() {
     try {
       await deleteAlert(publicKey.toBase58(), id);
       track('price_alert_deleted', { id });
+      refresh();
+    } catch (e: unknown) {
+      setSubmitErr(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function togglePause(id: number, isActive: boolean) {
+    if (!publicKey) return;
+    try {
+      await patchAlert(publicKey.toBase58(), id, { is_active: !isActive });
+      track('price_alert_toggled', { id, paused: isActive });
       refresh();
     } catch (e: unknown) {
       setSubmitErr(e instanceof Error ? e.message : String(e));
@@ -225,6 +239,25 @@ export function AlertsView() {
             </div>
           </div>
 
+          {/* T-932b · 冷却时长 select(默认 60min) */}
+          <div className="space-y-2">
+            <Label htmlFor="alert-cooldown">{t('alerts.cooldown.label')}</Label>
+            <Select
+              value={String(cooldownMinutes)}
+              onValueChange={(v) => { if (v) setCooldownMinutes(Number(v) as CooldownMinutes); }}
+            >
+              <SelectTrigger id="alert-cooldown">
+                {t('alerts.cooldown.minutes', { n: cooldownMinutes })}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">{t('alerts.cooldown.minutes', { n: 30 })}</SelectItem>
+                <SelectItem value="60">{t('alerts.cooldown.minutes', { n: 60 })}</SelectItem>
+                <SelectItem value="120">{t('alerts.cooldown.minutes', { n: 120 })}</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="text-[11px] text-muted-foreground">{t('alerts.cooldown.hint')}</div>
+          </div>
+
           {submitErr && (
             <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
               <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -273,8 +306,15 @@ export function AlertsView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {alerts.map((a) => (
-                  <TableRow key={a.id} className={a.triggered ? 'opacity-70' : ''}>
+                {alerts.map((a) => {
+                  // T-932a/932b 字段(后端 ship 后默认有,老数据兜底)
+                  const isActive = a.is_active !== false;
+                  const cdMin = a.cooldown_minutes ?? 60;
+                  const fireCount = a.fire_count ?? 0;
+                  const cdRemainingSec = computeCooldownSec(a.last_fired_at, cdMin);
+                  const inCooldown = isActive && cdRemainingSec > 0;
+                  return (
+                  <TableRow key={a.id} className={!isActive ? 'opacity-50' : ''}>
                     <TableCell>
                       <Link
                         href={`/trade?mint=${a.mint}`}
@@ -282,6 +322,11 @@ export function AlertsView() {
                       >
                         <span className="text-sm font-medium">{a.symbol || a.mint.slice(0, 6)}</span>
                       </Link>
+                      {fireCount > 0 && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          {t('alerts.cooldown.fired', { n: fireCount })}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs">
                       {a.direction === 'above'
@@ -292,30 +337,48 @@ export function AlertsView() {
                       {a.triggered_price_usd != null ? `$${formatPrice(a.triggered_price_usd)}` : '—'}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {a.triggered ? (
-                        <span className="inline-flex items-center gap-1 text-success">
-                          <CheckCircle2 className="h-3 w-3" />
-                          {t('alerts.list.triggered')}
+                      {!isActive ? (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Pause className="h-3 w-3" />
+                          {t('alerts.cooldown.paused')}
+                        </span>
+                      ) : inCooldown ? (
+                        <span className="inline-flex items-center gap-1 text-warning">
+                          <Clock className="h-3 w-3" />
+                          {t('alerts.cooldown.inCooldown', { n: Math.ceil(cdRemainingSec / 60) })}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-muted-foreground">
-                          <Bell className="h-3 w-3" />
-                          {t('alerts.list.active')}
+                        <span className="inline-flex items-center gap-1 text-success">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {t('alerts.cooldown.watching')}
                         </span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(a.id)}
-                        className="h-7 px-2 text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => togglePause(a.id, isActive)}
+                          title={isActive ? t('alerts.cooldown.pause') : t('alerts.cooldown.resume')}
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        >
+                          {isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(a.id)}
+                          title={t('common.delete')}
+                          className="h-7 w-7 p-0 text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </Card>
@@ -338,4 +401,14 @@ function formatPrice(n: number): string {
   if (n >= 1) return n.toFixed(4);
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+// T-932b · 算冷却剩余秒,无 last_fired_at 返 0(从未触发)
+function computeCooldownSec(lastFiredAt: string | null | undefined, cooldownMin: number): number {
+  if (!lastFiredAt) return 0;
+  const fired = Date.parse(lastFiredAt);
+  if (!Number.isFinite(fired)) return 0;
+  const passedSec = (Date.now() - fired) / 1000;
+  const remaining = cooldownMin * 60 - passedSec;
+  return remaining > 0 ? remaining : 0;
 }
