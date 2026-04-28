@@ -26,6 +26,7 @@ import { TradeTabs } from './trade-tabs';
 import { MobileActionBar } from './mobile-action-bar';
 import { MobileDataColumn } from './mobile-data-column';
 import { MiniTradeFlow } from './mini-trade-flow';
+import { WalletTokenStats } from './wallet-token-stats';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
 import { ErrorBoundary } from '@/components/common/error-boundary';
@@ -138,6 +139,8 @@ export function TradeScreen() {
               onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
             />
           </ErrorBoundary>
+          {/* T-985b · 4 数字栏 总买入/总卖出/余额/总收益 · 仅桌面 */}
+          <WalletTokenStats mint={mint} tokenPriceUsd={detail?.priceUsd} />
         </div>
         <div className="min-w-0 space-y-4 lg:order-1">
           <ChartCard mint={mint} />

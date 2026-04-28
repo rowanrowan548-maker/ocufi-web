@@ -457,6 +457,14 @@
       "sending": "广播中…",
       "confirming": "链上确认…"
     },
+    "walletStats": {
+      "totalBuy": "总买入",
+      "totalSell": "总卖出",
+      "balance": "余额",
+      "totalPnl": "总收益",
+      "connectWallet": "连钱包后显示该币的盈亏",
+      "noActivity": "尚未交易"
+    },
     "preview": {
       "pay": "支付",
       "receive": "预计收到",

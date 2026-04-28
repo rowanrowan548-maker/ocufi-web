@@ -457,6 +457,14 @@
       "sending": "Broadcasting…",
       "confirming": "Confirming on-chain…"
     },
+    "walletStats": {
+      "totalBuy": "Total buy",
+      "totalSell": "Total sell",
+      "balance": "Balance",
+      "totalPnl": "Total PnL",
+      "connectWallet": "Connect wallet to see this token's PnL",
+      "noActivity": "No trades yet"
+    },
     "preview": {
       "pay": "You pay",
       "receive": "You receive",
