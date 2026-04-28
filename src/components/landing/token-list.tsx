@@ -1,19 +1,28 @@
 'use client';
 
 /**
- * Landing 页 · 代币行情主表(币安风)
+ * Landing 页 · 行情列表(T-956 GMGN 风格升级)
  *
- * tabs: 全部 / 蓝筹 / Meme / LST / 稳定币
- * 表格列: 名称 / 价格 / 24h 涨跌 / 24h 成交量 / 市值 / 操作
- * 排序: 默认按市值降序
- * 操作: 跳 /trade?mint=X 一键交易(详情已合并到 /trade,无独立详情页)
+ * tabs: 🔥 Trending(子 tab 5m/15m/1h/24h)/ 🆕 New Pairs / ⭐ 自选 / 📈 主流
+ * 列:Token / Price / 5m / 1h / 24h / Liq+MC / Vol+Age / Buy/Sell / ⚡
+ *
+ * #25 删 ShoppingCart icon → Zap ⚡
+ * #26 行内 0.1 SOL ⚡ 快买(QuickBuyConfirm)
+ * #27 SOL/USDC 默认隐藏 toggle
+ *
+ * 后端来源:
+ *  - /markets/trending?timeframe=5m|15m|1h|24h(60s 缓存)
+ *  - /markets/new-pairs(30s 缓存)
+ *  - 自选 / 主流:本地 fetchTokensInfoBatch DexScreener
  */
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { TrendingUp, TrendingDown, ShoppingCart, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useWallet } from '@solana/wallet-adapter-react';
+import {
+  TrendingUp, TrendingDown, Star, Zap, Flame, Sparkles, BarChart3,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -21,65 +30,147 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { fetchTokensInfoBatch, fetchTokenInfo, type TokenInfo } from '@/lib/portfolio';
-import {
-  PRESET_ALL, PRESET_MAJORS, PRESET_MEME, PRESET_STABLE,
-} from '@/lib/preset-tokens';
+import { fetchTokensInfoBatch, type TokenInfo } from '@/lib/portfolio';
+import { PRESET_MAJORS, SOL_MINT, USDC_MINT } from '@/lib/preset-tokens';
 import { useFavorites } from '@/lib/favorites';
-import { MiniSparkline } from '@/components/common/mini-sparkline';
-import { TokenTags, tagsFor } from '@/components/common/token-tags';
+import {
+  fetchMarketsTrending, fetchMarketsNewPairs, isApiConfigured,
+  type MarketItem, type MarketsTimeframe,
+} from '@/lib/api-client';
+import { QuickBuyConfirm } from '@/components/trade/quick-buy-confirm';
 
-const ALL = PRESET_ALL;
+type Tab = 'trending' | 'newpairs' | 'fav' | 'major';
+const TIMEFRAMES: MarketsTimeframe[] = ['5m', '15m', '1h', '24h'];
 
-const GROUPS: Record<string, string[]> = {
-  all: ALL,
-  major: PRESET_MAJORS,
-  meme: PRESET_MEME,
-  stable: PRESET_STABLE,
-};
+const HIDE_KEY = 'ocufi.markets.hideMajors';
 
-type Tab = 'fav' | 'all' | 'major' | 'meme' | 'stable';
+/** 把 TokenInfo 转成 MarketItem 形态(自选/主流 tab 用) */
+function infoToMarket(info: TokenInfo): MarketItem {
+  return {
+    mint: info.mint,
+    symbol: info.symbol,
+    name: info.name,
+    logo: info.logoUri ?? null,
+    priceUsd: info.priceUsd ?? null,
+    change5m: info.priceChange5m ?? null,
+    change1h: info.priceChange1h ?? null,
+    change24h: info.priceChange24h ?? null,
+    liquidityUsd: info.liquidityUsd ?? null,
+    marketCapUsd: info.marketCap ?? null,
+    fdvUsd: null,
+    volumeH24: info.volume24h ?? null,
+    ageHours: info.pairCreatedAt ? (Date.now() - info.pairCreatedAt) / 3.6e6 : null,
+    buys24h: null,
+    sells24h: null,
+    holdersCount: null,
+    topPoolAddress: info.topPoolAddress ?? null,
+  };
+}
 
 export function TokenList() {
-  const t = useTranslations('landing.tokenList');
-  const router = useRouter();
-  const [tab, setTab] = useState<Tab>('all');
-  const [infos, setInfos] = useState<Map<string, TokenInfo>>(new Map());
+  const t = useTranslations('markets');
+  const wallet = useWallet();
+  const [tab, setTab] = useState<Tab>('trending');
+  const [tf, setTf] = useState<MarketsTimeframe>('1h');
+  const [hideMajors, setHideMajors] = useState(false); // #27 SOL/USDC toggle
+  const [trendingItems, setTrendingItems] = useState<MarketItem[]>([]);
+  const [newPairsItems, setNewPairsItems] = useState<MarketItem[]>([]);
+  const [presetItems, setPresetItems] = useState<MarketItem[]>([]);
+  const [favItems, setFavItems] = useState<MarketItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const { favorites, isFavorite, toggle } = useFavorites();
 
+  // 持久 hideMajors
   useEffect(() => {
-    fetchTokensInfoBatch(ALL).then(setInfos).catch(() => {});
+    if (typeof window === 'undefined') return;
+    try {
+      const v = window.localStorage.getItem(HIDE_KEY);
+      if (v === '1') setHideMajors(true);
+    } catch { /* */ }
   }, []);
+  function toggleHideMajors() {
+    setHideMajors((p) => {
+      const next = !p;
+      try { window.localStorage.setItem(HIDE_KEY, next ? '1' : '0'); } catch { /* */ }
+      return next;
+    });
+  }
 
-  // 自选里有 PRESET 没收录的 mint,补拉一次
+  // 拉 trending(timeframe 切换重拉)
   useEffect(() => {
-    const missing = favorites.filter((m) => !infos.has(m));
-    if (missing.length === 0) return;
+    if (tab !== 'trending' || !isApiConfigured()) return;
     let cancelled = false;
-    Promise.all(missing.map((m) => fetchTokenInfo(m))).then((arr) => {
-      if (cancelled) return;
-      setInfos((prev) => {
-        const next = new Map(prev);
-        arr.forEach((info, i) => { if (info) next.set(missing[i], info); });
-        return next;
-      });
-    }).catch(() => {});
+    setLoading(true);
+    fetchMarketsTrending(tf, 50)
+      .then((items) => { if (!cancelled) setTrendingItems(items); })
+      .catch(() => { if (!cancelled) setTrendingItems([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [favorites, infos]);
+  }, [tab, tf]);
+
+  // 拉 new pairs
+  useEffect(() => {
+    if (tab !== 'newpairs' || !isApiConfigured()) return;
+    let cancelled = false;
+    setLoading(true);
+    fetchMarketsNewPairs(50)
+      .then((items) => { if (!cancelled) setNewPairsItems(items); })
+      .catch(() => { if (!cancelled) setNewPairsItems([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [tab]);
+
+  // 主流 + 自选 走 DexScreener 批量
+  useEffect(() => {
+    if (tab !== 'major') return;
+    let cancelled = false;
+    setLoading(true);
+    fetchTokensInfoBatch(PRESET_MAJORS).then((map) => {
+      if (cancelled) return;
+      setPresetItems(PRESET_MAJORS.map((m) => map.get(m)).filter((x): x is TokenInfo => !!x).map(infoToMarket));
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== 'fav' || favorites.length === 0) {
+      if (tab === 'fav') setFavItems([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    fetchTokensInfoBatch(favorites).then((map) => {
+      if (cancelled) return;
+      setFavItems(favorites.map((m) => map.get(m)).filter((x): x is TokenInfo => !!x).map(infoToMarket));
+    }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [tab, favorites]);
 
   const rows = useMemo(() => {
-    const sourceMints = tab === 'fav' ? favorites : (GROUPS[tab] || ALL);
-    const list = sourceMints
-      .map((m) => infos.get(m))
-      .filter((t): t is TokenInfo => !!t && !!t.logoUri);
-    // 默认按 24h 成交量降序;成交量为空的排到最后,按市值兜底
-    return list.sort((a, b) => {
-      const va = a.volume24h ?? 0;
-      const vb = b.volume24h ?? 0;
-      if (va !== vb) return vb - va;
-      return (b.marketCap ?? 0) - (a.marketCap ?? 0);
-    });
-  }, [tab, infos]);
+    let src: MarketItem[];
+    switch (tab) {
+      case 'trending': src = trendingItems; break;
+      case 'newpairs': src = newPairsItems; break;
+      case 'fav': src = favItems; break;
+      case 'major': src = presetItems; break;
+    }
+    if (hideMajors) {
+      src = src.filter((it) => it.mint !== SOL_MINT && it.mint !== USDC_MINT);
+    }
+    return src;
+  }, [tab, trendingItems, newPairsItems, favItems, presetItems, hideMajors]);
+
+  // T-956 #26 · 快买 dialog
+  const [quickBuyOpen, setQuickBuyOpen] = useState(false);
+  const [quickBuyMint, setQuickBuyMint] = useState<string | null>(null);
+  const [quickBuySymbol, setQuickBuySymbol] = useState<string | undefined>(undefined);
+
+  function openQuickBuy(mint: string, symbol?: string) {
+    setQuickBuyMint(mint);
+    setQuickBuySymbol(symbol);
+    setQuickBuyOpen(true);
+  }
 
   return (
     <section className="px-4 sm:px-6 py-6 sm:py-10">
@@ -93,101 +184,168 @@ export function TokenList() {
           </div>
           <Tabs value={tab} onValueChange={(v) => v && setTab(v as Tab)}>
             <TabsList>
+              <TabsTrigger value="trending">
+                <Flame className="h-3 w-3 mr-1" />
+                {t('tabs.trending')}
+              </TabsTrigger>
+              <TabsTrigger value="newpairs">
+                <Sparkles className="h-3 w-3 mr-1" />
+                {t('tabs.newpairs')}
+              </TabsTrigger>
               <TabsTrigger value="fav">
                 <Star className="h-3 w-3 mr-1" />
                 {t('tabs.fav')}{favorites.length > 0 ? ` ${favorites.length}` : ''}
               </TabsTrigger>
-              <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
-              <TabsTrigger value="major">{t('tabs.major')}</TabsTrigger>
-              <TabsTrigger value="meme">{t('tabs.meme')}</TabsTrigger>
-              <TabsTrigger value="stable">{t('tabs.stable')}</TabsTrigger>
+              <TabsTrigger value="major">
+                <BarChart3 className="h-3 w-3 mr-1" />
+                {t('tabs.major')}
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        {/* 桌面 / 平板:表格视图 */}
+        {/* trending 子 tab + #27 hide majors toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+          {tab === 'trending' ? (
+            <Tabs value={tf} onValueChange={(v) => v && setTf(v as MarketsTimeframe)}>
+              <TabsList>
+                {TIMEFRAMES.map((f) => (
+                  <TabsTrigger key={f} value={f}>{f}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          ) : <div />}
+          <button
+            type="button"
+            onClick={toggleHideMajors}
+            className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
+              hideMajors
+                ? 'border-primary/30 bg-primary/10 text-primary'
+                : 'border-border/40 text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {hideMajors ? t('hideMajorsOn') : t('hideMajorsOff')}
+          </button>
+        </div>
+
+        {/* 桌面 / 平板:表格 */}
         <Card className="overflow-x-auto hidden sm:block">
-          <Table className="min-w-[720px]">
+          <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-8" />
-                <TableHead>{t('cols.name')}</TableHead>
+                <TableHead>{t('cols.token')}</TableHead>
                 <TableHead className="text-right">{t('cols.price')}</TableHead>
-                <TableHead className="text-right">{t('cols.change')}</TableHead>
-                <TableHead className="text-right hidden md:table-cell">
-                  {t('cols.volume')}
-                </TableHead>
-                <TableHead className="text-right hidden md:table-cell">
-                  {t('cols.mcap')}
-                </TableHead>
+                <TableHead className="text-right">5m</TableHead>
+                <TableHead className="text-right">1h</TableHead>
+                <TableHead className="text-right">24h</TableHead>
+                <TableHead className="text-right hidden md:table-cell">{t('cols.liqMcap')}</TableHead>
+                <TableHead className="text-right hidden lg:table-cell">{t('cols.volAge')}</TableHead>
+                <TableHead className="text-right hidden lg:table-cell">{t('cols.buySell')}</TableHead>
                 <TableHead className="text-right">{t('cols.action')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.length === 0
-                ? tab === 'fav' ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-20 text-center text-muted-foreground text-xs">
-                        {t('emptyFav')}
-                      </TableCell>
-                    </TableRow>
-                  ) : Array.from({ length: 5 }).map((_, i) => (
+              {rows.length === 0 ? (
+                loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={7} className="h-12 text-center text-muted-foreground text-xs">
-                        ⌛ loading…
+                      <TableCell colSpan={10} className="h-12 text-center text-muted-foreground text-xs">
+                        ⌛ {t('loading')}
                       </TableCell>
                     </TableRow>
                   ))
-                : rows.map((tok) => (
-                    <Row
-                      key={tok.mint}
-                      tok={tok}
-                      starred={isFavorite(tok.mint)}
-                      onToggleStar={() => toggle(tok.mint)}
-                      onTrade={() => router.push(`/trade?mint=${tok.mint}`)}
-                    />
-                  ))}
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={10} className="h-20 text-center text-muted-foreground text-xs">
+                      {tab === 'fav' ? t('emptyFav') : t('empty')}
+                    </TableCell>
+                  </TableRow>
+                )
+              ) : rows.map((it) => (
+                <Row
+                  key={it.mint}
+                  it={it}
+                  starred={isFavorite(it.mint)}
+                  onToggleStar={() => toggle(it.mint)}
+                  onQuickBuy={() => {
+                    if (!wallet.connected) return;
+                    openQuickBuy(it.mint, it.symbol);
+                  }}
+                  walletConnected={wallet.connected}
+                  t={t}
+                />
+              ))}
             </TableBody>
           </Table>
         </Card>
 
-        {/* 移动端:卡片视图(替代横向滚动表格) */}
+        {/* 移动端卡片 */}
         <div className="sm:hidden space-y-2">
           {rows.length === 0 ? (
             <Card className="p-6 text-center text-xs text-muted-foreground">
-              {tab === 'fav' ? t('emptyFav') : '⌛ loading…'}
+              {loading ? `⌛ ${t('loading')}` : (tab === 'fav' ? t('emptyFav') : t('empty'))}
             </Card>
-          ) : (
-            rows.map((tok) => (
-              <MobileCard
-                key={tok.mint}
-                tok={tok}
-                starred={isFavorite(tok.mint)}
-                onToggleStar={() => toggle(tok.mint)}
-                onTrade={() => router.push(`/trade?mint=${tok.mint}`)}
-              />
-            ))
-          )}
+          ) : rows.map((it) => (
+            <MobileCard
+              key={it.mint}
+              it={it}
+              starred={isFavorite(it.mint)}
+              onToggleStar={() => toggle(it.mint)}
+              onQuickBuy={() => {
+                if (!wallet.connected) return;
+                openQuickBuy(it.mint, it.symbol);
+              }}
+              walletConnected={wallet.connected}
+              t={t}
+            />
+          ))}
         </div>
       </div>
+
+      {/* T-956 #26 · 快买 dialog */}
+      {quickBuyMint && (
+        <QuickBuyConfirm
+          open={quickBuyOpen}
+          onOpenChange={(v) => {
+            setQuickBuyOpen(v);
+            if (!v) {
+              setQuickBuyMint(null);
+              setQuickBuySymbol(undefined);
+            }
+          }}
+          mint={quickBuyMint}
+          symbol={quickBuySymbol}
+        />
+      )}
     </section>
   );
 }
 
+function ChangePill({ pct }: { pct: number | null }) {
+  if (pct == null) return <span className="text-xs text-muted-foreground/50">—</span>;
+  const up = pct > 0;
+  const down = pct < 0;
+  const color = up ? 'text-success' : down ? 'text-danger' : 'text-muted-foreground';
+  const Icon = up ? TrendingUp : down ? TrendingDown : null;
+  return (
+    <span className={`text-xs font-mono inline-flex items-center gap-0.5 justify-end ${color}`}>
+      {Icon && <Icon className="h-3 w-3" />}
+      {up ? '+' : ''}{pct.toFixed(2)}%
+    </span>
+  );
+}
+
 function Row({
-  tok, starred, onToggleStar, onTrade,
+  it, starred, onToggleStar, onQuickBuy, walletConnected, t,
 }: {
-  tok: TokenInfo;
+  it: MarketItem;
   starred: boolean;
   onToggleStar: () => void;
-  onTrade: () => void;
+  onQuickBuy: () => void;
+  walletConnected: boolean;
+  t: ReturnType<typeof useTranslations>;
 }) {
-  const change = tok.priceChange24h;
-  const up = change != null && change > 0;
-  const down = change != null && change < 0;
-  const ChangeIcon = up ? TrendingUp : down ? TrendingDown : null;
-  const color = up ? 'text-success' : down ? 'text-danger' : 'text-muted-foreground';
-
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
       <TableCell className="pr-0">
@@ -197,76 +355,142 @@ function Row({
           aria-label={starred ? 'Remove favorite' : 'Add favorite'}
           className="p-1 hover:bg-muted/40 rounded transition-colors"
         >
-          <Star
-            className={`h-4 w-4 ${
-              starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'
-            }`}
-          />
+          <Star className={`h-4 w-4 ${starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'}`} />
         </button>
       </TableCell>
       <TableCell>
-        <Link href={`/trade?mint=${tok.mint}`} className="flex items-center gap-3">
+        <Link href={`/trade?mint=${it.mint}`} className="flex items-center gap-3 min-w-0">
           <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
-            {tok.logoUri ? (
-              <Image
-                src={tok.logoUri}
-                alt={tok.symbol}
-                width={32}
-                height={32}
-                className="object-cover"
-                unoptimized
-              />
+            {it.logo ? (
+              <Image src={it.logo} alt={it.symbol} width={32} height={32} className="object-cover" unoptimized />
             ) : (
               <span className="text-[10px] font-bold text-muted-foreground">
-                {tok.symbol.slice(0, 2).toUpperCase()}
+                {it.symbol.slice(0, 2).toUpperCase()}
               </span>
             )}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-sm font-medium truncate">{tok.symbol}</span>
-              <TokenTags kinds={tagsFor(tok)} />
-            </div>
-            {tok.name && tok.name !== tok.symbol && (
-              <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
-                {tok.name}
-              </div>
+            <div className="text-sm font-medium truncate">{it.symbol}</div>
+            {it.name && it.name !== it.symbol && (
+              <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{it.name}</div>
             )}
           </div>
         </Link>
       </TableCell>
       <TableCell className="text-right font-mono text-sm whitespace-nowrap">
-        ${formatPrice(tok.priceUsd)}
+        {it.priceUsd ? `$${formatPrice(it.priceUsd)}` : '—'}
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
-          <MiniSparkline
-            priceUsd={tok.priceUsd}
-            change24h={tok.priceChange24h}
-            change6h={tok.priceChange6h}
-            change1h={tok.priceChange1h}
-            change5m={tok.priceChange5m}
-            width={50}
-            height={18}
-          />
-          <span className={`text-xs font-mono inline-flex items-center gap-0.5 justify-end ${color}`}>
-            {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
-            {change != null ? `${up ? '+' : ''}${change.toFixed(2)}%` : '—'}
-          </span>
+        <ChangePill pct={it.change5m} />
+      </TableCell>
+      <TableCell className="text-right">
+        <ChangePill pct={it.change1h} />
+      </TableCell>
+      <TableCell className="text-right">
+        <ChangePill pct={it.change24h} />
+      </TableCell>
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell whitespace-nowrap">
+        <div>{it.liquidityUsd ? `$${formatCompact(it.liquidityUsd)}` : '—'}</div>
+        <div className="text-muted-foreground/60">
+          MC {it.marketCapUsd ? `$${formatCompact(it.marketCapUsd)}` : '—'}
         </div>
       </TableCell>
-      <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell">
-        {tok.volume24h ? `$${formatCompact(tok.volume24h)}` : '—'}
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden lg:table-cell whitespace-nowrap">
+        <div>{it.volumeH24 ? `$${formatCompact(it.volumeH24)}` : '—'}</div>
+        <div className="text-muted-foreground/60">{formatAge(it.ageHours)}</div>
       </TableCell>
-      <TableCell className="text-right font-mono text-xs text-muted-foreground hidden md:table-cell">
-        ${formatCompact(tok.marketCap)}
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden lg:table-cell whitespace-nowrap">
+        {it.buys24h != null || it.sells24h != null ? (
+          <span>
+            <span className="text-success">{it.buys24h ?? 0}</span>
+            {' / '}
+            <span className="text-danger">{it.sells24h ?? 0}</span>
+          </span>
+        ) : '—'}
       </TableCell>
       <TableCell className="text-right">
-        <Button size="sm" variant="ghost" className="h-7 px-2 text-primary" onClick={onTrade}>
-          <ShoppingCart className="h-3.5 w-3.5" />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 px-2 text-success hover:bg-success/10"
+          onClick={onQuickBuy}
+          disabled={!walletConnected}
+          title={walletConnected ? t('actions.quickBuyTitle') : t('actions.quickBuyConnectFirst')}
+        >
+          <Zap className="h-3 w-3 mr-0.5" />
+          <span className="text-[10px] font-mono">0.1</span>
         </Button>
       </TableCell>
     </TableRow>
+  );
+}
+
+function MobileCard({
+  it, starred, onToggleStar, onQuickBuy, walletConnected, t,
+}: {
+  it: MarketItem;
+  starred: boolean;
+  onToggleStar: () => void;
+  onQuickBuy: () => void;
+  walletConnected: boolean;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <Card className="p-3">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleStar}
+          aria-label={starred ? 'Remove favorite' : 'Add favorite'}
+          className="h-11 w-11 -m-3 flex items-center justify-center hover:bg-muted/40 rounded transition-colors flex-shrink-0"
+        >
+          <Star className={`h-4 w-4 ${starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'}`} />
+        </button>
+
+        <Link href={`/trade?mint=${it.mint}`} className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
+            {it.logo ? (
+              <Image src={it.logo} alt={it.symbol} width={36} height={36} className="object-cover" unoptimized />
+            ) : (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {it.symbol.slice(0, 2).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold truncate">{it.symbol}</div>
+            <div className="text-[10px] font-mono text-muted-foreground/60 truncate">
+              LP ${formatCompact(it.liquidityUsd ?? 0)} · MC ${formatCompact(it.marketCapUsd ?? 0)} · {formatAge(it.ageHours)}
+            </div>
+          </div>
+        </Link>
+
+        <div className="text-right flex-shrink-0">
+          <div className="text-sm font-mono font-semibold">
+            {it.priceUsd ? `$${formatPrice(it.priceUsd)}` : '—'}
+          </div>
+          <ChangePill pct={it.change24h} />
+        </div>
+
+        <button
+          type="button"
+          onClick={onQuickBuy}
+          aria-label="Quick buy 0.1 SOL"
+          disabled={!walletConnected}
+          className="h-11 w-11 -m-3 ml-0 flex items-center justify-center text-success hover:bg-success/10 disabled:opacity-40 rounded transition-colors flex-shrink-0"
+          title={walletConnected ? t('actions.quickBuyTitle') : t('actions.quickBuyConnectFirst')}
+        >
+          <Zap className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* 5m / 1h / 24h 三档 */}
+      <div className="mt-2 flex items-center justify-end gap-3 text-[10px] font-mono">
+        <span className="text-muted-foreground/60">5m <ChangePill pct={it.change5m} /></span>
+        <span className="text-muted-foreground/60">1h <ChangePill pct={it.change1h} /></span>
+        <span className="text-muted-foreground/60">24h <ChangePill pct={it.change24h} /></span>
+      </div>
+    </Card>
   );
 }
 
@@ -293,95 +517,10 @@ function formatCompact(n: number): string {
   return n.toFixed(0);
 }
 
-/**
- * 移动端卡片视图 · 把表格行改成纵向卡片布局
- *
- * 一卡两行:
- *  Row1: [⭐] [logo] [SYMBOL + 标签] [价格 + 涨跌] [🛒]
- *  Row2: [迷你 sparkline]   [Vol + MC]
- */
-function MobileCard({
-  tok, starred, onToggleStar, onTrade,
-}: {
-  tok: TokenInfo;
-  starred: boolean;
-  onToggleStar: () => void;
-  onTrade: () => void;
-}) {
-  const change = tok.priceChange24h;
-  const up = change != null && change > 0;
-  const down = change != null && change < 0;
-  const ChangeIcon = up ? TrendingUp : down ? TrendingDown : null;
-  const color = up ? 'text-success' : down ? 'text-danger' : 'text-muted-foreground';
-
-  return (
-    <Card className="p-3">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onToggleStar}
-          aria-label={starred ? 'Remove favorite' : 'Add favorite'}
-          // 44px tap target
-          className="h-11 w-11 -m-3 flex items-center justify-center hover:bg-muted/40 rounded transition-colors flex-shrink-0"
-        >
-          <Star
-            className={`h-4 w-4 ${
-              starred ? 'fill-warning text-warning' : 'text-muted-foreground/40'
-            }`}
-          />
-        </button>
-
-        <Link href={`/trade?mint=${tok.mint}`} className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
-            {tok.logoUri ? (
-              <Image src={tok.logoUri} alt={tok.symbol} width={36} height={36} className="object-cover" unoptimized />
-            ) : (
-              <span className="text-[10px] font-bold text-muted-foreground">
-                {tok.symbol.slice(0, 2).toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold truncate">{tok.symbol}</span>
-              <TokenTags kinds={tagsFor(tok)} />
-            </div>
-            <div className="text-[10px] font-mono text-muted-foreground/60 truncate">
-              Vol ${formatCompact(tok.volume24h ?? 0)} · MC ${formatCompact(tok.marketCap)}
-            </div>
-          </div>
-        </Link>
-
-        <div className="text-right flex-shrink-0">
-          <div className="text-sm font-mono font-semibold">${formatPrice(tok.priceUsd)}</div>
-          <div className={`text-[11px] font-mono inline-flex items-center gap-0.5 justify-end ${color}`}>
-            {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
-            {change != null ? `${up ? '+' : ''}${change.toFixed(2)}%` : '—'}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onTrade}
-          aria-label="Trade"
-          // 44px tap
-          className="h-11 w-11 -m-3 ml-0 flex items-center justify-center text-primary hover:bg-primary/10 rounded transition-colors flex-shrink-0"
-        >
-          <ShoppingCart className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="mt-2 flex justify-end">
-        <MiniSparkline
-          priceUsd={tok.priceUsd}
-          change24h={tok.priceChange24h}
-          change6h={tok.priceChange6h}
-          change1h={tok.priceChange1h}
-          change5m={tok.priceChange5m}
-          width={120}
-          height={24}
-        />
-      </div>
-    </Card>
-  );
+function formatAge(hours: number | null): string {
+  if (hours == null) return '—';
+  if (hours < 1) return `${Math.round(hours * 60)}m`;
+  if (hours < 24) return `${hours.toFixed(1)}h`;
+  if (hours < 24 * 30) return `${(hours / 24).toFixed(0)}d`;
+  return `${(hours / (24 * 30)).toFixed(0)}mo`;
 }

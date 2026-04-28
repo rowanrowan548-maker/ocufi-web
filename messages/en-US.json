@@ -1310,6 +1310,33 @@
       "action": "Action"
     }
   },
+  "markets": {
+    "title": "Markets",
+    "subtitle": "Live from GeckoTerminal · trending 60s cache · new pairs 30s",
+    "tabs": {
+      "trending": "Trending",
+      "newpairs": "New Pairs",
+      "fav": "Watchlist",
+      "major": "Major"
+    },
+    "cols": {
+      "token": "Token",
+      "price": "Price",
+      "liqMcap": "Liquidity / MCap",
+      "volAge": "Volume / Age",
+      "buySell": "24h Buy/Sell",
+      "action": "Action"
+    },
+    "actions": {
+      "quickBuyTitle": "Quick buy 0.1 SOL · with your defaults",
+      "quickBuyConnectFirst": "Connect wallet first"
+    },
+    "loading": "Loading…",
+    "empty": "No data yet · backend worker still fetching",
+    "emptyFav": "No favorites yet — tap the star to add",
+    "hideMajorsOff": "Hide SOL/USDC",
+    "hideMajorsOn": "Show SOL/USDC"
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong",

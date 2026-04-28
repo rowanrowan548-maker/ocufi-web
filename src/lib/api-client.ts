@@ -525,3 +525,46 @@ export async function fetchTokenRadar(category: RadarCategory, limit = 20): Prom
   const r = await apiFetch<RadarResp>(`/token/radar?category=${category}&limit=${limit}`);
   return r.items ?? r.list ?? [];
 }
+
+// ─── T-955 · /markets/{trending,new-pairs} ───
+
+export type MarketsTimeframe = '5m' | '15m' | '1h' | '24h';
+
+export interface MarketItem {
+  mint: string;
+  symbol: string;
+  name: string;
+  logo: string | null;
+  priceUsd: number | null;
+  change5m: number | null;
+  change1h: number | null;
+  change24h: number | null;
+  liquidityUsd: number | null;
+  marketCapUsd: number | null;
+  fdvUsd: number | null;
+  volumeH24: number | null;
+  ageHours: number | null;
+  buys24h: number | null;
+  sells24h: number | null;
+  holdersCount: number | null;
+  topPoolAddress: string | null;
+}
+
+export interface MarketsResp {
+  ok: boolean;
+  items: MarketItem[];
+  cached: boolean;
+  stale?: boolean;
+  fetched_at?: number | null;
+  error?: string | null;
+}
+
+export async function fetchMarketsTrending(timeframe: MarketsTimeframe, limit = 50): Promise<MarketItem[]> {
+  const r = await apiFetch<MarketsResp>(`/markets/trending?timeframe=${timeframe}&limit=${limit}`);
+  return r.items ?? [];
+}
+
+export async function fetchMarketsNewPairs(limit = 50): Promise<MarketItem[]> {
+  const r = await apiFetch<MarketsResp>(`/markets/new-pairs?limit=${limit}`);
+  return r.items ?? [];
+}

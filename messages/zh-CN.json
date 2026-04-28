@@ -1325,6 +1325,33 @@
       "action": "操作"
     }
   },
+  "markets": {
+    "title": "代币行情",
+    "subtitle": "GeckoTerminal 实时聚合 · trending 60s 缓存 · new pairs 30s",
+    "tabs": {
+      "trending": "Trending",
+      "newpairs": "New Pairs",
+      "fav": "自选",
+      "major": "主流"
+    },
+    "cols": {
+      "token": "代币",
+      "price": "价格",
+      "liqMcap": "流动性 / 市值",
+      "volAge": "成交量 / 池龄",
+      "buySell": "24h 买/卖",
+      "action": "操作"
+    },
+    "actions": {
+      "quickBuyTitle": "0.1 SOL 快买 · 用默认参数",
+      "quickBuyConnectFirst": "先连钱包"
+    },
+    "loading": "加载中…",
+    "empty": "暂无数据 · 后端 worker 抓取中",
+    "emptyFav": "还没有自选代币 — 点行首星标添加",
+    "hideMajorsOff": "隐藏 SOL/USDC",
+    "hideMajorsOn": "显示 SOL/USDC"
+  },
   "common": {
     "loading": "加载中…",
     "error": "出错了",
