@@ -112,15 +112,15 @@ export function TradeScreen() {
   }, [mint]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 py-2 sm:py-6 space-y-2 sm:space-y-4">
       <RpcHealthBanner />
       {/* 桌面端独立选币卡;移动端被 TradingHeader 内嵌的切币 popover 取代 */}
       <div className="hidden lg:block">
         <TokenSearchCombo value={mint} onSelect={setMint} />
       </div>
 
-      {/* T-962:移动端 TradingHeader sticky top + 桌面正常流 */}
-      <div className="lg:static lg:bg-transparent lg:backdrop-blur-none sticky top-0 lg:top-auto z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 lg:mx-0 lg:px-0 py-2 lg:py-0 bg-background/95 backdrop-blur lg:backdrop-blur-none">
+      {/* T-962/T-977b:移动端 TradingHeader sticky top + 桌面正常流(padding 压扁) */}
+      <div className="lg:static lg:bg-transparent lg:backdrop-blur-none sticky top-0 lg:top-auto z-30 -mx-2 sm:-mx-6 px-2 sm:px-6 lg:mx-0 lg:px-0 py-1 lg:py-0 bg-background/95 backdrop-blur lg:backdrop-blur-none">
         <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
       </div>
 

@@ -270,8 +270,10 @@ export function TradingHeader({ mint, detail: detailProp, onSelectMint }: Props)
         </div>
       </Card>
 
-      {/* ───── 移动 < lg · OKX 风格(T-505c) ───── */}
-      <Card className="lg:hidden p-3">
+      {/* ───── 移动 < lg · OKX 一屏密度(T-977b 压扁) ─────
+          删 6 数字 data 条(数据已搬到右栏 MobileDataColumn)
+          压缩 padding + 缩 price 字号 + 移除 Card border/shadow */}
+      <div className="lg:hidden px-2 py-1.5">
         {/* 顶部一行:back + 头像 + SYMBOL ▼(切币) + 验证 + mint + 复制 + ⭐ */}
         <TokenSearchCombo
           value={mint}
@@ -352,54 +354,27 @@ export function TradingHeader({ mint, detail: detailProp, onSelectMint }: Props)
           )}
         />
 
-        {/* 价格行(占满宽 · inline 涨跌 ) */}
-        <div className="mt-3 pt-3 border-t border-border/40 flex items-baseline gap-3 flex-wrap">
-          <span className="text-2xl font-bold font-mono tracking-tight leading-none">
+        {/* T-977b · 价格行 inline 单行(text-2xl→text-lg / 缩 mt + 取消 border-t) */}
+        <div className="mt-1 flex items-baseline gap-2 flex-wrap">
+          <span className="text-lg font-bold font-mono tracking-tight leading-none tabular-nums">
             ${formatPrice(detail.priceUsd)}
           </span>
           {change != null && (
             <span
-              className={`text-sm font-mono font-medium flex items-center gap-0.5 ${changeColor}`}
+              className={`text-xs font-mono font-medium flex items-center gap-0.5 tabular-nums ${changeColor}`}
             >
-              {ChangeIcon && <ChangeIcon className="h-3.5 w-3.5" />}
+              {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
               {up ? '+' : ''}
               {change.toFixed(2)}%
             </span>
           )}
-        </div>
-
-        {/* 数据条 6 项 grid-cols-3 × 2 行 */}
-        <div className="mt-3 pt-3 border-t border-border/40 grid grid-cols-3 gap-3">
-          <DataCell
-            label={t('trade.header.dataLabels.marketCap')}
-            value={formatUsdCompact(detail.marketCap)}
-          />
-          <DataCell
-            label={t('trade.header.dataLabels.liquidity')}
-            value={formatUsdCompact(detail.liquidityUsd)}
-          />
-          <DataCell
-            label={t('trade.header.dataLabels.volume24h')}
-            value={formatUsdCompact(detail.volume24h ?? null)}
-          />
-          <DataCell
-            label={t('trade.header.dataLabels.holders')}
-            value={formatCompact(detail.totalHolders ?? null)}
-          />
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-muted-foreground text-[10px] uppercase tracking-wide">
-              {t('trade.header.dataLabels.risk')}
-            </span>
-            <div className="flex items-center">
-              <RiskBadge level={risk} label={t(`token.risk.${risk}`)} />
-            </div>
+          {/* T-977b · 风险 badge inline 同行(数据条已删 · 风险移到价格行右侧) */}
+          <div className="ml-auto">
+            <RiskBadge level={risk} label={t(`token.risk.${risk}`)} />
           </div>
-          <DataCell
-            label={t('trade.header.dataLabels.age')}
-            value={formatAge(detail.createdAt, t)}
-          />
         </div>
-      </Card>
+        {/* T-977b · 删整块 6 数字 data 条(市值/流动性/24h/持币/年龄 已搬到右栏 MobileDataColumn) */}
+      </div>
     </>
   );
 }

@@ -23,6 +23,8 @@ interface Props {
   value: GasLevel;
   onChange: (v: GasLevel) => void;
   id?: string;
+  /** T-977b · 紧凑模式(移动端 50% 列宽) · text-[11px] / h-8 trigger */
+  compact?: boolean;
 }
 
 const ETA_BY_LEVEL: Record<GasLevel, string> = {
@@ -31,7 +33,7 @@ const ETA_BY_LEVEL: Record<GasLevel, string> = {
   turbo: '<3s',
 };
 
-export function GasSelect({ value, onChange, id }: Props) {
+export function GasSelect({ value, onChange, id, compact }: Props) {
   const t = useTranslations();
   const fees = usePriorityFees();
 
@@ -48,10 +50,10 @@ export function GasSelect({ value, onChange, id }: Props) {
     : 'text-muted-foreground';
 
   return (
-    <div className="space-y-2">
+    <div className={compact ? 'space-y-1' : 'space-y-2'}>
       <div className="flex items-center justify-between">
-        <Label htmlFor={id}>{t('trade.fields.gas')}</Label>
-        {fees && (
+        <Label htmlFor={id} className={compact ? 'text-[11px]' : undefined}>{t('trade.fields.gas')}</Label>
+        {fees && !compact && (
           <span className={`text-[10px] font-mono ${congestionTone}`}>
             {t(`trade.gas.congestion.${fees.congestion}`)}
           </span>
@@ -59,7 +61,7 @@ export function GasSelect({ value, onChange, id }: Props) {
       </div>
 
       <Select value={value} onValueChange={(v) => onChange(v as GasLevel)}>
-        <SelectTrigger id={id}>{t(`trade.gas.${value}`)}</SelectTrigger>
+        <SelectTrigger id={id} className={compact ? 'h-8 text-xs' : undefined}>{t(`trade.gas.${value}`)}</SelectTrigger>
         <SelectContent>
           {(['normal', 'fast', 'turbo'] as GasLevel[]).map((g) => (
             <SelectItem key={g} value={g}>

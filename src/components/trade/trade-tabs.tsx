@@ -94,27 +94,29 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
   }
 
   return (
-    <Card className={compact ? 'p-3 sm:p-4' : 'p-6 w-full max-w-xl'}>
+    <Card className={compact ? 'p-2' : 'p-6 w-full max-w-xl'}>
       {/* 外层 Buy/Sell */}
       <Tabs value={side} onValueChange={(v) => v && setSide(v as Side)}>
-        <TabsList className="grid w-full grid-cols-2 mb-3">
-          <TabsTrigger value="buy">{t('trade.tabs.buy')}</TabsTrigger>
-          <TabsTrigger value="sell">{t('trade.tabs.sell')}</TabsTrigger>
+        <TabsList className={compact ? 'grid w-full grid-cols-2 mb-2 h-8' : 'grid w-full grid-cols-2 mb-3'}>
+          <TabsTrigger value="buy" className={compact ? 'text-xs' : undefined}>{t('trade.tabs.buy')}</TabsTrigger>
+          <TabsTrigger value="sell" className={compact ? 'text-xs' : undefined}>{t('trade.tabs.sell')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* 内层 市价/限价 */}
       <Tabs value={orderType} onValueChange={(v) => v && setOrderType(v as OrderType)}>
-        <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto">
+        <TabsList className={compact
+          ? 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-3 px-0 mb-2 h-auto'
+          : 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto'}>
           <TabsTrigger
             value="market"
-            className="px-0 py-2 rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary"
+            className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
           >
             {t('trade.orderType.market')}
           </TabsTrigger>
           <TabsTrigger
             value="limit"
-            className="px-0 py-2 rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary"
+            className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
           >
             {t('trade.orderType.limit')}
           </TabsTrigger>

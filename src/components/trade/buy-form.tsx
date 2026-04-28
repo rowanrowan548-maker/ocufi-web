@@ -405,7 +405,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           </CardHeader>
         )}
 
-        <CardContent className="space-y-4">
+        <CardContent className={compact ? 'space-y-2 p-2' : 'space-y-4'}>
           {/* 受控时(trade-screen 顶部已有搜索)隐藏自己的 mint 输入 */}
           {mintProp == null && (
             <div className="space-y-2">
@@ -422,9 +422,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           )}
 
           {/* BUG-036:SOL 数量全宽,滑点 + 优先级 横排 50/50(桌面 + 移动一致) */}
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="buy-sol">{t('trade.fields.solAmount')}</Label>
+          <div className={compact ? 'space-y-1.5' : 'space-y-3'}>
+            <div className={compact ? 'space-y-1' : 'space-y-2'}>
+              <Label htmlFor="buy-sol" className={compact ? 'text-[11px]' : undefined}>{t('trade.fields.solAmount')}</Label>
               <Input
                 id="buy-sol"
                 type="number"
@@ -432,11 +432,11 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 min="0.001"
                 value={solAmount}
                 onChange={(e) => { setSolAmount(e.target.value); resetOnInput(); }}
-                className={insufficientBalance ? 'border-danger focus:border-danger' : undefined}
+                className={`${insufficientBalance ? 'border-danger focus:border-danger' : ''} ${compact ? 'h-8 text-sm' : ''}`.trim() || undefined}
               />
               {/* T-972 范围 1 · 超额输入 → 红色提示 + 按钮 disabled */}
               {insufficientBalance && (
-                <div className="text-[11px] text-danger flex items-center gap-1">
+                <div className="text-[10px] text-danger flex items-center gap-1">
                   <AlertCircle className="h-3 w-3 flex-shrink-0" />
                   {t('trade.errors.balanceInsufficientHint', {
                     max: Math.max(0, (solBalance ?? 0) - SOL_RESERVE).toFixed(4),
@@ -444,9 +444,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="buy-slippage">{t('trade.fields.slippage')}</Label>
+            <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'}>
+              <div className={compact ? 'space-y-1' : 'space-y-2'}>
+                <Label htmlFor="buy-slippage" className={compact ? 'text-[11px]' : undefined}>{t('trade.fields.slippage')}</Label>
                 <Select
                   value={String(slippageBps)}
                   onValueChange={(v) => {
@@ -455,7 +455,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                     resetOnInput();
                   }}
                 >
-                  <SelectTrigger id="buy-slippage">
+                  <SelectTrigger id="buy-slippage" className={compact ? 'h-8 text-xs' : undefined}>
                     {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
                   </SelectTrigger>
                   <SelectContent>
@@ -472,24 +472,25 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                   </div>
                 )}
               </div>
-              <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} />
+              <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} compact={compact} />
             </div>
           </div>
 
-          {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX */}
+          {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX
+              T-977b · compact 模式只留 buyAmounts[3] + MAX(50% 列宽塞不下 7 颗) */}
           {wallet.connected && (
-            <div className="flex gap-2 flex-wrap">
-              {/* T-929-cont #144:用 buy-prefs-store 的预设(默认 0.1/0.5/1)+ 固定 2/5 SOL */}
-              {[...buyAmounts, 2, 5].map((v, i) => (
+            <div className={compact ? 'grid grid-cols-4 gap-1' : 'flex gap-2 flex-wrap'}>
+              {/* T-929-cont #144:用 buy-prefs-store 的预设(默认 0.1/0.5/1)+ 桌面再补 2/5 SOL */}
+              {(compact ? buyAmounts : [...buyAmounts, 2, 5]).map((v, i) => (
                 <Button
                   key={`${v}-${i}`}
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
-                  className="text-xs px-2.5"
+                  className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-2.5'}
                 >
-                  {v} SOL
+                  {v}
                 </Button>
               ))}
               <Button
@@ -503,10 +504,10 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                   setSolAmount(max.toFixed(4));
                   resetOnInput();
                 }}
-                className="text-xs px-3"
+                className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-3'}
               >
                 {t('trade.quickAmount.max')}
-                {solBalance != null && (
+                {solBalance != null && !compact && (
                   <span className="ml-1 text-muted-foreground/70 font-mono">
                     {Math.max(0, solBalance - SOL_RESERVE).toFixed(2)}
                   </span>
