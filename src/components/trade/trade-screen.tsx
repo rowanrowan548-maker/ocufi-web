@@ -164,8 +164,8 @@ export function TradeScreen() {
           <ChartCard mint={mint} />
         </div>
 
-        {/* T-977 #3 · 50/50 双栏:左买入 / 右数据 + mini 成交流(右栏空白补) */}
-        <div className="grid grid-cols-2 gap-2 items-start">
+        {/* T-977f · 50/50 双栏:items-stretch · 右栏 trades 撑满左栏 buy form 高度 */}
+        <div className="grid grid-cols-2 gap-2 items-stretch">
           <div className="min-w-0">
             <TradeTabs
               mint={mint}
@@ -176,17 +176,24 @@ export function TradeScreen() {
               onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
             />
           </div>
-          <div className="min-w-0 space-y-2">
-            <MobileDataColumn detail={detail} />
-            {/* T-977d · buy form 旁下半空白填 mini trades(类比 OKX 订单簿) */}
-            <MiniTradeFlow mint={mint} limit={8} />
+          <div className="min-w-0 flex flex-col gap-2">
+            <div className="flex-shrink-0">
+              <MobileDataColumn detail={detail} />
+            </div>
+            {/* T-977f · trades 撑满剩余空间 · 显 20 笔内滚 */}
+            <div className="flex-1 min-h-0">
+              <MiniTradeFlow mint={mint} limit={20} />
+            </div>
           </div>
         </div>
 
-        {/* T-977 #4 · 底部活动 tab · 锚点 #mobile-activity-board 给 mini trades 跳转 */}
-        <div id="mobile-activity-board">
-          <ActivityBoard detail={detail} />
-        </div>
+        {/* T-977f · 底部 ActivityBoard 删 activity tab(右栏 mini trades 替代)
+            保留 orders/holders/liquidity 3 tabs · 默认 orders */}
+        <ActivityBoard
+          detail={detail}
+          tabs={['orders', 'holders', 'liquidity']}
+          initialTab="orders"
+        />
       </div>
 
       {/* 移动端底部固定双按钮 CTA(T-505b · 仅 lg:hidden) */}

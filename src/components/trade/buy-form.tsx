@@ -580,39 +580,64 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
           )}
         </CardContent>
 
-        <CardContent className="pt-0">
-          {/* 报价状态指示 */}
-          {validInput && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-              <span>
-                {autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
-                {autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
-                {autoQuote.status === 'error' && (
-                  <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+        <CardContent className={compact ? 'pt-0 px-2 pb-2 space-y-1.5' : 'pt-0'}>
+          {/* T-977f · compact 模式合并:状态 · 滑点 · Gas inline 1 行
+              桌面端仍保留两行(状态 + 滑点 hint) */}
+          {compact ? (
+            (validInput || wallet.connected) && (
+              <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground/70 font-mono mb-1.5">
+                <span className="truncate">
+                  {validInput && autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
+                  {validInput && autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
+                  {validInput && autoQuote.status === 'error' && (
+                    <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+                  )}
+                  {wallet.connected && (
+                    <span className="ml-1">
+                      · {(slippageBps / 100).toFixed(slippageBps < 100 ? 1 : 0)}% · {t(`trade.gas.${gasLevel}`)}
+                    </span>
+                  )}
+                </span>
+                {validInput && autoQuote.status === 'ok' && (
+                  <RefreshRing remaining={autoQuote.refreshIn} total={8} size={14} />
                 )}
-                {autoQuote.status === 'idle' && '—'}
-              </span>
-              {autoQuote.status === 'ok' && (
-                <RefreshRing
-                  remaining={autoQuote.refreshIn}
-                  total={8}
-                  size={20}
-                />
+                {validInput && autoQuote.status === 'loading' && (
+                  <RefreshRing remaining={0} total={8} size={14} loading />
+                )}
+              </div>
+            )
+          ) : (
+            <>
+              {/* 报价状态指示(桌面)*/}
+              {validInput && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                  <span>
+                    {autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
+                    {autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
+                    {autoQuote.status === 'error' && (
+                      <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+                    )}
+                    {autoQuote.status === 'idle' && '—'}
+                  </span>
+                  {autoQuote.status === 'ok' && (
+                    <RefreshRing remaining={autoQuote.refreshIn} total={8} size={20} />
+                  )}
+                  {autoQuote.status === 'loading' && (
+                    <RefreshRing remaining={0} total={8} size={20} loading />
+                  )}
+                </div>
               )}
-              {autoQuote.status === 'loading' && (
-                <RefreshRing remaining={0} total={8} size={20} loading />
-              )}
-            </div>
+            </>
           )}
 
           {/* T-925 #52:命中 honeypot/blacklist hard-block 信号 → 红色提示 + 禁用买入 */}
           {isBlocked && (
-            <div className="rounded-md border border-danger/60 bg-danger/15 p-3 text-xs space-y-1.5">
+            <div className={`rounded-md border border-danger/60 bg-danger/15 ${compact ? 'p-2' : 'p-3'} text-xs space-y-1`}>
               <div className="flex items-start gap-2 text-danger font-medium">
                 <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <div>{t('trade.confirm.blocked')}</div>
               </div>
-              <div className="text-muted-foreground pl-6">{t('trade.confirm.blockedHint')}</div>
+              {!compact && <div className="text-muted-foreground pl-6">{t('trade.confirm.blockedHint')}</div>}
               <ul className="pl-6 space-y-0.5 list-disc list-inside marker:text-danger/60">
                 {blockedReasons.map((r) => (
                   <li key={r.code} className="text-foreground">
@@ -623,8 +648,8 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
             </div>
           )}
 
-          {/* T-926 #37:滑点 + Gas 默认值露出按钮上方一行小字 */}
-          {wallet.connected && (
+          {/* T-926 #37:桌面端滑点+Gas hint 单独 1 行(compact 已合并到上方)*/}
+          {!compact && wallet.connected && (
             <div className="text-[11px] text-muted-foreground/70 font-mono text-center">
               {t('trade.preview.currentSlipGasHint', {
                 slippage: (slippageBps / 100).toFixed(slippageBps < 100 ? 1 : 0),

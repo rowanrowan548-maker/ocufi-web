@@ -8,9 +8,9 @@
  */
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { fetchMintTrades, type GTTrade } from '@/lib/geckoterminal';
+import { getCurrentChain } from '@/config/chains';
 
 interface Props {
   mint: string;
@@ -21,6 +21,7 @@ const REFRESH_MS = 30_000;
 
 export function MiniTradeFlow({ mint, limit = 8 }: Props) {
   const t = useTranslations('trade.activity');
+  const chain = getCurrentChain();
   const [trades, setTrades] = useState<GTTrade[] | null>(null);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function MiniTradeFlow({ mint, limit = 8 }: Props) {
 
   if (!trades) {
     return (
-      <div className="rounded-md border border-border/40 bg-card/40 p-2 space-y-1">
+      <div className="rounded-md border border-border/40 bg-card/40 p-2 space-y-1 h-full">
         <div className="h-2 w-full bg-muted/40 animate-pulse rounded" />
         <div className="h-2 w-3/4 bg-muted/40 animate-pulse rounded" />
         <div className="h-2 w-2/3 bg-muted/40 animate-pulse rounded" />
@@ -55,41 +56,41 @@ export function MiniTradeFlow({ mint, limit = 8 }: Props) {
 
   if (trades.length === 0) {
     return (
-      <div className="rounded-md border border-border/40 bg-card/40 p-2 text-[10px] text-muted-foreground/60 text-center">
+      <div className="rounded-md border border-border/40 bg-card/40 p-2 text-[10px] text-muted-foreground/60 text-center h-full flex items-center justify-center">
         {t('noActivity.title')}
       </div>
     );
   }
 
   return (
-    <Link
-      href="#mobile-activity-board"
-      className="block rounded-md border border-border/40 bg-card/40 p-2 hover:bg-card/60 transition-colors"
-      aria-label={t('activity')}
-    >
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 mb-1">
+    <div className="rounded-md border border-border/40 bg-card/40 flex flex-col h-full min-h-0">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 px-2 pt-2 pb-1 flex-shrink-0">
         {t('activity')}
       </div>
-      <div className="space-y-0.5">
+      <div className="px-2 pb-2 flex-1 min-h-0 overflow-y-auto space-y-0.5">
         {trades.slice(0, limit).map((tr) => {
           const isBuy = tr.kind === 'buy';
           const Icon = isBuy ? ArrowDownRight : ArrowUpRight;
           const cls = isBuy ? 'text-success' : 'text-destructive';
           return (
-            <div
+            <a
               key={tr.txSignature}
-              className="grid grid-cols-[14px_1fr_auto] items-center gap-1 text-[10px] leading-tight font-mono tabular-nums"
+              href={`${chain.explorer}/tx/${tr.txSignature}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="grid grid-cols-[14px_1fr_auto] items-center gap-1 text-[10px] leading-tight font-mono tabular-nums hover:bg-card/60 -mx-1 px-1 rounded transition-colors"
+              aria-label={`${tr.kind} $${tr.usdValue}`}
             >
               <Icon className={`h-2.5 w-2.5 ${cls}`} />
               <span className={`${cls} truncate`}>
                 ${formatCompact(tr.usdValue)}
               </span>
               <span className="text-muted-foreground/60">{formatAge(tr.blockTimestampMs)}</span>
-            </div>
+            </a>
           );
         })}
       </div>
-    </Link>
+    </div>
   );
 }
 

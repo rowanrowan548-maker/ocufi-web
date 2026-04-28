@@ -42,16 +42,19 @@ interface Props {
   detail: TokenDetail | null;
   /** 默认聚焦哪个内 tab(给 T-505a 移动端 5 tab 复用 ActivityBoard 用) */
   initialTab?: ActivityBoardTab;
+  /** T-977f · 限制只渲染指定 tab(移动端去重 mini trades 用) */
+  tabs?: ActivityBoardTab[];
 }
 
 const ACTIVITY_REFRESH_MS = 30_000;
 
-export function ActivityBoard({ detail, initialTab }: Props) {
+export function ActivityBoard({ detail, initialTab, tabs }: Props) {
   const t = useTranslations('trade.activity');
   const locale = useLocale();
   const chain = getCurrentChain();
   const { connection } = useConnection();
-  const [tab, setTab] = useState<ActivityBoardTab>(initialTab ?? 'activity');
+  const showTab = (tab: ActivityBoardTab) => !tabs || tabs.includes(tab);
+  const [tab, setTab] = useState<ActivityBoardTab>(initialTab ?? tabs?.[0] ?? 'activity');
 
   const mint = detail?.mint;
 
@@ -129,23 +132,33 @@ export function ActivityBoard({ detail, initialTab }: Props) {
     <Card className="p-4">
       <Tabs value={tab} onValueChange={(v) => v && setTab(v as ActivityBoardTab)}>
         <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto overflow-x-auto">
-          <TabBtn value="activity" Icon={Activity}>
-            {t('activity')}{trades?.length ? ` ${trades.length}` : ''}
-          </TabBtn>
-          <TabBtn value="orders" Icon={ListOrdered}>{t('orders')}</TabBtn>
-          <TabBtn value="holders" Icon={Users}>
-            {t('holders')}
-            {detail?.totalHolders ? ` ${detail.totalHolders.toLocaleString()}` : ''}
-          </TabBtn>
-          <TabBtn value="liquidity" Icon={Droplets}>
-            {t('liquidity')}{pairs?.length ? ` ${pairs.length}` : ''}
-          </TabBtn>
-          <TabBtn value="top-traders" Icon={Trophy}>
-            {t('topTraders')}{traders.length ? ` ${traders.length}` : ''}
-          </TabBtn>
-          <TabBtn value="risks" Icon={AlertTriangle}>
-            {t('risks')}{detail?.risks?.length ? ` ${detail.risks.length}` : ''}
-          </TabBtn>
+          {showTab('activity') && (
+            <TabBtn value="activity" Icon={Activity}>
+              {t('activity')}{trades?.length ? ` ${trades.length}` : ''}
+            </TabBtn>
+          )}
+          {showTab('orders') && <TabBtn value="orders" Icon={ListOrdered}>{t('orders')}</TabBtn>}
+          {showTab('holders') && (
+            <TabBtn value="holders" Icon={Users}>
+              {t('holders')}
+              {detail?.totalHolders ? ` ${detail.totalHolders.toLocaleString()}` : ''}
+            </TabBtn>
+          )}
+          {showTab('liquidity') && (
+            <TabBtn value="liquidity" Icon={Droplets}>
+              {t('liquidity')}{pairs?.length ? ` ${pairs.length}` : ''}
+            </TabBtn>
+          )}
+          {showTab('top-traders') && (
+            <TabBtn value="top-traders" Icon={Trophy}>
+              {t('topTraders')}{traders.length ? ` ${traders.length}` : ''}
+            </TabBtn>
+          )}
+          {showTab('risks') && (
+            <TabBtn value="risks" Icon={AlertTriangle}>
+              {t('risks')}{detail?.risks?.length ? ` ${detail.risks.length}` : ''}
+            </TabBtn>
+          )}
         </TabsList>
 
         {/* ── 活动 ── */}

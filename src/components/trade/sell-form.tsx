@@ -493,24 +493,50 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           )}
         </CardContent>
 
-        <CardContent className="pt-0">
-          {validInput && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-              <span>
-                {autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
-                {autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
-                {autoQuote.status === 'error' && (
-                  <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+        <CardContent className={compact ? 'pt-0 px-2 pb-2' : 'pt-0'}>
+          {/* T-977f · compact 模式合并:状态 · 滑点 · Gas inline 1 行 */}
+          {compact ? (
+            (validInput || wallet.connected) && (
+              <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground/70 font-mono mb-1.5">
+                <span className="truncate">
+                  {validInput && autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
+                  {validInput && autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
+                  {validInput && autoQuote.status === 'error' && (
+                    <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+                  )}
+                  {wallet.connected && (
+                    <span className="ml-1">
+                      · {(slippageBps / 100).toFixed(slippageBps < 100 ? 1 : 0)}% · {t(`trade.gas.${gasLevel}`)}
+                    </span>
+                  )}
+                </span>
+                {validInput && autoQuote.status === 'ok' && (
+                  <RefreshRing remaining={autoQuote.refreshIn} total={8} size={14} />
                 )}
-                {autoQuote.status === 'idle' && '—'}
-              </span>
-              {autoQuote.status === 'ok' && (
-                <RefreshRing remaining={autoQuote.refreshIn} total={8} size={20} />
-              )}
-              {autoQuote.status === 'loading' && (
-                <RefreshRing remaining={0} total={8} size={20} loading />
-              )}
-            </div>
+                {validInput && autoQuote.status === 'loading' && (
+                  <RefreshRing remaining={0} total={8} size={14} loading />
+                )}
+              </div>
+            )
+          ) : (
+            validInput && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                <span>
+                  {autoQuote.status === 'loading' && t('trade.quoteStatus.loading')}
+                  {autoQuote.status === 'ok' && t('trade.quoteStatus.live')}
+                  {autoQuote.status === 'error' && (
+                    <span className="text-danger">{t('trade.quoteStatus.error')}</span>
+                  )}
+                  {autoQuote.status === 'idle' && '—'}
+                </span>
+                {autoQuote.status === 'ok' && (
+                  <RefreshRing remaining={autoQuote.refreshIn} total={8} size={20} />
+                )}
+                {autoQuote.status === 'loading' && (
+                  <RefreshRing remaining={0} total={8} size={20} loading />
+                )}
+              </div>
+            )
           )}
 
           {!wallet.connected ? (
