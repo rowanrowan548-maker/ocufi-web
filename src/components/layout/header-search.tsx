@@ -55,7 +55,7 @@ export function HeaderSearch() {
       {/* 桌面 inline */}
       <div
         ref={desktopRef}
-        className="hidden lg:block w-[260px] xl:w-[300px]"
+        className="hidden lg:block w-[320px] xl:w-[400px]"
       >
         <TokenSearchCombo
           value=""

@@ -50,12 +50,7 @@ export const NAV_ENTRIES: NavEntry[] = [
         descKey: 'nav.descriptions.watchlist',
         iconName: 'Star',
       },
-      {
-        href: '/token',
-        labelKey: 'nav.tokenCheck',
-        descKey: 'nav.descriptions.tokenCheck',
-        iconName: 'ShieldCheck',
-      },
+      // T-928 #17:删 /token nav 入口 — 全局 header 搜索 + 首页 hero 已覆盖,nav 重复
     ],
   },
   {
@@ -136,18 +131,8 @@ export const NAV_ENTRIES: NavEntry[] = [
         descKey: 'nav.descriptions.faq',
         iconName: 'HelpCircle',
       },
-      {
-        href: '/status',
-        labelKey: 'nav.status',
-        descKey: 'nav.descriptions.status',
-        iconName: 'Activity',
-      },
-      {
-        href: '/legal',
-        labelKey: 'nav.legal',
-        descKey: 'nav.descriptions.legal',
-        iconName: 'Scale',
-      },
+      // T-928 #18:删 /status nav 入口 — 顶部右上角小绿点常驻替代
+      // T-928 #19:删 /legal nav 入口 — 仅 footer 列出
     ],
   },
 ];

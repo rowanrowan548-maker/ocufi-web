@@ -1055,7 +1055,22 @@
       "down": "有服务不可用",
       "refreshHint": "30 秒自动刷新一次,也可以右边手动点"
     },
-    "disclaimer": "仅探测从你浏览器到外部 API 的连通性,不代表 ocufi.io 整体可用性。完整可用性看你能否正常完成交易。"
+    "disclaimer": "仅探测从你浏览器到外部 API 的连通性,不代表 ocufi.io 整体可用性。完整可用性看你能否正常完成交易。",
+    "indicator": {
+      "label": {
+        "ok": "● 全部正常",
+        "degraded": "● 部分降级",
+        "down": "● 服务异常",
+        "unknown": "● 检测中"
+      },
+      "desc": {
+        "ok": "后端 API + RPC 节点目前响应正常",
+        "degraded": "部分子系统降级,核心交易仍可用",
+        "down": "后端不可达,交易可能受影响",
+        "unknown": "正在探活中"
+      },
+      "viewFull": "查看完整状态"
+    }
   },
   "pwa": {
     "install": {

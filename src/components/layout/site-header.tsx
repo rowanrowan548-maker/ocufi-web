@@ -6,6 +6,7 @@ import { NavDropdown } from './nav-dropdown';
 import { SettingsMenu } from './settings-menu';
 import { MobileNav } from './mobile-nav';
 import { HeaderSearch } from './header-search';
+import { StatusIndicator } from './status-indicator';
 import { NAV_ENTRIES } from './nav-config';
 
 /**
@@ -41,9 +42,13 @@ export async function SiteHeader() {
           </nav>
         </div>
 
-        {/* 右侧:搜索 + 设置齿轮 + 钱包 + 移动汉堡 */}
+        {/* 右侧:搜索 + 状态绿点 + 设置齿轮 + 钱包 + 移动汉堡 */}
         <div className="flex items-center gap-1.5">
           <HeaderSearch />
+          {/* T-928 #18:服务状态小圆点常驻 lg+(连续监控)*/}
+          <div className="hidden lg:block">
+            <StatusIndicator />
+          </div>
           <div className="hidden lg:block">
             <SettingsMenu />
           </div>

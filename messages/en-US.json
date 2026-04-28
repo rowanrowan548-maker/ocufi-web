@@ -1040,7 +1040,22 @@
       "down": "Some services down",
       "refreshHint": "Auto-refreshes every 30s · click on the right to refresh manually"
     },
-    "disclaimer": "We probe connectivity from your browser to upstream APIs. Full availability still depends on whether you can complete a trade end-to-end."
+    "disclaimer": "We probe connectivity from your browser to upstream APIs. Full availability still depends on whether you can complete a trade end-to-end.",
+    "indicator": {
+      "label": {
+        "ok": "● All normal",
+        "degraded": "● Degraded",
+        "down": "● Service down",
+        "unknown": "● Probing"
+      },
+      "desc": {
+        "ok": "Backend API + RPC nodes are responding normally",
+        "degraded": "Some subsystems degraded — core trading still works",
+        "down": "Backend unreachable — trades may be affected",
+        "unknown": "Probing connectivity"
+      },
+      "viewFull": "View full status"
+    }
   },
   "pwa": {
     "install": {
