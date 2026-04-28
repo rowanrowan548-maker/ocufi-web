@@ -136,9 +136,26 @@ export interface ApiPriceAlert {
   cooldown_minutes?: number;     // 30 / 60 / 120
   last_fired_at?: string | null;
   fire_count?: number;
+  // T-953 触发条件模式
+  mode?: 'absolute' | 'relative';
+  baseline_price_usd?: number | null;
+  change_pct?: number | null;
+  // T-957b 触发后行为
+  action?: 'notify' | 'execute';
+  amount_sol?: number | null;
+  slippage_bps?: number | null;
+  executed_tx?: string | null;
 }
 
 export type CooldownMinutes = 30 | 60 | 120;
+export type AlertAction = 'notify' | 'execute';
+
+export interface CreateAlertOpts {
+  cooldownMinutes?: CooldownMinutes;
+  action?: AlertAction;
+  amountSol?: number;
+  slippageBps?: number;
+}
 
 export async function createAlert(
   wallet: string,
@@ -146,14 +163,19 @@ export async function createAlert(
   symbol: string,
   direction: 'above' | 'below',
   targetUsd: number,
-  cooldownMinutes: CooldownMinutes = 60
+  opts: CreateAlertOpts = {}
 ): Promise<ApiPriceAlert> {
+  const cooldownMinutes = opts.cooldownMinutes ?? 60;
+  const body: Record<string, unknown> = {
+    wallet, mint, symbol, direction, target_usd: targetUsd,
+    cooldown_minutes: cooldownMinutes,
+  };
+  if (opts.action) body.action = opts.action;
+  if (opts.amountSol != null) body.amount_sol = opts.amountSol;
+  if (opts.slippageBps != null) body.slippage_bps = opts.slippageBps;
   return apiFetch('/alerts', {
     method: 'POST',
-    body: JSON.stringify({
-      wallet, mint, symbol, direction, target_usd: targetUsd,
-      cooldown_minutes: cooldownMinutes,
-    }),
+    body: JSON.stringify(body),
   });
 }
 

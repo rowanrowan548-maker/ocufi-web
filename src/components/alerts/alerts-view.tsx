@@ -11,8 +11,9 @@ import { PublicKey } from '@solana/web3.js';
 import Link from 'next/link';
 import {
   Bell, BellOff, AlertCircle, Trash2, CheckCircle2, Loader2, Wallet,
-  Pause, Play, Clock,
+  Pause, Play, Clock, Zap, ExternalLink,
 } from 'lucide-react';
+import { getCurrentChain } from '@/config/chains';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,7 @@ import {
 import { fetchTokenInfo } from '@/lib/portfolio';
 import {
   createAlert, deleteAlert, patchAlert, isApiConfigured,
-  type CooldownMinutes,
+  type CooldownMinutes, type AlertAction,
 } from '@/lib/api-client';
 import { usePriceAlerts } from '@/hooks/use-price-alerts';
 import { track } from '@/lib/analytics';
@@ -40,6 +41,7 @@ import { TgBindBanner } from './tg-bind-banner';
 
 export function AlertsView() {
   const t = useTranslations();
+  const chain = getCurrentChain();
   const { publicKey, connected } = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
   const { alerts, loading, error, refresh } = usePriceAlerts();
@@ -49,6 +51,10 @@ export function AlertsView() {
   const [direction, setDirection] = useState<'above' | 'below'>('above');
   const [targetUsd, setTargetUsd] = useState('');
   const [cooldownMinutes, setCooldownMinutes] = useState<CooldownMinutes>(60);
+  // T-957a · mode toggle 🔔 notify / ⚡ execute
+  const [actionMode, setActionMode] = useState<AlertAction>('notify');
+  const [amountSol, setAmountSol] = useState('');
+  const [slippageBps, setSlippageBps] = useState<string>('500'); // 5% 默认
   const [submitErr, setSubmitErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // T-921:输入合法 mint 后拉当前价,placeholder 用 ±5% 而不是裸 0.001
@@ -90,6 +96,22 @@ export function AlertsView() {
     const target = Number(targetUsd);
     if (!target || target <= 0) { setSubmitErr(t('alerts.errors.invalidTarget')); return; }
 
+    // T-957a · execute 模式校验 amount_sol
+    let amountSolNum: number | undefined;
+    let slippageBpsNum: number | undefined;
+    if (actionMode === 'execute') {
+      amountSolNum = Number(amountSol);
+      if (!amountSolNum || amountSolNum <= 0) {
+        setSubmitErr(t('alerts.mode.errors.amountRequired'));
+        return;
+      }
+      slippageBpsNum = Number(slippageBps);
+      if (!Number.isFinite(slippageBpsNum) || slippageBpsNum < 10 || slippageBpsNum > 5000) {
+        setSubmitErr(t('alerts.mode.errors.slippageRange'));
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const info = await fetchTokenInfo(m);
@@ -97,10 +119,19 @@ export function AlertsView() {
         setSubmitErr(t('alerts.errors.tokenNotFound'));
         return;
       }
-      await createAlert(publicKey.toBase58(), m, info.symbol, direction, target, cooldownMinutes);
-      track('price_alert_created', { mint: m, direction, targetUsd: target, cooldownMinutes });
+      await createAlert(publicKey.toBase58(), m, info.symbol, direction, target, {
+        cooldownMinutes,
+        action: actionMode,
+        amountSol: amountSolNum,
+        slippageBps: slippageBpsNum,
+      });
+      track('price_alert_created', {
+        mint: m, direction, targetUsd: target, cooldownMinutes,
+        action: actionMode, amountSol: amountSolNum,
+      });
       setMint('');
       setTargetUsd('');
+      setAmountSol('');
       refresh();
     } catch (e: unknown) {
       setSubmitErr(e instanceof Error ? e.message : String(e));
@@ -239,6 +270,85 @@ export function AlertsView() {
             </div>
           </div>
 
+          {/* T-957a · 模式 toggle:🔔 notify / ⚡ execute */}
+          <div className="space-y-2">
+            <Label>{t('alerts.mode.label')}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setActionMode('notify')}
+                className={`p-3 rounded-md border text-left transition-colors ${
+                  actionMode === 'notify'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border/40 hover:border-primary/30'
+                }`}
+              >
+                <div className="text-sm font-medium inline-flex items-center gap-1.5">
+                  <Bell className={`h-3.5 w-3.5 ${actionMode === 'notify' ? 'text-primary' : ''}`} />
+                  {t('alerts.mode.notify.title')}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                  {t('alerts.mode.notify.desc')}
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActionMode('execute')}
+                className={`p-3 rounded-md border text-left transition-colors ${
+                  actionMode === 'execute'
+                    ? 'border-warning bg-warning/10'
+                    : 'border-border/40 hover:border-warning/30'
+                }`}
+              >
+                <div className="text-sm font-medium inline-flex items-center gap-1.5">
+                  <Zap className={`h-3.5 w-3.5 ${actionMode === 'execute' ? 'text-warning' : ''}`} />
+                  {t('alerts.mode.execute.title')}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                  {t('alerts.mode.execute.desc')}
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* T-957a · execute 模式额外字段 */}
+          {actionMode === 'execute' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-md bg-warning/5 border border-warning/20">
+              <div className="space-y-2">
+                <Label htmlFor="alert-amount">{t('alerts.mode.execute.amountLabel')}</Label>
+                <Input
+                  id="alert-amount"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  placeholder="0.1"
+                  value={amountSol}
+                  onChange={(e) => setAmountSol(e.target.value)}
+                />
+                <div className="text-[10px] text-muted-foreground">SOL</div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alert-slippage">{t('alerts.mode.execute.slippageLabel')}</Label>
+                <Select
+                  value={slippageBps}
+                  onValueChange={(v) => { if (v) setSlippageBps(v); }}
+                >
+                  <SelectTrigger id="alert-slippage">
+                    {slippageBps ? `${(Number(slippageBps) / 100).toFixed(1)}%` : '5.0%'}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="100">1.0%</SelectItem>
+                    <SelectItem value="300">3.0%</SelectItem>
+                    <SelectItem value="500">5.0%</SelectItem>
+                    <SelectItem value="1000">10.0%</SelectItem>
+                    <SelectItem value="2000">20.0%</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="text-[10px] text-muted-foreground">{t('alerts.mode.execute.slippageHint')}</div>
+              </div>
+            </div>
+          )}
+
           {/* T-932b · 冷却时长 select(默认 60min) */}
           <div className="space-y-2">
             <Label htmlFor="alert-cooldown">{t('alerts.cooldown.label')}</Label>
@@ -313,6 +423,8 @@ export function AlertsView() {
                   const fireCount = a.fire_count ?? 0;
                   const cdRemainingSec = computeCooldownSec(a.last_fired_at, cdMin);
                   const inCooldown = isActive && cdRemainingSec > 0;
+                  const mode: AlertAction = a.action ?? 'notify';
+                  const isExecute = mode === 'execute';
                   return (
                   <TableRow key={a.id} className={!isActive ? 'opacity-50' : ''}>
                     <TableCell>
@@ -321,17 +433,50 @@ export function AlertsView() {
                         className="flex items-center gap-2 hover:underline"
                       >
                         <span className="text-sm font-medium">{a.symbol || a.mint.slice(0, 6)}</span>
+                        {/* T-957a · 模式标签 🔔 / ⚡ */}
+                        <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded ${
+                          isExecute
+                            ? 'bg-warning/15 text-warning'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {isExecute ? <Zap className="h-2.5 w-2.5" /> : <Bell className="h-2.5 w-2.5" />}
+                          {isExecute ? t('alerts.mode.execute.short') : t('alerts.mode.notify.short')}
+                        </span>
                       </Link>
                       {fireCount > 0 && (
                         <div className="text-[10px] text-muted-foreground mt-0.5">
                           {t('alerts.cooldown.fired', { n: fireCount })}
                         </div>
                       )}
+                      {/* T-957a · execute 模式触发后显执行 tx */}
+                      {a.executed_tx && (
+                        <a
+                          href={`${chain.explorer}/tx/${a.executed_tx}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] text-success hover:underline mt-0.5 font-mono"
+                        >
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          {a.executed_tx.slice(0, 6)}…
+                          <ExternalLink className="h-2 w-2" />
+                        </a>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {a.direction === 'above'
-                        ? t('alerts.list.aboveCond', { price: a.target_usd })
-                        : t('alerts.list.belowCond', { price: a.target_usd })}
+                      <div>
+                        {a.direction === 'above'
+                          ? t('alerts.list.aboveCond', { price: a.target_usd })
+                          : t('alerts.list.belowCond', { price: a.target_usd })}
+                      </div>
+                      {/* T-957a · execute 模式显 amount + slippage */}
+                      {isExecute && a.amount_sol != null && (
+                        <div className="text-[10px] text-warning/80 mt-0.5">
+                          {t('alerts.mode.execute.summary', {
+                            amount: a.amount_sol,
+                            slippage: ((a.slippage_bps ?? 500) / 100).toFixed(1),
+                          })}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs">
                       {a.triggered_price_usd != null ? `$${formatPrice(a.triggered_price_usd)}` : '—'}
