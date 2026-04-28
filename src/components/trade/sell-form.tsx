@@ -324,7 +324,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
 
   return (
     <>
-      <Card className={compact ? 'w-full' : 'w-full max-w-xl'}>
+      <Card className={compact ? 'w-full flex flex-col h-full' : 'w-full max-w-xl'}>
         {!compact && (
           <CardHeader>
             <CardTitle>{t('trade.sell.title')}</CardTitle>
@@ -332,7 +332,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           </CardHeader>
         )}
 
-        <CardContent className={compact ? 'space-y-2 p-2' : 'space-y-4'}>
+        <CardContent className={compact ? 'space-y-2 p-2 flex-1' : 'space-y-4'}>
           {mintProp == null && (
             <div className="space-y-2">
               <Label htmlFor="sell-mint">{t('trade.fields.mint')}</Label>
@@ -493,7 +493,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           )}
         </CardContent>
 
-        <CardContent className={compact ? 'pt-0 px-2 pb-2' : 'pt-0'}>
+        <CardContent className={compact ? 'pt-0 px-2 pb-2 mt-auto flex-shrink-0' : 'pt-0'}>
           {/* T-977f · compact 模式合并:状态 · 滑点 · Gas inline 1 行 */}
           {compact ? (
             (validInput || wallet.connected) && (

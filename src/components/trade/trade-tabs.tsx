@@ -94,7 +94,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
   }
 
   return (
-    <Card className={compact ? 'p-2' : 'p-6 w-full max-w-xl'}>
+    <Card className={compact ? 'p-2 flex flex-col h-full' : 'p-6 w-full max-w-xl'}>
       {/* 外层 Buy/Sell */}
       <Tabs value={side} onValueChange={(v) => v && setSide(v as Side)}>
         <TabsList className={compact ? 'grid w-full grid-cols-2 mb-2 h-8' : 'grid w-full grid-cols-2 mb-3'}>
@@ -103,41 +103,44 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
         </TabsList>
       </Tabs>
 
-      {/* 内层 市价/限价 */}
-      <Tabs value={orderType} onValueChange={(v) => v && setOrderType(v as OrderType)}>
-        <TabsList className={compact
-          ? 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-3 px-0 mb-2 h-auto'
-          : 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto'}>
-          <TabsTrigger
-            value="market"
-            className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
-          >
-            {t('trade.orderType.market')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="limit"
-            className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
-          >
-            {t('trade.orderType.limit')}
-          </TabsTrigger>
-        </TabsList>
+      {/* T-977g · compact 模式让内层 Tabs 包成 flex-1 flex-col,确保按钮粘底 */}
+      <div className={compact ? 'flex-1 flex flex-col' : ''}>
+        {/* 内层 市价/限价 */}
+        <Tabs value={orderType} onValueChange={(v) => v && setOrderType(v as OrderType)} className={compact ? 'flex-1 flex flex-col' : undefined}>
+          <TabsList className={compact
+            ? 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-3 px-0 mb-2 h-auto'
+            : 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto'}>
+            <TabsTrigger
+              value="market"
+              className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
+            >
+              {t('trade.orderType.market')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="limit"
+              className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
+            >
+              {t('trade.orderType.limit')}
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="market">
-          {side === 'buy' ? (
-            <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
-          ) : (
-            <SellForm mint={mint} compact risk={risk} reasons={reasons} />
-          )}
-        </TabsContent>
-        <TabsContent value="limit">
-          <LimitForm
-            mint={mint}
-            side={side}
-            compact
-            onCreated={onLimitOrderCreated}
-          />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="market" className={compact ? 'flex-1 flex flex-col' : undefined}>
+            {side === 'buy' ? (
+              <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
+            ) : (
+              <SellForm mint={mint} compact risk={risk} reasons={reasons} />
+            )}
+          </TabsContent>
+          <TabsContent value="limit" className={compact ? 'flex-1 flex flex-col' : undefined}>
+            <LimitForm
+              mint={mint}
+              side={side}
+              compact
+              onCreated={onLimitOrderCreated}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </Card>
   );
 }
