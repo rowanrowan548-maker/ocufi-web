@@ -1390,7 +1390,40 @@
     "footer": {
       "privacy": "隐私政策",
       "terms": "服务条款",
-      "disclaimer": "免责声明"
+      "disclaimer": "免责声明",
+      "audit": "安全审计"
+    },
+    "audit": {
+      "title": "安全审计 Checklist",
+      "lastUpdated": "最后更新:2026-04-28",
+      "s1": {
+        "h": "1. 无私钥托管",
+        "b": "Ocufi 永远碰不到你的私钥或助记词。所有交易都在你本地的钱包扩展(Phantom / Solflare / OKX)里签名,直接上 Solana 链。\n\n我们的服务器只看得到:你的钱包公钥(地址)+ 你已发起的交易签名(链上公开数据)。"
+      },
+      "s2": {
+        "h": "2. 双源风险审查",
+        "b": "每笔买入前,我们同时打 RugCheck + GoPlus 两个独立安全 API:\n\n· RugCheck:LP 锁定 / 持仓集中度 / mint+freeze 权限放弃 / rug 历史\n· GoPlus:转账税 / 蜜罐 / 余额可改 / 创建者信誉\n\n任一源标 critical 即硬阻断买入(蜜罐 / rugged / 转账税 ≥10% / 流动性 <$10K / 新币 <1h)。"
+      },
+      "s3": {
+        "h": "3. Sentry 监控",
+        "b": "前端 + 后端均接入 Sentry 错误追踪。任何 production 错误自动告警,我们看到 + 修复 + 复盘,公开 KNOWN_ISSUES.md 记录踩过的坑。"
+      },
+      "s4": {
+        "h": "4. TG bot 推送",
+        "b": "价格提醒 / 成交结果 / 系统告警均可通过 @Ocufi_bot 推到你的 Telegram。绑定流程在 /alerts 页 · 三步完成 · 可随时解绑。"
+      },
+      "s5": {
+        "h": "5. 链上验证入口",
+        "b": "每笔交易都有 Solscan 外链(交易历史 / 触发提醒 / 成交结果),你可以独立在链上核对所有数字。手续费收取地址 + 交易合约地址公开可查,接受任何第三方审计。"
+      },
+      "s6": {
+        "h": "6. Phantom Portal Review",
+        "b": "Ocufi 已提交 Phantom Portal 审核流程(目录列表中的「已验证」标识),通过后用户在 Phantom 钱包内打开 ocufi.io 可看到官方蓝色对勾。当前审核状态请见 #devlog。"
+      },
+      "s7": {
+        "h": "7. 0.2% 透明费率",
+        "b": "Ocufi 收 0.1% 买 + 0% 卖(总目标 0.2%)· 直接打到金库地址,链上可查。\n\n竞品(GMGN / Photon / BullX)普遍 0.8-1%,我们 V1 阶段把费率压到行业 1/4-1/5,赚的不是手续费而是用户长期信任。"
+      }
     },
     "privacy": {
       "title": "隐私政策",

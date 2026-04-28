@@ -1375,7 +1375,40 @@
     "footer": {
       "privacy": "Privacy",
       "terms": "Terms",
-      "disclaimer": "Disclaimer"
+      "disclaimer": "Disclaimer",
+      "audit": "Security Audit"
+    },
+    "audit": {
+      "title": "Security Audit Checklist",
+      "lastUpdated": "Last updated: 2026-04-28",
+      "s1": {
+        "h": "1. No private key custody",
+        "b": "Ocufi never touches your private keys or seed phrase. Every transaction is signed locally in your wallet extension (Phantom / Solflare / OKX) and sent directly to Solana.\n\nOur servers only see: your wallet public key + your submitted transaction signatures (public on-chain data)."
+      },
+      "s2": {
+        "h": "2. Dual-source risk screening",
+        "b": "Before any buy, we hit two independent safety APIs in parallel:\n\n· RugCheck: LP lock / holder concentration / mint+freeze authority / rug history\n· GoPlus: transfer fee / honeypot / mutable balance / creator reputation\n\nEither source flagging critical → hard block (honeypot / rugged / transfer fee ≥10% / liquidity <$10K / new pool <1h)."
+      },
+      "s3": {
+        "h": "3. Sentry monitoring",
+        "b": "Both frontend and backend are wired to Sentry error tracking. Any production error pages us automatically — we see it, fix it, and document the lesson in our public KNOWN_ISSUES.md."
+      },
+      "s4": {
+        "h": "4. TG bot push",
+        "b": "Price alerts / trade outcomes / system warnings can be pushed to your Telegram via @Ocufi_bot. Binding flow lives at /alerts · 3 steps · unbind anytime."
+      },
+      "s5": {
+        "h": "5. On-chain verification",
+        "b": "Every trade includes a Solscan link (history / triggered alerts / trade results) — you can independently verify every number on-chain. Fee collection address and trade contract addresses are public, open to third-party audit."
+      },
+      "s6": {
+        "h": "6. Phantom Portal review",
+        "b": "Ocufi is in the Phantom Portal review pipeline (the \"Verified\" badge in the directory). Once approved, users opening ocufi.io inside Phantom will see the official blue checkmark. See #devlog for current status."
+      },
+      "s7": {
+        "h": "7. 0.2% transparent fee",
+        "b": "Ocufi charges 0.1% on buys + 0% on sells (target 0.2% total) · paid directly to a public treasury address, fully verifiable on-chain.\n\nCompetitors (GMGN / Photon / BullX) typically charge 0.8-1%. We've cut V1 fees to 1/4-1/5 of the industry — long-term user trust > short-term revenue."
+      }
     },
     "privacy": {
       "title": "Privacy Policy",

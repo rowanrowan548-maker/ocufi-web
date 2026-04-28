@@ -11,6 +11,7 @@ import { OurPromise } from '@/components/landing/our-promise';
 import { StatsBar } from '@/components/landing/stats-bar';
 import { HeroCASearch } from '@/components/landing/hero-ca-search';
 import { XIcon, TelegramIcon, GithubIcon } from '@/components/brand/social-icons';
+import { FooterVersion } from '@/components/landing/footer-version';
 
 export default async function Landing({
   params,
@@ -243,17 +244,22 @@ export default async function Landing({
                 <Link href="/legal/privacy" className="block hover:text-foreground">{t('legal.footer.privacy')}</Link>
                 <Link href="/legal/terms" className="block hover:text-foreground">{t('legal.footer.terms')}</Link>
                 <Link href="/legal/disclaimer" className="block hover:text-foreground">{t('legal.footer.disclaimer')}</Link>
+                {/* T-964 #151 · 安全审计 checklist */}
+                <Link href="/legal/audit" className="block hover:text-foreground">{t('legal.footer.audit')}</Link>
               </div>
             </div>
           </div>
 
-          {/* 底部 · T-963:中文 locale 加 "@ocufi 天眼" 签名(en-US 空) */}
+          {/* 底部 · T-963:中文 locale 加 "@ocufi 天眼" 签名(en-US 空)
+              T-964 #152:加 fe/be commit + build time(FooterVersion) */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[11px] text-muted-foreground/70 pt-6 border-t border-border/40 font-mono">
             <div>
               © {new Date().getFullYear()} Ocufi · {chain.name} · v0.4
               {t('brand.footerSignature') && (
                 <span className="ml-2 text-muted-foreground/60">· {t('brand.footerSignature')}</span>
               )}
+              {' · '}
+              <FooterVersion />
             </div>
             <div>{t('landing.footer.poweredBy')}</div>
           </div>

@@ -496,6 +496,19 @@ export async function fetchPublicStats(): Promise<PublicStats> {
   return apiFetch<PublicStats>('/public/stats');
 }
 
+// ─── T-960 · /version backend (后端 commit + build time)───
+
+export interface VersionInfo {
+  name: string;
+  commit: string;
+  build_time: string;
+  api_version: string;
+}
+
+export async function fetchBackendVersion(): Promise<VersionInfo> {
+  return apiFetch<VersionInfo>('/version');
+}
+
 // ─── Day 11 user settings (email) ───
 
 export interface UserSettingsApi {
