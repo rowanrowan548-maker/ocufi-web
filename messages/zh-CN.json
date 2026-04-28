@@ -1462,7 +1462,17 @@
       }
     },
     "backendPending": "数据接口待上线",
-    "howLink": "查看玩法"
+    "howLink": "查看玩法",
+    "downstream": {
+      "title": "我的下线 ({n})",
+      "loading": "加载中…",
+      "rebate": "累计返佣",
+      "noTradeYet": "尚未交易",
+      "empty": {
+        "title": "还没有下线",
+        "hint": "分享你的邀请码 · 拿 30% 返佣"
+      }
+    }
   },
   "share": {
     "button": "晒一单",

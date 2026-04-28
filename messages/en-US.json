@@ -1447,7 +1447,17 @@
       }
     },
     "backendPending": "Backend wiring in progress",
-    "howLink": "Read more"
+    "howLink": "Read more",
+    "downstream": {
+      "title": "My referrals ({n})",
+      "loading": "Loading…",
+      "rebate": "Total rebate",
+      "noTradeYet": "No trade yet",
+      "empty": {
+        "title": "No referrals yet",
+        "hint": "Share your invite code · earn 30% rebate"
+      }
+    }
   },
   "share": {
     "button": "Share",

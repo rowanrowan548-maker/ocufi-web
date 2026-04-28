@@ -30,6 +30,7 @@ import {
 } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { ShareDialog } from './share-dialog';
+import { DownstreamList } from './downstream-list';
 
 interface InviteeRow {
   address: string;
@@ -439,6 +440,9 @@ export function InviteScreen() {
             )}
           </CardContent>
         </Card>
+
+        {/* T-INV-113 · 我的下线列表 */}
+        <DownstreamList />
 
         {/* 全站排行 */}
         <Card>

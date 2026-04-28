@@ -410,6 +410,30 @@ export async function fetchInviteLeaderboard(limit = 10): Promise<InviteLeaderbo
   return apiFetch(`/invite/leaderboard?limit=${limit}`);
 }
 
+// T-INV-113 · 我的下线列表
+export interface DownstreamRow {
+  wallet: string;            // 完整地址(前端自截 4 位)
+  first_trade_at?: string | null; // ISO date(首笔交易);可空表示尚未交易
+  total_rebate_sol: number;
+}
+
+export interface InviteDownstreamResp {
+  ok: boolean;
+  total: number;
+  page: number;
+  page_size: number;
+  items: DownstreamRow[];
+}
+
+export async function fetchInviteDownstream(
+  wallet: string,
+  page = 1,
+  pageSize = 20,
+): Promise<InviteDownstreamResp> {
+  const url = `/invite/downstream?wallet=${encodeURIComponent(wallet)}&page=${page}&page_size=${pageSize}`;
+  return apiFetch(url);
+}
+
 // ─── T-906 badges ───
 
 export type BadgeRarity = 'common' | 'uncommon' | 'legendary';
