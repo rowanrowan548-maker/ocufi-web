@@ -420,7 +420,9 @@
       "slippage": "Slippage",
       "slippageWarn": "{pct}% slippage is risky · sandwich / heavy loss possible",
       "gas": "Priority",
-      "priority": "Priority"
+      "priority": "Priority",
+      "slippageHelp": "What is slippage? View docs",
+      "priorityHelp": "About priority fee tiers · view docs"
     },
     "priority": {
       "pilot": "Pilot",
@@ -987,6 +989,7 @@
     },
     "mode": {
       "label": "What happens on trigger",
+      "help": "Notify vs execute · view docs",
       "notify": {
         "title": "🔔 Notify",
         "short": "Notify",
@@ -1053,6 +1056,7 @@
       "above": "Rises to ≥",
       "below": "Falls to ≤",
       "target": "Target price",
+      "targetHelp": "How to set target price · view docs",
       "submit": "Create alert"
     },
     "connectToUse": "Connect your wallet to manage alerts",

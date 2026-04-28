@@ -420,7 +420,9 @@
       "slippage": "滑点",
       "slippageWarn": "{pct}% 滑点偏高 · 可能被三明治攻击或巨亏",
       "gas": "优先级",
-      "priority": "优先级"
+      "priority": "优先级",
+      "slippageHelp": "什么是滑点?查看文档",
+      "priorityHelp": "优先费档位说明 · 查看文档"
     },
     "priority": {
       "pilot": "Pilot",
@@ -1002,6 +1004,7 @@
     },
     "mode": {
       "label": "触发后做什么",
+      "help": "提醒 vs 执行 · 查看文档",
       "notify": {
         "title": "🔔 到价提醒",
         "short": "提醒",
@@ -1068,6 +1071,7 @@
       "above": "涨到 ≥",
       "below": "跌到 ≤",
       "target": "目标价",
+      "targetHelp": "目标价怎么设 · 查看文档",
       "submit": "创建提醒"
     },
     "connectToUse": "连接钱包后才能管理你的提醒",

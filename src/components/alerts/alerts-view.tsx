@@ -38,6 +38,7 @@ import { usePriceAlerts } from '@/hooks/use-price-alerts';
 import { track } from '@/lib/analytics';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { TgBindBanner } from './tg-bind-banner';
+import { DocsHelpIcon } from '@/components/docs/docs-help-icon';
 
 export function AlertsView() {
   const t = useTranslations();
@@ -257,7 +258,10 @@ export function AlertsView() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="alert-target">{t('alerts.form.target')}</Label>
+              <Label htmlFor="alert-target" className="inline-flex items-center gap-1">
+                {t('alerts.form.target')}
+                <DocsHelpIcon target="section-limit" label={t('alerts.form.targetHelp')} />
+              </Label>
               <Input
                 id="alert-target"
                 type="number"
@@ -273,7 +277,10 @@ export function AlertsView() {
 
           {/* T-957a · 模式 toggle:🔔 notify / ⚡ execute */}
           <div className="space-y-2">
-            <Label>{t('alerts.mode.label')}</Label>
+            <Label className="inline-flex items-center gap-1">
+              {t('alerts.mode.label')}
+              <DocsHelpIcon target="section-limit" label={t('alerts.mode.help')} />
+            </Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"

@@ -44,6 +44,7 @@ import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
 import { PriorityTierToggle, PRIORITY_TIER_TO_GAS_LEVEL } from './priority-tier-toggle';
 import type { PriorityTier } from '@/lib/priority-fees';
+import { DocsHelpIcon } from '@/components/docs/docs-help-icon';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
@@ -473,7 +474,10 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
             </div>
             <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'}>
               <div className={compact ? 'space-y-1' : 'space-y-2'}>
-                <Label htmlFor="buy-slippage" className={compact ? 'text-[11px]' : undefined}>{t('trade.fields.slippage')}</Label>
+                <Label htmlFor="buy-slippage" className={`${compact ? 'text-[11px]' : ''} inline-flex items-center gap-1`}>
+                  {t('trade.fields.slippage')}
+                  {!compact && <DocsHelpIcon target="err-slippage" label={t('trade.fields.slippageHelp')} />}
+                </Label>
                 <Select
                   value={String(slippageBps)}
                   onValueChange={(v) => {

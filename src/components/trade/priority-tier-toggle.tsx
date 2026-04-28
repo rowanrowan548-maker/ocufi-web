@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import { Label } from '@/components/ui/label';
 import type { GasLevel } from '@/lib/jupiter';
 import type { PriorityTier } from '@/lib/priority-fees';
+import { DocsHelpIcon } from '@/components/docs/docs-help-icon';
 
 interface Props {
   value: PriorityTier;
@@ -39,7 +40,10 @@ export function PriorityTierToggle({ value, onChange, id }: Props) {
   const t = useTranslations();
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{t('trade.fields.priority')}</Label>
+      <Label htmlFor={id} className="inline-flex items-center gap-1">
+        {t('trade.fields.priority')}
+        <DocsHelpIcon target="adv-priority-fee" label={t('trade.fields.priorityHelp')} />
+      </Label>
       <div id={id} className="grid grid-cols-4 gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
         {TIERS.map((tier) => {
           const active = value === tier.value;
