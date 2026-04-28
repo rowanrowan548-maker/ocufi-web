@@ -17,7 +17,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { RefreshCw, Wallet, AlertCircle, Copy, Check, Award } from 'lucide-react';
+import { RefreshCw, Wallet, AlertCircle, Copy, Check, Award, ExternalLink } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,10 +47,12 @@ import { BadgeIcon } from '@/components/badges/badge-icon';
 import { useBadges, type EarnedBadge } from '@/hooks/use-badges';
 import { useCurrency } from '@/lib/currency-store';
 import { formatAmount } from '@/lib/format';
+import { getCurrentChain } from '@/config/chains';
 
 export function PortfolioView() {
   const t = useTranslations();
   const wallet = useWallet();
+  const chain = getCurrentChain();
   const { setVisible: openWalletModal } = useWalletModal();
   const { sol, tokens, totalUsd, loading, error, refresh } = usePortfolio();
   const { costs, loading: cbLoading, records } = useCostBasis();
@@ -279,23 +281,35 @@ export function PortfolioView() {
           <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
             {/* T-905a:移动端钱包行 — wallet 左 + 3 图标右,填补右侧空白 */}
             <div className="flex items-center justify-between gap-2 lg:contents">
-              {/* 钱包地址 */}
-              <button
-                type="button"
-                onClick={copyAddr}
-                className="flex items-center gap-2 group min-w-0 hover:bg-muted/40 -m-1 p-1 rounded transition-colors"
-                title={t('wallet.copyAddress')}
-              >
-                <Wallet className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
-                <span className="font-mono text-xs sm:text-sm text-muted-foreground truncate">
-                  {shortAddr(walletAddr)}
-                </span>
-                {copied ? (
-                  <Check className="h-3 w-3 text-success flex-shrink-0" />
-                ) : (
-                  <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground flex-shrink-0" />
-                )}
-              </button>
+              {/* 钱包地址 + T-929 #82 链上验证 */}
+              <div className="flex items-center gap-1 min-w-0">
+                <button
+                  type="button"
+                  onClick={copyAddr}
+                  className="flex items-center gap-2 group min-w-0 hover:bg-muted/40 -m-1 p-1 rounded transition-colors"
+                  title={t('wallet.copyAddress')}
+                >
+                  <Wallet className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0" />
+                  <span className="font-mono text-xs sm:text-sm text-muted-foreground truncate">
+                    {shortAddr(walletAddr)}
+                  </span>
+                  {copied ? (
+                    <Check className="h-3 w-3 text-success flex-shrink-0" />
+                  ) : (
+                    <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground flex-shrink-0" />
+                  )}
+                </button>
+                <a
+                  href={`${chain.explorer}/account/${walletAddr}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t('portfolio.viewOnChain')}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded text-muted-foreground/40 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
+                  aria-label={t('portfolio.viewOnChain')}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
               {/* 移动端 only · 3 图标右排 */}
               <div className="flex items-center gap-1 lg:hidden">
                 <ActionIcons
@@ -411,11 +425,28 @@ export function PortfolioView() {
         <PortfolioSkeleton />
       ) : !hasAnyHolding ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-            <p className="text-muted-foreground">{t('portfolio.empty')}</p>
-            <Link href="/trade">
-              <Button>{t('portfolio.goTrade')}</Button>
-            </Link>
+          <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center max-w-md mx-auto">
+            <p className="text-sm font-medium">{t('portfolio.empty.title')}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {t('portfolio.empty.desc')}
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button onClick={refresh} variant="outline" size="sm" disabled={loading}>
+                {t('portfolio.refreshNow')}
+              </Button>
+              <a
+                href={`${chain.explorer}/account/${walletAddr}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="sm">
+                  {t('portfolio.viewOnChain')}
+                </Button>
+              </a>
+              <Link href="/trade">
+                <Button size="sm">{t('portfolio.goTrade')}</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       ) : (

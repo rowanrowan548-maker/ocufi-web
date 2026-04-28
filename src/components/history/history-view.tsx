@@ -16,6 +16,7 @@ import Image from 'next/image';
 import {
   RefreshCw, Wallet, AlertCircle, ExternalLink,
   ArrowDownToLine, ArrowUpFromLine, ArrowDownLeft, ArrowUpRight, Minus, Gift,
+  CheckCircle2, XCircle, RotateCw,
 } from 'lucide-react';
 import { track } from '@/lib/analytics';
 
@@ -83,15 +84,16 @@ export function HistoryView() {
         </Card>
       ) : (
         <Card className="overflow-x-auto">
-          <Table className="min-w-[640px]">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{t('history.columns.time')}</TableHead>
                 <TableHead>{t('history.columns.type')}</TableHead>
+                <TableHead className="w-[60px]">{t('history.columns.status')}</TableHead>
                 <TableHead>{t('history.columns.token')}</TableHead>
                 <TableHead className="text-right">{t('history.columns.tokenAmount')}</TableHead>
                 <TableHead className="text-right">{t('history.columns.solAmount')}</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="font-mono text-[11px]">{t('history.columns.signature')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -119,7 +121,7 @@ function HistoryRow({
   const { Icon, color } = TYPE_STYLE[r.type];
 
   return (
-    <TableRow className={r.err ? 'opacity-50' : ''}>
+    <TableRow className={r.err ? 'bg-destructive/5' : ''}>
       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
         {formatTime(r.blockTime)}
       </TableCell>
@@ -128,6 +130,19 @@ function HistoryRow({
           <Icon className="h-3.5 w-3.5" />
           {typeLabel}
         </span>
+      </TableCell>
+      <TableCell>
+        {r.err ? (
+          <span className="inline-flex items-center gap-1 text-xs text-destructive" title={t('history.status.failed')}>
+            <XCircle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('history.status.failed')}</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs text-success" title={t('history.status.success')}>
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('history.status.success')}</span>
+          </span>
+        )}
       </TableCell>
       <TableCell>
         {r.type === 'nft_airdrop' || r.type === 'nft' ? (
@@ -184,15 +199,29 @@ function HistoryRow({
         {r.tokenMint && r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
       </TableCell>
       <TableCell>
-        <a
-          href={`${explorer}/tx/${r.signature}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex p-1 text-muted-foreground hover:text-foreground"
-          title="Solscan"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </a>
+        <div className="flex items-center gap-1">
+          <a
+            href={`${explorer}/tx/${r.signature}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            title={r.signature}
+          >
+            {r.signature.slice(0, 6)}…
+            <ExternalLink className="h-3 w-3" />
+          </a>
+          {/* T-929 #95:失败买入加重试按钮 */}
+          {r.err && r.type === 'buy' && r.tokenMint && (
+            <Link
+              href={`/trade?mint=${r.tokenMint}&side=buy`}
+              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] text-warning hover:bg-warning/10 transition-colors"
+              title={t('history.retry')}
+            >
+              <RotateCw className="h-3 w-3" />
+              <span className="hidden md:inline">{t('history.retry')}</span>
+            </Link>
+          )}
+        </div>
       </TableCell>
     </TableRow>
   );

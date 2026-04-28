@@ -211,13 +211,23 @@ export default async function Landing({
                 <Link href="/faq" className="block hover:text-foreground">{t('nav.faq')}</Link>
                 <Link href="/docs" className="block hover:text-foreground">{t('nav.docs')}</Link>
                 <Link href="/status" className="block hover:text-foreground">{t('nav.status')}</Link>
+                {/* T-929 #149:Telegram 群链接(社群入口) */}
+                <a
+                  href="https://t.me/+HucmvmOx2IswZDBl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block hover:text-foreground"
+                >
+                  Telegram
+                </a>
+                {/* T-929 #153:GitHub 开源链接(明文 "Open Source · GitHub")*/}
                 <a
                   href="https://github.com/rowanrowan548-maker/ocufi-web"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block hover:text-foreground"
                 >
-                  GitHub
+                  {t('landing.footer.openSource')}
                 </a>
               </div>
             </div>

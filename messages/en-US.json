@@ -131,6 +131,7 @@
       "product": "Product",
       "resources": "Resources",
       "legal": "Legal",
+      "openSource": "Open Source · GitHub",
       "poweredBy": "Powered by Solana · Jupiter"
     },
     "promise": {
@@ -557,9 +558,13 @@
     "totalValue": "Total Value (USD)",
     "walletAddress": "Wallet",
     "notConnected": "Connect your wallet to see holdings",
-    "empty": "No tokens in your wallet yet",
+    "empty": {
+      "title": "No SPL holdings detected",
+      "desc": "Just traded? Wait 30s and refresh manually, or check your wallet on-chain"
+    },
     "goTrade": "Go buy something",
     "viewOnExplorer": "View on Solscan",
+    "viewOnChain": "View on-chain",
     "autoRefreshHint": "Auto-refreshes every 30s · click {icon} to refresh manually",
     "refreshNow": "Refresh now",
     "badgesEntry": "My badges",
@@ -981,10 +986,17 @@
     "columns": {
       "time": "Time",
       "type": "Type",
+      "status": "Status",
       "token": "Token",
       "tokenAmount": "Amount",
-      "solAmount": "SOL"
+      "solAmount": "SOL",
+      "signature": "Tx"
     },
+    "status": {
+      "success": "Success",
+      "failed": "Failed"
+    },
+    "retry": "Retry",
     "type": {
       "buy": "Buy",
       "sell": "Sell",

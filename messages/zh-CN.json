@@ -131,6 +131,7 @@
       "product": "产品",
       "resources": "资源",
       "legal": "法律",
+      "openSource": "开源 · GitHub",
       "poweredBy": "Powered by Solana · Jupiter"
     },
     "promise": {
@@ -557,9 +558,13 @@
     "totalValue": "总资产(USD)",
     "walletAddress": "钱包",
     "notConnected": "连接钱包后才能看到你的持仓",
-    "empty": "你的钱包里还没有代币",
+    "empty": {
+      "title": "未发现 SPL 代币持仓",
+      "desc": "如果你刚交易过,请等待 30 秒后手动刷新,或直接查看链上账户核对"
+    },
     "goTrade": "去交易页买入",
     "viewOnExplorer": "在 Solscan 查看",
+    "viewOnChain": "查看链上",
     "autoRefreshHint": "每 30 秒自动刷新 · 点右上角 {icon} 手动刷新",
     "refreshNow": "立即刷新",
     "badgesEntry": "我的徽章",
@@ -996,10 +1001,17 @@
     "columns": {
       "time": "时间",
       "type": "类型",
+      "status": "状态",
       "token": "代币",
       "tokenAmount": "代币数量",
-      "solAmount": "SOL"
+      "solAmount": "SOL",
+      "signature": "Tx"
     },
+    "status": {
+      "success": "成功",
+      "failed": "失败"
+    },
+    "retry": "重试",
     "type": {
       "buy": "买入",
       "sell": "卖出",
