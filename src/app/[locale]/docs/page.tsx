@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Wallet, ShoppingCart, ListOrdered, Shield, Zap, Star, ArrowRight,
+  AlertTriangle, Sparkles,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { DocImagePlaceholder } from '@/components/docs/doc-image-placeholder';
@@ -96,6 +97,22 @@ export default async function DocsPage({
     },
   ];
 
+  // T-980-120 · 常见错误故障排查 · 5 子项 症状 → 原因 → 解法
+  const errorItems: Array<{ id: string; titleKey: string; symptomKey: string; causeKey: string; fixKey: string }> = [
+    { id: 'err-tx-failed', titleKey: 'errors.txFailed.title', symptomKey: 'errors.txFailed.symptom', causeKey: 'errors.txFailed.cause', fixKey: 'errors.txFailed.fix' },
+    { id: 'err-holding-delay', titleKey: 'errors.holdingDelay.title', symptomKey: 'errors.holdingDelay.symptom', causeKey: 'errors.holdingDelay.cause', fixKey: 'errors.holdingDelay.fix' },
+    { id: 'err-withdraw', titleKey: 'errors.withdraw.title', symptomKey: 'errors.withdraw.symptom', causeKey: 'errors.withdraw.cause', fixKey: 'errors.withdraw.fix' },
+    { id: 'err-slippage', titleKey: 'errors.slippage.title', symptomKey: 'errors.slippage.symptom', causeKey: 'errors.slippage.cause', fixKey: 'errors.slippage.fix' },
+    { id: 'err-wallet-disconnect', titleKey: 'errors.walletDisconnect.title', symptomKey: 'errors.walletDisconnect.symptom', causeKey: 'errors.walletDisconnect.cause', fixKey: 'errors.walletDisconnect.fix' },
+  ];
+
+  // T-980-121 · 高级技巧 · 3 子项
+  const advancedItems: Array<{ id: string; titleKey: string; bodyKey: string }> = [
+    { id: 'adv-priority-fee', titleKey: 'advanced.priorityFee.title', bodyKey: 'advanced.priorityFee.body' },
+    { id: 'adv-mev', titleKey: 'advanced.mev.title', bodyKey: 'advanced.mev.body' },
+    { id: 'adv-copy-trade', titleKey: 'advanced.copyTrade.title', bodyKey: 'advanced.copyTrade.body' },
+  ];
+
   return (
     <main className="flex flex-1 flex-col">
       <div className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-8">
@@ -125,6 +142,16 @@ export default async function DocsPage({
                 </a>
               </li>
             ))}
+            <li>
+              <a href="#section-errors" className="text-foreground/80 hover:text-primary hover:underline transition-colors">
+                {t('errors.title')}
+              </a>
+            </li>
+            <li>
+              <a href="#section-advanced" className="text-foreground/80 hover:text-primary hover:underline transition-colors">
+                {t('advanced.title')}
+              </a>
+            </li>
           </ol>
         </nav>
 
@@ -169,6 +196,63 @@ export default async function DocsPage({
             </Card>
           ))}
         </div>
+
+        {/* T-980-120 · 常见错误故障排查 */}
+        <Card id="section-errors" className="p-5 sm:p-6 scroll-mt-24">
+          <div className="flex gap-4">
+            <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+            </div>
+            <div className="flex-1 min-w-0 space-y-3">
+              <h2 className="text-lg font-semibold tracking-tight">{t('errors.title')}</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t('errors.intro')}</p>
+              <ul className="space-y-3">
+                {errorItems.map((it) => (
+                  <li key={it.id} id={it.id} className="rounded-md border border-border/40 bg-card/40 p-3 scroll-mt-24">
+                    <div className="text-sm font-medium mb-1.5">{t(it.titleKey)}</div>
+                    <dl className="text-xs text-muted-foreground space-y-1 leading-relaxed">
+                      <div className="flex gap-2">
+                        <dt className="text-muted-foreground/70 flex-shrink-0">{t('errors.labels.symptom')}</dt>
+                        <dd>{t(it.symptomKey)}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="text-muted-foreground/70 flex-shrink-0">{t('errors.labels.cause')}</dt>
+                        <dd>{t(it.causeKey)}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="text-success flex-shrink-0">{t('errors.labels.fix')}</dt>
+                        <dd className="text-foreground/80">{t(it.fixKey)}</dd>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Card>
+
+        {/* T-980-121 · 高级技巧 */}
+        <Card id="section-advanced" className="p-5 sm:p-6 scroll-mt-24">
+          <div className="flex gap-4">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0 space-y-3">
+              <h2 className="text-lg font-semibold tracking-tight">{t('advanced.title')}</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t('advanced.intro')}</p>
+              <ul className="space-y-3">
+                {advancedItems.map((it) => (
+                  <li key={it.id} id={it.id} className="rounded-md border border-border/40 bg-card/40 p-3 scroll-mt-24">
+                    <div className="text-sm font-medium mb-1">{t(it.titleKey)}</div>
+                    <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
+                      {t(it.bodyKey).split(/\n\n+/).map((p, j) => <p key={j}>{p}</p>)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Card>
 
         <div className="text-xs text-muted-foreground/70 text-center pt-6 border-t border-border/40">
           {t('footer')}

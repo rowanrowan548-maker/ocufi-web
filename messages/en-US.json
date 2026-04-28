@@ -1201,6 +1201,61 @@
       "cta": "Open watchlist →",
       "imageAlt": "Watchlist screen"
     },
+    "errors": {
+      "title": "Common errors & troubleshooting",
+      "intro": "5 common issues — symptom → cause → fix. If your error isn't listed, search /faq or ask in the TG group.",
+      "labels": {
+        "symptom": "Symptom",
+        "cause": "Cause",
+        "fix": "Fix"
+      },
+      "txFailed": {
+        "title": "Transaction failed / on-chain revert",
+        "symptom": "After signing, you see 'failed' or red status on the explorer. Funds return to wallet (no loss, but gas spent).",
+        "cause": "Slippage exceeded / pool ran out of liquidity / Solana congestion above your priority fee.",
+        "fix": "Retry + raise slippage (5-10% for low-cap) + pick Fast or Turbo priority. After 3 fails, consider switching coin or waiting for the market to settle."
+      },
+      "holdingDelay": {
+        "title": "Holdings page missing the coin you just bought",
+        "symptom": "Trade filled (visible on explorer) but /portfolio doesn't show the token.",
+        "cause": "Helius RPC index lag of 5-30s; new SPL tokens occasionally take 1-2 min.",
+        "fix": "Wait 30-60s and tap refresh. Still missing? Go directly to /trade?mint={addr} — selling still works."
+      },
+      "withdraw": {
+        "title": "Invite rebate withdrawal feels slow",
+        "symptom": "You clicked Claim on /invite but SOL hasn't arrived in your wallet.",
+        "cause": "Invite withdrawal is server-side accounting + periodic batch on-chain transfer, not instant. Batches run 1-2× per week.",
+        "fix": "Watch the 'Pending review' field on /invite. Once approved, expect funds within 7 days. Stuck? Ping the TG group."
+      },
+      "slippage": {
+        "title": "Slippage protection rejected the trade",
+        "symptom": "After clicking Confirm Buy, you see 'Price moved X%, exceeded slippage'.",
+        "cause": "Market moved too fast — actual fill drifted past your tolerance.",
+        "fix": "Wait a few seconds and retry / raise slippage / split into smaller orders. For low-cap tokens, 5-10% slippage is reasonable."
+      },
+      "walletDisconnect": {
+        "title": "Wallet keeps disconnecting / can't connect",
+        "symptom": "After refresh wallet shows disconnected, or Connect button does nothing.",
+        "cause": "Desktop Chrome incognito / iOS Safari / outdated wallet-app browser.",
+        "fix": "Desktop: regular Chrome + Phantom/Solflare extension. Mobile: must use the wallet app's built-in browser (regular Safari can't detect wallets)."
+      }
+    },
+    "advanced": {
+      "title": "Advanced",
+      "intro": "Power-user tweaks for tighter on-chain execution.",
+      "priorityFee": {
+        "title": "Priority fee tiers · Pilot / P1 / P2 / P3",
+        "body": "Pilot (lowest, slow) for non-urgent small orders. P1 (0.00005 SOL, fast) is V1 default — fits most cases. P2 (0.0005 SOL, very fast) for congested markets or hot launches. P3 (0.005 SOL, max) for rare drops or MEV-protect tier.\n\nDuring Solana congestion, P1 may not land — bump to P2/P3 to land reliably."
+      },
+      "mev": {
+        "title": "MEV protection (educational)",
+        "body": "MEV (Maximal Extractable Value) = sandwich attackers front-running. They raise price before your buy, depress after your sell, pocket the spread.\n\nOcufi V1 routes through Jupiter; some liquidity flows through MEV-protected pools (Jito etc.). V2 plans dedicated MEV defense (Helius MEV Protect routes). Today's tip: high slippage helps attackers — use 1-3% slippage + high priority fee to land safely."
+      },
+      "copyTrade": {
+        "title": "Copy trading (V2 preview)",
+        "body": "V2 plan: bind a target wallet, automatically mirror its trades (proportional sizing + risk filter + slippage cap).\n\nToday: paste any wallet on /history to see its trade log; decide manually whether to follow."
+      }
+    },
     "footer": "More questions? Check the FAQ or open a GitHub Issue. All code is open and auditable."
   },
   "status": {
