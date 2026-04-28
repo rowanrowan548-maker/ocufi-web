@@ -37,7 +37,40 @@ const GAS_CONFIG: Record<GasLevel, { priorityLevel: string; maxLamports: number 
 
 // SPL Memo program v2 · Solana 第一方 program,所有钱包识别
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-const OCUFI_FEE_MEMO = 'Ocufi 0.1% trading fee · ocufi.io/fees';
+
+/**
+ * T-FEE-CONFIG · Fee bps 改读 env 驱动(用户决策 2026-04-29 · V1 维持 0.1%/0% 不变 ·
+ * 阶段 2/3/4 改 env 即可不动代码)
+ *
+ *   buy  fee = NEXT_PUBLIC_FEE_BPS_BUY  ?? 10  (V1: 0.1%)
+ *   sell fee = NEXT_PUBLIC_FEE_BPS_SELL ?? 0   (V1: 0%)
+ *
+ * 解析失败 / 负数 → 兜底默认值(env 配错不会乱扣 fee)
+ */
+export function getFeeBps(side: 'buy' | 'sell'): number {
+  const envVal =
+    side === 'buy'
+      ? process.env.NEXT_PUBLIC_FEE_BPS_BUY
+      : process.env.NEXT_PUBLIC_FEE_BPS_SELL;
+  const defaultVal = side === 'buy' ? 10 : 0;
+  if (!envVal) return defaultVal;
+  const parsed = parseInt(envVal, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : defaultVal;
+}
+
+/**
+ * 构造 fee 转账的 SPL Memo 文本(动态化 · 钱包 simulation UI 显示用途)
+ *
+ *   "Ocufi 0.1% buy fee · ocufi.io/fees"
+ *   "Ocufi 0.05% sell fee · ocufi.io/fees"(阶段 3 半半场景)
+ *
+ * bps 能被 10 整除 → 1 位小数(0.1% / 1.0%);非整除 → 2 位(0.05% / 0.25%)
+ */
+export function buildFeeMemoText(bps: number, isBuy: boolean): string {
+  const pctNum = bps / 100;
+  const pctStr = bps % 10 === 0 ? pctNum.toFixed(1) : pctNum.toFixed(2);
+  return `Ocufi ${pctStr}% ${isBuy ? 'buy' : 'sell'} fee · ocufi.io/fees`;
+}
 
 // Token program owner ids · 用于检测 mint 是经典 SPL Token 还是 Token-2022
 const TOKEN_2022_PROGRAM_ID = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
@@ -92,13 +125,16 @@ function getFeeVault(): PublicKey | null {
  * @param quote    Jupiter quote(不带 platformFeeBps)
  * @param userPublicKey 用户钱包
  * @param gasLevel 优先级
- * @param feeBps   收费基点,默认 10 = 0.1%(仅买入有效)
+ * @param feeBps   @deprecated · T-FEE-CONFIG(2026-04-29)起 fee 改 env 驱动,本参数被忽略;
+ *                 保留签名向后兼容 buy-form / sell-form / quick-buy-confirm 旧调用方,
+ *                 等前端 T-FEE-CONFIG-fe 清理。
  */
 export async function buildSwapTxWithFee(
   connection: Connection,
   quote: JupiterQuote,
   userPublicKey: string,
   gasLevel: GasLevel = 'fast',
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   feeBps = 10
 ): Promise<VersionedTransaction> {
   const chain = getCurrentChain();
@@ -215,10 +251,15 @@ export async function buildSwapTxWithFee(
   if (resp.tokenLedgerInstruction) instructions.push(jsonToIx(resp.tokenLedgerInstruction));
   instructions.push(...resp.setupInstructions.map(jsonToIx));
 
-  // 💰 Ocufi fee:仅在买入(input=SOL)且配了 vault 时插入
+  // 💰 Ocufi fee · T-FEE-CONFIG(2026-04-29)· env 驱动 · buy/sell 各自配
+  //   isBuy(input=SOL)→ NEXT_PUBLIC_FEE_BPS_BUY(默认 10 · V1 不变)
+  //   isSell           → NEXT_PUBLIC_FEE_BPS_SELL(默认 0 · V1 不变)
+  //   阶段 3/4 改 env 即可不动代码
   const vault = getFeeVault();
-  if (vault && quote.inputMint === SOL_MINT && feeBps > 0) {
-    const feeLamports = Math.floor((Number(quote.inAmount) * feeBps) / 10_000);
+  const isBuy = quote.inputMint === SOL_MINT;
+  const sideFeeBps = getFeeBps(isBuy ? 'buy' : 'sell');
+  if (vault && sideFeeBps > 0) {
+    const feeLamports = Math.floor((Number(quote.inAmount) * sideFeeBps) / 10_000);
     if (feeLamports > 0) {
       instructions.push(
         SystemProgram.transfer({
@@ -227,15 +268,15 @@ export async function buildSwapTxWithFee(
           lamports: feeLamports,
         })
       );
-      // Memo ix:在 Phantom / Solflare simulation UI 里显示用途文本,
-      // 让用户(和 Blowfish)看清楚 fee 转账是"手续费"而非可疑转账。
-      // T-601 Mitigation B · 不依赖外部 SDK,手写 Memo program v2 ix。
+      // Memo ix · T-601 Mitigation B · Phantom / Solflare simulation UI 显示用途
+      // 文本动态化:"Ocufi 0.1% buy fee · ocufi.io/fees" 等
       // signer = 用户钱包(让 indexer / wallet UI 关联到主调者)
+      const memoText = buildFeeMemoText(sideFeeBps, isBuy);
       instructions.push(
         new TransactionInstruction({
           programId: MEMO_PROGRAM_ID,
           keys: [{ pubkey: new PublicKey(userPublicKey), isSigner: true, isWritable: false }],
-          data: Buffer.from(OCUFI_FEE_MEMO, 'utf-8'),
+          data: Buffer.from(memoText, 'utf-8'),
         })
       );
     }
