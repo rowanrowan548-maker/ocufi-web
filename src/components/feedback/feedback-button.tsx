@@ -3,47 +3,34 @@
 /**
  * 全站反馈入口 · 浮动按钮 + 弹窗
  *
- * 弹窗内 3 个渠道:
- *  - TG 群:跳官方 TG 链接
- *  - GitHub Issue:用户填好标题/内容,点提交 → 跳 prefilled GitHub Issue 创建页
- *  - Twitter:跳 @Ocufi_io 私信
- *
- * V2 接后端 /feedback API 后,可改成站内提交,这里继续保留 GitHub Issue 路径作为公开备案
+ * T-944 重排 · 中文用户优先(主推 TG):
+ *  1. 大绿色 TG 群按钮(主推)→ tg://+HucmvmOx2IswZDBl
+ *  2. 中按钮 Twitter @Ocufi_io DM(英文用户)
+ *  3. 灰色小字 GitHub Issue(技术 bug · 开发者用)
+ *  4. 已知问题链接 → GitHub Issues 列表
  */
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { MessageSquare, Send, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MessageSquare, X, ListChecks, ExternalLink } from 'lucide-react';
+import { TelegramIcon, XIcon, GithubIcon } from '@/components/brand/social-icons';
 
 const TG_GROUP_URL = 'https://t.me/+HucmvmOx2IswZDBl';
 const GITHUB_REPO = 'rowanrowan548-maker/ocufi-web';
+const GITHUB_NEW_ISSUE = `https://github.com/${GITHUB_REPO}/issues/new`;
+const GITHUB_ISSUES_LIST = `https://github.com/${GITHUB_REPO}/issues`;
 const TWITTER_HANDLE = 'Ocufi_io';
+const TWITTER_DM_URL = `https://x.com/messages/compose?recipient_id=${TWITTER_HANDLE}`;
+const TWITTER_PROFILE_URL = `https://x.com/${TWITTER_HANDLE}`;
 
 export function FeedbackButton() {
   const t = useTranslations('feedback');
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
 
-  // T-926 #44:trade 页隐藏(FAB 遮挡 buy 按钮)。其他页保留。
-  // pathname 形如 /zh-CN/trade,匹配 /trade 段而非 prefix locale
+  // T-926 #44:trade 页隐藏(FAB 遮挡 buy 按钮)
   if (/^\/[a-z]{2}-[A-Z]{2}\/trade(\/|$|\?)/.test(pathname ?? '')) {
     return null;
-  }
-
-  function submitToGitHub() {
-    const title = encodeURIComponent(subject.slice(0, 100) || 'Feedback');
-    const description =
-      `${body}\n\n---\nUA: ${navigator.userAgent}\nURL: ${window.location.href}`.slice(0, 4000);
-    const url =
-      `https://github.com/${GITHUB_REPO}/issues/new?title=${title}` +
-      `&body=${encodeURIComponent(description)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setOpen(false);
-    setSubject('');
-    setBody('');
   }
 
   return (
@@ -53,8 +40,6 @@ export function FeedbackButton() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t('label')}
-        // 圆形 44px tap target on mobile,带 label 的 pill 在桌面
-        // bottom-24 让位给移动端 MobileActionBar (固定 bottom-0 + py-3 + h-11),桌面无 CTA 时回 bottom-4
         className="fixed bottom-24 lg:bottom-4 right-4 z-40 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-background h-11 w-11 sm:w-auto sm:px-4 shadow-lg hover:opacity-90 transition-opacity text-sm font-medium"
       >
         <MessageSquare className="h-4 w-4" />
@@ -82,71 +67,75 @@ export function FeedbackButton() {
               </button>
             </div>
 
-            <div className="px-5 pb-5 space-y-4">
-              {/* 三个快速渠道 */}
-              <div className="grid grid-cols-3 gap-2">
-                <a
-                  href={TG_GROUP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-md border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                >
-                  <span className="text-xl">💬</span>
-                  <span className="text-[10px] text-muted-foreground">{t('channels.tg')}</span>
-                </a>
-                <a
-                  href={`https://github.com/${GITHUB_REPO}/issues`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-md border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                >
-                  <span className="text-xl">⌥</span>
-                  <span className="text-[10px] text-muted-foreground">{t('channels.github')}</span>
-                </a>
-                <a
-                  href={`https://x.com/${TWITTER_HANDLE}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-md border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-colors"
-                >
-                  <span className="text-xl">𝕏</span>
-                  <span className="text-[10px] text-muted-foreground">{t('channels.twitter')}</span>
-                </a>
+            <div className="px-5 pb-5 space-y-3">
+              {/* T-944 #136 · TG 主推大绿色 · 中文用户优先 */}
+              <a
+                href={TG_GROUP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={TG_GROUP_URL}
+                onClick={() => setOpen(false)}
+                className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-md bg-primary hover:bg-primary/90 text-background text-sm font-medium transition-colors"
+              >
+                <TelegramIcon className="h-5 w-5" />
+                <span>{t('channels.tgPrimary')}</span>
+              </a>
+              <div className="text-[11px] text-center text-muted-foreground/80">
+                {t('languageHint')}
               </div>
 
-              <div className="text-[11px] text-muted-foreground/70 text-center pt-1 border-t border-border/40">
-                {t('orInline')}
-              </div>
+              {/* Twitter 中按钮 · 英文用户 */}
+              <a
+                href={TWITTER_DM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={TWITTER_DM_URL}
+                onClick={() => setOpen(false)}
+                className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background hover:bg-muted/40 text-foreground text-sm transition-colors"
+              >
+                <XIcon className="h-4 w-4" />
+                <span>{t('channels.twitterSecondary')}</span>
+              </a>
 
-              {/* 表单 → 提交到 GitHub Issue */}
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value.slice(0, 100))}
-                  placeholder={t('form.subject')}
-                  maxLength={100}
-                  className="w-full h-10 px-3 rounded-md border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50"
-                />
-                <textarea
-                  value={body}
-                  onChange={(e) => setBody(e.target.value.slice(0, 2000))}
-                  placeholder={t('form.body')}
-                  maxLength={2000}
-                  rows={4}
-                  className="w-full px-3 py-2 rounded-md border border-border/60 bg-background text-sm focus:outline-none focus:border-primary/50 resize-none"
-                />
-                <Button
-                  onClick={submitToGitHub}
-                  disabled={!subject.trim() && !body.trim()}
-                  className="w-full"
-                  size="sm"
-                >
-                  <Send className="h-3.5 w-3.5 mr-2" />
-                  {t('form.submit')}
-                </Button>
-                <div className="text-[10px] text-muted-foreground/70 text-center">
-                  {t('form.hint')}
+              {/* GitHub 灰色小字 · 技术 bug · 开发者用 */}
+              <div className="pt-2 border-t border-border/40 space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <a
+                    href={GITHUB_NEW_ISSUE}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={GITHUB_NEW_ISSUE}
+                    className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    <GithubIcon className="h-3 w-3" />
+                    <span>{t('channels.githubTertiary')}</span>
+                    <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                  </a>
+                  {/* T-944 #139 · 已知问题链接 */}
+                  <a
+                    href={GITHUB_ISSUES_LIST}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={GITHUB_ISSUES_LIST}
+                    className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    <ListChecks className="h-3 w-3" />
+                    <span>{t('knownIssues')}</span>
+                    <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                  </a>
+                </div>
+                <div className="text-[10px] text-muted-foreground/60 leading-relaxed">
+                  {t('githubHint')} ·{' '}
+                  <a
+                    href={TWITTER_PROFILE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    @{TWITTER_HANDLE}
+                  </a>
                 </div>
               </div>
             </div>

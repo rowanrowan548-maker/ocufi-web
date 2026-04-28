@@ -1220,17 +1220,16 @@
     "label": "Feedback",
     "title": "Give Ocufi feedback",
     "subtitle": "We read every one — at this stage your feedback matters most",
+    "languageHint": "Chinese users prefer the TG group · English / technical bugs use GitHub below",
+    "knownIssues": "Known issues",
+    "githubHint": "GitHub Issues are public — best for reproducible bugs · For private matters use the TG group",
     "channels": {
       "tg": "TG Group",
       "github": "GitHub",
-      "twitter": "Twitter"
-    },
-    "orInline": "Or write inline and we'll redirect to a prefilled GitHub Issue",
-    "form": {
-      "subject": "Title (required, < 100 chars)",
-      "body": "Details · what you did / what you expected / what happened (< 2000 chars)",
-      "submit": "Submit to GitHub Issue",
-      "hint": "GitHub Issues are public. For private matters use the TG group."
+      "twitter": "Twitter",
+      "tgPrimary": "Join TG group (recommended)",
+      "twitterSecondary": "DM @Ocufi_io on Twitter",
+      "githubTertiary": "Open a GitHub Issue"
     }
   },
   "watchlist": {

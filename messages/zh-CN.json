@@ -1235,17 +1235,16 @@
     "label": "反馈",
     "title": "给 Ocufi 提反馈",
     "subtitle": "我们读每一条 — 早期阶段你的反馈最有价值",
+    "languageHint": "中文用户优先去 TG 群 · 英文 / 技术 bug 走下方 GitHub",
+    "knownIssues": "已知问题",
+    "githubHint": "GitHub Issue 公开可见,适合可复现 bug · 隐私问题请走 TG 私聊",
     "channels": {
       "tg": "TG 群",
       "github": "GitHub",
-      "twitter": "Twitter"
-    },
-    "orInline": "或在这里直接写,会跳到 GitHub Issue 提交",
-    "form": {
-      "subject": "标题(必填,< 100 字)",
-      "body": "详细描述 · 怎么操作的 / 期望什么 / 实际什么(< 2000 字)",
-      "submit": "提交到 GitHub Issue",
-      "hint": "GitHub Issue 公开可见。隐私问题请走 TG 群私聊。"
+      "twitter": "Twitter",
+      "tgPrimary": "加 TG 群反馈(推荐)",
+      "twitterSecondary": "Twitter 私信 @Ocufi_io",
+      "githubTertiary": "提 GitHub Issue"
     }
   },
   "watchlist": {
