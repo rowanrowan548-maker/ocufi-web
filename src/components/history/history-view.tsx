@@ -29,12 +29,90 @@ import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 
+// T-HIST-92 · 筛选状态(localStorage 持久化)
+const FILTERS_KEY = 'ocufi.history.filters.v1';
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
+type TokenFilter = 'all' | 'sol' | 'usdc' | 'custom';
+type TimeFilter = 'all' | '24h' | '7d' | '30d';
+type StatusFilter = 'all' | 'success' | 'failed';
+
+interface Filters {
+  token: TokenFilter;
+  customMint: string;
+  time: TimeFilter;
+  status: StatusFilter;
+  minSol: string;
+  maxSol: string;
+}
+
+const DEFAULT_FILTERS: Filters = {
+  token: 'all', customMint: '', time: 'all', status: 'all', minSol: '', maxSol: '',
+};
+
+function loadFilters(): Filters {
+  if (typeof window === 'undefined') return DEFAULT_FILTERS;
+  try {
+    const raw = window.localStorage.getItem(FILTERS_KEY);
+    if (!raw) return DEFAULT_FILTERS;
+    return { ...DEFAULT_FILTERS, ...(JSON.parse(raw) as Filters) };
+  } catch {
+    return DEFAULT_FILTERS;
+  }
+}
+
+function saveFilters(f: Filters): void {
+  if (typeof window === 'undefined') return;
+  try { window.localStorage.setItem(FILTERS_KEY, JSON.stringify(f)); } catch { /* noop */ }
+}
+
+function applyFilters(records: EnrichedTxRecord[], f: Filters): EnrichedTxRecord[] {
+  const now = Date.now() / 1000;
+  const timeCutoff =
+    f.time === '24h' ? now - 86400 :
+    f.time === '7d' ? now - 86400 * 7 :
+    f.time === '30d' ? now - 86400 * 30 :
+    null;
+  const minSol = f.minSol ? parseFloat(f.minSol) : null;
+  const maxSol = f.maxSol ? parseFloat(f.maxSol) : null;
+  const customNeedle = f.customMint.trim().toLowerCase();
+  return records.filter((r) => {
+    if (timeCutoff !== null && (r.blockTime ?? 0) <= timeCutoff) return false;
+    if (f.status === 'success' && r.err) return false;
+    if (f.status === 'failed' && !r.err) return false;
+    if (f.token === 'sol' && r.tokenMint) return false;
+    if (f.token === 'usdc' && r.tokenMint !== USDC_MINT) return false;
+    if (f.token === 'custom' && customNeedle && !r.tokenMint.toLowerCase().includes(customNeedle)) return false;
+    if (minSol !== null && (r.solAmount || 0) < minSol) return false;
+    if (maxSol !== null && (r.solAmount || 0) > maxSol) return false;
+    return true;
+  });
+}
+
 export function HistoryView() {
   const t = useTranslations();
   const chain = getCurrentChain();
   const wallet = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
   const { records, loading, error, refresh } = useTxHistory(100);
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+
+  useEffect(() => {
+    setFilters(loadFilters());
+  }, []);
+
+  function updateFilters(patch: Partial<Filters>) {
+    setFilters((prev) => {
+      const next = { ...prev, ...patch };
+      saveFilters(next);
+      return next;
+    });
+  }
+
+  const filteredRecords = useMemo(() => applyFilters(records, filters), [records, filters]);
+  const filtersActive =
+    filters.token !== 'all' || filters.time !== 'all' || filters.status !== 'all' ||
+    filters.minSol !== '' || filters.maxSol !== '';
 
   useEffect(() => {
     if (wallet.publicKey) {
@@ -60,12 +138,16 @@ export function HistoryView() {
     <div className="w-full max-w-5xl space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {t('history.countHint', { n: records.length })}
+          {filtersActive
+            ? t('history.countHintFiltered', { n: filteredRecords.length, total: records.length })
+            : t('history.countHint', { n: records.length })}
         </p>
         <Button size="sm" variant="ghost" onClick={refresh} disabled={loading} className="h-8 px-2">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
+
+      <HistoryFilters filters={filters} onChange={updateFilters} active={filtersActive} />
 
       {error && (
         <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
@@ -74,7 +156,16 @@ export function HistoryView() {
         </div>
       )}
 
-      {!loading && records.length === 0 && !error ? (
+      {!loading && filteredRecords.length === 0 && !error && filtersActive ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+            <p className="text-sm text-muted-foreground">{t('history.emptyFiltered')}</p>
+            <Button size="sm" variant="outline" onClick={() => updateFilters(DEFAULT_FILTERS)}>
+              {t('history.filters.reset')}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : !loading && records.length === 0 && !error ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
             <p className="text-muted-foreground">{t('history.empty')}</p>
@@ -85,7 +176,7 @@ export function HistoryView() {
         </Card>
       ) : (
         <>
-        <HistoryStats24h records={records} />
+        <HistoryStats24h records={filteredRecords} />
         <Card className="overflow-x-auto">
           <Table className="min-w-[1000px]">
             <TableHeader>
@@ -105,7 +196,7 @@ export function HistoryView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {records.map((r) => (
+              {filteredRecords.map((r) => (
                 <HistoryRow key={r.signature} r={r} explorer={chain.explorer} t={t} />
               ))}
             </TableBody>
@@ -361,4 +452,160 @@ function formatAmount(n: number): string {
   if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+// T-HIST-92 · 筛选条
+function HistoryFilters({
+  filters, onChange, active,
+}: {
+  filters: Filters;
+  onChange: (patch: Partial<Filters>) => void;
+  active: boolean;
+}) {
+  const t = useTranslations();
+
+  const tokenOptions: Array<{ value: TokenFilter; label: string }> = [
+    { value: 'all', label: t('history.filters.all') },
+    { value: 'sol', label: 'SOL' },
+    { value: 'usdc', label: 'USDC' },
+    { value: 'custom', label: t('history.filters.custom') },
+  ];
+  const timeOptions: Array<{ value: TimeFilter; label: string }> = [
+    { value: 'all', label: t('history.filters.all') },
+    { value: '24h', label: '24h' },
+    { value: '7d', label: '7d' },
+    { value: '30d', label: '30d' },
+  ];
+  const statusOptions: Array<{ value: StatusFilter; label: string }> = [
+    { value: 'all', label: t('history.filters.all') },
+    { value: 'success', label: t('history.status.success') },
+    { value: 'failed', label: t('history.status.failed') },
+  ];
+
+  return (
+    <Card>
+      <CardContent className="p-3 sm:p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            {t('history.filters.title')}
+          </span>
+          {active && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={() => onChange(DEFAULT_FILTERS)}
+            >
+              {t('history.filters.reset')}
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* 代币 */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+              {t('history.filters.token')}
+            </label>
+            <ToggleRow
+              options={tokenOptions}
+              value={filters.token}
+              onChange={(v) => onChange({ token: v as TokenFilter })}
+            />
+            {filters.token === 'custom' && (
+              <input
+                type="text"
+                placeholder={t('history.filters.customMintPlaceholder')}
+                value={filters.customMint}
+                onChange={(e) => onChange({ customMint: e.target.value })}
+                className="w-full h-7 px-2 text-xs rounded border border-border/40 bg-background placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40"
+              />
+            )}
+          </div>
+
+          {/* 时间 */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+              {t('history.filters.time')}
+            </label>
+            <ToggleRow
+              options={timeOptions}
+              value={filters.time}
+              onChange={(v) => onChange({ time: v as TimeFilter })}
+            />
+          </div>
+
+          {/* 状态 */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+              {t('history.filters.status')}
+            </label>
+            <ToggleRow
+              options={statusOptions}
+              value={filters.status}
+              onChange={(v) => onChange({ status: v as StatusFilter })}
+            />
+          </div>
+
+          {/* 金额(SOL) */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+              {t('history.filters.amountSol')}
+            </label>
+            <div className="grid grid-cols-2 gap-1">
+              <input
+                type="number"
+                step="any"
+                min="0"
+                placeholder={t('history.filters.min')}
+                value={filters.minSol}
+                onChange={(e) => onChange({ minSol: e.target.value })}
+                className="w-full h-7 px-2 text-xs rounded border border-border/40 bg-background placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 tabular-nums"
+              />
+              <input
+                type="number"
+                step="any"
+                min="0"
+                placeholder={t('history.filters.max')}
+                value={filters.maxSol}
+                onChange={(e) => onChange({ maxSol: e.target.value })}
+                className="w-full h-7 px-2 text-xs rounded border border-border/40 bg-background placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 tabular-nums"
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ToggleRow<V extends string>({
+  options, value, onChange,
+}: {
+  options: Array<{ value: V; label: string }>;
+  value: V;
+  onChange: (v: V) => void;
+}) {
+  return (
+    <div className="grid grid-flow-col auto-cols-fr gap-0.5 rounded-md border border-border/40 bg-muted/20 p-0.5">
+      {options.map((opt) => {
+        const active = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            aria-pressed={active}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors truncate ${
+              active
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted/40'
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 }

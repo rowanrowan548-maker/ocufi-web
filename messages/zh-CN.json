@@ -1162,7 +1162,22 @@
     },
     "notConnected": "连接钱包才能看到成交记录",
     "empty": "还没有成交记录",
+    "emptyFiltered": "当前筛选条件下没有记录",
     "countHint": "共 {n} 笔",
+    "countHintFiltered": "{n} / {total} 笔(已筛选)",
+    "filters": {
+      "title": "筛选",
+      "all": "全部",
+      "custom": "自定义",
+      "token": "代币",
+      "time": "时间",
+      "status": "状态",
+      "amountSol": "金额 (SOL)",
+      "min": "最小",
+      "max": "最大",
+      "customMintPlaceholder": "输入 mint 包含…",
+      "reset": "重置"
+    },
     "stats": {
       "count": "笔数",
       "volume": "总额",

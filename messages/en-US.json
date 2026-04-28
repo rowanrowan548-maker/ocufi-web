@@ -1147,7 +1147,22 @@
     },
     "notConnected": "Connect your wallet to see transaction history",
     "empty": "No transactions yet",
+    "emptyFiltered": "No records match the current filters",
     "countHint": "{n} transactions",
+    "countHintFiltered": "{n} / {total} transactions (filtered)",
+    "filters": {
+      "title": "Filters",
+      "all": "All",
+      "custom": "Custom",
+      "token": "Token",
+      "time": "Time",
+      "status": "Status",
+      "amountSol": "Amount (SOL)",
+      "min": "Min",
+      "max": "Max",
+      "customMintPlaceholder": "Enter mint contains…",
+      "reset": "Reset"
+    },
     "stats": {
       "count": "Trades",
       "volume": "Volume",
