@@ -375,6 +375,36 @@ export async function fetchTokenAuditCard(mint: string): Promise<TokenAuditCard>
   return apiFetch(`/token/audit-card?mint=${encodeURIComponent(mint)}`);
 }
 
+// T-OKX-4C-be · 按地址标签筛选 trades
+export type TradeTag =
+  | 'all' | 'kol' | 'rat' | 'whale' | 'sniper' | 'smart_money'
+  | 'dev' | 'top10' | 'new_wallet' | 'bundler' | 'phishing';
+
+export interface TradeByTagItem {
+  tx_signature: string;
+  block_time_ms: number;
+  from_address: string;
+  kind: 'buy' | 'sell';
+  usd_value: number;
+  tags?: TradeTag[];
+}
+
+export interface TradesByTagResp {
+  ok: boolean;
+  items: TradeByTagItem[];
+  cached?: boolean;
+  error?: string | null;
+}
+
+export async function fetchTradesByTag(
+  pool: string,
+  tag: TradeTag = 'all',
+  limit = 100,
+): Promise<TradesByTagResp> {
+  const url = `/trades/by-tag?pool=${encodeURIComponent(pool)}&tag=${tag}&limit=${limit}`;
+  return apiFetch(url);
+}
+
 // T-980-118 · /docs · /faq 全文搜索(后端 T-952 已 ship)
 export interface SearchHit {
   id: string;

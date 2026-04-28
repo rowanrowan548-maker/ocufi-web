@@ -29,6 +29,7 @@ import { fetchTopHolders, type Holder } from '@/lib/holders';
 import { fetchDexPairs, type DexPairInfo } from '@/lib/dex-pairs';
 import { aggregateTraders, type TraderStats } from '@/lib/top-traders';
 import { formatCompact as formatLibCompact, formatUsdCompact } from '@/lib/format';
+import { TradesTagFilter } from './trades-tag-filter';
 
 export type ActivityBoardTab =
   | 'activity'
@@ -180,29 +181,17 @@ export function ActivityBoard({ detail, initialTab, tabs }: Props) {
           )}
         </TabsList>
 
-        {/* ── 活动 ── */}
+        {/* ── 活动 · T-OKX-4C-fe 子 tag 筛选 ── */}
         <TabsContent value="activity">
           {!mint ? (
             <Empty Icon={Construction} title={t('comingSoon.activity.title')} subtitle={t('comingSoon.activity.subtitle')} />
-          ) : tradesLoading && !trades ? (
-            <LoadingRow />
-          ) : trades && trades.length > 0 ? (
-            <div className="text-xs">
-              {/* 表头 */}
-              <div className="grid grid-cols-[60px_1fr_1fr_50px] gap-2 px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground/60 font-medium">
-                <span>{t('cols.side')}</span>
-                <span className="text-right">{t('cols.usd')}</span>
-                <span>{t('cols.maker')}</span>
-                <span className="text-right">{t('cols.time')}</span>
-              </div>
-              <div className="max-h-[480px] overflow-y-auto">
-                {trades.slice(0, 100).map((tr) => (
-                  <TradeRow key={tr.txSignature} tr={tr} explorer={chain.explorer} />
-                ))}
-              </div>
-            </div>
           ) : (
-            <Empty Icon={Activity} title={t('noActivity.title')} subtitle={t('noActivity.subtitle')} />
+            <TradesTagFilter
+              mint={mint}
+              gtTrades={trades}
+              gtLoading={tradesLoading}
+              explorer={chain.explorer}
+            />
           )}
         </TabsContent>
 

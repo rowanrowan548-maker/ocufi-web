@@ -385,6 +385,21 @@
         "quickTrade": "Quick trade",
         "share": "Share"
       },
+      "tags": {
+        "all": "All",
+        "kol": "KOL",
+        "rat": "Rats",
+        "whale": "Whales",
+        "sniper": "Snipers",
+        "phishing": "Phishing",
+        "smart_money": "Smart money",
+        "dev": "Dev",
+        "top10": "Top10",
+        "new_wallet": "New wallet",
+        "bundler": "Bundler"
+      },
+      "loading": "Loading…",
+      "noTaggedTrades": "No tagged trades yet",
       "comingSoon": {
         "activity": {
           "title": "Activity Feed",
@@ -423,7 +438,8 @@
         "time": "Time",
         "owner": "Owner",
         "amount": "Amount",
-        "pct": "%"
+        "pct": "%",
+        "tags": "Tags"
       },
       "liquidityCols": {
         "dex": "DEX",

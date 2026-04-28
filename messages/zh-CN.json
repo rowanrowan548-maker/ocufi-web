@@ -385,6 +385,21 @@
         "quickTrade": "一键买卖",
         "share": "分享"
       },
+      "tags": {
+        "all": "全部",
+        "kol": "KOL",
+        "rat": "老鼠仓",
+        "whale": "巨鲸",
+        "sniper": "狙击",
+        "phishing": "疑似钓鱼",
+        "smart_money": "聪明钱",
+        "dev": "开发者",
+        "top10": "Top10",
+        "new_wallet": "新钱包",
+        "bundler": "捆绑"
+      },
+      "loading": "加载中…",
+      "noTaggedTrades": "该标签暂无成交记录",
       "comingSoon": {
         "activity": {
           "title": "交易活动",
@@ -423,7 +438,8 @@
         "time": "时间",
         "owner": "持有者",
         "amount": "持仓",
-        "pct": "占比"
+        "pct": "占比",
+        "tags": "标签"
       },
       "liquidityCols": {
         "dex": "DEX",
