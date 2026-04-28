@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { Wallet, LogOut, ExternalLink, Copy, Check, Loader2, ArrowRight } from 'lucide-react';
 import { WalletAvatar } from './wallet-avatar';
 import { Button } from '@/components/ui/button';
+import { PhantomConnectButton } from './phantom-connect-button';
+import { isPhantomConnectConfigured } from '@/lib/phantom-connect';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,23 +98,52 @@ export function ConnectWalletButton({ variant = 'header' }: Props) {
   // 未连接状态
   if (!connected || !publicKey) {
     const openModal = () => setVisible(true);
+    const phantomEnabled = isPhantomConnectConfigured();
+
     if (variant === 'landing') {
       return (
-        <Button size="lg" onClick={openModal} disabled={connecting} className="sm:min-w-[200px]">
-          {connecting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('wallet.connecting')}
-            </>
-          ) : (
-            <>
-              <Wallet className="mr-2 h-4 w-4" />
-              {t('landing.hero.cta_connect')}
-            </>
-          )}
-        </Button>
+        <div className="flex flex-col gap-2 w-full sm:w-auto sm:min-w-[260px]">
+          {phantomEnabled && <PhantomConnectButton variant="landing" />}
+          <Button
+            size="lg"
+            variant={phantomEnabled ? 'outline' : 'default'}
+            onClick={openModal}
+            disabled={connecting}
+            className="w-full sm:min-w-[200px]"
+          >
+            {connecting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('wallet.connecting')}
+              </>
+            ) : (
+              <>
+                <Wallet className="mr-2 h-4 w-4" />
+                {phantomEnabled ? t('wallet.otherWallets') : t('landing.hero.cta_connect')}
+              </>
+            )}
+          </Button>
+        </div>
       );
     }
+
+    // header 模式:Phantom Connect 主按钮 + 紧凑 "其他钱包" 次按钮
+    if (phantomEnabled) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <PhantomConnectButton variant="header" />
+          <Button size="sm" variant="outline" onClick={openModal} disabled={connecting}>
+            {connecting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Wallet className="h-4 w-4" />
+            )}
+            <span className="hidden md:inline ml-1.5">{t('wallet.otherWallets')}</span>
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <Button size="sm" variant="outline" onClick={openModal} disabled={connecting}>
         {connecting ? (

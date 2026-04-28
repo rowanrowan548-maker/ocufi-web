@@ -25,6 +25,7 @@ import { useTranslations } from 'next-intl';
 import '@solana/wallet-adapter-react-ui/styles.css';
 import './wallet-modal-polish.css';
 import { getCurrentChain } from '@/config/chains';
+import { PhantomConnectProvider } from './phantom-connect-provider';
 
 export function SolanaWalletProvider({
   children,
@@ -77,10 +78,12 @@ export function SolanaWalletProvider({
   }, [t]);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect onError={onError}>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <PhantomConnectProvider>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect onError={onError}>
+          <WalletModalProvider>{children}</WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
+    </PhantomConnectProvider>
   );
 }

@@ -232,6 +232,12 @@
     "copyAddress": "Copy address",
     "copied": "Copied",
     "viewExplorer": "View on Solscan",
+    "otherWallets": "Other wallets",
+    "phantomConnect": {
+      "button": "Connect with Phantom Connect",
+      "buttonShort": "Phantom Connect",
+      "error": "Phantom Connect error: {reason}"
+    },
     "errors": {
       "notReady": "Wallet extension not ready · Refresh and try again",
       "notInstalled": "No wallet detected · Install Phantom or Solflare extension first",

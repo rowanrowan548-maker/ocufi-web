@@ -232,6 +232,12 @@
     "copyAddress": "复制地址",
     "copied": "已复制",
     "viewExplorer": "在 Solscan 查看",
+    "otherWallets": "其他钱包",
+    "phantomConnect": {
+      "button": "通过 Phantom Connect 连接",
+      "buttonShort": "Phantom Connect",
+      "error": "Phantom Connect 错误:{reason}"
+    },
     "errors": {
       "notReady": "钱包扩展未就绪 · 刷新页面再试",
       "notInstalled": "未检测到钱包 · 请先装 Phantom / Solflare 浏览器扩展",

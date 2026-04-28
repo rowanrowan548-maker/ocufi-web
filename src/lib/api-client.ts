@@ -316,8 +316,13 @@ export interface InviteClaimResp {
   ok: boolean;
   claim_id?: number | null;
   amount_sol?: number | null;
+  // T-INV-114-be · 给链上侧组装/跟踪 transfer 用的字段(后端 invite.py 已返)
+  sol_lamports?: number | null;
+  vault_address?: string | null;
   amount_points?: number | null;
   status?: string | null;
+  /** V2 链上结算完成后由后端 ship 代签时回填 · 当前后端只记账不上链 → 永远 null */
+  claim_signature?: string | null;
   error?: string | null;
 }
 
