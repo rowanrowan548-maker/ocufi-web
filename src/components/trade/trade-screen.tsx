@@ -26,6 +26,7 @@ import { InfoPanel } from './info-panel';
 import { SafetyPanel } from './safety-panel';
 import { MobileActionBar } from './mobile-action-bar';
 import { MobileDataColumn } from './mobile-data-column';
+import { MiniTradeFlow } from './mini-trade-flow';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
 import { ErrorBoundary } from '@/components/common/error-boundary';
@@ -155,15 +156,15 @@ export function TradeScreen() {
           5. 删 MobileTabSwitcher 5 tab(数据已挪到右栏)
           底部 MobileActionBar 仍保留快买入口 · pb-20 防遮挡 */}
       <div className="lg:hidden flex flex-col gap-2 pb-20">
-        {/* T-977 #6 · 安全审查红绿灯(继续浮在最上)*/}
-        <TrustSignals detail={detail} />
+        {/* T-977d · 删 TrustSignals 重复卡(右栏 MobileDataColumn 已含 LP/Mint/Freeze/Top10)
+            桌面 lg+ 仍保留 · 移动端不再渲染节省 ~120px */}
 
         {/* T-977 #2 · K 线常驻 · aspect-[16/9] 占视口约 30% */}
         <div className="rounded-lg border border-border/40 overflow-hidden">
           <ChartCard mint={mint} />
         </div>
 
-        {/* T-977 #3 · 50/50 双栏:左买入 / 右数据 */}
+        {/* T-977 #3 · 50/50 双栏:左买入 / 右数据 + mini 成交流(右栏空白补) */}
         <div className="grid grid-cols-2 gap-2 items-start">
           <div className="min-w-0">
             <TradeTabs
@@ -175,13 +176,17 @@ export function TradeScreen() {
               onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-2">
             <MobileDataColumn detail={detail} />
+            {/* T-977d · buy form 旁下半空白填 mini trades(类比 OKX 订单簿) */}
+            <MiniTradeFlow mint={mint} limit={8} />
           </div>
         </div>
 
-        {/* T-977 #4 · 底部活动 tab(持有/活动/风险 全宽 · ActivityBoard 内含 3 内 tab) */}
-        <ActivityBoard detail={detail} />
+        {/* T-977 #4 · 底部活动 tab · 锚点 #mobile-activity-board 给 mini trades 跳转 */}
+        <div id="mobile-activity-board">
+          <ActivityBoard detail={detail} />
+        </div>
       </div>
 
       {/* 移动端底部固定双按钮 CTA(T-505b · 仅 lg:hidden) */}
