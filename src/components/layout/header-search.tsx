@@ -52,10 +52,11 @@ export function HeaderSearch() {
 
   return (
     <>
-      {/* 桌面 inline */}
+      {/* T-986 · 桌面 inline · 宽度由父容器 flex-1 控制(吃满中间空间)
+          spec: max-w-2xl + min-width 320px + / 快捷键 hint */}
       <div
         ref={desktopRef}
-        className="hidden lg:block w-[320px] xl:w-[400px]"
+        className="hidden lg:block w-full min-w-[320px] max-w-2xl"
       >
         <TokenSearchCombo
           value=""
@@ -72,7 +73,10 @@ export function HeaderSearch() {
               <span className="flex-1 truncate text-xs">
                 {t('nav.search.placeholder')}
               </span>
-              <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] rounded bg-background border border-border/40 text-muted-foreground/70 font-mono">
+              <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] rounded bg-background border border-border/40 text-muted-foreground/70 font-mono flex-shrink-0">
+                /
+              </kbd>
+              <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] rounded bg-background border border-border/40 text-muted-foreground/70 font-mono flex-shrink-0">
                 ⌘K
               </kbd>
             </button>
