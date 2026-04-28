@@ -61,6 +61,8 @@ export function PortfolioView() {
   const [tab, setTab] = useState<'holdings' | 'closed'>('holdings');
   // T-903:顶层双 tab 盈亏分析 / 资产组合
   const [topTab, setTopTab] = useState<'pnl' | 'portfolio'>('pnl');
+  // T-971 #80:总览 / 已实现盈亏 / 浮动盈亏 三段顶部 tab(在 topTab 之上)
+  const [pnlTab, setPnlTab] = useState<'overview' | 'realized' | 'unrealized'>('overview');
   // T-900a:时间筛选 state hoist · T-900c 阶段联动 stat 卡 + 表格数据
   const [range, setRange] = useState<'1d' | '7d' | '30d' | 'all'>('all');
   // T-908b · 全站货币(替换 T-902 局部 unit)· 顶部局部 toggle 已删
@@ -450,6 +452,93 @@ export function PortfolioView() {
           </CardContent>
         </Card>
       ) : (
+        <Tabs value={pnlTab} onValueChange={(v) => v && setPnlTab(v as typeof pnlTab)}>
+          {/* T-971 #80 · 总览 / 已实现 / 浮动盈亏 三段顶部 tab(在 pnl/portfolio 之上)*/}
+          <TabsList className="grid grid-cols-3 mb-4 h-9">
+            <TabsTrigger value="overview" className="text-xs">
+              {t('portfolio.pnlTab.overview')}
+            </TabsTrigger>
+            <TabsTrigger value="realized" className="text-xs">
+              {t('portfolio.pnlTab.realized')}
+              {closed.length > 0 && <span className="ml-1 text-muted-foreground/60">{closed.length}</span>}
+            </TabsTrigger>
+            <TabsTrigger value="unrealized" className="text-xs">
+              {t('portfolio.pnlTab.unrealized')}
+              {tokens.length > 0 && <span className="ml-1 text-muted-foreground/60">{tokens.length}</span>}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* T-971 · 已实现盈亏 tab — 大数 + ClosedPositions 列表 */}
+          <TabsContent value="realized" className="space-y-4">
+            <Card>
+              <CardContent className="py-6 text-center space-y-2">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t('portfolio.pnlTab.realizedLabel')}
+                </div>
+                <div
+                  className={`text-3xl sm:text-4xl font-bold font-mono tabular-nums ${
+                    pnlSummary.realizedUsd > 0
+                      ? 'text-success'
+                      : pnlSummary.realizedUsd < 0
+                      ? 'text-danger'
+                      : 'text-foreground'
+                  }`}
+                >
+                  {pnlSummary.realizedUsd >= 0 ? '+' : '-'}
+                  {formatAmount(Math.abs(pnlSummary.realizedUsd), currency, solUsdPrice)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {t('portfolio.pnlTab.realizedSub', {
+                    closed: pnlSummary.closedCount,
+                    win: pnlSummary.winCount,
+                    pct: pnlSummary.closedCount > 0
+                      ? Math.round((pnlSummary.winCount / pnlSummary.closedCount) * 100)
+                      : 0,
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="p-4">
+              <ClosedPositions list={closed} />
+            </Card>
+          </TabsContent>
+
+          {/* T-971 · 浮动盈亏 tab — 大数 + HoldingsTable */}
+          <TabsContent value="unrealized" className="space-y-4">
+            <Card>
+              <CardContent className="py-6 text-center space-y-2">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t('portfolio.pnlTab.unrealizedLabel')}
+                </div>
+                <div
+                  className={`text-3xl sm:text-4xl font-bold font-mono tabular-nums ${
+                    pnlSummary.unrealizedUsd > 0
+                      ? 'text-success'
+                      : pnlSummary.unrealizedUsd < 0
+                      ? 'text-danger'
+                      : 'text-foreground'
+                  }`}
+                >
+                  {pnlSummary.unrealizedUsd >= 0 ? '+' : '-'}
+                  {formatAmount(Math.abs(pnlSummary.unrealizedUsd), currency, solUsdPrice)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {t('portfolio.pnlTab.unrealizedSub', { count: tokens.length })}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="p-4">
+              <HoldingsTable
+                sol={sol}
+                tokens={tokens}
+                costs={costs}
+                cutoffSec={cutoffSec}
+              />
+            </Card>
+          </TabsContent>
+
+          {/* 总览 tab — 包内层 pnl/portfolio Tabs(原有 5 stat 卡 + 持仓/已平仓 / 资产组合)*/}
+          <TabsContent value="overview" className="space-y-4">
         <Tabs value={topTab} onValueChange={(v) => v && setTopTab(v as typeof topTab)}>
           <TabsList className="bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-3 h-auto">
             <TabsTrigger
@@ -734,6 +823,8 @@ export function PortfolioView() {
                 cutoffSec={cutoffSec}
               />
             </Card>
+          </TabsContent>
+        </Tabs>
           </TabsContent>
         </Tabs>
       )}

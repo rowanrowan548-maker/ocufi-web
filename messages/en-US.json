@@ -620,6 +620,15 @@
       "pnl": "P/L Analysis",
       "portfolio": "Portfolio"
     },
+    "pnlTab": {
+      "overview": "Overview",
+      "realized": "Realized",
+      "unrealized": "Unrealized",
+      "realizedLabel": "Total realized P/L",
+      "realizedSub": "{closed} positions closed · {win} winners ({pct}% win rate)",
+      "unrealizedLabel": "Current unrealized P/L",
+      "unrealizedSub": "{count} open positions · marked vs avg cost"
+    },
     "closed": {
       "summary": "Total realized P/L",
       "empty": {

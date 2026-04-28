@@ -620,6 +620,15 @@
       "pnl": "盈亏分析",
       "portfolio": "资产组合"
     },
+    "pnlTab": {
+      "overview": "总览",
+      "realized": "已实现盈亏",
+      "unrealized": "浮动盈亏",
+      "realizedLabel": "累计已实现盈亏",
+      "realizedSub": "{closed} 笔已平仓 · {win} 笔盈利({pct}% 胜率)",
+      "unrealizedLabel": "当前浮动盈亏",
+      "unrealizedSub": "{count} 个持仓代币 · 按当前价 vs 均价"
+    },
     "closed": {
       "summary": "累计已实现盈亏",
       "empty": {
