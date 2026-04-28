@@ -114,153 +114,82 @@ export function TradingHeader({ mint, detail: detailProp, onSelectMint }: Props)
 
   return (
     <>
-      {/* ───── 桌面 lg+ · T-501 三层布局(完全保留) ───── */}
-      <Card className="hidden lg:block p-3 sm:p-4">
-        {/* 层 1 · 细条:小头像 / mint / 复制 / 链浏览器 */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-border/40">
-            {detail.logoUri ? (
-              <Image
-                src={detail.logoUri}
-                alt={detail.symbol}
-                width={32}
-                height={32}
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <span className="text-[10px] font-bold text-muted-foreground">
-                {detail.symbol.slice(0, 2).toUpperCase()}
-              </span>
-            )}
-          </div>
-          <span className="font-mono uppercase text-foreground/80 font-medium">{detail.symbol}</span>
-          {detail.name && detail.name !== detail.symbol && (
-            <>
-              <span className="text-muted-foreground/40">·</span>
-              <span className="truncate max-w-[180px] sm:max-w-[280px]">{detail.name}</span>
-            </>
-          )}
-          <span className="text-muted-foreground/40">·</span>
-          <span className="font-mono">{shortAddr(mint)}</span>
-          <button
-            type="button"
-            onClick={() => copyMint(setCopied)}
-            className="hover:text-foreground transition-colors"
-            title={t('wallet.copyAddress')}
-            aria-label={t('wallet.copyAddress')}
-          >
-            {copied ? (
-              <Check className="h-3 w-3 text-success" />
-            ) : (
-              <Copy className="h-3 w-3" />
-            )}
-          </button>
-          <a
-            href={`${chain.explorer}/token/${mint}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors ml-auto"
-            aria-label="Solscan"
-          >
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-
-        {/* T-984b · 桌面横排 OKX 样:大头像 + symbol + verified + name | 大价格 24h% | 流动性 / 24h量 / 持币 / 手续费 / 风险 */}
-        <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-6 lg:gap-8">
-          <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
-            <div className="h-12 w-12 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-border/40">
+      {/* ───── T-OKX-2 桌面 lg+ · 1 行紧凑 OKX 风(原 2 层合并 · 删 1 头像 + 1 mint copy 重复) ───── */}
+      <Card className="hidden lg:block px-3 py-2">
+        <div className="flex items-center gap-4 xl:gap-6">
+          {/* 左 cluster:logo + symbol + verified + star + age + mint + copy + solscan */}
+          <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+            <div className="h-9 w-9 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0 ring-1 ring-border/40">
               {detail.logoUri ? (
-                <Image
-                  src={detail.logoUri}
-                  alt={detail.symbol}
-                  width={48}
-                  height={48}
-                  className="object-cover"
-                  unoptimized
-                />
+                <Image src={detail.logoUri} alt={detail.symbol} width={36} height={36} className="object-cover" unoptimized />
               ) : (
-                <span className="text-sm font-bold text-muted-foreground">
+                <span className="text-xs font-bold text-muted-foreground">
                   {detail.symbol.slice(0, 2).toUpperCase()}
                 </span>
               )}
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono uppercase text-base font-bold tracking-tight">
-                  {detail.symbol}
-                </span>
-                {verified && (
-                  <BadgeCheck
-                    className="h-4 w-4 text-success flex-shrink-0"
-                    aria-label={t('trade.header.verified')}
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={() => toggle(mint)}
-                  aria-label={starred ? 'Remove favorite' : 'Add favorite'}
-                  className="p-0.5 hover:bg-muted/40 rounded transition-colors flex-shrink-0"
-                >
-                  <Star
-                    className={`h-3.5 w-3.5 ${
-                      starred ? 'fill-warning text-warning' : 'text-muted-foreground/50'
-                    }`}
-                  />
-                </button>
-              </div>
-              {detail.name && detail.name !== detail.symbol && (
-                <div className="text-[11px] text-muted-foreground truncate">
-                  {detail.name}
-                </div>
-              )}
-            </div>
+            <span className="font-mono uppercase text-base font-bold tracking-tight">
+              {detail.symbol}
+            </span>
+            {verified && (
+              <BadgeCheck className="h-4 w-4 text-success flex-shrink-0" aria-label={t('trade.header.verified')} />
+            )}
+            <button
+              type="button"
+              onClick={() => toggle(mint)}
+              aria-label={starred ? 'Remove favorite' : 'Add favorite'}
+              className="p-0.5 hover:bg-muted/40 rounded transition-colors flex-shrink-0"
+            >
+              <Star className={`h-3.5 w-3.5 ${starred ? 'fill-warning text-warning' : 'text-muted-foreground/50'}`} />
+            </button>
+            {detail.name && detail.name !== detail.symbol && (
+              <span className="text-[11px] text-muted-foreground/70 truncate max-w-[120px] xl:max-w-[180px]">
+                {detail.name}
+              </span>
+            )}
+            <span className="text-muted-foreground/40 text-[10px]">·</span>
+            <span className="text-[10px] text-muted-foreground/70">{formatAge(detail.createdAt, t)}</span>
+            <span className="text-muted-foreground/40 text-[10px]">·</span>
+            <span className="font-mono text-[10px] text-muted-foreground/70">{shortAddr(mint)}</span>
+            <button
+              type="button"
+              onClick={() => copyMint(setCopied)}
+              className="text-muted-foreground/60 hover:text-foreground transition-colors"
+              title={t('wallet.copyAddress')}
+              aria-label={t('wallet.copyAddress')}
+            >
+              {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+            </button>
+            <a
+              href={`${chain.explorer}/token/${mint}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground/60 hover:text-foreground transition-colors"
+              aria-label="Solscan"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
 
-          {/* 大价格 + 24h% (仅次于 logo,字号最大) */}
+          {/* 中:大价格 + 24h% */}
           <div className="flex flex-col gap-0 flex-shrink-0">
-            <span className="text-3xl font-bold font-mono tracking-tight leading-none tabular-nums">
+            <span className="text-2xl xl:text-3xl font-bold font-mono tracking-tight leading-none tabular-nums">
               ${formatPrice(detail.priceUsd)}
             </span>
             {change != null && (
-              <span
-                className={`text-sm font-mono font-medium flex items-center gap-0.5 mt-1 ${changeColor}`}
-              >
-                {ChangeIcon && <ChangeIcon className="h-3.5 w-3.5" />}
-                {up ? '+' : ''}
-                {change.toFixed(2)}%
+              <span className={`text-xs font-mono font-medium flex items-center gap-0.5 mt-0.5 ${changeColor}`}>
+                {ChangeIcon && <ChangeIcon className="h-3 w-3" />}
+                {up ? '+' : ''}{change.toFixed(2)}%
               </span>
             )}
           </div>
 
-          {/* 横排 inline 字段(OKX 样 · 字段名小灰字 / 数字大字 / 间距 32-48px) */}
-          <div className="flex items-center gap-8 xl:gap-12 flex-1 overflow-x-auto">
-            <BarStat
-              label={t('trade.header.dataLabels.marketCap')}
-              value={formatUsdCompact(detail.marketCap)}
-            />
-            <BarStat
-              label={t('trade.header.dataLabels.liquidity')}
-              value={formatUsdCompact(detail.liquidityUsd)}
-            />
-            <BarStat
-              label={t('trade.header.dataLabels.volume24h')}
-              value={formatUsdCompact(detail.volume24h ?? null)}
-            />
-            <BarStat
-              label={t('trade.header.dataLabels.holders')}
-              value={formatCompact(detail.totalHolders ?? null)}
-            />
-            <BarStat
-              label={t('trade.header.dataLabels.fee')}
-              value="0.1%"
-            />
-            <BarStat
-              label={t('trade.header.dataLabels.age')}
-              value={formatAge(detail.createdAt, t)}
-            />
-            {/* 风险标签 */}
+          {/* 右 BarStat row · OKX 字段顺序:流动性 / 持币地址 / 总手续费 / 总买卖税 / 风险 */}
+          <div className="flex items-center gap-5 xl:gap-8 flex-1 overflow-x-auto justify-end">
+            <BarStat label={t('trade.header.dataLabels.liquidity')} value={formatUsdCompact(detail.liquidityUsd)} />
+            <BarStat label={t('trade.header.dataLabels.holders')} value={formatCompact(detail.totalHolders ?? null)} />
+            <BarStat label={t('trade.header.dataLabels.fee')} value="0.1%" />
+            <BarStat label={t('trade.header.dataLabels.tax')} value="0%" />
             <div className="flex flex-col gap-0.5 flex-shrink-0">
               <span className="text-muted-foreground text-[10px] uppercase tracking-wide">
                 {t('trade.header.dataLabels.risk')}

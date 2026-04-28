@@ -269,7 +269,8 @@
         "holders": "Holders",
         "risk": "Risk",
         "age": "Age",
-        "fee": "Fee"
+        "fee": "Fee",
+        "tax": "Tax"
       }
     },
     "rpcHealth": {
