@@ -334,6 +334,31 @@ export async function claimInviteRebate(
   });
 }
 
+// T-980-118 · /docs · /faq 全文搜索(后端 T-952 已 ship)
+export interface SearchHit {
+  id: string;
+  title_zh: string;
+  title_en: string;
+  snippet: string;
+  score: number;
+}
+
+export interface SearchResp {
+  ok: boolean;
+  items: SearchHit[];
+  cached?: boolean;
+}
+
+export async function searchDocs(q: string, limit = 10): Promise<SearchResp> {
+  const url = `/search/docs?q=${encodeURIComponent(q)}&limit=${limit}`;
+  return apiFetch(url);
+}
+
+export async function searchFaq(q: string, limit = 10): Promise<SearchResp> {
+  const url = `/search/faq?q=${encodeURIComponent(q)}&limit=${limit}`;
+  return apiFetch(url);
+}
+
 // T-975 · v1(6 字符)→ v2(8 字符)邀请码升级
 export interface InviteRegenerateResp {
   ok: boolean;

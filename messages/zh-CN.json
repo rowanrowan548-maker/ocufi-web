@@ -1144,6 +1144,12 @@
   "docs": {
     "title": "使用文档",
     "subtitle": "5 分钟上手 Ocufi · 链上交易完整流程",
+    "search": {
+      "placeholder": "搜索文档(滑点 / 限价 / 提醒…)· ⌘K",
+      "searching": "搜索中…",
+      "noResults": "没找到「{q}」相关内容",
+      "clear": "清除"
+    },
     "connect": {
       "title": "连接钱包",
       "body": "支持 Phantom / Solflare / OKX。点右上角「连接钱包」选你装好的钱包扩展(桌面端)。\n\n手机端:你必须在钱包 app 自带的浏览器里打开 ocufi.io,普通 Safari/Chrome 检测不到钱包。",

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { DocImagePlaceholder } from '@/components/docs/doc-image-placeholder';
+import { DocsSearch } from '@/components/docs/docs-search';
 
 export async function generateMetadata({
   params,
@@ -27,6 +28,8 @@ export default async function DocsPage({
   const t = await getTranslations('docs');
 
   const sections: Array<{
+    /** T-980-118 · 锚点 ID · DocsSearch 跳转目标(BE → FE 映射用) */
+    id: string;
     Icon: typeof Wallet;
     titleKey: string;
     bodyKey: string;
@@ -36,6 +39,7 @@ export default async function DocsPage({
     image?: { src?: string; altKey: string; aspect?: '16/9' | '4/3' };
   }> = [
     {
+      id: 'section-connect',
       Icon: Wallet,
       titleKey: 'connect.title',
       bodyKey: 'connect.body',
@@ -44,6 +48,7 @@ export default async function DocsPage({
       image: { altKey: 'connect.imageAlt' },
     },
     {
+      id: 'section-buy',
       Icon: ShoppingCart,
       titleKey: 'buy.title',
       bodyKey: 'buy.body',
@@ -52,6 +57,7 @@ export default async function DocsPage({
       image: { altKey: 'buy.imageAlt' },
     },
     {
+      id: 'section-sell',
       Icon: ListOrdered,
       titleKey: 'sell.title',
       bodyKey: 'sell.body',
@@ -60,6 +66,7 @@ export default async function DocsPage({
       image: { altKey: 'sell.imageAlt' },
     },
     {
+      id: 'section-limit',
       Icon: Zap,
       titleKey: 'limit.title',
       bodyKey: 'limit.body',
@@ -68,6 +75,7 @@ export default async function DocsPage({
       image: { altKey: 'limit.imageAlt' },
     },
     {
+      id: 'section-safety',
       Icon: Shield,
       titleKey: 'safety.title',
       bodyKey: 'safety.body',
@@ -76,6 +84,7 @@ export default async function DocsPage({
       image: { altKey: 'safety.imageAlt' },
     },
     {
+      id: 'section-watchlist',
       Icon: Star,
       titleKey: 'watchlist.title',
       bodyKey: 'watchlist.body',
@@ -95,9 +104,12 @@ export default async function DocsPage({
           <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
         </header>
 
+        {/* T-980-118 · sticky 全文搜索框(后端 /search/docs)+ Cmd+K */}
+        <DocsSearch />
+
         <div className="space-y-4">
           {sections.map((s, i) => (
-            <Card key={i} className="p-5 sm:p-6">
+            <Card key={i} id={s.id} className="p-5 sm:p-6 scroll-mt-24">
               <div className="flex gap-4">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <s.Icon className="h-5 w-5 text-primary" />

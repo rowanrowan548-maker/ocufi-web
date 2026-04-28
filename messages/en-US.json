@@ -1129,6 +1129,12 @@
   "docs": {
     "title": "Docs",
     "subtitle": "Get up and running with Ocufi in 5 minutes",
+    "search": {
+      "placeholder": "Search docs (slippage / limit / alerts…) · ⌘K",
+      "searching": "Searching…",
+      "noResults": "No results for \"{q}\"",
+      "clear": "Clear"
+    },
     "connect": {
       "title": "Connect a wallet",
       "body": "Phantom / Solflare / OKX supported. On desktop, click \"Connect wallet\" in the top right and pick your installed wallet extension.\n\nOn mobile you must open ocufi.io inside your wallet app's built-in browser — Safari/Chrome cannot detect wallet extensions.",
