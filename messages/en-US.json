@@ -253,7 +253,8 @@
         "volume24h": "24h vol",
         "holders": "Holders",
         "risk": "Risk",
-        "age": "Age"
+        "age": "Age",
+        "fee": "Fee"
       }
     },
     "rpcHealth": {

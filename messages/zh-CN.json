@@ -253,7 +253,8 @@
         "volume24h": "24h 量",
         "holders": "持币",
         "risk": "风险",
-        "age": "年龄"
+        "age": "年龄",
+        "fee": "手续费"
       }
     },
     "rpcHealth": {
