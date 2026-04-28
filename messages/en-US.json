@@ -672,12 +672,50 @@
   },
   "token": {
     "page": {
-      "poweredBy": "Powered by DexScreener + RugCheck"
+      "poweredBy": "Powered by DexScreener + RugCheck + GoPlus · Radar refreshed every 30 minutes"
     },
     "search": {
       "title": "Token Safety Check",
       "subtitle": "Paste a mint address to see if it's safe to buy",
-      "button": "Check"
+      "button": "Check",
+      "placeholder": "Paste token mint address (32-44 chars)"
+    },
+    "history": {
+      "label": "Recent",
+      "clear": "Clear"
+    },
+    "radar": {
+      "loading": "Loading boards…",
+      "empty": "No data yet · worker refreshes every 30 minutes",
+      "risky": {
+        "title": "24h Risky Tokens",
+        "subtitle": "honeypot / low LP / new / transfer fee"
+      },
+      "safe": {
+        "title": "24h Audited Safe",
+        "subtitle": "authorities renounced + LP locked ≥70% + deep liq"
+      }
+    },
+    "checks": {
+      "loading": "Scanning…",
+      "status": {
+        "ok": "OK",
+        "warn": "Watch",
+        "fail": "Fail",
+        "unknown": "Unknown"
+      },
+      "mintAuthority": { "label": "Mint authority" },
+      "freezeAuthority": { "label": "Freeze authority" },
+      "transferFee": { "label": "Transfer fee" },
+      "nonTransferable": { "label": "Transferable / honeypot" },
+      "balanceMutable": { "label": "Balance not mutable" },
+      "maliciousCreator": { "label": "Creator not flagged" },
+      "lpLocked": { "label": "LP locked" },
+      "concentration": { "label": "Top 10 concentration" },
+      "liquidity": { "label": "Liquidity" },
+      "holders": { "label": "Holders" },
+      "poolAge": { "label": "Pool age" },
+      "rugged": { "label": "Rug flag" }
     },
     "notFound": "Token not found — might be too illiquid or just created",
     "rugCheckUnavailable": "RugCheck is temporarily unavailable; some safety data may be missing",
@@ -717,7 +755,9 @@
       "justNow": "just now"
     },
     "actions": {
-      "buy": "Buy now"
+      "buy": "Buy now",
+      "star": "Add to watchlist",
+      "unstar": "In watchlist · click to remove"
     }
   },
   "faq": {

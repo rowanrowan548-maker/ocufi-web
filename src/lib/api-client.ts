@@ -492,3 +492,36 @@ export async function setUserEmail(wallet: string, email: string): Promise<{ ok:
     body: JSON.stringify({ wallet, email }),
   });
 }
+
+// ─── T-948 · /token/radar 雷达榜 ───
+
+export type RadarCategory = 'risky' | 'safe';
+
+export interface RadarItem {
+  mint: string;
+  symbol: string;
+  name: string;
+  category: string;
+  riskReasons: string[];
+  priceUsd: number | null;
+  volume24hUsd: number | null;
+  liquidityUsd: number | null;
+  priceChange24h: number | null;
+  poolAgeHours: number | null;
+  topPoolAddress: string | null;
+  lastChecked: string;
+}
+
+export interface RadarResp {
+  ok: boolean;
+  /** T-948 · 后端字段名(主路径) */
+  items?: RadarItem[];
+  /** 后端 `RadarOut(list=items)` 历史拼写兼容(若部署版本有这个 typo) */
+  list?: RadarItem[];
+  cached: boolean;
+}
+
+export async function fetchTokenRadar(category: RadarCategory, limit = 20): Promise<RadarItem[]> {
+  const r = await apiFetch<RadarResp>(`/token/radar?category=${category}&limit=${limit}`);
+  return r.items ?? r.list ?? [];
+}

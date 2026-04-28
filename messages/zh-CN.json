@@ -672,12 +672,50 @@
   },
   "token": {
     "page": {
-      "poweredBy": "数据源: DexScreener + RugCheck"
+      "poweredBy": "数据源: DexScreener + RugCheck + GoPlus · 雷达榜每 30 分钟刷新"
     },
     "search": {
       "title": "代币安全查询",
       "subtitle": "粘合约地址,一眼看出这币能不能买",
-      "button": "查询"
+      "button": "查询",
+      "placeholder": "粘贴代币合约地址(mint · 32-44 字符)"
+    },
+    "history": {
+      "label": "最近查询",
+      "clear": "清空"
+    },
+    "radar": {
+      "loading": "加载榜单中…",
+      "empty": "暂无数据 · worker 30 分钟刷一次",
+      "risky": {
+        "title": "24h 高风险代币榜",
+        "subtitle": "蜜罐 / 低 LP / 新币 / 转账税"
+      },
+      "safe": {
+        "title": "24h 已审计安全榜",
+        "subtitle": "权限放弃 + LP 锁 ≥ 70% + 高流动性"
+      }
+    },
+    "checks": {
+      "loading": "扫描中…",
+      "status": {
+        "ok": "通过",
+        "warn": "注意",
+        "fail": "未通过",
+        "unknown": "未知"
+      },
+      "mintAuthority": { "label": "Mint 增发权" },
+      "freezeAuthority": { "label": "Freeze 冻结权" },
+      "transferFee": { "label": "转账税" },
+      "nonTransferable": { "label": "可转让 / 蜜罐" },
+      "balanceMutable": { "label": "余额不可外部修改" },
+      "maliciousCreator": { "label": "创建者非恶意" },
+      "lpLocked": { "label": "LP 锁定" },
+      "concentration": { "label": "前 10 持仓占比" },
+      "liquidity": { "label": "流动性" },
+      "holders": { "label": "持有人数" },
+      "poolAge": { "label": "池子年龄" },
+      "rugged": { "label": "Rug 标记" }
     },
     "notFound": "找不到这个代币,可能流动性太低或刚刚创建",
     "rugCheckUnavailable": "RugCheck 接口暂时不可用,部分安全数据可能缺失",
@@ -717,7 +755,9 @@
       "justNow": "刚刚"
     },
     "actions": {
-      "buy": "立即买入"
+      "buy": "立即买入",
+      "star": "加自选",
+      "unstar": "已在自选 · 点取消"
     }
   },
   "faq": {
