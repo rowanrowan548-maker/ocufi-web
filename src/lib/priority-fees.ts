@@ -96,3 +96,51 @@ export function formatPriorityFeeSol(sol: number): string {
   if (sol >= 0.00001) return sol.toFixed(6);
   return sol.toFixed(7);
 }
+
+/**
+ * T-985d · OKX 风 4 档优先费档位(桌面 buy/sell-form 优先级字段)
+ *
+ * 跟现有 RPC 自适应 fetchPriorityFees 三档(normal/fast/turbo)是**两套独立机制**:
+ *   - 旧 RPC 自适应:估算"市场推荐",自动按拥堵分档(p25/p50/p95 百分位)
+ *   - 4 档静态:用户手选档位,固定上限,不随市场波动
+ *
+ * 单位:每笔 swap 的总优先费 **lamports 上限**(传给 Jupiter
+ * `prioritizationFeeLamports.priorityLevelWithMaxLamports.maxLamports`)
+ *
+ *   pilot · 0.000005 SOL · 慢(网络空闲时也能上)
+ *   p1    · 0.00005 SOL  · 标准(对应旧 fast 档,V1 默认)
+ *   p2    · 0.0005 SOL   · 快(高峰期保上)
+ *   p3    · 0.005 SOL    · 极速 / MEV-protect 级(大额 / 抢单)
+ *
+ * P3 = 5_000_000 lamports = 0.005 SOL · 反算 microLamports/CU = 25_000(Helius
+ * 报"very high"档位区间),不算极端,留给抢单用户;若实测投诉太狠,后续调 1M。
+ */
+export type PriorityTier = 'pilot' | 'p1' | 'p2' | 'p3';
+
+export const PRIORITY_TIER_LAMPORTS: Record<PriorityTier, number> = {
+  pilot: 5_000,
+  p1: 50_000,
+  p2: 500_000,
+  p3: 5_000_000,
+};
+
+/**
+ * 把 4 档之一映射到 microLamports/CU(用于 ComputeBudget setComputeUnitPrice 直接调用)
+ *
+ * 反算公式:microLamports/CU = (lamports × 1_000_000) / TYPICAL_SWAP_CU(200_000)
+ *   - pilot → 25_000
+ *   - p1    → 250_000
+ *   - p2    → 2_500_000
+ *   - p3    → 25_000_000
+ *
+ * ⚠️ 注意:实际 priority fee = consumed_CU × microLamportsPerCU。本 helper 假定 swap
+ * 实际消耗 ≈ TYPICAL_SWAP_CU(200K),所以反算值才能让总花费 = PRIORITY_TIER_LAMPORTS。
+ * 若 setComputeUnitLimit 设到 1.4M 但 swap 真实只用 200K CU,实际花费仍按 consumed 算,
+ * 跟 PRIORITY_TIER_LAMPORTS 上限一致;若真实超 200K(罕见),实际花费会等比例上升。
+ *
+ * 不破现有调用:swap-with-fee.ts 仍走 Jupiter `prioritizationFeeLamports`(总 lamports 上限),
+ * 这个 helper 是给将来直接用 setComputeUnitPrice 的路径备的。
+ */
+export function getMicroLamportsForTier(tier: PriorityTier): number {
+  return Math.floor((PRIORITY_TIER_LAMPORTS[tier] * 1_000_000) / TYPICAL_SWAP_CU);
+}
