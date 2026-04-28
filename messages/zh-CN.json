@@ -820,6 +820,12 @@
       "subtitle": "加 Telegram 群直接问开发者,实时回复 / 反馈 Bug / 看其他人在聊什么。",
       "button": "加 TG 群提问"
     },
+    "feedback": {
+      "prompt": "这个有用吗?",
+      "helpful": "有用",
+      "notHelpful": "没用",
+      "recorded": "已记录,谢谢反馈"
+    },
     "items": [
       {
         "group": "交易",

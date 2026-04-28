@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronDown, Send } from 'lucide-react';
+import { ChevronDown, Send, ThumbsUp, ThumbsDown, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { track } from '@/lib/analytics';
 
 interface FaqItem {
   group: string;
@@ -13,10 +14,45 @@ interface FaqItem {
   a: string;
 }
 
+type Vote = 'up' | 'down';
+const VOTES_KEY = 'ocufi.faq.votes.v1';
+
+function loadVotes(): Record<string, Vote> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(VOTES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, Vote>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveVotes(votes: Record<string, Vote>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+  } catch {
+    /* noop */
+  }
+}
+
 export function FaqView() {
   const t = useTranslations('faq');
   const items = t.raw('items') as FaqItem[];
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [votes, setVotes] = useState<Record<string, Vote>>({});
+
+  useEffect(() => {
+    setVotes(loadVotes());
+  }, []);
+
+  const handleVote = (faqId: string, vote: Vote) => {
+    if (votes[faqId]) return;
+    const next = { ...votes, [faqId]: vote };
+    setVotes(next);
+    saveVotes(next);
+    track('faq_feedback', { faq_id: faqId, vote });
+  };
 
   // 按 group 归类
   const grouped = items.reduce<Record<string, Array<{ idx: number; item: FaqItem }>>>((acc, item, idx) => {
@@ -49,11 +85,47 @@ export function FaqView() {
                       }`}
                     />
                   </button>
-                  {open && (
-                    <div className="px-4 pb-4 pt-1 text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                      {item.a}
-                    </div>
-                  )}
+                  {open && (() => {
+                    const faqId = `${item.group}::${item.q}`;
+                    const userVote = votes[faqId];
+                    return (
+                      <div className="px-4 pb-4 pt-1 space-y-3">
+                        <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                          {item.a}
+                        </div>
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/40 text-xs">
+                          {userVote ? (
+                            <span className="inline-flex items-center gap-1 text-muted-foreground">
+                              <Check className="h-3 w-3" />
+                              {t('feedback.recorded')}
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-muted-foreground">{t('feedback.prompt')}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleVote(faqId, 'up')}
+                                aria-label={t('feedback.helpful')}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded border border-border/40 hover:bg-emerald-500/10 hover:border-emerald-500/40 hover:text-emerald-500 transition"
+                              >
+                                <ThumbsUp className="h-3 w-3" />
+                                <span>{t('feedback.helpful')}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleVote(faqId, 'down')}
+                                aria-label={t('feedback.notHelpful')}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded border border-border/40 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-500 transition"
+                              >
+                                <ThumbsDown className="h-3 w-3" />
+                                <span>{t('feedback.notHelpful')}</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

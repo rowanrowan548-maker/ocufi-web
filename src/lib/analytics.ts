@@ -25,7 +25,8 @@ export type AnalyticsEvent =
   | 'price_alert_created'
   | 'price_alert_triggered'
   | 'price_alert_deleted'
-  | 'price_alert_toggled';
+  | 'price_alert_toggled'
+  | 'faq_feedback';
 
 export interface TrackProps {
   [k: string]: string | number | boolean | null | undefined;

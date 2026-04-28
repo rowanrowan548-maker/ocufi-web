@@ -820,6 +820,12 @@
       "subtitle": "Join our Telegram group — devs reply directly, share bugs, see what others are asking.",
       "button": "Ask on Telegram"
     },
+    "feedback": {
+      "prompt": "Was this helpful?",
+      "helpful": "Yes",
+      "notHelpful": "No",
+      "recorded": "Recorded, thanks for the feedback"
+    },
     "items": [
       {
         "group": "Trading",
