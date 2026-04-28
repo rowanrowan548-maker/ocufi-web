@@ -817,26 +817,6 @@
     },
     "items": [
       {
-        "group": "Basics",
-        "q": "What is Ocufi?",
-        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.2% (half what gmgn/bullx charge)\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
-      },
-      {
-        "group": "Basics",
-        "q": "What does non-custodial mean?",
-        "a": "Ocufi never touches your funds. Every trade is signed locally in your wallet (Phantom / Solflare / OKX) and broadcast directly to Solana.\n\nNo account, no custody — just your on-chain address."
-      },
-      {
-        "group": "Basics",
-        "q": "Which wallet should I use?",
-        "a": "Phantom or Solflare (native Solana wallets) work best.\n\nOKX Web3 is supported but has minor compatibility limits with advanced Jupiter features."
-      },
-      {
-        "group": "Basics",
-        "q": "Can I use it on mobile?",
-        "a": "Yes, but Safari / Chrome can't see wallet extensions on mobile.\n\nThe fix: open www.ocufi.io inside the Phantom or Solflare app's built-in browser. The homepage detects mobile and shows an \"Open in Phantom\" button for one-tap deeplink."
-      },
-      {
         "group": "Trading",
         "q": "How are fees charged?",
         "a": "0.1% of the input SOL is sent to the Ocufi vault when you buy. Selling is currently free in V1 to avoid dust meme tokens piling up."
@@ -850,6 +830,16 @@
         "group": "Trading",
         "q": "OKX says \"Trade failed, contact support\"?",
         "a": "Generic OKX fallback, not informative. Common causes:\n\n1. Slippage too tight — raise to 5% or 10%\n2. 100% sell balance race — Ocufi auto-leaves 0.1% dust\n3. Not enough SOL for gas — keep ≥ 0.005 SOL\n4. Pump.fun micro-liquidity"
+      },
+      {
+        "group": "Basics",
+        "q": "Which wallet should I use?",
+        "a": "Phantom or Solflare (native Solana wallets) work best.\n\nOKX Web3 is supported but has minor compatibility limits with advanced Jupiter features."
+      },
+      {
+        "group": "Basics",
+        "q": "Can I use it on mobile?",
+        "a": "Yes, but Safari / Chrome can't see wallet extensions on mobile.\n\nThe fix: open www.ocufi.io inside the Phantom or Solflare app's built-in browser. The homepage detects mobile and shows an \"Open in Phantom\" button for one-tap deeplink."
       },
       {
         "group": "Limit Orders",
@@ -890,6 +880,16 @@
         "group": "Other",
         "q": "Contact?",
         "a": "Twitter: @Ocufi_io\nTelegram: t.me/+HucmvmOx2IswZDBl (live discussion / feedback / bug reports)\nGitHub: github.com/rowanrowan548-maker/ocufi-web/issues"
+      },
+      {
+        "group": "Other",
+        "q": "What does non-custodial mean?",
+        "a": "Ocufi never touches your funds. Every trade is signed locally in your wallet (Phantom / Solflare / OKX) and broadcast directly to Solana.\n\nNo account, no custody — just your on-chain address."
+      },
+      {
+        "group": "Other",
+        "q": "What is Ocufi?",
+        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.2% (half what gmgn/bullx charge)\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
       }
     ]
   },

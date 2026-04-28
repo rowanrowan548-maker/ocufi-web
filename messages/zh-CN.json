@@ -817,26 +817,6 @@
     },
     "items": [
       {
-        "group": "入门",
-        "q": "Ocufi 是什么?",
-        "a": "一个基于 Solana 的链上交易终端。\n\n特点:\n· 非托管 —— 你的私钥永远在自己钱包里\n· 低费 —— 0.2% 手续费(买卖各 0.1%),竞品普遍 0.8-1%\n· 安全审查 —— 每个代币下单前给你做 RugCheck + 蓝筹白名单\n· 开源 —— 前端代码 GitHub 可审计"
-      },
-      {
-        "group": "入门",
-        "q": "非托管是什么意思?",
-        "a": "Ocufi 永远碰不到你的钱。所有交易都在你本地的钱包(Phantom / OKX / Solflare)里签名,直接上 Solana 链。\n\n对比交易所(CEX):你的币在交易所账户里,交易所能冻结或挪用。\nOcufi 没有账户概念,只有链上地址,没有人能挪用。"
-      },
-      {
-        "group": "入门",
-        "q": "用什么钱包?",
-        "a": "推荐 Phantom 或 Solflare(Solana 原生,体验最好)。\n\nOKX Web3 钱包也支持,但对某些 Jupiter 高级特性(Referral 等)有兼容限制,偶尔需要手动调整。"
-      },
-      {
-        "group": "入门",
-        "q": "手机端能用吗?",
-        "a": "能。但 Safari / Chrome 默认看不到钱包扩展。\n\n正确用法:\n1. 在 Phantom 或 Solflare app 里\n2. 点 app 底部的「浏览器」图标\n3. 输入 www.ocufi.io\n\n这样钱包才能和网页通信。首页会检测到手机环境,显示「用 Phantom 打开」按钮,点了自动跳到钱包自带浏览器。"
-      },
-      {
         "group": "交易",
         "q": "手续费怎么收?",
         "a": "买入时从你付的 SOL 里扣 0.1% 自动打到 Ocufi 金库。\n\n卖出暂时不收(V1 阶段,避免收到一堆 meme 币垃圾)。所以总手续费 = 0.1%(买)+ 0 (卖) = 0.2% 目标的一半,还没满。"
@@ -860,6 +840,16 @@
         "group": "交易",
         "q": "为什么看到 -0.02 SOL 和 -0.02 WSOL 两笔?",
         "a": "Solana 的坑爹 UX,并不是收你两次钱。\n\nJupiter swap 内部做 3 步:\n1. 0.02 SOL → 包装成 0.02 WSOL(wrapped SOL,临时账户)\n2. 0.02 WSOL → 在 pool 里换成目标 token\n3. 临时 WSOL 账户关闭\n\nOKX 钱包把这 3 步全列出来显得像扣两次,实际只扣一次 0.02 SOL。Phantom 钱包会合并显示。"
+      },
+      {
+        "group": "入门",
+        "q": "用什么钱包?",
+        "a": "推荐 Phantom 或 Solflare(Solana 原生,体验最好)。\n\nOKX Web3 钱包也支持,但对某些 Jupiter 高级特性(Referral 等)有兼容限制,偶尔需要手动调整。"
+      },
+      {
+        "group": "入门",
+        "q": "手机端能用吗?",
+        "a": "能。但 Safari / Chrome 默认看不到钱包扩展。\n\n正确用法:\n1. 在 Phantom 或 Solflare app 里\n2. 点 app 底部的「浏览器」图标\n3. 输入 www.ocufi.io\n\n这样钱包才能和网页通信。首页会检测到手机环境,显示「用 Phantom 打开」按钮,点了自动跳到钱包自带浏览器。"
       },
       {
         "group": "限价单",
@@ -905,6 +895,16 @@
         "group": "其他",
         "q": "联系方式?",
         "a": "Twitter: @Ocufi_io\nTG 群: t.me/+HucmvmOx2IswZDBl(实时讨论 / 反馈 / Bug 报告)\nGitHub Issue: github.com/rowanrowan548-maker/ocufi-web/issues"
+      },
+      {
+        "group": "其他",
+        "q": "非托管是什么意思?",
+        "a": "Ocufi 永远碰不到你的钱。所有交易都在你本地的钱包(Phantom / OKX / Solflare)里签名,直接上 Solana 链。\n\n对比交易所(CEX):你的币在交易所账户里,交易所能冻结或挪用。\nOcufi 没有账户概念,只有链上地址,没有人能挪用。"
+      },
+      {
+        "group": "其他",
+        "q": "Ocufi 是什么?",
+        "a": "一个基于 Solana 的链上交易终端。\n\n特点:\n· 非托管 —— 你的私钥永远在自己钱包里\n· 低费 —— 0.2% 手续费(买卖各 0.1%),竞品普遍 0.8-1%\n· 安全审查 —— 每个代币下单前给你做 RugCheck + 蓝筹白名单\n· 开源 —— 前端代码 GitHub 可审计"
       }
     ]
   },
