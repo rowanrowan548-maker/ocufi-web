@@ -290,18 +290,43 @@ export async function buildSwapTxWithFee(
       commitment: 'confirmed',
     });
     if (sim.value.err) {
+      const logs = sim.value.logs ?? [];
       console.error(
         '[swap-with-fee] simulation failed · err:',
         JSON.stringify(sim.value.err),
         '· logs:',
-        sim.value.logs ?? []
+        logs
       );
+      // T-972 范围 2:simulation 失败按 logs 分类抛具体 sentinel,前端 mapError 给具体文案
+      const joined = logs.join(' | ').toLowerCase();
+      const errStr = JSON.stringify(sim.value.err).toLowerCase();
+      if (joined.includes('insufficient lamports') || errStr.includes('insufficientlamports')) {
+        throw new Error('__ERR_INSUFFICIENT_BALANCE');
+      }
+      if (joined.includes('toolittlesolreceived') || joined.includes('slippage') ||
+          joined.includes('exceedsdesiredslippage') || joined.includes('toolittlereceived')) {
+        throw new Error('__ERR_SLIPPAGE_TOO_LOW');
+      }
+      if (joined.includes('token-2022') || joined.includes('token2022') ||
+          (joined.includes('programfailedtocomplete') && joined.includes('tokenkeg') === false &&
+           (joined.includes('tokenz') || joined.includes('extension')))) {
+        throw new Error('__ERR_TOKEN_2022_INCOMPATIBLE');
+      }
+      if (errStr.includes('blockhashnotfound') || joined.includes('blockhashnotfound')) {
+        throw new Error('__ERR_STALE_BLOCKHASH');
+      }
       // 不把 raw simulation log 塞 message,只抛 sentinel(T-813 友好化要求)
       throw new Error('__ERR_TX_SIMULATION_FAIL');
     }
   } catch (e) {
-    // 我们自己抛的 sentinel → 透传
-    if (e instanceof Error && e.message === '__ERR_TX_SIMULATION_FAIL') throw e;
+    // 我们自己抛的 sentinel → 透传(T-972 加 4 个细分 sentinel)
+    if (e instanceof Error && (
+      e.message === '__ERR_TX_SIMULATION_FAIL' ||
+      e.message === '__ERR_INSUFFICIENT_BALANCE' ||
+      e.message === '__ERR_SLIPPAGE_TOO_LOW' ||
+      e.message === '__ERR_TOKEN_2022_INCOMPATIBLE' ||
+      e.message === '__ERR_STALE_BLOCKHASH'
+    )) throw e;
     // RPC 调用本身失败(timeout / 5xx)→ 不拦 swap,让用户继续尝试(simulate 不可用 ≠ tx 必坏)
     console.warn('[swap-with-fee] simulate RPC unavailable, proceeding without precheck:', e);
   }

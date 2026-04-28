@@ -555,7 +555,12 @@
       "blockhashExpired": "Network congested; transaction expired. Please retry.",
       "balanceDrift": "Balance changed; please refresh and place again.",
       "txSimulationFail": "Transaction simulation failed. Please retry or try a different token.",
-      "txSizeOverflow": "Transaction too large. Please reduce amount or try a different token."
+      "txSizeOverflow": "Transaction too large. Please reduce amount or try a different token.",
+      "balanceInsufficientHint": "Insufficient balance · max {max} SOL",
+      "insufficientBalance": "Insufficient SOL balance. Reduce amount or top up your wallet.",
+      "slippageTooLow": "Slippage too low. Try raising it to 5-10%.",
+      "token2022Incompatible": "This token uses Token-2022 standard, not supported yet. Try a standard SPL token.",
+      "staleBlockhash": "Transaction expired due to network latency. Please retry."
     }
   },
   "portfolio": {

@@ -219,6 +219,15 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
   const isBlocked = blockedReasons.length > 0;
   const ackRequired = risk === 'high' || risk === 'critical' || risk === 'unknown';
 
+  // T-972 范围 1:余额预检防呆 · amount + 0.001 buffer(ATA + priority fee)> balance → 拦
+  const solAmountNum = Number(solAmount);
+  const BALANCE_BUFFER = 0.001;
+  const insufficientBalance =
+    solBalance != null &&
+    Number.isFinite(solAmountNum) &&
+    solAmountNum > 0 &&
+    solAmountNum + BALANCE_BUFFER > solBalance;
+
   function openConfirm() {
     if (!quoteData) return;
     if (!wallet.connected || !wallet.publicKey) {
@@ -423,7 +432,17 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 min="0.001"
                 value={solAmount}
                 onChange={(e) => { setSolAmount(e.target.value); resetOnInput(); }}
+                className={insufficientBalance ? 'border-danger focus:border-danger' : undefined}
               />
+              {/* T-972 范围 1 · 超额输入 → 红色提示 + 按钮 disabled */}
+              {insufficientBalance && (
+                <div className="text-[11px] text-danger flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                  {t('trade.errors.balanceInsufficientHint', {
+                    max: Math.max(0, (solBalance ?? 0) - SOL_RESERVE).toFixed(4),
+                  })}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -622,6 +641,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
               size="lg"
               disabled={
                 isBlocked ||
+                insufficientBalance ||
                 !quoteData ||
                 stage === 'signing' ||
                 stage === 'sending' ||
@@ -696,6 +716,15 @@ function mapError(t: ReturnType<typeof useTranslations>, raw: string): string {
       return t('trade.errors.txSimulationFail');
     case '__ERR_TX_SIZE_OVERFLOW':
       return t('trade.errors.txSizeOverflow');
+    // T-972 范围 2 · simulation 细分错误
+    case '__ERR_INSUFFICIENT_BALANCE':
+      return t('trade.errors.insufficientBalance');
+    case '__ERR_SLIPPAGE_TOO_LOW':
+      return t('trade.errors.slippageTooLow');
+    case '__ERR_TOKEN_2022_INCOMPATIBLE':
+      return t('trade.errors.token2022Incompatible');
+    case '__ERR_STALE_BLOCKHASH':
+      return t('trade.errors.staleBlockhash');
     default:
       return raw;
   }

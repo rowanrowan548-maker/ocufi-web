@@ -16,7 +16,15 @@ export function humanize(e: unknown): string {
   // T-810 · tx 自检主动抛(swap-with-fee.ts):透传 sentinel
   // - __ERR_TX_SIZE_OVERFLOW:序列化后 > 1232 字节(Solana mainnet packet 限制)
   // - __ERR_TX_SIMULATION_FAIL:Phantom Lighthouse/Blowfish 模拟失败,继续签会触发红警
-  if (msg === '__ERR_TX_SIZE_OVERFLOW' || msg === '__ERR_TX_SIMULATION_FAIL') {
+  // T-972 · simulation 细分(swap-with-fee.ts 按 logs 分类):透传 sentinel
+  if (
+    msg === '__ERR_TX_SIZE_OVERFLOW' ||
+    msg === '__ERR_TX_SIMULATION_FAIL' ||
+    msg === '__ERR_INSUFFICIENT_BALANCE' ||
+    msg === '__ERR_SLIPPAGE_TOO_LOW' ||
+    msg === '__ERR_TOKEN_2022_INCOMPATIBLE' ||
+    msg === '__ERR_STALE_BLOCKHASH'
+  ) {
     return msg;
   }
   // 用户在钱包里点了"拒绝"

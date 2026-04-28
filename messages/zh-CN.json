@@ -555,7 +555,12 @@
       "blockhashExpired": "网络拥堵导致交易失效,请重试一次",
       "balanceDrift": "余额已变化,请刷新后重新下单",
       "txSimulationFail": "交易预模拟失败,请稍后重试或换 token",
-      "txSizeOverflow": "交易过大,请减小成交量或换 token"
+      "txSizeOverflow": "交易过大,请减小成交量或换 token",
+      "balanceInsufficientHint": "余额不足 · 最大可买 {max} SOL",
+      "insufficientBalance": "余额不足,请减小金额或充值钱包",
+      "slippageTooLow": "滑点太低,建议提到 5-10%",
+      "token2022Incompatible": "此代币是 Token-2022 标准,暂不支持,请换标准 SPL",
+      "staleBlockhash": "网络延迟导致交易过期,请重试"
     }
   },
   "portfolio": {

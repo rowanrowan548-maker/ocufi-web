@@ -591,6 +591,15 @@ function mapError(t: ReturnType<typeof useTranslations>, raw: string): string {
       return t('trade.errors.txSizeOverflow');
     case '__ERR_BALANCE_DRIFT':
       return t('trade.errors.balanceDrift');
+    // T-972 范围 2 · simulation 细分错误
+    case '__ERR_INSUFFICIENT_BALANCE':
+      return t('trade.errors.insufficientBalance');
+    case '__ERR_SLIPPAGE_TOO_LOW':
+      return t('trade.errors.slippageTooLow');
+    case '__ERR_TOKEN_2022_INCOMPATIBLE':
+      return t('trade.errors.token2022Incompatible');
+    case '__ERR_STALE_BLOCKHASH':
+      return t('trade.errors.staleBlockhash');
     default:
       return raw;
   }
