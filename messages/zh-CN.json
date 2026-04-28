@@ -504,6 +504,18 @@
       "sells": "卖",
       "unavailable": "暂无 1h 池子数据"
     },
+    "rightTabs": {
+      "detail": "详情",
+      "devTokens": "开发者代币",
+      "sameName": "同名代币",
+      "description": "描述",
+      "deployedFrom": "主池子",
+      "noMint": "未选择代币",
+      "descriptionPending": "暂无描述",
+      "auditCardPending": "更多审计字段加载中…(后端 /token/audit-card)",
+      "devTokensPending": "暂无 · 开发者其他代币列表(待后端)",
+      "sameNamePending": "暂无 · 同名代币防钓鱼(待后端)"
+    },
     "preview": {
       "pay": "支付",
       "receive": "预计收到",

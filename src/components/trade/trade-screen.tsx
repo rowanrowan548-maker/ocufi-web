@@ -27,6 +27,7 @@ import { MobileActionBar } from './mobile-action-bar';
 import { MobileDataColumn } from './mobile-data-column';
 import { MiniTradeFlow } from './mini-trade-flow';
 import { WalletTokenStats } from './wallet-token-stats';
+import { RightInfoTabs } from './right-info-tabs';
 import { PoolStatsOneHour } from './pool-stats-1h';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
@@ -144,6 +145,8 @@ export function TradeScreen() {
           <WalletTokenStats mint={mint} tokenPriceUsd={detail?.priceUsd} />
           {/* T-985c · 1h 聚合 + 买卖力量 · 仅桌面 · 30s 刷新 */}
           <PoolStatsOneHour mint={mint} />
+          {/* T-OKX-1B · 详情 / 开发者代币 / 同名代币 3 tab */}
+          <RightInfoTabs mint={mint} detail={detail} />
         </div>
         <div className="min-w-0 space-y-4 lg:order-1">
           <ChartCard mint={mint} />

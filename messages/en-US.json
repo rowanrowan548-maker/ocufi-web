@@ -504,6 +504,18 @@
       "sells": "Sells",
       "unavailable": "1h pool stats unavailable"
     },
+    "rightTabs": {
+      "detail": "Details",
+      "devTokens": "Dev tokens",
+      "sameName": "Same name",
+      "description": "Description",
+      "deployedFrom": "Top pool",
+      "noMint": "No token selected",
+      "descriptionPending": "No description",
+      "auditCardPending": "More audit fields loading… (backend /token/audit-card)",
+      "devTokensPending": "Empty · Other tokens by dev (pending backend)",
+      "sameNamePending": "Empty · Same-name tokens to avoid phishing (pending backend)"
+    },
     "preview": {
       "pay": "You pay",
       "receive": "You receive",
