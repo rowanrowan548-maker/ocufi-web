@@ -334,6 +334,23 @@ export async function claimInviteRebate(
   });
 }
 
+// T-975 · v1(6 字符)→ v2(8 字符)邀请码升级
+export interface InviteRegenerateResp {
+  ok: boolean;
+  code?: string | null;
+  length?: number | null;
+  upgraded: boolean;
+  already_v2: boolean;
+  error?: string | null;
+}
+
+export async function regenerateInviteCode(wallet: string): Promise<InviteRegenerateResp> {
+  return apiFetch('/invite/regenerate', {
+    method: 'POST',
+    body: JSON.stringify({ wallet }),
+  });
+}
+
 export interface InviteLeaderRow {
   rank: number;
   wallet_short: string;

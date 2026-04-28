@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTranslations } from 'next-intl';
-import { Copy, Check, Wallet, Trophy, Users, Sparkles, Info, Coins, ArrowDownToLine } from 'lucide-react';
+import { Copy, Check, Wallet, Trophy, Users, Sparkles, Info, Coins, ArrowDownToLine, Zap, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { inviteCodeFor, readCachedMyCode, cacheMyCode, buildInviteUrl } from '@/lib/invite';
 import {
-  fetchInviteMe, fetchInviteLeaderboard, claimInviteRebate, isApiConfigured,
+  fetchInviteMe, fetchInviteLeaderboard, claimInviteRebate, regenerateInviteCode, isApiConfigured,
   type InviteeRow as ApiInviteeRow, type InviteLeaderRow, type RebateSummary,
 } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -72,6 +72,8 @@ export function InviteScreen() {
   const [invitees, setInvitees] = useState<InviteeRow[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
   const [claiming, setClaiming] = useState(false);
+  // T-975 · v1 → v2 升级
+  const [regenerating, setRegenerating] = useState(false);
 
   // 邀请码:先用本地 SHA-256 算出来即时显示(v2 8 字符),后端 /invite/me 返回更权威值再覆盖
   useEffect(() => {
@@ -174,8 +176,36 @@ export function InviteScreen() {
     }
   }
 
+  // T-975 · v1(6 字符)→ v2(8 字符)升级
+  async function handleRegenerate() {
+    if (!wallet.publicKey || regenerating) return;
+    setRegenerating(true);
+    try {
+      const r = await regenerateInviteCode(wallet.publicKey.toBase58());
+      if (r.ok && r.code) {
+        if (r.upgraded) {
+          setMyCode(r.code);
+          cacheMyCode(wallet.publicKey.toBase58(), r.code);
+          toast.success(t('regenerate.success', { code: r.code }));
+        } else if (r.already_v2) {
+          toast.info(t('regenerate.alreadyV2'));
+        }
+      } else {
+        const reason = r.error ?? 'unknown';
+        toast.error(t('regenerate.failed', { reason }));
+      }
+    } catch (e) {
+      console.warn('[invite] regenerate failed', e);
+      toast.error(t('regenerate.failed', { reason: 'network' }));
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
   // T-974 BUG-039 · 未连钱包教育态:dummy 数字卡 + 分享按钮 disabled tooltip + 推文模板 placeholder
   const notConnected = !wallet.connected || !wallet.publicKey;
+  // T-975 · v1 = 6 字符 · v2 = 8 字符
+  const isV1Code = !notConnected && myCode.length === 6;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -200,6 +230,31 @@ export function InviteScreen() {
               </div>
               <Button size="sm" onClick={() => openWalletModal(true)}>
                 {t('notConnected.connect')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* T-975 · v1 老用户(6 字符)升级 v2(8 字符)banner */}
+        {isV1Code && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardContent className="py-4 flex items-center gap-3">
+              <Zap className="h-5 w-5 text-warning flex-shrink-0" />
+              <div className="flex-1 text-sm">
+                <div className="font-medium">{t('regenerate.title')}</div>
+                <div className="text-muted-foreground text-xs mt-0.5">
+                  {t('regenerate.subtitle', { current: myCode })}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                className="bg-warning hover:bg-warning/90 text-warning-foreground"
+              >
+                {regenerating ? (
+                  <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('regenerate.processing')}</>
+                ) : t('regenerate.button')}
               </Button>
             </CardContent>
           </Card>

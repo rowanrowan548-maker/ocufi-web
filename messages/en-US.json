@@ -1245,6 +1245,15 @@
       "success": "Requested {sol} SOL · arrives after on-chain transfer",
       "failed": "Claim failed: {reason}"
     },
+    "regenerate": {
+      "title": "Invite code upgraded to 8 chars",
+      "subtitle": "Your current code {current} is the legacy 6-char version · Upgrade to reduce collision risk · Existing bindings stay intact",
+      "button": "Upgrade to 8 chars",
+      "processing": "Upgrading…",
+      "success": "Upgraded to {code} · old links still work",
+      "alreadyV2": "Already on the latest code version",
+      "failed": "Upgrade failed: {reason}"
+    },
     "howItWorks": {
       "title": "How it works",
       "s1": "Copy your invite link and share it. When someone first connects their wallet through your link, they're permanently bound to you.",

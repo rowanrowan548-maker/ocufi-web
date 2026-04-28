@@ -1260,6 +1260,15 @@
       "success": "已申请提现 {sol} SOL · 链上转账后到账",
       "failed": "提现失败:{reason}"
     },
+    "regenerate": {
+      "title": "邀请码已升级为 8 字符",
+      "subtitle": "你的当前邀请码 {current} 是旧版 6 字符 · 升级后更不容易撞码 · 已绑定的下线关系不变",
+      "button": "升级到 8 字符",
+      "processing": "升级中…",
+      "success": "已升级为 {code} · 旧链接仍可用",
+      "alreadyV2": "已经是最新版邀请码",
+      "failed": "升级失败:{reason}"
+    },
     "howItWorks": {
       "title": "怎么算的",
       "s1": "复制你的邀请链接,发给朋友。新用户首次连钱包就和你绑定,永久。",
