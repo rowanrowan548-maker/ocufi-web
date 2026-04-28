@@ -5,6 +5,7 @@ import {
   Wallet, ShoppingCart, ListOrdered, Shield, Zap, Star, ArrowRight,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { DocImagePlaceholder } from '@/components/docs/doc-image-placeholder';
 
 export async function generateMetadata({
   params,
@@ -31,6 +32,8 @@ export default async function DocsPage({
     bodyKey: string;
     href?: string;
     cta?: string;
+    /** T-980-117 · 章节配图(留 src 占位 · 用户后续录 GIF / 截图后改 src 即可)*/
+    image?: { src?: string; altKey: string; aspect?: '16/9' | '4/3' };
   }> = [
     {
       Icon: Wallet,
@@ -38,6 +41,7 @@ export default async function DocsPage({
       bodyKey: 'connect.body',
       href: '/portfolio',
       cta: 'connect.cta',
+      image: { altKey: 'connect.imageAlt' },
     },
     {
       Icon: ShoppingCart,
@@ -45,6 +49,7 @@ export default async function DocsPage({
       bodyKey: 'buy.body',
       href: '/trade',
       cta: 'buy.cta',
+      image: { altKey: 'buy.imageAlt' },
     },
     {
       Icon: ListOrdered,
@@ -52,6 +57,7 @@ export default async function DocsPage({
       bodyKey: 'sell.body',
       href: '/portfolio',
       cta: 'sell.cta',
+      image: { altKey: 'sell.imageAlt' },
     },
     {
       Icon: Zap,
@@ -59,6 +65,7 @@ export default async function DocsPage({
       bodyKey: 'limit.body',
       href: '/trade',
       cta: 'limit.cta',
+      image: { altKey: 'limit.imageAlt' },
     },
     {
       Icon: Shield,
@@ -66,6 +73,7 @@ export default async function DocsPage({
       bodyKey: 'safety.body',
       href: '/token',
       cta: 'safety.cta',
+      image: { altKey: 'safety.imageAlt' },
     },
     {
       Icon: Star,
@@ -73,6 +81,7 @@ export default async function DocsPage({
       bodyKey: 'watchlist.body',
       href: '/watchlist',
       cta: 'watchlist.cta',
+      image: { altKey: 'watchlist.imageAlt' },
     },
   ];
 
@@ -102,6 +111,15 @@ export default async function DocsPage({
                       <p key={j}>{p}</p>
                     ))}
                   </div>
+                  {s.image && (
+                    <div className="pt-2">
+                      <DocImagePlaceholder
+                        src={s.image.src}
+                        alt={t(s.image.altKey)}
+                        aspect={s.image.aspect ?? '16/9'}
+                      />
+                    </div>
+                  )}
                   {s.href && s.cta && (
                     <div className="pt-1">
                       <Link
