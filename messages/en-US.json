@@ -87,7 +87,7 @@
     "hero": {
       "title": "On-chain trading, brought home",
       "subtitle": "Lower fees · Transparent pricing · No middleman tax. Still growing — but every decision starts with you.",
-      "tagline": "0.2% fee · Lowest on Solana",
+      "tagline": "0.1% fee · Lowest on Solana",
       "searchPlaceholder": "Paste a Solana contract address, e.g. So111…1112",
       "hotTokens": "Trending",
       "cta_connect": "Connect Wallet",
@@ -137,7 +137,7 @@
         "desc": "Your keys stay yours. Ocufi never holds your funds."
       },
       "lowFee": {
-        "title": "0.2% fees",
+        "title": "0.1% fees",
         "desc": "Half of what the competitors charge — no hidden skim."
       },
       "safety": {
@@ -1044,7 +1044,7 @@
       {
         "group": "Other",
         "q": "What is Ocufi?",
-        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.2% (half what gmgn/bullx charge)\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
+        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.1% (buy 0.1% · sell free in V1) · ~10x cheaper than gmgn/bullx\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
       }
     ]
   },
@@ -1505,8 +1505,8 @@
       "wechatHint": "WeChat blocks direct links — screenshot the QR or copy the URL to share",
       "copyUrl": "Copy URL",
       "copied": "Copied",
-      "twitterTemplate": "Trading on Solana with @Ocufi_io · 0.2% fee (vs 1% elsewhere) · self-custody · the lowest on chain — join with my code (ref={code}):",
-      "telegramTemplate": "Ocufi · Solana on-chain trading · 0.2% fee · self-custody · join with my invite code: {code}"
+      "twitterTemplate": "Trading on Solana with @Ocufi_io · 0.1% fee (vs 1% elsewhere) · self-custody · the lowest on chain — join with my code (ref={code}):",
+      "telegramTemplate": "Ocufi · Solana on-chain trading · 0.1% fee · self-custody · join with my invite code: {code}"
     },
     "stats": {
       "invited": "Invited",
@@ -1551,7 +1551,7 @@
       "s2": "Once they make a trade ≥ $100, the invite is auto-activated.",
       "s3": "After activation, every trade they make earns you +10% of their points — forever, not a one-time bonus.",
       "s4": "Points redeem for merch; may unlock more perks later.",
-      "note": "We don't share trading fees (0.2% is the moat). We share points — printed by us, near-zero cost, sustainable long-term."
+      "note": "We don't share trading fees (0.1% is the moat). We share points — printed by us, near-zero cost, sustainable long-term."
     },
     "myInvitees": {
       "title": "People you've invited",
@@ -1737,8 +1737,8 @@
         "b": "Ocufi is in the Phantom Portal review pipeline (the \"Verified\" badge in the directory). Once approved, users opening ocufi.io inside Phantom will see the official blue checkmark. See #devlog for current status."
       },
       "s7": {
-        "h": "7. 0.2% transparent fee",
-        "b": "Ocufi charges 0.1% on buys + 0% on sells (target 0.2% total) · paid directly to a public treasury address, fully verifiable on-chain.\n\nCompetitors (GMGN / Photon / BullX) typically charge 0.8-1%. We've cut V1 fees to 1/4-1/5 of the industry — long-term user trust > short-term revenue."
+        "h": "7. 0.1% transparent fee",
+        "b": "Ocufi charges 0.1% on buys + 0% on sells (V1) · paid directly to a public treasury address, fully verifiable on-chain.\n\nCompetitors (GMGN / Photon / BullX) typically charge 0.8-1% — we're ~10x cheaper. Long-term user trust > short-term revenue."
       }
     },
     "privacy": {

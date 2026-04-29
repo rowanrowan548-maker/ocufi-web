@@ -7,7 +7,7 @@
  * 字段适配限价单语义:
  *  - 支付 / 目标价 / 预计成交
  *  - 当前市价 + 价格差(目标 vs 市价 ·  买:负=折扣;卖:正=溢价)
- *  - Jupiter 限价费 0.2%(Trigger API 文档值)
+ *  - Jupiter 限价费 0.2%(由 Jupiter Trigger API 收 · 跟 Ocufi 0.1% 平台费分开)
  *  - 最小订单 $5 USD 估值 hint
  */
 import { useTranslations } from 'next-intl';
