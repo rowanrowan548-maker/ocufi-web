@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import { ChartDemo } from '@/components/trade-preview/chart-demo';
+import { RedCandidates } from '@/components/trade-preview/red-candidates';
 
 // T-CHART-DEMO · 临时藏页 · 给用户看自家 K 线效果
 // 无 ?demo=1 → 404 防 SEO 收录 · 用户拍板做完整版后整页 git revert
@@ -41,6 +42,8 @@ export default async function TradePreviewPage({
       </div>
 
       <ChartDemo mint={mint} />
+
+      <RedCandidates mint={mint} />
     </main>
   );
 }
