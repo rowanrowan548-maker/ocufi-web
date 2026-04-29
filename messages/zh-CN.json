@@ -346,7 +346,15 @@
         "devBuys": "Dev Buys",
         "gtNote": "USD/SOL · 时间段切换 → GT 图内",
         "gtChart": "GT 图",
-        "selfChart": "自家图"
+        "selfChart": "自家图",
+        "tf": {
+          "minute_1": "1m",
+          "minute_5": "5m",
+          "minute_15": "15m",
+          "hour_1": "1h",
+          "hour_4": "4h",
+          "day_1": "1d"
+        }
       }
     },
     "trust": {

@@ -30,6 +30,12 @@ import { Loader2, LineChart, TrendingUp, Sparkles } from 'lucide-react';
 import { fetchTokenInfo } from '@/lib/portfolio';
 import { SOL_MINT } from '@/lib/jupiter';
 import { CandlestickChart } from './candlestick-chart';
+import {
+  useChartTimeframe,
+  useSetChartTimeframe,
+  TIMEFRAMES,
+} from '@/lib/chart-timeframe-store';
+import type { Timeframe } from '@/lib/ohlc';
 
 type ChartType = 'price' | 'market_cap';
 type ChartSource = 'gt' | 'self';   // T-CHART-FULL-1 · 自家图 vs GT iframe
@@ -50,6 +56,9 @@ export function ChartCard({ mint }: Props) {
   const [chartType, setChartType] = useState<ChartType>('price');
   // T-CHART-FULL-1 · 自家图 / GT 图 toggle · 默认 GT (稳定先行) · 用户主动切换体验自家图
   const [chartSource, setChartSource] = useState<ChartSource>('gt');
+  // T-CHART-FULL-2 · 时间段(zustand 持久化 · 6 档 · 仅自家图生效)
+  const tf = useChartTimeframe();
+  const setTf = useSetChartTimeframe();
 
   // mint → topPoolAddress(复用 portfolio.fetchTokenInfo,30s 缓存自带,无新外部请求)
   useEffect(() => {
@@ -140,8 +149,28 @@ export function ChartCard({ mint }: Props) {
             <TrendingUp className="h-3 w-3" />
             {t('toolbar.devBuys')}
           </span>
+          {/* T-CHART-FULL-2 · 时间段 6 档 · 仅自家图模式显 */}
+          {chartSource === 'self' && (
+            <div className="ml-auto inline-flex rounded border border-border/40 overflow-hidden">
+              {TIMEFRAMES.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setTf(opt)}
+                  data-testid={`tf-${opt}`}
+                  className={`px-2 py-0.5 transition-colors text-[10px] ${
+                    tf === opt
+                      ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
+                      : 'text-muted-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {t(`toolbar.tf.${opt}` as 'toolbar.tf.minute_5')}
+                </button>
+              ))}
+            </div>
+          )}
           {/* T-CHART-FULL-1 · 自家图 / GT 图 切换 · 默认 GT */}
-          <div className="ml-auto inline-flex rounded border border-border/40 overflow-hidden">
+          <div className={`${chartSource === 'self' ? '' : 'ml-auto'} inline-flex rounded border border-border/40 overflow-hidden`}>
             <button
               type="button"
               onClick={() => setChartSource('gt')}
@@ -172,9 +201,9 @@ export function ChartCard({ mint }: Props) {
       )}
       {/* T-CHART-COMPRESS · 桌面降 560→400 让一屏看到 ActivityBoard / 审计 / 持仓 */}
       <div className="relative h-[420px] sm:h-[480px] lg:h-[400px]">
-        {/* T-CHART-FULL-1 · 自家蜡烛图(brand 色 · 走 /chart/ohlc 后端代理) */}
+        {/* T-CHART-FULL-1+2 · 自家蜡烛图(brand 色 · 走 /chart/ohlc 后端代理) */}
         {showSelfChart && mint && (
-          <CandlestickChart mint={mint} />
+          <CandlestickChart mint={mint} timeframe={tf} />
         )}
         {iframeSrc && chartSource === 'gt' && (
           <iframe
