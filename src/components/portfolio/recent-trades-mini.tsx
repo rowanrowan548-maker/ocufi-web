@@ -66,7 +66,7 @@ function RecentRow({ r, explorer }: { r: EnrichedTxRecord; explorer: string }) {
   const isBuy = r.type === 'buy';
   const isSell = r.type === 'sell';
   const Icon = isBuy ? ArrowDownRight : isSell ? ArrowUpRight : null;
-  const tone = isBuy ? 'text-emerald-500' : isSell ? 'text-red-500' : 'text-muted-foreground';
+  const tone = isBuy ? 'text-success' : isSell ? 'text-danger' : 'text-muted-foreground';
   const symbol = r.tokenSymbol || (r.tokenMint ? r.tokenMint.slice(0, 4) : 'SOL');
   return (
     <Link

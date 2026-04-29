@@ -16,11 +16,10 @@ import {
 } from 'lightweight-charts';
 import { fetchOhlc, type OhlcCandle } from '@/lib/ohlc';
 
+// T-BRAND-COLOR-ROLLOUT · 用户拍板留珊瑚粉红 · 其他 3 候选删
+// 全网 brand 跌色统一 #FF6B6B(globals.css --brand-down)
 const RED_CANDIDATES = [
-  { name: '朱红', hex: '#E63946' },
-  { name: '熔岩红', hex: '#FF4D2E' },
-  { name: '宝石红', hex: '#DC143C' },
-  { name: '珊瑚粉红', hex: '#FF6B6B' },
+  { name: '珊瑚粉红 · 已选', hex: '#FF6B6B' },
 ] as const;
 
 const GREEN = '#19FB9B'; // T-CHART-DEMO-V4 · 真品牌青绿 (--primary · 跟反馈按钮 / logo 同色)
@@ -144,15 +143,18 @@ export function RedCandidates({ mint }: Props) {
   return (
     <div className="mt-8 space-y-4">
       <div className="text-xs uppercase tracking-wider text-amber-400/80 font-mono">
-        T-CHART-DEMO-V3 · 4 色红对比(放大版)
+        T-BRAND-COLOR-ROLLOUT · 用户已选珊瑚粉红
       </div>
-      <h2 className="text-xl font-semibold">挑一个红色 · 后续完整版用</h2>
+      <h2 className="text-xl font-semibold">最终品牌色 · 涨青绿 · 跌珊瑚粉红</h2>
       <p className="text-sm text-muted-foreground">
-        涨色统一 <span className="font-mono text-primary">#19FB9B</span> 青绿(跟反馈按钮 / logo 同色)· 跌色为 4 个候选 · 数据共享 BONK 5m
+        涨 <span className="font-mono text-[var(--brand-up)]">#19FB9B</span> ·
+        跌 <span className="font-mono text-[var(--brand-down)]">#FF6B6B</span> ·
+        全网用 globals.css <code className="font-mono text-foreground">--brand-up</code> /{' '}
+        <code className="font-mono text-foreground">--brand-down</code> token
       </p>
 
-      {/* V3 · 桌面 2x2 大格 / 移动单列 · 高 400px · 标签放大 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* V3 · 桌面 1 列大格 · 移动单列 · 高 400px · 标签放大 */}
+      <div className="grid grid-cols-1 gap-4">
         {RED_CANDIDATES.map((c) => (
           <div key={c.hex} className="space-y-2">
             <MiniChart candles={candles} redHex={c.hex} />

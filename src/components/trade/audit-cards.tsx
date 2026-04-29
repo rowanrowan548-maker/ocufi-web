@@ -79,9 +79,9 @@ export function AuditCards({ mint }: Props) {
 
 function Cell({ label, value, Icon, tone }: { label: string; value: string; Icon: LucideIcon; tone: Tone }) {
   const toneCls =
-    tone === 'good' ? 'text-emerald-500' :
+    tone === 'good' ? 'text-success' :
     tone === 'warn' ? 'text-amber-500' :
-    tone === 'bad' ? 'text-red-500' :
+    tone === 'bad' ? 'text-danger' :
     'text-muted-foreground/50';
   return (
     <div className="rounded border border-border/40 bg-card/40 p-2">

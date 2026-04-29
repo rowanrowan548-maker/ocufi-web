@@ -112,12 +112,12 @@ export function ChartDemo({ mint }: Props) {
 
         // 蜡烛系列 · 品牌绿涨红跌
         const candleSeries = chart.addSeries(CandlestickSeries, {
-          upColor: '#19FB9B',         // 品牌青绿(--primary · 跟反馈按钮 / logo 同色)
-          downColor: '#f43f5e',       // rose-500(待 V5 用户挑色后换)
+          upColor: '#19FB9B',         // T-BRAND-COLOR-ROLLOUT · --brand-up 青绿
+          downColor: '#FF6B6B',       // T-BRAND-COLOR-ROLLOUT · --brand-down 珊瑚粉红
           borderUpColor: '#19FB9B',
-          borderDownColor: '#f43f5e',
+          borderDownColor: '#FF6B6B',
           wickUpColor: '#19FB9B',
-          wickDownColor: '#f43f5e',
+          wickDownColor: '#FF6B6B',
         });
         candleSeries.setData(
           candles.map((c) => ({

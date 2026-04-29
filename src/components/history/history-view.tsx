@@ -277,8 +277,8 @@ function Stat({
   label, value, sub, tone,
 }: { label: string; value: string; sub?: string; tone?: 'pos' | 'neg' }) {
   const toneClass =
-    tone === 'pos' ? 'text-emerald-500' :
-    tone === 'neg' ? 'text-red-500' :
+    tone === 'pos' ? 'text-success' :
+    tone === 'neg' ? 'text-danger' :
     'text-foreground';
   return (
     <div className="flex flex-col gap-0.5 min-w-0">

@@ -95,8 +95,8 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
 
   return (
     <Card className={compact ? 'p-2 flex flex-col h-full' : 'p-6 w-full max-w-xl'}>
-      {/* 外层 Buy/Sell · T-BUYSELL-COLOR-FIX3 · 透明深色底 + 亮文字(跟 logo 同色系)
-          dark:data-active: 双前缀 · ! 后缀战胜 ui/tabs.tsx 基类 dark variant specificity */}
+      {/* 外层 Buy/Sell · T-BRAND-COLOR-ROLLOUT · 用 --brand-up / --brand-down token
+          双前缀 dark:data-active: + ! 后缀仍保留(战胜 ui/tabs.tsx 基类 dark variant specificity) */}
       <Tabs value={side} onValueChange={(v) => v && setSide(v as Side)}>
         <TabsList className={compact ? 'grid w-full grid-cols-2 mb-2 h-8 bg-transparent gap-1 p-0' : 'grid w-full grid-cols-2 mb-3 bg-transparent gap-1.5 p-0'}>
           <TabsTrigger
@@ -105,8 +105,8 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
               compact ? 'text-xs h-8' : 'h-9',
               'rounded-md border font-medium transition-colors',
               'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40 hover:text-foreground',
-              'data-active:bg-emerald-500/15! data-active:text-emerald-300! data-active:border-emerald-500/60!',
-              'dark:data-active:bg-emerald-500/15! dark:data-active:text-emerald-300! dark:data-active:border-emerald-500/60!',
+              'data-active:bg-[var(--brand-up)]/15! data-active:text-[var(--brand-up)]! data-active:border-[var(--brand-up)]/60!',
+              'dark:data-active:bg-[var(--brand-up)]/15! dark:data-active:text-[var(--brand-up)]! dark:data-active:border-[var(--brand-up)]/60!',
             ].join(' ')}
           >
             {t('trade.tabs.buy')}
@@ -117,8 +117,8 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
               compact ? 'text-xs h-8' : 'h-9',
               'rounded-md border font-medium transition-colors',
               'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40 hover:text-foreground',
-              'data-active:bg-rose-500/15! data-active:text-rose-300! data-active:border-rose-500/60!',
-              'dark:data-active:bg-rose-500/15! dark:data-active:text-rose-300! dark:data-active:border-rose-500/60!',
+              'data-active:bg-[var(--brand-down)]/15! data-active:text-[var(--brand-down)]! data-active:border-[var(--brand-down)]/60!',
+              'dark:data-active:bg-[var(--brand-down)]/15! dark:data-active:text-[var(--brand-down)]! dark:data-active:border-[var(--brand-down)]/60!',
             ].join(' ')}
           >
             {t('trade.tabs.sell')}

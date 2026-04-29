@@ -49,6 +49,9 @@
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  /* T-BRAND-COLOR-ROLLOUT · 涨/跌品牌 token · JS / chart 库取 hex 用 var(--brand-up) */
+  --color-brand-up: var(--brand-up);
+  --color-brand-down: var(--brand-down);
   /* 半径 */
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -80,9 +83,12 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.84 0.23 155 / 50%);
   --success: oklch(0.84 0.23 155);
-  --danger: oklch(0.65 0.22 25);
+  --danger: oklch(0.72 0.18 25);            /* 跌珊瑚粉红 ≈ #FF6B6B(用户拍板) */
   --warning: oklch(0.78 0.17 80);
   --info: oklch(0.73 0.16 245);
+  /* T-BRAND-COLOR-ROLLOUT · 字面 hex · 给 JS / chart 库直接读 */
+  --brand-up: #19FB9B;
+  --brand-down: #FF6B6B;
   --chart-1: oklch(0.84 0.23 155);
   --chart-2: oklch(0.73 0.16 245);
   --chart-3: oklch(0.78 0.17 80);
@@ -122,10 +128,15 @@
 
   /* 语义色 */
   --success: oklch(0.88 0.25 155);           /* 涨绿(== primary) */
-  --danger: oklch(0.65 0.23 25);             /* 跌红 #EF4444 */
-  --destructive: oklch(0.65 0.23 25);
+  --danger: oklch(0.72 0.18 25);             /* T-BRAND-COLOR-ROLLOUT · 跌珊瑚粉红 ≈ #FF6B6B */
+  --destructive: oklch(0.65 0.23 25);        /* 通用 destructive 仍朱红 · 不混"涨跌"语义 */
   --warning: oklch(0.78 0.17 80);            /* #FFB020 */
   --info: oklch(0.73 0.17 245);              /* #60A5FA */
+
+  /* T-BRAND-COLOR-ROLLOUT · 涨/跌品牌字面 hex · 给 JS / chart lib (lightweight-charts) 直读
+     · text-success / text-danger Tailwind class 也走 oklch 变体跟此对齐 */
+  --brand-up: #19FB9B;                       /* 涨/买入/盈利/成功 = 青绿(--primary 同色) */
+  --brand-down: #FF6B6B;                     /* 跌/卖出/亏损/错误 = 珊瑚粉红(用户从 4 候选挑) */
 
   /* 线 + 输入 */
   --border: oklch(1 0 0 / 10%);              /* ~ #2A2E3A */

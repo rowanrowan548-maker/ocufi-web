@@ -127,7 +127,7 @@ function AllTradesTable({
             rel="noopener noreferrer"
             className="grid grid-cols-[60px_1fr_1fr_50px] gap-2 px-2 py-1 text-xs hover:bg-muted/30 transition-colors items-center"
           >
-            <span className={`inline-flex items-center gap-0.5 ${tr.kind === 'buy' ? 'text-emerald-500' : 'text-red-500'}`}>
+            <span className={`inline-flex items-center gap-0.5 ${tr.kind === 'buy' ? 'text-success' : 'text-danger'}`}>
               {tr.kind === 'buy' ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
               {tr.kind}
             </span>
@@ -168,7 +168,7 @@ function TaggedTradesTable({
             rel="noopener noreferrer"
             className="grid grid-cols-[60px_1fr_1fr_1fr_50px] gap-2 px-2 py-1 text-xs hover:bg-muted/30 transition-colors items-center"
           >
-            <span className={`inline-flex items-center gap-0.5 ${it.kind === 'buy' ? 'text-emerald-500' : 'text-red-500'}`}>
+            <span className={`inline-flex items-center gap-0.5 ${it.kind === 'buy' ? 'text-success' : 'text-danger'}`}>
               {it.kind === 'buy' ? <ArrowDownLeft className="h-3 w-3" /> : <ArrowUpRight className="h-3 w-3" />}
               {it.kind}
             </span>
