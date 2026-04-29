@@ -14,6 +14,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Users, Bug, UserCog, Package, Crosshair, Flame, type LucideIcon } from 'lucide-react';
 import { fetchTokenAuditCard, isApiConfigured, type TokenAuditCard } from '@/lib/api-client';
 
 interface Props {
@@ -66,17 +67,17 @@ export function AuditCards({ mint }: Props) {
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      <Cell label={t('top10')} value={fmtPct(top10)} icon="💚" tone={top10Tone} />
-      <Cell label={t('rats')} value={fmtPct(rats)} icon="🐀" tone={ratsTone} />
-      <Cell label={t('dev')} value={dev ? t(`devStatus.${dev}`) : '--'} icon="👤" tone={devTone} />
-      <Cell label={t('bundle')} value={fmtPct(bundle)} icon="📦" tone={bundleTone} />
-      <Cell label={t('sniper')} value={fmtPct(sniper)} icon="🎯" tone={sniperTone} />
-      <Cell label={t('lpBurn')} value={fmtPct(lp)} icon="🔥" tone={lpTone} />
+      <Cell label={t('top10')} value={fmtPct(top10)} Icon={Users} tone={top10Tone} />
+      <Cell label={t('rats')} value={fmtPct(rats)} Icon={Bug} tone={ratsTone} />
+      <Cell label={t('dev')} value={dev ? t(`devStatus.${dev}`) : '--'} Icon={UserCog} tone={devTone} />
+      <Cell label={t('bundle')} value={fmtPct(bundle)} Icon={Package} tone={bundleTone} />
+      <Cell label={t('sniper')} value={fmtPct(sniper)} Icon={Crosshair} tone={sniperTone} />
+      <Cell label={t('lpBurn')} value={fmtPct(lp)} Icon={Flame} tone={lpTone} />
     </div>
   );
 }
 
-function Cell({ label, value, icon, tone }: { label: string; value: string; icon: string; tone: Tone }) {
+function Cell({ label, value, Icon, tone }: { label: string; value: string; Icon: LucideIcon; tone: Tone }) {
   const toneCls =
     tone === 'good' ? 'text-emerald-500' :
     tone === 'warn' ? 'text-amber-500' :
@@ -89,7 +90,7 @@ function Cell({ label, value, icon, tone }: { label: string; value: string; icon
       </div>
       <div className={`flex items-center gap-1 mt-0.5 text-sm font-mono font-semibold tabular-nums ${toneCls}`}>
         <span>{value}</span>
-        <span className="text-xs">{icon}</span>
+        <Icon className="h-3.5 w-3.5" />
       </div>
     </div>
   );

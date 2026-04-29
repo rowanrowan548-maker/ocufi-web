@@ -5,7 +5,7 @@
  * verified 单独走主色青绿,其他走对应语义色。
  */
 import {
-  ShieldCheck, CheckCircle2, AlertTriangle, AlertOctagon, HelpCircle,
+  ShieldCheck, CheckCircle2, AlertTriangle, ShieldAlert, ShieldX, HelpCircle,
 } from 'lucide-react';
 import type { OverallRisk } from '@/lib/token-info';
 
@@ -37,12 +37,12 @@ const CONFIG: Record<
   },
   high: {
     color: 'text-warning border-warning/40 bg-warning/15',
-    Icon: AlertTriangle,
+    Icon: ShieldAlert,
     defaultLabel: '高风险',
   },
   critical: {
     color: 'text-danger border-danger/30 bg-danger/10',
-    Icon: AlertOctagon,
+    Icon: ShieldX,
     defaultLabel: '严重风险',
   },
   unknown: {

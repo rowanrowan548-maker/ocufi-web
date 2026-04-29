@@ -14,7 +14,7 @@
  *
  * 颜色按值判定 safe / warn / danger,detail=null 时全 `—` 占位不崩。
  */
-import { Lock, Users, Coins, Snowflake } from 'lucide-react';
+import { Lock, Users, Coins, Snowflake, Circle, type LucideIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import { overallRisk, type TokenDetail, type OverallRisk } from '@/lib/token-info';
@@ -52,7 +52,7 @@ export function TrustSignals({ detail }: Props) {
           {t('title')}
         </div>
         <div className={`flex items-center gap-1.5 text-[11px] font-mono ${lightInfo.colorClass}`}>
-          <span className="text-base leading-none">{lightInfo.emoji}</span>
+          <lightInfo.Icon className="h-3.5 w-3.5 fill-current" />
           <span>{t(`overall.${overall}`)}</span>
         </div>
       </div>
@@ -137,19 +137,19 @@ function authoritySignal(
   return { text: t('values.active'), tone: 'warn' };
 }
 
-// T-926 #42:overallRisk → 红绿灯 emoji + 颜色
-function trafficLightInfo(risk: OverallRisk): { emoji: string; colorClass: string } {
+// T-926 #42 + T-ICON-UNIFY:overallRisk → 红绿灯(lucide Circle filled)+ 颜色
+function trafficLightInfo(risk: OverallRisk): { Icon: LucideIcon; colorClass: string } {
   switch (risk) {
     case 'verified':
     case 'low':
-      return { emoji: '🟢', colorClass: 'text-success' };
+      return { Icon: Circle, colorClass: 'text-success' };
     case 'medium':
-      return { emoji: '🟡', colorClass: 'text-warning' };
+      return { Icon: Circle, colorClass: 'text-warning' };
     case 'high':
     case 'critical':
-      return { emoji: '🔴', colorClass: 'text-destructive' };
+      return { Icon: Circle, colorClass: 'text-destructive' };
     case 'unknown':
     default:
-      return { emoji: '⚪', colorClass: 'text-muted-foreground' };
+      return { Icon: Circle, colorClass: 'text-muted-foreground' };
   }
 }
