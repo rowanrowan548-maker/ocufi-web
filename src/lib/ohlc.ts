@@ -27,6 +27,19 @@ export type Timeframe =
   | 'hour_4'
   | 'day_1';
 
+/**
+ * T-CHAIN-BIRDEYE-OHLCV-LIB · 数据源选择
+ *
+ *   'auto'    · 后端默认行为(GT first · 失败 fallback Birdeye)· 现有调用方
+ *   'gt'      · 强制 GeckoTerminal(后端需支持 ?source=gt)
+ *   'birdeye' · 强制 Birdeye(后端需支持 ?source=birdeye · 给 K 线完整版拉更长历史用)
+ *
+ * 后端当前(2026-04-29)已 ship Birdeye fallback,但**未 ship `source` query 参数**。
+ * 不支持时后端忽略 query 走默认 — 调用方等同 `auto`,本字段不破现有行为。
+ * 后端 ship 后(SPEC T-CHAIN-BIRDEYE-OHLCV-LIB · 0.5h 后端改动)`birdeye` 立即强制走。
+ */
+export type OhlcSource = 'auto' | 'gt' | 'birdeye';
+
 export interface OhlcCandle {
   /** unix seconds(lightweight-charts 要求);GT 返回多为 seconds,>1e12 时按 ms 转 */
   time: number;
@@ -42,8 +55,9 @@ export interface OhlcCandle {
 const cache = new Map<string, { data: OhlcCandle[]; expiresAt: number }>();
 const inflight = new Map<string, Promise<OhlcCandle[]>>();
 
-function cacheKey(mint: string, tf: Timeframe, limit: number): string {
-  return `${mint}::${tf}::${limit}`;
+function cacheKey(mint: string, tf: Timeframe, limit: number, source: OhlcSource): string {
+  // source 进 cache key · 'birdeye' 跟 'auto' 不同源不共享缓存
+  return `${mint}::${tf}::${limit}::${source}`;
 }
 
 function setCache(key: string, data: OhlcCandle[]) {
@@ -67,21 +81,24 @@ function normalizeTime(ts: unknown): number {
  * 拉某 token 的 OHLC 数据,转成 lightweight-charts 兼容格式
  *
  * T-700b-fix:签名从 (pool, tf) 改成 (mint, tf),后端处理 mint→pool 解析
+ * T-CHAIN-BIRDEYE-OHLCV-LIB(2026-04-29):加 source 可选参数,默认 'auto' 兼容旧调用
  *
  * @param mint      token mint 地址(base58)
  * @param timeframe UI 枚举('minute_5' / 'hour_4' / 'day_1' …)
  * @param limit     返回 candle 数,默认 200,GT max 1000
+ * @param source    数据源选择('auto' 默认 · 'gt' · 'birdeye'),后端未支持 query 时忽略走默认
  * @returns         OhlcCandle[](time 升序;失败 / 无 LP / 无数据返回 [])
  */
 export async function fetchOhlc(
   mint: string,
   timeframe: Timeframe,
-  limit: number = DEFAULT_LIMIT
+  limit: number = DEFAULT_LIMIT,
+  source: OhlcSource = 'auto'
 ): Promise<OhlcCandle[]> {
   if (!mint) return [];
   const safeLimit = Math.min(Math.max(1, Math.floor(limit) || DEFAULT_LIMIT), MAX_LIMIT);
 
-  const key = cacheKey(mint, timeframe, safeLimit);
+  const key = cacheKey(mint, timeframe, safeLimit, source);
   const cached = getCached(key);
   if (cached?.fresh) return cached.data;
 
@@ -95,9 +112,10 @@ export async function fetchOhlc(
     setCache(key, []);
     return [];
   }
+  const sourceQuery = source !== 'auto' ? `&source=${encodeURIComponent(source)}` : '';
   const url =
     `${apiUrl.replace(/\/$/, '')}/chart/ohlc` +
-    `?mint=${encodeURIComponent(mint)}&tf=${encodeURIComponent(timeframe)}&limit=${safeLimit}`;
+    `?mint=${encodeURIComponent(mint)}&tf=${encodeURIComponent(timeframe)}&limit=${safeLimit}${sourceQuery}`;
 
   const promise = (async () => {
     try {
