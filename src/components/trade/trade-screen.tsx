@@ -18,7 +18,6 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
 
-import { TokenSearchCombo } from '@/components/common/token-search-combo';
 import { RpcHealthBanner } from '@/components/common/rpc-health-banner';
 import { TradingHeader } from './trading-header';
 import { ChartCard } from './chart-card';
@@ -120,10 +119,8 @@ export function TradeScreen() {
   return (
     <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:max-w-none lg:mx-0 lg:px-4 py-2 sm:py-6 space-y-2 sm:space-y-4">
       <RpcHealthBanner />
-      {/* 桌面端独立选币卡;移动端被 TradingHeader 内嵌的切币 popover 取代 */}
-      <div className="hidden lg:block">
-        <TokenSearchCombo value={mint} onSelect={setMint} />
-      </div>
+      {/* T-SEARCH-DEDUP · 删除桌面端 TokenSearchCombo 独立卡(冗余)
+          切币只通过顶部 header search → /trade?mint= · trading-header 顶部仍有 SYMBOL+price */}
 
       {/* T-962/T-977b:移动端 TradingHeader sticky top + 桌面正常流(padding 压扁) */}
       <div className="lg:static lg:bg-transparent lg:backdrop-blur-none sticky top-0 lg:top-auto z-30 -mx-2 sm:-mx-6 px-2 sm:px-6 lg:mx-0 lg:px-0 py-1 lg:py-0 bg-background/95 backdrop-blur lg:backdrop-blur-none">
