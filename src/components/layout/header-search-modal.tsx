@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Search, X, ClipboardPaste, Loader2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { PublicKey } from '@solana/web3.js';
 import { fetchMarketsTrending, type MarketItem } from '@/lib/api-client';
 import { searchTokens, type TokenInfo } from '@/lib/portfolio';
@@ -98,6 +98,7 @@ function clearHistory() {
 export function HeaderSearchModal({ open, onClose }: Props) {
   const t = useTranslations('nav.searchModal');
   const router = useRouter();
+  const locale = useLocale();
   const [tab, setTab] = useState<'tokens' | 'dapps'>('tokens');
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -111,11 +112,17 @@ export function HeaderSearchModal({ open, onClose }: Props) {
 
   const handleNavigate = useCallback(
     (item: { mint: string; symbol: string; logo: string | null }) => {
+      // T-FIX-SEARCH-CLICK · 顺序:先 push 再 saveHistory 再 close
+      // localePrefix=as-needed 下,默认 locale (zh-CN) 不加前缀,其他显式带
+      const path =
+        locale === 'zh-CN'
+          ? `/trade?mint=${item.mint}`
+          : `/${locale}/trade?mint=${item.mint}`;
+      router.push(path);
       saveHistory({ mint: item.mint, symbol: item.symbol, logo: item.logo });
-      router.push(`/trade?mint=${item.mint}`);
       onClose();
     },
-    [router, onClose],
+    [router, onClose, locale],
   );
 
   // open 切 true 时 reset state + autofocus
