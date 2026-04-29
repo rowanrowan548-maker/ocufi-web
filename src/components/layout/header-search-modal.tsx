@@ -20,7 +20,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Search, X, ClipboardPaste, Loader2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
-import { PublicKey } from '@solana/web3.js';
 import { fetchMarketsTrending, type MarketItem } from '@/lib/api-client';
 import { searchTokens, type TokenInfo } from '@/lib/portfolio';
 
@@ -49,15 +48,6 @@ interface HistoryItem {
 
 const HISTORY_KEY = 'ocufi.search.history.v1';
 const HISTORY_MAX = 5;
-
-function isValidMint(s: string): boolean {
-  try {
-    new PublicKey(s);
-    return s.length >= 32 && s.length <= 44;
-  } catch {
-    return false;
-  }
-}
 
 function loadHistory(): HistoryItem[] {
   if (typeof window === 'undefined') return [];
@@ -160,17 +150,13 @@ export function HeaderSearchModal({ open, onClose }: Props) {
       .finally(() => setTrendingLoading(false));
   }, [open, trending.length, trendingLoading]);
 
-  // 输入合法 mint 直接跳
-  useEffect(() => {
-    const q = input.trim();
-    if (!isValidMint(q)) return;
-    handleNavigate({ mint: q, symbol: q.slice(0, 4) + '…', logo: null });
-  }, [input, handleNavigate]);
+  // T-FIX-SEARCH-PASTE · 删除"输入合法 mint 自动跳转"
+  // 用户粘贴合约后应看到匹配的代币行,主动点选才跳 · 不要 auto-submit
 
-  // 远端搜索 · 输入 >= 2 字符时 350ms 防抖
+  // 远端搜索 · 输入 >= 2 字符时 350ms 防抖(合法 mint 也搜,DexScreener 接受 mint 查询)
   useEffect(() => {
     const q = input.trim();
-    if (q.length < 2 || isValidMint(q)) {
+    if (q.length < 2) {
       setSearchHits([]);
       setSearchLoading(false);
       return;
