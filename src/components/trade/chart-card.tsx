@@ -35,6 +35,10 @@ import {
   useSetChartTimeframe,
   TIMEFRAMES,
 } from '@/lib/chart-timeframe-store';
+import {
+  useChartUnit,
+  useSetChartUnit,
+} from '@/lib/chart-unit-store';
 import type { Timeframe } from '@/lib/ohlc';
 
 type ChartType = 'price' | 'market_cap';
@@ -59,6 +63,9 @@ export function ChartCard({ mint }: Props) {
   // T-CHART-FULL-2 · 时间段(zustand 持久化 · 6 档 · 仅自家图生效)
   const tf = useChartTimeframe();
   const setTf = useSetChartTimeframe();
+  // T-CHART-FULL-8 · 价格单位 USD / SOL(仅自家图生效)
+  const unit = useChartUnit();
+  const setUnit = useSetChartUnit();
 
   // mint → topPoolAddress(复用 portfolio.fetchTokenInfo,30s 缓存自带,无新外部请求)
   useEffect(() => {
@@ -149,9 +156,29 @@ export function ChartCard({ mint }: Props) {
             <TrendingUp className="h-3 w-3" />
             {t('toolbar.devBuys')}
           </span>
-          {/* T-CHART-FULL-2 · 时间段 6 档 · 仅自家图模式显 */}
+          {/* T-CHART-FULL-8 · USD / SOL 价格单位 · 仅自家图模式显 */}
           {chartSource === 'self' && (
             <div className="ml-auto inline-flex rounded border border-border/40 overflow-hidden">
+              {(['USD', 'SOL'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setUnit(opt)}
+                  data-testid={`chart-unit-${opt}`}
+                  className={`px-2 py-0.5 transition-colors text-[10px] ${
+                    unit === opt
+                      ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
+                      : 'text-muted-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* T-CHART-FULL-2 · 时间段 6 档 · 仅自家图模式显 */}
+          {chartSource === 'self' && (
+            <div className="inline-flex rounded border border-border/40 overflow-hidden">
               {TIMEFRAMES.map((opt) => (
                 <button
                   key={opt}
@@ -199,8 +226,9 @@ export function ChartCard({ mint }: Props) {
           </div>
         </div>
       )}
-      {/* T-CHART-COMPRESS · 桌面降 560→400 让一屏看到 ActivityBoard / 审计 / 持仓 */}
-      <div className="relative h-[420px] sm:h-[480px] lg:h-[400px]">
+      {/* T-CHART-COMPRESS · 桌面降 400 让一屏看到 ActivityBoard / 审计 / 持仓
+          T-CHART-FULL-9 · 移动 280px / 平板 360px / 桌面 400px */}
+      <div className="relative h-[280px] sm:h-[360px] lg:h-[400px]">
         {/* T-CHART-FULL-1+2 · 自家蜡烛图(brand 色 · 走 /chart/ohlc 后端代理) */}
         {showSelfChart && mint && (
           <CandlestickChart mint={mint} timeframe={tf} />

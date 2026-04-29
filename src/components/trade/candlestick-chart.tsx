@@ -33,6 +33,7 @@ import { SOL_MINT } from '@/lib/jupiter';
 import { USDC_MINT } from '@/lib/preset-tokens';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { getTriggerOrders, type TriggerOrder } from '@/lib/jupiter-trigger';
+import { useChartUnit } from '@/lib/chart-unit-store';
 
 interface Props {
   mint: string;
@@ -64,6 +65,8 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   // T-CHART-FULL-7 · 提醒线 · 复用 usePriceAlerts(已有 20s 轮询)
   const { alerts } = usePriceAlerts();
   const alertLinesRef = useRef<IPriceLine[]>([]);
+  // T-CHART-FULL-8 · USD / SOL 价格单位(后端 ohlc 返 USD · SOL 模式前端反推)
+  const unit = useChartUnit();
   // T-CHART-FULL-3 · crosshair 悬停 tooltip · O/H/L/C + time
   const [hover, setHover] = useState<null | {
     o: number; h: number; l: number; c: number; t: number;
@@ -127,8 +130,9 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
         priceUsd = (taking / making) * outputUsd;
       }
       if (!priceUsd || !Number.isFinite(priceUsd)) continue;
+      const price = unit === 'SOL' && solUsdPrice > 0 ? priceUsd / solUsdPrice : priceUsd;
       orderLinesRef.current.push(series.createPriceLine({
-        price: priceUsd,
+        price,
         color: isBuy ? upColor : downColor,
         lineWidth: 1,
         lineStyle: LineStyle.Dotted,
@@ -136,7 +140,7 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
         title: `${isBuy ? t('limitBuy') : t('limitSell')} ${making.toFixed(2)}`,
       }));
     }
-  }, [orders, mint, solUsdPrice, t]);
+  }, [orders, mint, solUsdPrice, unit, t]);
 
   // T-CHART-FULL-7 · 提醒线 · alerts/mint 任一变都重画
   useEffect(() => {
@@ -152,8 +156,9 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       if (a.triggered) continue;             // 已触发不显
       if (a.is_active === false) continue;   // 暂停的不显
       if (!Number.isFinite(a.target_usd) || a.target_usd <= 0) continue;
+      const price = unit === 'SOL' && solUsdPrice > 0 ? a.target_usd / solUsdPrice : a.target_usd;
       alertLinesRef.current.push(series.createPriceLine({
-        price: a.target_usd,
+        price,
         color: '#F59E0B',                    // amber 中性色 · 区别买卖
         lineWidth: 1,
         lineStyle: LineStyle.Dashed,
@@ -161,7 +166,7 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
         title: `🔔 ${t('alertAt')} ${a.target_usd}`,
       }));
     }
-  }, [alerts, mint, t]);
+  }, [alerts, mint, unit, solUsdPrice, t]);
 
   // T-CHART-FULL-5 · 买卖点 markers · records/mint 变化重设
   useEffect(() => {
@@ -206,15 +211,16 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
     const root = getComputedStyle(document.documentElement);
     const upColor = root.getPropertyValue('--brand-up').trim() || '#19FB9B';
     const avgUsd = entry.avgCostSol * solUsdPrice;
+    const price = unit === 'SOL' ? entry.avgCostSol : avgUsd;
     costLineRef.current = series.createPriceLine({
-      price: avgUsd,
+      price,
       color: upColor,
       lineWidth: 1,
       lineStyle: LineStyle.Dashed,
       axisLabelVisible: true,
       title: t('myCost'),
     });
-  }, [costs, mint, solUsdPrice, t]);
+  }, [costs, mint, solUsdPrice, unit, t]);
 
   // 创建 chart(只 1 次)
   useEffect(() => {
@@ -299,7 +305,7 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
     };
   }, []);
 
-  // 拉数据(mint / tf 变化时)
+  // 拉数据(mint / tf / unit 变化时)
   useEffect(() => {
     if (!mint) return;
     let cancelled = false;
@@ -312,12 +318,16 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
           setEmpty(true);
           return;
         }
-        const data = candles.map((c) => ({
+        // T-CHART-FULL-9 · 数据点上限 · slice 防 1000+ 卡(实际 limit=300 已防)
+        const safe = candles.slice(-1000);
+        // T-CHART-FULL-8 · SOL 模式 · 用当前 SOL/USD 价反推(approx · 历史价用今价转)
+        const unitDiv = unit === 'SOL' && solUsdPrice > 0 ? solUsdPrice : 1;
+        const data = safe.map((c) => ({
           time: c.time as Time,
-          open: c.open,
-          high: c.high,
-          low: c.low,
-          close: c.close,
+          open: c.open / unitDiv,
+          high: c.high / unitDiv,
+          low: c.low / unitDiv,
+          close: c.close / unitDiv,
         }));
         seriesRef.current?.setData(data);
         chartRef.current?.timeScale().fitContent();
@@ -325,7 +335,7 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       .catch(() => { if (!cancelled) setEmpty(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [mint, timeframe]);
+  }, [mint, timeframe, unit, solUsdPrice]);
 
   return (
     <div className={`relative w-full h-full ${className ?? ''}`}>
@@ -336,7 +346,7 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
           data-testid="chart-hover-tooltip"
           className="absolute top-2 right-2 z-10 bg-card/90 border border-border/40 rounded px-2 py-1 text-[10px] font-mono tabular-nums backdrop-blur pointer-events-none"
         >
-          <div className="text-muted-foreground/70">{new Date(hover.t * 1000).toLocaleString()}</div>
+          <div className="text-muted-foreground/70">{new Date(hover.t * 1000).toLocaleString()} · {unit}</div>
           <div className="flex gap-2 mt-0.5">
             <span>O <span className="text-foreground">{fmtPrice(hover.o)}</span></span>
             <span>H <span className="text-[var(--brand-up)]">{fmtPrice(hover.h)}</span></span>
