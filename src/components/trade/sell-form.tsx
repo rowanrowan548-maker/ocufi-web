@@ -42,6 +42,7 @@ import { GasSelect } from './gas-select';
 import { PriorityTierToggle, PRIORITY_TIER_TO_GAS_LEVEL } from './priority-tier-toggle';
 import type { PriorityTier } from '@/lib/priority-fees';
 import { pushTradeNotification } from '@/lib/notification-store';
+import { useSwapRefresh } from '@/lib/swap-refresh-store';
 import { TokenPricePreview } from '@/components/common/token-price-preview';
 import { useAutoQuote } from '@/hooks/use-auto-quote';
 import { RefreshRing } from '@/components/common/refresh-ring';
@@ -125,6 +126,8 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
   const [progressStartedAt, setProgressStartedAt] = useState<number | undefined>(undefined);
 
   const balance = useTokenBalance(mint.trim() || null);
+  // T-PORTFOLIO-AUTOREFRESH · swap 成交后通知刷新
+  const bumpSwap = useSwapRefresh((s) => s.bumpSwap);
 
   // ── 自动报价 ──
   const amt = Number(tokenAmount);
@@ -256,6 +259,9 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
         amountTokens: quoteData.tokenAmount,
         signature: sig,
       });
+
+      // T-PORTFOLIO-AUTOREFRESH · 等链上确认稳定 ~2s 通知刷新订阅者
+      setTimeout(() => bumpSwap(), 2000);
 
       toast.success(
         t('trade.toast.sellSuccess', {

@@ -39,6 +39,7 @@ import { fetchSolUsdPrice, fetchTokenInfo, type TokenInfo } from '@/lib/portfoli
 import { shouldSkipBuyConfirm, useDefaultGasLevel, useBuyAmounts } from '@/lib/buy-prefs-store';
 import { useFavorites } from '@/lib/favorites';
 import { pushTradeNotification } from '@/lib/notification-store';
+import { useSwapRefresh } from '@/lib/swap-refresh-store';
 import { QuotePreview, formatAmount } from './quote-preview';
 import { ConfirmDialog } from './confirm-dialog';
 import { GasSelect } from './gas-select';
@@ -129,6 +130,8 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
   const buyAmounts = useBuyAmounts();
   // T-942 #57 · 成交即自动加 watchlist
   const { add: addFavorite } = useFavorites();
+  // T-PORTFOLIO-AUTOREFRESH · swap 成交后通知 portfolio/history/cost-basis 刷新
+  const bumpSwap = useSwapRefresh((s) => s.bumpSwap);
   // 用户是否手动调过滑点:调过就别用推荐值覆盖
   const slippageTouched = useRef(false);
 
@@ -325,6 +328,11 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
         amountTokens: actualTokens,
         signature: sig,
       });
+
+      // T-PORTFOLIO-AUTOREFRESH · 等链上确认稳定后(~2s)通知所有订阅者刷新
+      // 不轮询 · 仅 onSuccess 一次性 bump · usePortfolio/useTxHistory/useCostBasis
+      // 都依赖 swapVersion · setTimeout 让本帧 toast 先渲染
+      setTimeout(() => bumpSwap(), 2000);
 
       // 成功 toast · 含 Solscan 链接
       toast.success(

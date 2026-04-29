@@ -15,6 +15,7 @@ import {
   type TokenInfo,
   SOL_MINT,
 } from '@/lib/portfolio';
+import { useSwapRefresh } from '@/lib/swap-refresh-store';
 
 export interface PortfolioToken {
   mint: string;
@@ -52,6 +53,9 @@ export function usePortfolio(): PortfolioState {
     error: null,
   });
   const [tick, setTick] = useState(0);   // 手动刷新触发
+  // T-PORTFOLIO-AUTOREFRESH · swap 成交后由 buy/sell-form 调 bumpSwap()
+  // swapVersion 变 → 下面的 useEffect 重新 load(等同 refresh)
+  const swapVersion = useSwapRefresh((s) => s.swapVersion);
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
@@ -142,7 +146,7 @@ export function usePortfolio(): PortfolioState {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [publicKey, connection, tick]);
+  }, [publicKey, connection, tick, swapVersion]);
 
   return { ...state, refresh };
 }

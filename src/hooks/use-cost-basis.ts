@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { fetchTxHistory, type TxRecord } from '@/lib/tx-history';
 import { computeCostBasis, type CostEntry } from '@/lib/cost-basis';
+import { useSwapRefresh } from '@/lib/swap-refresh-store';
 
 export interface CostBasisState {
   costs: Map<string, CostEntry>;
@@ -21,6 +22,8 @@ export function useCostBasis(): CostBasisState {
   const [costs, setCosts] = useState<Map<string, CostEntry>>(new Map());
   const [records, setRecords] = useState<TxRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  // T-PORTFOLIO-AUTOREFRESH · swap 成交后自动重算
+  const swapVersion = useSwapRefresh((s) => s.swapVersion);
 
   useEffect(() => {
     if (!publicKey) {
@@ -48,7 +51,7 @@ export function useCostBasis(): CostBasisState {
     return () => {
       cancelled = true;
     };
-  }, [publicKey, connection]);
+  }, [publicKey, connection, swapVersion]);
 
   return { costs, loading, records };
 }

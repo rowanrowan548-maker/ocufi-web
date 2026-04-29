@@ -10,6 +10,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { fetchTxHistory, type TxRecord } from '@/lib/tx-history';
 import { fetchTokensInfoBatch } from '@/lib/portfolio';
 import { fetchHistoryEnriched, isApiConfigured } from '@/lib/api-client';
+import { useSwapRefresh } from '@/lib/swap-refresh-store';
 
 export interface EnrichedTxRecord extends TxRecord {
   tokenSymbol: string;
@@ -39,6 +40,8 @@ export function useTxHistory(limit = 100): TxHistoryState {
   });
   const [tick, setTick] = useState(0);
   const refresh = useCallback(() => setTick((t) => t + 1), []);
+  // T-PORTFOLIO-AUTOREFRESH · swap 成交后自动 refetch
+  const swapVersion = useSwapRefresh((s) => s.swapVersion);
 
   useEffect(() => {
     if (!publicKey) {
@@ -102,7 +105,7 @@ export function useTxHistory(limit = 100): TxHistoryState {
     return () => {
       cancelled = true;
     };
-  }, [publicKey, connection, limit, tick]);
+  }, [publicKey, connection, limit, tick, swapVersion]);
 
   return { ...state, refresh };
 }
