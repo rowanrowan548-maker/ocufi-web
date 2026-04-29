@@ -597,6 +597,7 @@
     },
     "rightTabs": {
       "detail": "Details",
+      "risk": "Risk",
       "devTokens": "Dev tokens",
       "sameName": "Same name",
       "description": "Description",
@@ -1711,13 +1712,22 @@
       "quickBuyTitle": "Quick buy 0.1 SOL · with your defaults",
       "quickBuyConnectFirst": "Connect wallet first"
     },
+    "smartMoney": {
+      "label": "{count} smart wallets buying",
+      "topBuyers": "Top buyers (30d net PnL)",
+      "tooltipHint": "Smart money = 30d net PnL > $10K"
+    },
     "risk": {
       "verified": "Verified token",
       "safe": "No risk signals",
       "warn": "Some risk signals",
       "risky": "High risk · be careful",
       "unknown": "Audit fetch failed",
-      "pending": "Audit loading"
+      "pending": "Audit loading",
+      "safeDetail": "All 6 audit checks pass (top10 / rats / bundle / sniper / dev / LP burn) · safe to trade",
+      "warnDetail": "1+ checks in mid-risk range (e.g. top10 20-40% / LP burn 80-99%) · review details first",
+      "riskyDetail": "1+ checks in high-risk range (e.g. top10 ≥40% / honeypot / dev dumping / LP not burned) · be careful",
+      "clickHint": "→ Click for full audit"
     },
     "loading": "Loading…",
     "empty": "No data yet · backend worker still fetching",

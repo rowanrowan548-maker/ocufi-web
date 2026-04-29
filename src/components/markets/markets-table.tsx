@@ -2,19 +2,22 @@
 
 /**
  * T-MARKETS-PAGE-V1 · /markets 主表
+ * T-MARKETS-DIFFER-V2(2026-04-30):加聪明钱列 + 行 hover mini K 线 + 风险标 click 跳 #risk
  *
- * 列:代币 / 价格 / 5m / 1h / 24h / 流动性 / 市值 / 24h 量 / 池龄 / (风险标)
+ * 列:代币 / 价格 / 5m / 1h / 24h / 流动性 / 市值 / 24h 量 / 池龄 / 聪明钱 / (风险标)
  *
  * 风险标行级懒加载:
  *  - showRisk=true 时显示风险列(verified / risk tab)
  *  - 用 IntersectionObserver 每行进视口才 fetchTokenAuditCard
  *  - 失败/未加载 → 灰圆点 · 加载完按 honeypot/lp_burn/top10 给颜色
+ *  - hover icon 出 tooltip 解释具体风险点 · click → /trade?mint=X#risk(打开 risk tab)
  *
- * 行交互:点击 → /trade?mint=X · hover 高亮
+ * 行交互:点击 token → /trade?mint=X · hover 行 0.5s → 浮 mini K 线
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ShieldCheck, ShieldAlert, ShieldX, Shield, Loader2 } from 'lucide-react';
 import {
@@ -27,6 +30,10 @@ import {
   type TokenAuditCard,
 } from '@/lib/api-client';
 import { isVerifiedToken } from '@/lib/verified-tokens';
+import { SmartMoneyBadge } from './smart-money-badge';
+import { MiniChartTooltip } from './mini-chart-tooltip';
+
+const HOVER_DELAY_MS = 500;
 
 interface Props {
   items: MarketItem[];
@@ -35,9 +42,12 @@ interface Props {
 }
 
 export function MarketsTable({ items, showRisk = false }: Props) {
+  // 单例 mini K 线 hover 状态 · 同时只有 1 个 tooltip
+  const [hover, setHover] = useState<{ mint: string; symbol: string; anchor: DOMRect } | null>(null);
+
   return (
     <div className="overflow-x-auto">
-      <Table className="min-w-[1100px]">
+      <Table className="min-w-[1180px]">
         <TableHeader>
           <TableRow>
             <ColHead>代币</ColHead>
@@ -49,15 +59,26 @@ export function MarketsTable({ items, showRisk = false }: Props) {
             <ColHead align="right" mdOnly>市值</ColHead>
             <ColHead align="right" lgOnly>24h 量</ColHead>
             <ColHead align="right" lgOnly>池龄</ColHead>
+            <ColHead align="right">聪明钱</ColHead>
             {showRisk && <ColHead align="center">风险</ColHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((it) => (
-            <Row key={it.mint} it={it} showRisk={showRisk} />
+            <Row
+              key={it.mint}
+              it={it}
+              showRisk={showRisk}
+              onHoverStart={(rect) => setHover({ mint: it.mint, symbol: it.symbol, anchor: rect })}
+              onHoverEnd={() => setHover((h) => (h && h.mint === it.mint ? null : h))}
+            />
           ))}
         </TableBody>
       </Table>
+
+      {hover && (
+        <MiniChartTooltip mint={hover.mint} symbol={hover.symbol} anchor={hover.anchor} />
+      )}
     </div>
   );
 }
@@ -78,12 +99,42 @@ function ColHead({
   return <TableHead className={cls}>{children}</TableHead>;
 }
 
-function Row({ it, showRisk }: { it: MarketItem; showRisk: boolean }) {
+function Row({
+  it, showRisk, onHoverStart, onHoverEnd,
+}: {
+  it: MarketItem;
+  showRisk: boolean;
+  onHoverStart: (rect: DOMRect) => void;
+  onHoverEnd: () => void;
+}) {
+  const rowRef = useRef<HTMLTableRowElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const el = rowRef.current;
+      if (!el) return;
+      onHoverStart(el.getBoundingClientRect());
+    }, HOVER_DELAY_MS);
+  };
+  const handleLeave = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    onHoverEnd();
+  };
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  }, []);
+
   return (
     <TableRow
+      ref={rowRef}
       data-testid="markets-row"
       data-mint={it.mint}
       className="hover:bg-muted/30 transition-colors"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
     >
       <TableCell>
         <Link href={`/trade?mint=${it.mint}`} className="flex items-center gap-3 min-w-0">
@@ -128,6 +179,9 @@ function Row({ it, showRisk }: { it: MarketItem; showRisk: boolean }) {
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden lg:table-cell whitespace-nowrap">
         {formatAge(it.ageHours)}
       </TableCell>
+      <TableCell className="text-right">
+        <SmartMoneyBadge mint={it.mint} />
+      </TableCell>
       {showRisk && (
         <TableCell className="text-center">
           <RiskBadge mint={it.mint} />
@@ -157,10 +211,12 @@ function getAudit(mint: string): Promise<TokenAuditCard | 'error'> {
 
 function RiskBadge({ mint }: { mint: string }) {
   const t = useTranslations('markets.risk');
+  const router = useRouter();
   const ref = useRef<HTMLSpanElement>(null);
   const [audit, setAudit] = useState<TokenAuditCard | null>(null);
   const [errored, setErrored] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
 
   // 已审白名单 → 直接显示 ✓ · 不打 audit-card
   const verified = useMemo(() => isVerifiedToken(mint), [mint]);
@@ -201,39 +257,80 @@ function RiskBadge({ mint }: { mint: string }) {
     return () => { cancelled = true; io.disconnect(); };
   }, [mint, verified]);
 
+  // 点击 → 跳 trade 页 + #risk hash · trade 页 right-info-tabs 监听 hash 自动开 risk tab
+  const goTrade = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/trade?mint=${mint}#risk`);
+  };
+
   if (verified) {
     return (
-      <span className="inline-flex items-center gap-1 text-[var(--brand-up)]" title={t('verified')}>
+      <button
+        type="button"
+        onClick={goTrade}
+        data-testid="risk-badge-verified"
+        className="inline-flex items-center gap-1 text-[var(--brand-up)] hover:opacity-80 transition-opacity"
+        title={t('verified')}
+        aria-label={t('verified')}
+      >
         <ShieldCheck className="h-4 w-4" />
-      </span>
+      </button>
     );
   }
 
+  const tone = audit ? scoreTone(audit) : null;
+  const tooltipKey = errored
+    ? 'unknown'
+    : tone === 'bad' ? 'riskyDetail' : tone === 'warn' ? 'warnDetail' : tone === 'good' ? 'safeDetail' : 'pending';
+
   return (
-    <span ref={ref} className="inline-flex items-center justify-center" data-testid="risk-badge">
-      {loading && !audit ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground/50" />
-      ) : errored ? (
-        <Shield className="h-4 w-4 text-muted-foreground/40" aria-label={t('unknown')} />
-      ) : audit ? (
-        <RiskIcon audit={audit} t={t} />
-      ) : (
-        <Shield className="h-4 w-4 text-muted-foreground/30" aria-label={t('pending')} />
+    <span
+      ref={ref}
+      className="relative inline-flex items-center justify-center"
+      data-testid="risk-badge"
+      data-tone={tone ?? (errored ? 'unknown' : 'pending')}
+      onMouseEnter={() => setTipOpen(true)}
+      onMouseLeave={() => setTipOpen(false)}
+      onFocus={() => setTipOpen(true)}
+      onBlur={() => setTipOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={goTrade}
+        className="inline-flex items-center justify-center hover:opacity-80 transition-opacity"
+        aria-label={t(tone === 'bad' ? 'risky' : tone === 'warn' ? 'warn' : tone === 'good' ? 'safe' : errored ? 'unknown' : 'pending')}
+        tabIndex={0}
+      >
+        {loading && !audit ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground/50" />
+        ) : errored ? (
+          <Shield className="h-4 w-4 text-muted-foreground/40" />
+        ) : audit ? (
+          <RiskIconByTone tone={tone!} />
+        ) : (
+          <Shield className="h-4 w-4 text-muted-foreground/30" />
+        )}
+      </button>
+
+      {tipOpen && (
+        <span
+          role="tooltip"
+          data-testid="risk-badge-tooltip"
+          className="absolute right-0 top-full mt-1 z-50 w-[260px] rounded-md border border-border/60 bg-popover text-popover-foreground shadow-lg p-2 text-left text-[10px] leading-relaxed"
+        >
+          <div className="font-medium mb-1">{t(tone === 'bad' ? 'risky' : tone === 'warn' ? 'warn' : tone === 'good' ? 'safe' : errored ? 'unknown' : 'pending')}</div>
+          <div className="text-muted-foreground">{t(tooltipKey)}</div>
+          <div className="mt-1.5 pt-1 border-t border-border/40 text-[var(--brand-up)]">
+            {t('clickHint')}
+          </div>
+        </span>
       )}
     </span>
   );
 }
 
-function RiskIcon({
-  audit, t,
-}: {
-  audit: TokenAuditCard;
-  t: ReturnType<typeof useTranslations>;
-}) {
-  // 风险等级判定(spec 中蜜罐字段后端暂未返,用现有字段近似):
-  //  bad  · top10>=40 / rats>=15 / bundle>=15 / sniper>=10 / dev=active / lp<80 → 红
-  //  warn · 中间档                                                              → 黄
-  //  good · 全绿且 lp>=99                                                       → 绿
+function scoreTone(audit: TokenAuditCard): 'good' | 'warn' | 'bad' {
   const top10 = audit.top10_pct;
   const rats = audit.rat_warehouse_pct;
   const bundle = audit.bundle_pct;
@@ -256,32 +353,17 @@ function RiskIcon({
     + (sniper != null && sniper >= 5 && sniper < 10 ? 1 : 0)
     + (lp != null && lp >= 80 && lp < 99 ? 1 : 0);
 
-  if (badHits > 0) {
-    return (
-      <ShieldX
-        className="h-4 w-4 text-[var(--brand-down)]"
-        aria-label={t('risky')}
-        data-tone="bad"
-      />
-    );
-  }
-  if (warnHits > 0) {
-    return (
-      <ShieldAlert
-        className="h-4 w-4 text-amber-500"
-        aria-label={t('warn')}
-        data-tone="warn"
-      />
-    );
-  }
-  return (
-    <ShieldCheck
-      className="h-4 w-4 text-[var(--brand-up)]"
-      aria-label={t('safe')}
-      data-tone="good"
-    />
-  );
+  if (badHits > 0) return 'bad';
+  if (warnHits > 0) return 'warn';
+  return 'good';
 }
+
+function RiskIconByTone({ tone }: { tone: 'good' | 'warn' | 'bad' }) {
+  if (tone === 'bad') return <ShieldX className="h-4 w-4 text-[var(--brand-down)]" />;
+  if (tone === 'warn') return <ShieldAlert className="h-4 w-4 text-amber-500" />;
+  return <ShieldCheck className="h-4 w-4 text-[var(--brand-up)]" />;
+}
+
 
 function ChangePill({ pct }: { pct: number | null }) {
   if (pct == null) return <span className="text-xs text-muted-foreground/50">—</span>;

@@ -597,6 +597,7 @@
     },
     "rightTabs": {
       "detail": "详情",
+      "risk": "风险",
       "devTokens": "开发者代币",
       "sameName": "同名代币",
       "description": "描述",
@@ -1726,13 +1727,22 @@
       "quickBuyTitle": "0.1 SOL 快买 · 用默认参数",
       "quickBuyConnectFirst": "先连钱包"
     },
+    "smartMoney": {
+      "label": "{count} 个聪明钱在买",
+      "topBuyers": "Top 买家(30 天净盈利)",
+      "tooltipHint": "聪明钱 = 30 天净盈利 > $10K"
+    },
     "risk": {
       "verified": "已审代币",
       "safe": "无明显风险",
       "warn": "存在风险信号",
       "risky": "高风险 · 慎入",
       "unknown": "审计数据获取失败",
-      "pending": "审计加载中"
+      "pending": "审计加载中",
+      "safeDetail": "持仓集中度 / 老鼠仓 / 捆绑 / 狙击手 / LP 烧池子 6 项审计全过 · 可放心交易",
+      "warnDetail": "1 项以上审计在中等风险区间(如 top 10 持仓 20-40% / LP 烧池 80-99%)· 建议先看明细",
+      "riskyDetail": "1 项以上审计在高风险区间(如 top 10 持仓 ≥40% / 蜜罐 / 开发者活跃倾销 / LP 未烧)· 慎入",
+      "clickHint": "→ 点击看完整审计明细"
     },
     "loading": "加载中…",
     "empty": "暂无数据 · 后端 worker 抓取中",
