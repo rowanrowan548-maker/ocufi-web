@@ -112,11 +112,11 @@ export function ChartDemo({ mint }: Props) {
 
         // 蜡烛系列 · 品牌绿涨红跌
         const candleSeries = chart.addSeries(CandlestickSeries, {
-          upColor: '#10b981',         // emerald-500
-          downColor: '#f43f5e',       // rose-500
-          borderUpColor: '#10b981',
+          upColor: '#19FB9B',         // 品牌青绿(--primary · 跟反馈按钮 / logo 同色)
+          downColor: '#f43f5e',       // rose-500(待 V5 用户挑色后换)
+          borderUpColor: '#19FB9B',
           borderDownColor: '#f43f5e',
-          wickUpColor: '#10b981',
+          wickUpColor: '#19FB9B',
           wickDownColor: '#f43f5e',
         });
         candleSeries.setData(
@@ -155,14 +155,14 @@ export function ChartDemo({ mint }: Props) {
             {
               time: buyAt1.time as Time,
               position: 'belowBar',
-              color: '#10b981',
+              color: '#19FB9B',
               shape: 'arrowUp',
               text: `买入 $${buyAt1.close.toPrecision(3)}`,
             },
             {
               time: buyAt2.time as Time,
               position: 'belowBar',
-              color: '#10b981',
+              color: '#19FB9B',
               shape: 'arrowUp',
               text: `买入 $${buyAt2.close.toPrecision(3)}`,
             },

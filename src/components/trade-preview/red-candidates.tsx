@@ -3,7 +3,7 @@
 /**
  * T-CHART-DEMO-V2 · 4 色红对比 · 用户挑专属品牌红
  *
- * 4 列小蜡烛图 · 共享同一份 BONK OHLC · 仅 downColor 不同 · 涨色统一 emerald-500(logo 同色)
+ * 4 列小蜡烛图 · 共享同一份 BONK OHLC · 仅 downColor 不同 · 涨色统一 #19FB9B 青绿(--primary)
  * 桌面 4 列横排 · 移动 2x2 grid
  * 不画成本线 / 买入气泡(对比纯看颜色)
  */
@@ -23,7 +23,7 @@ const RED_CANDIDATES = [
   { name: '珊瑚粉红', hex: '#FF6B6B' },
 ] as const;
 
-const GREEN = '#10b981'; // emerald-500 · logo 4 弧绿
+const GREEN = '#19FB9B'; // T-CHART-DEMO-V4 · 真品牌青绿 (--primary · 跟反馈按钮 / logo 同色)
 
 // 同 chart-demo · CORS 兜底
 function generateSyntheticCandles(): OhlcCandle[] {
@@ -148,7 +148,7 @@ export function RedCandidates({ mint }: Props) {
       </div>
       <h2 className="text-xl font-semibold">挑一个红色 · 后续完整版用</h2>
       <p className="text-sm text-muted-foreground">
-        涨色统一 emerald-500(跟 logo 4 弧绿同色)· 跌色为 4 个候选 · 数据共享 BONK 5m
+        涨色统一 <span className="font-mono text-primary">#19FB9B</span> 青绿(跟反馈按钮 / logo 同色)· 跌色为 4 个候选 · 数据共享 BONK 5m
       </p>
 
       {/* V3 · 桌面 2x2 大格 / 移动单列 · 高 400px · 标签放大 */}
