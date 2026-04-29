@@ -101,19 +101,14 @@ export function HeaderSearchModal({ open, onClose }: Props) {
 
   const handleNavigate = useCallback(
     (item: { mint: string; symbol: string; logo: string | null }) => {
-      // T-SEARCH-CLICK-FIX3 · 真因(第 7 轮反馈):第一次点 ✓ 第二次 ✗
-      //   - router.push 同 pathname 不同 query · Next 16 Turbopack 在
-      //     trade-screen 已有 history.replaceState 写 URL 的副作用下,
-      //     router 内部 state 跟实际 URL 已 desync · 第二次 push "看似同路径"被 dedup
-      //   - 修法:① 不再加 locale 前缀(localePrefix=as-needed 自处理) ·
-      //     避免 middleware redirect 引入额外 nav 跳;② 在 push 之后 router.refresh()
-      //     强制 server / client 都 invalidate;③ rAF close 让 push commit 后再 unmount
+      // T-SEARCH-CLICK-FIX4 · router.refresh() 是元凶:在 push commit 完成前
+      // 触发 RSC re-fetch 用旧 URL 拉 server payload · 把 push 的 client state 反向覆盖
+      // 配合 trade-screen 改 URL 派生 mint(单源)· 删 refresh + push 即可生效
       const path = `/trade?mint=${item.mint}`;
       // eslint-disable-next-line no-console
-      console.log('[search-modal] navigate v3', { mint: item.mint, path });
+      console.log('[search-modal] navigate v4', { mint: item.mint, path });
       saveHistory({ mint: item.mint, symbol: item.symbol, logo: item.logo });
       router.push(path);
-      router.refresh();
       requestAnimationFrame(() => onClose());
     },
     [router, onClose],
