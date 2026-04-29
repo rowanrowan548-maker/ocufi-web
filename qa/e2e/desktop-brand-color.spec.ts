@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { tradeUrl, gotoAndSettle, MINTS } from './_helpers';
 
-// T-BRAND-COLOR-ROLLOUT 验证 · 桌面 + 模拟移动 · USDC 页 buy/sell + /trade-preview demo
+// T-BRAND-COLOR-ROLLOUT 验证 · 桌面 + 模拟移动 · USDC 页 buy/sell
+// (trade-preview demo test 在 T-CHART-CLEANUP-PREVIEW 后删除 · /trade-preview 已移除)
 test.describe('brand color rollout · screenshots for review', () => {
   test.setTimeout(120_000);
 
@@ -36,26 +37,4 @@ test.describe('brand color rollout · screenshots for review', () => {
     });
   });
 
-  test('trade-preview demo · 涨青绿 + 跌珊瑚粉红', async ({ page }) => {
-    await page.goto('/trade-preview?demo=1', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('div.rounded-lg.border.bg-\\[\\#0a0a0a\\]').first()).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .waitForFunction(
-        () => {
-          const txt = document.body.textContent ?? '';
-          return /蜡烛/.test(txt) && !/加载.*中/.test(txt);
-        },
-        undefined,
-        { timeout: 30_000 },
-      )
-      .catch(() => {});
-    await page.waitForTimeout(2000);
-
-    await page.screenshot({
-      path: 'test-results/brand-color-demo-page.png',
-      fullPage: true,
-    });
-  });
 });
