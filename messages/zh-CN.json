@@ -340,6 +340,7 @@
       "retry": "重试",
       "solBaseFallback": "SOL 是 Solana 基础币",
       "solBaseHint": "K 线请在 USDC / USDT 等交易对中查看",
+      "myCost": "我的成本",
       "toolbar": {
         "price": "价格",
         "marketCap": "市值",

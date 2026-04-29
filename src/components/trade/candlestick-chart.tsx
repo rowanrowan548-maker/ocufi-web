@@ -14,12 +14,17 @@ import {
   createChart,
   CandlestickSeries,
   CrosshairMode,
+  LineStyle,
   type IChartApi,
   type ISeriesApi,
+  type IPriceLine,
   type Time,
 } from 'lightweight-charts';
 import { Loader2, LineChart } from 'lucide-react';
 import { fetchOhlc, type Timeframe } from '@/lib/ohlc';
+import { useCostBasis } from '@/hooks/use-cost-basis';
+import { fetchPrice } from '@/lib/api-client';
+import { SOL_MINT } from '@/lib/jupiter';
 
 interface Props {
   mint: string;
@@ -35,12 +40,50 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const costLineRef = useRef<IPriceLine | null>(null);
   const [loading, setLoading] = useState(true);
   const [empty, setEmpty] = useState(false);
+  // T-CHART-FULL-4 · 平均买入价线 · 钱包未连或无持仓 → 不显
+  const { costs } = useCostBasis();
+  const [solUsdPrice, setSolUsdPrice] = useState<number>(0);
   // T-CHART-FULL-3 · crosshair 悬停 tooltip · O/H/L/C + time
   const [hover, setHover] = useState<null | {
     o: number; h: number; l: number; c: number; t: number;
   }>(null);
+
+  // T-CHART-FULL-4 · 拉 SOL→USD 价(把 avgCostSol 换算成 chart 的 USD 单位)
+  useEffect(() => {
+    let cancelled = false;
+    fetchPrice(SOL_MINT)
+      .then((r) => { if (!cancelled) setSolUsdPrice(r.price_usd); })
+      .catch(() => { /* ignore · 没价就不画线 */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // T-CHART-FULL-4 · 成本线 createPriceLine · costs/mint/solUsdPrice 任一变都重画
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+    // 先清旧
+    if (costLineRef.current) {
+      try { series.removePriceLine(costLineRef.current); } catch { /* noop */ }
+      costLineRef.current = null;
+    }
+    if (!mint || !solUsdPrice) return;
+    const entry = costs.get(mint);
+    if (!entry || entry.derivedBalance <= 0 || entry.avgCostSol <= 0) return;
+    const root = getComputedStyle(document.documentElement);
+    const upColor = root.getPropertyValue('--brand-up').trim() || '#19FB9B';
+    const avgUsd = entry.avgCostSol * solUsdPrice;
+    costLineRef.current = series.createPriceLine({
+      price: avgUsd,
+      color: upColor,
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: true,
+      title: t('myCost'),
+    });
+  }, [costs, mint, solUsdPrice, t]);
 
   // 创建 chart(只 1 次)
   useEffect(() => {
