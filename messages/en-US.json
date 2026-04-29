@@ -344,7 +344,9 @@
         "price": "Price",
         "marketCap": "Market cap",
         "devBuys": "Dev Buys",
-        "gtNote": "USD/SOL · timeframe → inside GT chart"
+        "gtNote": "USD/SOL · timeframe → inside GT chart",
+        "gtChart": "GT chart",
+        "selfChart": "Native chart"
       }
     },
     "trust": {

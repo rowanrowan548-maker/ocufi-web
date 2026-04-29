@@ -344,7 +344,9 @@
         "price": "价格",
         "marketCap": "市值",
         "devBuys": "Dev Buys",
-        "gtNote": "USD/SOL · 时间段切换 → GT 图内"
+        "gtNote": "USD/SOL · 时间段切换 → GT 图内",
+        "gtChart": "GT 图",
+        "selfChart": "自家图"
       }
     },
     "trust": {
