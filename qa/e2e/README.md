@@ -68,14 +68,16 @@ RPC / GeckoTerminal blips. Gate on a stable preview deployment first.
 - **Live-prod data**: trending list / chart values are real and change. Tests
   only assert *structural* things (element existence, layout dims, computed
   colors). Visible numbers are masked or asserted against ranges.
-- **Hydration race on first interaction**: occasionally the very first click
-  in a fresh page is swallowed by a React hydration error (#418). The
-  search-modal-click spec is intentionally written so the **second** click is
-  the regression-critical one — that's the assertion that distinguishes
-  T-SEARCH-CLICK-FIX3 working vs broken.
-- **Color tolerance ±20**: Tailwind v4 ships oklch palette; Chromium's lab→sRGB
+- **Color tolerance ±25**: Tailwind v4 ships oklch palette; Chromium's lab→sRGB
   canvas conversion can drift up to ~18/255 on saturated red. Spec text said
   ±10 but that's tighter than the rendering pipeline gives — see comment in
-  `buysell-color.spec.ts`.
+  `buysell-color.spec.ts`. Bumped to ±25 once palette went transparent
+  (FIX3, emerald-300 / rose-300 text on transparent bg).
+- **First-click navigation regression history**: pre-FIX5 the very first click
+  on a freshly-hydrated `/trade` was swallowed by a React #418 hydration
+  mismatch (root cause: `phantom-connect.ts` module-level constant differed
+  between SSR and CSR). FIX5 (`5da794c`) made the constant a single literal
+  string — both clicks now navigate cleanly. The spec asserts both clicks; if
+  it ever regresses, that's the canary.
 - **No `tests/e2e/` overlap**: those run against `pnpm dev --port 3100` and
   use a separate `playwright.config.ts` at repo root. Don't merge configs.
