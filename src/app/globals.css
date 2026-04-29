@@ -78,11 +78,12 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.65 0.22 25);
+  /* T-BRAND-COLOR-ROLLOUT-V2 · success/destructive 对齐品牌色 · 涨跌 + 通用语义统一 */
+  --destructive: oklch(0.72 0.18 25);       /* == --danger == --brand-down (#FF6B6B 珊瑚粉红) */
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.84 0.23 155 / 50%);
-  --success: oklch(0.84 0.23 155);
+  --success: oklch(0.84 0.23 155);          /* == --primary == --brand-up (#19FB9B 青绿) */
   --danger: oklch(0.72 0.18 25);            /* 跌珊瑚粉红 ≈ #FF6B6B(用户拍板) */
   --warning: oklch(0.78 0.17 80);
   --info: oklch(0.73 0.16 245);
@@ -126,10 +127,10 @@
   --accent: oklch(0.26 0.008 240);
   --accent-foreground: oklch(0.985 0 0);
 
-  /* 语义色 */
-  --success: oklch(0.88 0.25 155);           /* 涨绿(== primary) */
+  /* 语义色 · T-BRAND-COLOR-ROLLOUT-V2 · 涨跌 + 通用语义统一品牌色 · 简化心智模型 */
+  --success: oklch(0.88 0.25 155);           /* == --primary == --brand-up (#19FB9B 青绿) */
   --danger: oklch(0.72 0.18 25);             /* T-BRAND-COLOR-ROLLOUT · 跌珊瑚粉红 ≈ #FF6B6B */
-  --destructive: oklch(0.65 0.23 25);        /* 通用 destructive 仍朱红 · 不混"涨跌"语义 */
+  --destructive: oklch(0.72 0.18 25);        /* == --danger == --brand-down · 错误 toast 也用珊瑚粉(温和) */
   --warning: oklch(0.78 0.17 80);            /* #FFB020 */
   --info: oklch(0.73 0.17 245);              /* #60A5FA */
 
