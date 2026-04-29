@@ -104,9 +104,11 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
               compact ? 'text-xs h-8' : 'h-9',
               'rounded-md border font-medium transition-colors',
               'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40',
-              // base-ui Tab 同时挂 data-active(boolean)+ 部分场景 data-selected · 两个都写更稳
-              'data-active:bg-emerald-900/40 data-active:border-emerald-500/60 data-active:text-emerald-400',
-              'data-[selected=true]:bg-emerald-900/40 data-[selected=true]:border-emerald-500/60 data-[selected=true]:text-emerald-400',
+              // T-BUYSELL-COLOR-FIX2 真因:基类 ui/tabs.tsx 用了 `dark:data-active:bg-input/30`
+              // 比无 dark 前缀的覆盖 specificity 高 · 我们必须挂 `dark:` 才能赢
+              // 用实底色(spec)而非透明 · 跟黑底融合时仍醒目 · ! 后缀(Tailwind v4 important)再加保险
+              'data-active:bg-emerald-700! data-active:text-white! data-active:border-emerald-500!',
+              'dark:data-active:bg-emerald-700! dark:data-active:text-white! dark:data-active:border-emerald-500!',
             ].join(' ')}
           >
             {t('trade.tabs.buy')}
@@ -117,8 +119,8 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
               compact ? 'text-xs h-8' : 'h-9',
               'rounded-md border font-medium transition-colors',
               'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40',
-              'data-active:bg-rose-900/40 data-active:border-rose-500/60 data-active:text-rose-400',
-              'data-[selected=true]:bg-rose-900/40 data-[selected=true]:border-rose-500/60 data-[selected=true]:text-rose-400',
+              'data-active:bg-rose-700! data-active:text-white! data-active:border-rose-500!',
+              'dark:data-active:bg-rose-700! dark:data-active:text-white! dark:data-active:border-rose-500!',
             ].join(' ')}
           >
             {t('trade.tabs.sell')}
