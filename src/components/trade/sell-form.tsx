@@ -409,7 +409,9 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                 className={compact ? 'h-8 text-sm' : undefined}
               />
             </div>
-            <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'}>
+            {/* T-BUYFORM-OKX · 移动 < lg 仍显滑点 + 单档 gas
+                桌面 lg+ 滑点 + 优先级 搬到 sell 按钮下方 settings 行 */}
+            <div className={`${compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'} lg:hidden`}>
               <div className={compact ? 'space-y-1' : 'space-y-2'}>
                 <Label htmlFor="sell-slippage" className={`${compact ? 'text-[11px]' : ''} inline-flex items-center gap-1`}>
                   {t('trade.fields.slippage')}
@@ -432,7 +434,6 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                     ))}
                   </SelectContent>
                 </Select>
-                {/* T-965 #168 · 滑点 > 10% 时红色警告 */}
                 {slippageBps > 1000 && (
                   <div className="text-[10px] text-danger flex items-center gap-1">
                     <AlertCircle className="h-3 w-3 flex-shrink-0" />
@@ -440,20 +441,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
                   </div>
                 )}
               </div>
-              {/* T-OKX-1A · 卖侧也接 4 档 OKX 风优先费 · lg+ 显新 4 档 · <lg 显单档 */}
-              <div className="hidden lg:block">
-                <PriorityTierToggle
-                  id="sell-priority"
-                  value={priorityTier}
-                  onChange={(t) => {
-                    setPriorityTier(t);
-                    setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
-                  }}
-                />
-              </div>
-              <div className="lg:hidden">
-                <GasSelect id="sell-gas" value={gasLevel} onChange={setGasLevel} compact={compact} />
-              </div>
+              <GasSelect id="sell-gas-mobile" value={gasLevel} onChange={setGasLevel} compact={compact} />
             </div>
           </div>
 
@@ -589,6 +577,46 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
               {stage === 'done' && t('trade.buttons.sellAgain')}
             </Button>
           )}
+
+          {/* T-BUYFORM-OKX · 桌面 lg+ sell 按钮下方 settings 行:优先级 4 档 + 滑点 */}
+          <div className="hidden lg:block space-y-2 pt-2">
+            <PriorityTierToggle
+              id="sell-priority"
+              value={priorityTier}
+              onChange={(t) => {
+                setPriorityTier(t);
+                setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
+              }}
+            />
+            <div className="flex items-center gap-2 text-[11px]">
+              <Label htmlFor="sell-slippage-desktop" className="text-muted-foreground/80 inline-flex items-center gap-1 m-0">
+                {t('trade.fields.slippage')}
+              </Label>
+              <Select
+                value={String(slippageBps)}
+                onValueChange={(v) => {
+                  setSlippageBps(Number(v));
+                  slippageTouched.current = true;
+                  resetOnInput();
+                }}
+              >
+                <SelectTrigger id="sell-slippage-desktop" className="h-7 text-xs w-auto min-w-[80px]">
+                  {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
+                </SelectTrigger>
+                <SelectContent>
+                  {SLIPPAGE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {slippageBps > 1000 && (
+                <span className="text-[10px] text-danger inline-flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                  {t('trade.fields.slippageWarn', { pct: (slippageBps / 100).toFixed(0) })}
+                </span>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 

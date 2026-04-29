@@ -384,6 +384,12 @@
       "market": "市价",
       "limit": "限价"
     },
+    "form": {
+      "walletSelected": "已选择 {n} 个钱包",
+      "walletBalance": "余额 {sol} SOL",
+      "quantity": "数量",
+      "autoSellShort": "自动卖出"
+    },
     "quoteStatus": {
       "loading": "查询报价中…",
       "live": "实时报价 · 自动刷新",

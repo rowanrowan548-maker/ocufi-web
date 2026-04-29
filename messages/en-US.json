@@ -384,6 +384,12 @@
       "market": "Market",
       "limit": "Limit"
     },
+    "form": {
+      "walletSelected": "{n} wallet selected",
+      "walletBalance": "Balance {sol} SOL",
+      "quantity": "Amount",
+      "autoSellShort": "Auto-sell"
+    },
     "quoteStatus": {
       "loading": "Fetching quote…",
       "live": "Live · auto-refresh",

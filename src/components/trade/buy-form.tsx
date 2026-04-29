@@ -10,7 +10,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { Loader2, AlertCircle, CheckCircle2, ExternalLink, Shield } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, ExternalLink, Shield, Wallet, Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -443,6 +443,19 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
         )}
 
         <CardContent className={compact ? 'space-y-2 p-2 flex-1' : 'space-y-4'}>
+          {/* T-BUYFORM-OKX · 桌面顶部钱包/余额条(lg+) · 对齐 OKX 截图 */}
+          {compact && wallet.connected && (
+            <div className="hidden lg:flex items-center justify-between text-[11px] text-muted-foreground/80 -mt-1 mb-0.5">
+              <span className="inline-flex items-center gap-1">
+                <Wallet className="h-3 w-3" />
+                {t('trade.form.walletSelected', { n: 1 })}
+              </span>
+              <span className="font-mono tabular-nums">
+                {t('trade.form.walletBalance', { sol: (solBalance ?? 0).toFixed(4) })}
+              </span>
+            </div>
+          )}
+
           {/* 受控时(trade-screen 顶部已有搜索)隐藏自己的 mint 输入 */}
           {mintProp == null && (
             <div className="space-y-2">
@@ -481,7 +494,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                 </div>
               )}
             </div>
-            <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'}>
+            {/* T-BUYFORM-OKX · 移动 < lg 仍显滑点 + 单档 gas(空间不够 priority+slippage 都搬下面)
+                桌面 lg+ 整行隐藏 · 滑点和优先级搬到 buy 按钮下方 OKX 风 settings 行 */}
+            <div className={`${compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-3'} lg:hidden`}>
               <div className={compact ? 'space-y-1' : 'space-y-2'}>
                 <Label htmlFor="buy-slippage" className={`${compact ? 'text-[11px]' : ''} inline-flex items-center gap-1`}>
                   {t('trade.fields.slippage')}
@@ -512,61 +527,73 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
                   </div>
                 )}
               </div>
-              {/* T-OKX-1A · CSS 响应式替代 compact prop · lg+ 4 档 OKX 风 · <lg 单档(空间不够) */}
-              <div className="hidden lg:block">
-                <PriorityTierToggle
-                  id="buy-priority"
-                  value={priorityTier}
-                  onChange={(t) => {
-                    setPriorityTier(t);
-                    setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
-                  }}
-                />
-              </div>
-              <div className="lg:hidden">
-                <GasSelect id="buy-gas" value={gasLevel} onChange={setGasLevel} compact />
-              </div>
+              <GasSelect id="buy-gas-mobile" value={gasLevel} onChange={setGasLevel} compact />
             </div>
           </div>
 
-          {/* 快捷金额 · 0.1 / 0.5 / 1 / MAX
-              T-977b · compact 模式只留 buyAmounts[3] + MAX(50% 列宽塞不下 7 颗) */}
+          {/* T-BUYFORM-OKX · 桌面 lg+ 4 档固定 0.5/1/2/3 + ✏️ pencil(对齐 OKX) · 删 MAX
+              移动 < lg 保留原 buyAmounts + MAX */}
           {wallet.connected && (
-            <div className={compact ? 'grid grid-cols-4 gap-1' : 'flex gap-2 flex-wrap'}>
-              {/* T-929-cont #144:用 buy-prefs-store 的预设(默认 0.1/0.5/1)+ 桌面再补 2/5 SOL */}
-              {(compact ? buyAmounts : [...buyAmounts, 2, 5]).map((v, i) => (
+            <>
+              {/* mobile · 原版 */}
+              <div className={`${compact ? 'grid grid-cols-4 gap-1' : 'flex gap-2 flex-wrap'} lg:hidden`}>
+                {(compact ? buyAmounts : [...buyAmounts, 2, 5]).map((v, i) => (
+                  <Button
+                    key={`m-${v}-${i}`}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
+                    className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-2.5'}
+                  >
+                    {v}
+                  </Button>
+                ))}
                 <Button
-                  key={`${v}-${i}`}
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
-                  className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-2.5'}
+                  disabled={solBalance == null || solBalance <= SOL_RESERVE}
+                  onClick={() => {
+                    if (solBalance == null) return;
+                    const max = Math.max(0, solBalance - SOL_RESERVE);
+                    setSolAmount(max.toFixed(4));
+                    resetOnInput();
+                  }}
+                  className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-3'}
                 >
-                  {v}
+                  {t('trade.quickAmount.max')}
                 </Button>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={solBalance == null || solBalance <= SOL_RESERVE}
-                onClick={() => {
-                  if (solBalance == null) return;
-                  const max = Math.max(0, solBalance - SOL_RESERVE);
-                  setSolAmount(max.toFixed(4));
-                  resetOnInput();
-                }}
-                className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-3'}
-              >
-                {t('trade.quickAmount.max')}
-                {solBalance != null && !compact && (
-                  <span className="ml-1 text-muted-foreground/70 font-mono">
-                    {Math.max(0, solBalance - SOL_RESERVE).toFixed(2)}
-                  </span>
-                )}
-              </Button>
-            </div>
+              </div>
+
+              {/* desktop · OKX 4 档 + ✏️ */}
+              <div className="hidden lg:grid grid-cols-5 gap-1">
+                {[0.5, 1, 2, 3].map((v) => (
+                  <Button
+                    key={`d-${v}`}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
+                    className="h-8 text-xs"
+                  >
+                    {v}
+                  </Button>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    document.getElementById('buy-sol')?.focus();
+                  }}
+                  aria-label={t('trade.form.quantity')}
+                  className="h-8 px-0"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </>
           )}
 
           {/* T-985d · 自动卖出 · T-OKX-1A 改 CSS 响应式 · lg+ 才显(空间够) */}
@@ -765,6 +792,47 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
               {stage === 'done' && t('trade.buttons.buyAgain')}
             </Button>
           )}
+
+          {/* T-BUYFORM-OKX · 桌面 lg+ buy 按钮下方 settings 行:优先级 4 档 + 滑点
+              对齐 OKX 截图 · 移动 < lg 滑点/单档 gas 已在上方 grid-cols-2 行 */}
+          <div className="hidden lg:block space-y-2 pt-2">
+            <PriorityTierToggle
+              id="buy-priority"
+              value={priorityTier}
+              onChange={(t) => {
+                setPriorityTier(t);
+                setGasLevel(PRIORITY_TIER_TO_GAS_LEVEL[t]);
+              }}
+            />
+            <div className="flex items-center gap-2 text-[11px]">
+              <Label htmlFor="buy-slippage-desktop" className="text-muted-foreground/80 inline-flex items-center gap-1 m-0">
+                {t('trade.fields.slippage')}
+              </Label>
+              <Select
+                value={String(slippageBps)}
+                onValueChange={(v) => {
+                  setSlippageBps(Number(v));
+                  slippageTouched.current = true;
+                  resetOnInput();
+                }}
+              >
+                <SelectTrigger id="buy-slippage-desktop" className="h-7 text-xs w-auto min-w-[80px]">
+                  {SLIPPAGE_OPTIONS.find((o) => o.value === String(slippageBps))?.label ?? '—'}
+                </SelectTrigger>
+                <SelectContent>
+                  {SLIPPAGE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {slippageBps > 1000 && (
+                <span className="text-[10px] text-danger inline-flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                  {t('trade.fields.slippageWarn', { pct: (slippageBps / 100).toFixed(0) })}
+                </span>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
