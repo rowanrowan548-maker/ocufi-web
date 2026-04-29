@@ -102,15 +102,19 @@ export function HeaderSearchModal({ open, onClose }: Props) {
 
   const handleNavigate = useCallback(
     (item: { mint: string; symbol: string; logo: string | null }) => {
-      // T-FIX-SEARCH-CLICK · 顺序:先 push 再 saveHistory 再 close
-      // localePrefix=as-needed 下,默认 locale (zh-CN) 不加前缀,其他显式带
-      const path =
-        locale === 'zh-CN'
-          ? `/trade?mint=${item.mint}`
-          : `/${locale}/trade?mint=${item.mint}`;
-      router.push(path);
+      // T-SEARCH-CLICK-FIX2 · 真因:之前用 zh-CN 不加 locale 前缀,
+      // 但同 /trade?mint=A → /trade?mint=B 的 router.push Next 16 Turbopack 下
+      // 在同一 layout segment 内可能不触发 page-level 重渲染,trade-screen
+      // 的 useSearchParams 在某些时序里读到旧 URL · 强制总加 locale 前缀
+      // (localePrefix=as-needed 仍兼容)+ 换 setTimeout 微推 onClose,
+      // 让 router.push 在本帧把 navigation queue 立起来再 unmount modal
+      const path = `/${locale}/trade?mint=${item.mint}`;
+      // 真测 hook · 用户可在浏览器 console 看到一条 log 验证 click 真触发
+      // eslint-disable-next-line no-console
+      console.log('[search-modal] navigate', { mint: item.mint, path });
       saveHistory({ mint: item.mint, symbol: item.symbol, logo: item.logo });
-      onClose();
+      router.push(path);
+      setTimeout(onClose, 0);
     },
     [router, onClose, locale],
   );
@@ -451,10 +455,17 @@ function Row({
   return (
     <button
       type="button"
-      onClick={onSelect}
+      // T-SEARCH-CLICK-FIX2 · 防御:有些场景 child(Image)的 mousedown 改 focus
+      // 但 click 应正常冒泡到 button · stopPropagation 防 backdrop onClick 抢占
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
       onMouseEnter={onHover}
       className={[
-        'w-full grid grid-cols-[1fr_90px] sm:grid-cols-[28px_1fr_90px_90px_90px_90px] gap-2 px-3 py-2 text-left text-xs hover:bg-muted/30 transition-colors',
+        'w-full grid grid-cols-[1fr_90px] sm:grid-cols-[28px_1fr_90px_90px_90px_90px] gap-2 px-3 py-2 text-left text-xs hover:bg-muted/30 transition-colors cursor-pointer',
         active ? 'bg-muted/40' : '',
       ].join(' ')}
     >
