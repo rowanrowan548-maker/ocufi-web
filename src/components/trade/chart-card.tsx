@@ -137,7 +137,8 @@ export function ChartCard({ mint }: Props) {
           <span className="text-muted-foreground/40 ml-auto">{t('toolbar.gtNote')}</span>
         </div>
       )}
-      <div className="relative h-[420px] sm:h-[480px] lg:h-[560px]">
+      {/* T-CHART-COMPRESS · 桌面降 560→400 让一屏看到 ActivityBoard / 审计 / 持仓 */}
+      <div className="relative h-[420px] sm:h-[480px] lg:h-[400px]">
         {iframeSrc && (
           <iframe
             key={`${pool}-${chartType}`}
