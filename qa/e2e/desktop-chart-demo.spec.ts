@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// T-CHART-DEMO + V2 视觉截图 · 自家 K 线 demo · /trade-preview?demo=1
+// T-CHART-DEMO + V2 + V3 视觉截图 · 自家 K 线 demo · /trade-preview?demo=1
 // 不进 CI 回归套件 · 看完用户拍板后整页 git revert 即可
 test('chart-demo · screenshot for user review', async ({ page }) => {
   test.setTimeout(60_000);
@@ -30,10 +30,22 @@ test('chart-demo · screenshot for user review', async ({ page }) => {
     fullPage: false,
   });
 
-  // T-CHART-DEMO-V2 · 4 色红对比追加 · 全页截图(含上方原 demo + 下方 4 色横排)
+  // T-CHART-DEMO-V2 · 4 色红对比追加 · 全页截图
   await page.waitForTimeout(1500);
   await page.screenshot({
     path: 'test-results/chart-demo-v2-full.png',
+    fullPage: true,
+  });
+
+  // T-CHART-DEMO-V3 · 桌面 1920 V3 全页 + 模拟移动 viewport(同 chromium · 不依赖 webkit)
+  await page.screenshot({
+    path: 'test-results/chart-demo-v3-desktop.png',
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 393, height: 852 });
+  await page.waitForTimeout(1500);
+  await page.screenshot({
+    path: 'test-results/chart-demo-v3-mobile.png',
     fullPage: true,
   });
 });
