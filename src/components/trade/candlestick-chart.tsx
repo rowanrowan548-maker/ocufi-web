@@ -29,6 +29,9 @@ import { useCostBasis } from '@/hooks/use-cost-basis';
 import { useTxHistory } from '@/hooks/use-tx-history';
 import { fetchPrice } from '@/lib/api-client';
 import { SOL_MINT } from '@/lib/jupiter';
+import { USDC_MINT } from '@/lib/preset-tokens';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { getTriggerOrders, type TriggerOrder } from '@/lib/jupiter-trigger';
 
 interface Props {
   mint: string;
@@ -53,6 +56,10 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   // T-CHART-FULL-5 · 买卖点 markers · 钱包未连或无该 mint 历史 → 不显
   const { records } = useTxHistory(100);
   const markersPluginRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
+  // T-CHART-FULL-6 · 限价单线 · 取 user active trigger orders
+  const { publicKey } = useWallet();
+  const [orders, setOrders] = useState<TriggerOrder[]>([]);
+  const orderLinesRef = useRef<IPriceLine[]>([]);
   // T-CHART-FULL-3 · crosshair 悬停 tooltip · O/H/L/C + time
   const [hover, setHover] = useState<null | {
     o: number; h: number; l: number; c: number; t: number;
@@ -66,6 +73,66 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       .catch(() => { /* ignore · 没价就不画线 */ });
     return () => { cancelled = true; };
   }, []);
+
+  // T-CHART-FULL-6 · 拉用户 active trigger orders · 30s 自动刷
+  useEffect(() => {
+    if (!publicKey) { setOrders([]); return; }
+    let cancelled = false;
+    const userPk = publicKey.toBase58();
+    const load = () => {
+      getTriggerOrders(userPk, 'active')
+        .then((r) => { if (!cancelled) setOrders(r.orders); })
+        .catch(() => { if (!cancelled) setOrders([]); });
+    };
+    load();
+    const timer = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [publicKey]);
+
+  // T-CHART-FULL-6 · 限价单线 · orders/mint/solUsdPrice 任一变都重画
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+    // 先清旧
+    for (const line of orderLinesRef.current) {
+      try { series.removePriceLine(line); } catch { /* noop */ }
+    }
+    orderLinesRef.current = [];
+    if (!mint || orders.length === 0) return;
+    const root = getComputedStyle(document.documentElement);
+    const upColor = root.getPropertyValue('--brand-up').trim() || '#19FB9B';
+    const downColor = root.getPropertyValue('--brand-down').trim() || '#FF6B6B';
+    for (const o of orders) {
+      const isBuy = o.outputMint === mint;     // 买:换进 mint
+      const isSell = o.inputMint === mint;     // 卖:换出 mint
+      if (!isBuy && !isSell) continue;
+      const making = parseFloat(o.makingAmount);
+      const taking = parseFloat(o.takingAmount);
+      if (!Number.isFinite(making) || !Number.isFinite(taking) || making <= 0 || taking <= 0) continue;
+      // 计算 USD 单价
+      let priceUsd = 0;
+      if (isBuy) {
+        // input → mint:price = makingAmount(input) / takingAmount(mint) × inputUsd
+        const inputUsd = o.inputMint === SOL_MINT ? solUsdPrice : o.inputMint === USDC_MINT ? 1 : 0;
+        if (!inputUsd) continue;
+        priceUsd = (making / taking) * inputUsd;
+      } else {
+        // mint → output:price = takingAmount(output) / makingAmount(mint) × outputUsd
+        const outputUsd = o.outputMint === SOL_MINT ? solUsdPrice : o.outputMint === USDC_MINT ? 1 : 0;
+        if (!outputUsd) continue;
+        priceUsd = (taking / making) * outputUsd;
+      }
+      if (!priceUsd || !Number.isFinite(priceUsd)) continue;
+      orderLinesRef.current.push(series.createPriceLine({
+        price: priceUsd,
+        color: isBuy ? upColor : downColor,
+        lineWidth: 1,
+        lineStyle: LineStyle.Dotted,
+        axisLabelVisible: true,
+        title: `${isBuy ? t('limitBuy') : t('limitSell')} ${making.toFixed(2)}`,
+      }));
+    }
+  }, [orders, mint, solUsdPrice, t]);
 
   // T-CHART-FULL-5 · 买卖点 markers · records/mint 变化重设
   useEffect(() => {
