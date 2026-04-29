@@ -36,8 +36,7 @@ import {
 } from '@solana/web3.js';
 import type { JupiterQuote, GasLevel } from './jupiter';
 import { getCurrentChain } from '@/config/chains';
-import { SOL_MINT, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from './portfolio';
-import { createCloseAccountIx } from './close-accounts';
+import { SOL_MINT, TOKEN_2022_PROGRAM_ID } from './portfolio';
 
 const GAS_CONFIG: Record<GasLevel, { priorityLevel: string; maxLamports: number }> = {
   normal: { priorityLevel: 'medium', maxLamports: 5_000 },
@@ -261,12 +260,9 @@ export async function prepareSwapTxs(
   const userPubkey = new PublicKey(userPublicKey);
 
   // 0. 卖出场景 ATA 余额 sanity check(挡 30s 轮询余额竞态 N3)
-  //    + T-REWARDS-CLOSE-ACCOUNT-TX · 100% 全卖时记录 ATA · cleanup 自动追加 closeAccount 退押金
-  let fullSellAta: PublicKey | null = null; // 100% 卖出时的源 ATA · 用于自动 close 退押金
   if (quote.inputMint !== SOL_MINT) {
     let onChainTotal = BigInt(0);
     let probeOk = false;
-    const accountsForMint: { ata: PublicKey; amount: bigint }[] = [];
     try {
       const res = await connection.getParsedTokenAccountsByOwner(userPubkey, {
         mint: new PublicKey(quote.inputMint),
@@ -276,11 +272,7 @@ export async function prepareSwapTxs(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const info: any = acc.account.data;
         const amt = info?.parsed?.info?.tokenAmount;
-        const raw = BigInt(String(amt?.amount ?? '0'));
-        if (raw > BigInt(0)) {
-          onChainTotal += raw;
-          accountsForMint.push({ ata: acc.pubkey, amount: raw });
-        }
+        if (amt) onChainTotal += BigInt(String(amt.amount ?? '0'));
       }
     } catch (e) {
       console.warn('[swap-with-fee] balance precheck failed, skipping:', e);
@@ -290,17 +282,12 @@ export async function prepareSwapTxs(
       if (onChainTotal < need) {
         throw new Error('__ERR_BALANCE_DRIFT');
       }
-      // 100% 全卖 + 单 ATA 场景 · 标记自动 close · 多 ATA 场景由"奖励中心"批量处理
-      if (onChainTotal === need && accountsForMint.length === 1) {
-        fullSellAta = accountsForMint[0].ata;
-      }
     }
   }
 
-  // 0.5. T-814 · Token-2022 兼容 · 同时记录 inputMint 的 token program(给 closeAccount ix 用)
+  // 0.5. T-814 · Token-2022 兼容
   const nonSolMint = quote.inputMint === SOL_MINT ? quote.outputMint : quote.inputMint;
   let useSharedAccounts = true;
-  let inputMintProgramId: PublicKey = TOKEN_PROGRAM_ID; // close ix 走 classic 默认 · Token-2022 时切
   try {
     const info = await connection.getAccountInfo(new PublicKey(nonSolMint));
     if (info && info.owner.toBase58() === TOKEN_2022_PROGRAM_ID.toBase58()) {
@@ -309,13 +296,6 @@ export async function prepareSwapTxs(
         '[swap-with-fee] Token-2022 mint detected, useSharedAccounts=false:',
         nonSolMint.slice(0, 8)
       );
-    }
-    // 卖出场景 · inputMint 的 program id · 给后面 closeAccount ix 用
-    if (quote.inputMint !== SOL_MINT) {
-      const inInfo = await connection.getAccountInfo(new PublicKey(quote.inputMint));
-      if (inInfo && inInfo.owner.toBase58() === TOKEN_2022_PROGRAM_ID.toBase58()) {
-        inputMintProgramId = TOKEN_2022_PROGRAM_ID;
-      }
     }
   } catch (e) {
     console.warn(
@@ -385,14 +365,8 @@ export async function prepareSwapTxs(
       : [];
 
   // 5. swap + cleanup
-  //    + T-REWARDS-CLOSE-ACCOUNT-TX · 100% 全卖时追加 closeAccount 退 ~0.00204 SOL 押金
-  //    Note:size 超 1150 时下面"决策"段会自动剥离 close ix(降级 · 用户可去 /rewards 批量回收)
   const swapAndCleanup: TransactionInstruction[] = [jsonToIx(resp.swapInstruction)];
   if (resp.cleanupInstruction) swapAndCleanup.push(jsonToIx(resp.cleanupInstruction));
-  const autoCloseIx: TransactionInstruction | null = fullSellAta
-    ? createCloseAccountIx(fullSellAta, userPubkey, inputMintProgramId)
-    : null;
-  if (autoCloseIx) swapAndCleanup.push(autoCloseIx);
 
   // 6. 加载 ALT
   const alts: AddressLookupTableAccount[] = await Promise.all(
@@ -408,36 +382,14 @@ export async function prepareSwapTxs(
 
   // 7. 试组单笔 tx · 看 size 决定 single / split
   const { blockhash } = await connection.getLatestBlockhash('confirmed');
-
-  // T-REWARDS-CLOSE-ACCOUNT-TX size 保护:
-  //   先尝试含 close ix 的版本 · 超 1150 → 剥 close 让普通 swap 优先 · close 让用户去 /rewards 后续清
-  let swapAndCleanupFinal = swapAndCleanup;
-  let closeStripped = false;
-  if (autoCloseIx) {
-    const trial = compileV0Tx(
-      userPubkey,
-      blockhash,
-      [...computeBudgetIxs, ...setupIxs, ...buildFeeIxs(true), ...swapAndCleanup],
-      alts
-    );
-    if (trial.serialize().length > PHANTOM_SAFE_SIZE_LIMIT) {
-      swapAndCleanupFinal = swapAndCleanup.filter((ix) => ix !== autoCloseIx);
-      closeStripped = true;
-      console.info(
-        '[swap-with-fee] auto-close skipped · size > 1150 · use /rewards page to claim later'
-      );
-    }
-  }
-
   const singleAllIxs = [
     ...computeBudgetIxs,
     ...setupIxs,
     ...buildFeeIxs(true), // single 模式保留 memo
-    ...swapAndCleanupFinal,
+    ...swapAndCleanup,
   ];
   const singleTx = compileV0Tx(userPubkey, blockhash, singleAllIxs, alts);
   const singleSize = singleTx.serialize().length;
-  void closeStripped; // 仅 console.info 用 · 不外漏
 
   // 8. 决策
   const needSplit = setupIxs.length > 0 && singleSize > PHANTOM_SAFE_SIZE_LIMIT;
@@ -462,8 +414,7 @@ export async function prepareSwapTxs(
   await simulateOrThrow(connection, setupTx);
 
   // swap tx 闭包 · 调用时拿 fresh blockhash · 不带 memo(Rory 强调删)
-  // 这里用 swapAndCleanupFinal · close ix 已按 size 决定保留/剥离
-  const swapTxIxs = [...computeBudgetIxs, ...buildFeeIxs(false), ...swapAndCleanupFinal];
+  const swapTxIxs = [...computeBudgetIxs, ...buildFeeIxs(false), ...swapAndCleanup];
   const buildSwapTx = (freshBlockhash: string): VersionedTransaction => {
     const swapTx = compileV0Tx(userPubkey, freshBlockhash, swapTxIxs, alts);
     // swap tx 严格不超 Solana 上限(没法再拆,拆完仍超只能报错)
