@@ -39,6 +39,10 @@ import {
   useChartUnit,
   useSetChartUnit,
 } from '@/lib/chart-unit-store';
+import {
+  useChartSource,
+  useSetChartSource,
+} from '@/lib/chart-source-store';
 import type { Timeframe } from '@/lib/ohlc';
 
 type ChartType = 'price' | 'market_cap';
@@ -58,8 +62,9 @@ export function ChartCard({ mint }: Props) {
   const [errored, setErrored] = useState(false);
   // T-OKX-3 · Price / 市值 toggle(GT iframe 支持的唯一动态参数)
   const [chartType, setChartType] = useState<ChartType>('price');
-  // T-CHART-FULL-1 · 自家图 / GT 图 toggle · 默认 GT (稳定先行) · 用户主动切换体验自家图
-  const [chartSource, setChartSource] = useState<ChartSource>('gt');
+  // T-CHART-FULL-1+10 · 自家图 / GT 图 toggle · 默认 GT(稳定)· zustand 持久化用户选择
+  const chartSource = useChartSource() as ChartSource;
+  const setChartSource = useSetChartSource();
   // T-CHART-FULL-2 · 时间段(zustand 持久化 · 6 档 · 仅自家图生效)
   const tf = useChartTimeframe();
   const setTf = useSetChartTimeframe();
