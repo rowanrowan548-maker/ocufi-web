@@ -30,10 +30,17 @@ export const PHANTOM_APP_ID = process.env.NEXT_PUBLIC_PHANTOM_APP_ID ?? '';
 /**
  * OAuth 回调 URL · Phantom Connect 走 google/apple 时需要回跳
  * 默认用站点根 + /auth/phantom-callback,前端可在 layout 路由层补上对应 page
+ *
+ * T-SEARCH-CLICK-FIX5 · 真因:此值是 module-scope 常量,作为 PhantomProvider config
+ * 的 authOptions.redirectUrl 传下去 · 必须 SSR/CSR 两端一致 · 否则 React #418 hydration
+ * mismatch · 导致整个 desktop 子树 re-create · 第一个 click handler 没绑成 → 用户表象
+ * "搜索 modal 点击不跳转 · 4 次 v4 log 都触发但 URL 不动"
+ *
+ * 修:删 `typeof window` 分支(SSR='', CSR='http://...')· 一律用 prod URL 兜底
  */
 export const PHANTOM_REDIRECT_URL =
   process.env.NEXT_PUBLIC_PHANTOM_REDIRECT_URL ??
-  (typeof window !== 'undefined' ? `${window.location.origin}/auth/phantom-callback` : '');
+  'https://www.ocufi.io/auth/phantom-callback';
 
 /** 显示在 Phantom Connect 弹窗顶部的 app 名 */
 export const PHANTOM_APP_NAME = 'Ocufi · Solana Trading Terminal';
