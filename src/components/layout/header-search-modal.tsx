@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Search, X, ClipboardPaste, Loader2 } from 'lucide-react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { fetchMarketsTrending, type MarketItem } from '@/lib/api-client';
 import { searchTokens, type TokenInfo } from '@/lib/portfolio';
 
@@ -88,7 +88,6 @@ function clearHistory() {
 export function HeaderSearchModal({ open, onClose }: Props) {
   const t = useTranslations('nav.searchModal');
   const router = useRouter();
-  const locale = useLocale();
   const [tab, setTab] = useState<'tokens' | 'dapps'>('tokens');
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -102,21 +101,22 @@ export function HeaderSearchModal({ open, onClose }: Props) {
 
   const handleNavigate = useCallback(
     (item: { mint: string; symbol: string; logo: string | null }) => {
-      // T-SEARCH-CLICK-FIX2 · 真因:之前用 zh-CN 不加 locale 前缀,
-      // 但同 /trade?mint=A → /trade?mint=B 的 router.push Next 16 Turbopack 下
-      // 在同一 layout segment 内可能不触发 page-level 重渲染,trade-screen
-      // 的 useSearchParams 在某些时序里读到旧 URL · 强制总加 locale 前缀
-      // (localePrefix=as-needed 仍兼容)+ 换 setTimeout 微推 onClose,
-      // 让 router.push 在本帧把 navigation queue 立起来再 unmount modal
-      const path = `/${locale}/trade?mint=${item.mint}`;
-      // 真测 hook · 用户可在浏览器 console 看到一条 log 验证 click 真触发
+      // T-SEARCH-CLICK-FIX3 · 真因(第 7 轮反馈):第一次点 ✓ 第二次 ✗
+      //   - router.push 同 pathname 不同 query · Next 16 Turbopack 在
+      //     trade-screen 已有 history.replaceState 写 URL 的副作用下,
+      //     router 内部 state 跟实际 URL 已 desync · 第二次 push "看似同路径"被 dedup
+      //   - 修法:① 不再加 locale 前缀(localePrefix=as-needed 自处理) ·
+      //     避免 middleware redirect 引入额外 nav 跳;② 在 push 之后 router.refresh()
+      //     强制 server / client 都 invalidate;③ rAF close 让 push commit 后再 unmount
+      const path = `/trade?mint=${item.mint}`;
       // eslint-disable-next-line no-console
-      console.log('[search-modal] navigate', { mint: item.mint, path });
+      console.log('[search-modal] navigate v3', { mint: item.mint, path });
       saveHistory({ mint: item.mint, symbol: item.symbol, logo: item.logo });
       router.push(path);
-      setTimeout(onClose, 0);
+      router.refresh();
+      requestAnimationFrame(() => onClose());
     },
-    [router, onClose, locale],
+    [router, onClose],
   );
 
   // open 切 true 时 reset state + autofocus

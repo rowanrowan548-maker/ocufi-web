@@ -91,11 +91,18 @@ export function TradeScreen() {
     if (s === 'buy' || s === 'sell') setDefaultSide(s);
   }, [searchParams, mint]);
 
+  // T-SEARCH-CLICK-FIX3 · 真因:write effect 用 history.replaceState 直接改 URL
+  // 跳过 Next router · 导致 router 内部 state 跟实际 URL desync · 第二次 router.push
+  // 同 pathname 不同 query 时被 dedup 不刷新
+  // 修:URL 已经一致就 skip · 不抢 router state · 只在 mount 后清理 default mint
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!isValidMint(mint)) return;
     const url = new URL(window.location.href);
-    if (mint === DEFAULT_TRADE_MINT) url.searchParams.delete('mint');
+    const target = mint === DEFAULT_TRADE_MINT ? null : mint;
+    const current = url.searchParams.get('mint');
+    if (current === target) return; // already in sync · 不写
+    if (target === null) url.searchParams.delete('mint');
     else url.searchParams.set('mint', mint);
     window.history.replaceState({}, '', url.toString());
   }, [mint]);
