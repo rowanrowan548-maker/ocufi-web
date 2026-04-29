@@ -104,7 +104,10 @@ export function OrderList({ refreshTick = 0 }: Props) {
         order: order.orderKey,
       });
       const tx = VersionedTransaction.deserialize(Buffer.from(res.transaction, 'base64'));
-      const sig = await signAndSendTx(connection, wallet, tx);
+      // T-MEV-REBATE-FE · cancel 走 rebate URL 一致性 · 没 swap 也无害
+      const sig = await signAndSendTx(connection, wallet, tx, {
+        rebateForUser: wallet.publicKey ?? undefined,
+      });
       await confirmTx(connection, sig, 60_000);
       track('limit_order_cancelled', { orderKey: order.orderKey });
       refresh();

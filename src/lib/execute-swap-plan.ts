@@ -10,7 +10,7 @@
  * Rory 强调:setup 成功但 swap 失败 → 必须有 cleanup 逃生口(unwrap WSOL)
  * 此处通过 onSetupConfirmed callback 让上层标记"用户有未完成 wrap" · 失败时弹 cleanup toast。
  */
-import type { Connection, VersionedTransaction } from '@solana/web3.js';
+import type { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import type { JupiterQuote, GasLevel } from './jupiter';
 import { prepareSwapTxs } from './swap-with-fee';
@@ -27,6 +27,12 @@ export interface ExecuteSwapOpts {
   platformFeeBps?: number;
   /** confirm 超时(默认 60s) */
   confirmTimeoutMs?: number;
+  /**
+   * T-MEV-REBATE-FE · 用户钱包(PublicKey 或 base58 string)
+   * 透传给底层 signAndSendTx · 触发 Helius rebate URL · MEV 50% 返用户
+   * undefined / env 没配 → 走默认 connection(向后兼容)
+   */
+  rebateForUser?: PublicKey | string;
 }
 
 export interface ExecuteSwapResult {
@@ -57,6 +63,9 @@ export async function executeSwapPlan(
   const userPk = wallet.publicKey.toBase58();
   const onStage = opts.onStage ?? (() => {});
   const confirmTimeoutMs = opts.confirmTimeoutMs ?? 60_000;
+  // T-MEV-REBATE-FE · 默认用 wallet.publicKey · 调用方可显式 override
+  const rebateForUser = opts.rebateForUser ?? wallet.publicKey;
+  const sendOpts = { rebateForUser };
 
   // 1. 决策 single / split
   const plan = await prepareSwapTxs(connection, quote, userPk, gasLevel);
@@ -65,7 +74,7 @@ export async function executeSwapPlan(
     // 老路径
     onStage('signing');
     onStage('sending');
-    const sig = await signAndSendTx(connection, wallet, plan.tx);
+    const sig = await signAndSendTx(connection, wallet, plan.tx, sendOpts);
     onStage('confirming');
     const confirmed = await confirmTx(connection, sig, confirmTimeoutMs);
     if (!confirmed) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
@@ -76,7 +85,7 @@ export async function executeSwapPlan(
   // 第 1 笔(setup · 通常是 wrap SOL + create ATA)
   onStage('signing');
   onStage('sending');
-  const setupSig = await signAndSendTx(connection, wallet, plan.setupTx);
+  const setupSig = await signAndSendTx(connection, wallet, plan.setupTx, sendOpts);
   onStage('confirming');
   const setupOk = await confirmTx(connection, setupSig, confirmTimeoutMs);
   if (!setupOk) throw new Error(`__ERR_SETUP_UNCONFIRMED:${setupSig}`);
@@ -91,7 +100,7 @@ export async function executeSwapPlan(
 
   onStage('signing');
   onStage('sending');
-  const sig = await signAndSendTx(connection, wallet, swapTx);
+  const sig = await signAndSendTx(connection, wallet, swapTx, sendOpts);
   onStage('confirming');
   const swapOk = await confirmTx(connection, sig, confirmTimeoutMs);
   if (!swapOk) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
