@@ -34,6 +34,31 @@
     "search": {
       "placeholder": "Token / address / DApp..."
     },
+    "searchModal": {
+      "title": "Search",
+      "inputPlaceholder": "Search tokens, contract address, DApp",
+      "paste": "Paste contract",
+      "pasted": "Pasted",
+      "pasteFail": "Cannot read clipboard",
+      "history": "Recent searches",
+      "historyClear": "Clear",
+      "tabs": {
+        "tokens": "Tokens",
+        "dapps": "DApps"
+      },
+      "trending": "Trending",
+      "empty": "No results",
+      "loading": "Searching…",
+      "table": {
+        "rank": "#",
+        "name": "Name",
+        "price": "Price",
+        "liquidity": "Liquidity",
+        "vol1h": "1h Vol",
+        "marketCap": "Market Cap"
+      },
+      "comingSoon": "Coming soon"
+    },
     "descriptions": {
       "trending": "Discover trending tokens & market signals",
       "watchlist": "Create watchlist for real-time tracking",

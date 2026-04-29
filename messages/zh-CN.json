@@ -34,6 +34,31 @@
     "search": {
       "placeholder": "币种 / 地址 / DApp..."
     },
+    "searchModal": {
+      "title": "搜索",
+      "inputPlaceholder": "搜索代币、合约地址、DApp",
+      "paste": "粘贴合约地址",
+      "pasted": "已粘贴",
+      "pasteFail": "无法读取剪贴板",
+      "history": "搜索历史",
+      "historyClear": "清除",
+      "tabs": {
+        "tokens": "代币",
+        "dapps": "DApp"
+      },
+      "trending": "热门趋势",
+      "empty": "无结果",
+      "loading": "搜索中…",
+      "table": {
+        "rank": "#",
+        "name": "名称",
+        "price": "价格",
+        "liquidity": "流动性",
+        "vol1h": "1h 成交",
+        "marketCap": "市值"
+      },
+      "comingSoon": "即将上线"
+    },
     "descriptions": {
       "trending": "洞察市场趋势,发现热门代币",
       "watchlist": "创建自选列表,实时追踪动态",
