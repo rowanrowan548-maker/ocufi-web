@@ -15,14 +15,18 @@ import {
   CandlestickSeries,
   CrosshairMode,
   LineStyle,
+  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type IPriceLine,
+  type ISeriesMarkersPluginApi,
+  type SeriesMarker,
   type Time,
 } from 'lightweight-charts';
 import { Loader2, LineChart } from 'lucide-react';
 import { fetchOhlc, type Timeframe } from '@/lib/ohlc';
 import { useCostBasis } from '@/hooks/use-cost-basis';
+import { useTxHistory } from '@/hooks/use-tx-history';
 import { fetchPrice } from '@/lib/api-client';
 import { SOL_MINT } from '@/lib/jupiter';
 
@@ -46,6 +50,9 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   // T-CHART-FULL-4 · 平均买入价线 · 钱包未连或无持仓 → 不显
   const { costs } = useCostBasis();
   const [solUsdPrice, setSolUsdPrice] = useState<number>(0);
+  // T-CHART-FULL-5 · 买卖点 markers · 钱包未连或无该 mint 历史 → 不显
+  const { records } = useTxHistory(100);
+  const markersPluginRef = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
   // T-CHART-FULL-3 · crosshair 悬停 tooltip · O/H/L/C + time
   const [hover, setHover] = useState<null | {
     o: number; h: number; l: number; c: number; t: number;
@@ -59,6 +66,34 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       .catch(() => { /* ignore · 没价就不画线 */ });
     return () => { cancelled = true; };
   }, []);
+
+  // T-CHART-FULL-5 · 买卖点 markers · records/mint 变化重设
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+    if (!markersPluginRef.current) {
+      markersPluginRef.current = createSeriesMarkers<Time>(series, []);
+    }
+    if (!mint) {
+      markersPluginRef.current.setMarkers([]);
+      return;
+    }
+    const root = getComputedStyle(document.documentElement);
+    const upColor = root.getPropertyValue('--brand-up').trim() || '#19FB9B';
+    const downColor = root.getPropertyValue('--brand-down').trim() || '#FF6B6B';
+    // 过滤当前 mint 的 buy/sell · 取最近 30 笔(防卡)
+    const filtered = records
+      .filter((r) => (r.type === 'buy' || r.type === 'sell') && r.tokenMint === mint && r.blockTime)
+      .slice(0, 30);
+    const markers: SeriesMarker<Time>[] = filtered.map((r) => ({
+      time: r.blockTime as unknown as Time,
+      position: r.type === 'buy' ? 'belowBar' : 'aboveBar',
+      color: r.type === 'buy' ? upColor : downColor,
+      shape: r.type === 'buy' ? 'arrowUp' : 'arrowDown',
+      text: `${r.type === 'buy' ? 'B' : 'S'} ${r.solAmount.toFixed(2)}`,
+    }));
+    markersPluginRef.current.setMarkers(markers);
+  }, [records, mint]);
 
   // T-CHART-FULL-4 · 成本线 createPriceLine · costs/mint/solUsdPrice 任一变都重画
   useEffect(() => {
