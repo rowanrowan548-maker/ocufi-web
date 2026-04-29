@@ -58,11 +58,11 @@ function MiniChart({ candles, redHex }: MiniProps) {
     const container = ref.current;
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 220,
+      height: 400,
       layout: {
         background: { color: '#0a0a0a' },
-        textColor: '#737373',
-        fontSize: 10,
+        textColor: '#a3a3a3',
+        fontSize: 12,
       },
       grid: {
         vertLines: { color: '#1a1a1a' },
@@ -111,7 +111,7 @@ function MiniChart({ candles, redHex }: MiniProps) {
     <div
       ref={ref}
       className="rounded-lg border border-border/40 overflow-hidden bg-[#0a0a0a]"
-      style={{ height: 220 }}
+      style={{ height: 400 }}
     />
   );
 }
@@ -142,22 +142,28 @@ export function RedCandidates({ mint }: Props) {
   }, [mint]);
 
   return (
-    <div className="mt-8 space-y-3">
+    <div className="mt-8 space-y-4">
       <div className="text-xs uppercase tracking-wider text-amber-400/80 font-mono">
-        T-CHART-DEMO-V2 · 4 色红对比
+        T-CHART-DEMO-V3 · 4 色红对比(放大版)
       </div>
-      <h2 className="text-lg font-semibold">挑一个红色 · 后续完整版用</h2>
-      <p className="text-xs text-muted-foreground">
+      <h2 className="text-xl font-semibold">挑一个红色 · 后续完整版用</h2>
+      <p className="text-sm text-muted-foreground">
         涨色统一 emerald-500(跟 logo 4 弧绿同色)· 跌色为 4 个候选 · 数据共享 BONK 5m
       </p>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* V3 · 桌面 2x2 大格 / 移动单列 · 高 400px · 标签放大 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {RED_CANDIDATES.map((c) => (
-          <div key={c.hex} className="space-y-1.5">
+          <div key={c.hex} className="space-y-2">
             <MiniChart candles={candles} redHex={c.hex} />
-            <div className="text-center text-xs">
-              <span className="text-foreground">{c.name}</span>
-              <span className="ml-1.5 font-mono text-muted-foreground">{c.hex}</span>
+            <div className="text-center text-base flex items-center justify-center gap-2">
+              <span
+                className="inline-block h-3 w-3 rounded-sm border border-border/40"
+                style={{ background: c.hex }}
+                aria-hidden="true"
+              />
+              <span className="font-semibold text-foreground">{c.name}</span>
+              <span className="font-mono text-sm text-muted-foreground">{c.hex}</span>
             </div>
           </div>
         ))}
