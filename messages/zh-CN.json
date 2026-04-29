@@ -343,6 +343,7 @@
       "myCost": "我的成本",
       "limitBuy": "挂单买",
       "limitSell": "挂单卖",
+      "alertAt": "提醒 $",
       "toolbar": {
         "price": "价格",
         "marketCap": "市值",

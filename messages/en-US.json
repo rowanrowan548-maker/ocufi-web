@@ -343,6 +343,7 @@
       "myCost": "My cost",
       "limitBuy": "Buy @",
       "limitSell": "Sell @",
+      "alertAt": "Alert $",
       "toolbar": {
         "price": "Price",
         "marketCap": "Market cap",

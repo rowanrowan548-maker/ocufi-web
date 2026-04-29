@@ -27,6 +27,7 @@ import { Loader2, LineChart } from 'lucide-react';
 import { fetchOhlc, type Timeframe } from '@/lib/ohlc';
 import { useCostBasis } from '@/hooks/use-cost-basis';
 import { useTxHistory } from '@/hooks/use-tx-history';
+import { usePriceAlerts } from '@/hooks/use-price-alerts';
 import { fetchPrice } from '@/lib/api-client';
 import { SOL_MINT } from '@/lib/jupiter';
 import { USDC_MINT } from '@/lib/preset-tokens';
@@ -60,6 +61,9 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   const { publicKey } = useWallet();
   const [orders, setOrders] = useState<TriggerOrder[]>([]);
   const orderLinesRef = useRef<IPriceLine[]>([]);
+  // T-CHART-FULL-7 · 提醒线 · 复用 usePriceAlerts(已有 20s 轮询)
+  const { alerts } = usePriceAlerts();
+  const alertLinesRef = useRef<IPriceLine[]>([]);
   // T-CHART-FULL-3 · crosshair 悬停 tooltip · O/H/L/C + time
   const [hover, setHover] = useState<null | {
     o: number; h: number; l: number; c: number; t: number;
@@ -133,6 +137,31 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       }));
     }
   }, [orders, mint, solUsdPrice, t]);
+
+  // T-CHART-FULL-7 · 提醒线 · alerts/mint 任一变都重画
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+    for (const line of alertLinesRef.current) {
+      try { series.removePriceLine(line); } catch { /* noop */ }
+    }
+    alertLinesRef.current = [];
+    if (!mint || alerts.length === 0) return;
+    for (const a of alerts) {
+      if (a.mint !== mint) continue;
+      if (a.triggered) continue;             // 已触发不显
+      if (a.is_active === false) continue;   // 暂停的不显
+      if (!Number.isFinite(a.target_usd) || a.target_usd <= 0) continue;
+      alertLinesRef.current.push(series.createPriceLine({
+        price: a.target_usd,
+        color: '#F59E0B',                    // amber 中性色 · 区别买卖
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: `🔔 ${t('alertAt')} ${a.target_usd}`,
+      }));
+    }
+  }, [alerts, mint, t]);
 
   // T-CHART-FULL-5 · 买卖点 markers · records/mint 变化重设
   useEffect(() => {
