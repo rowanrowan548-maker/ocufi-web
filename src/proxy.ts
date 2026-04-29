@@ -102,7 +102,9 @@ export const config = {
   // 这些路径不进 middleware,Vercel CDN 直接返回静态文件,不会被 launch 锁拦截
   // T-821 fix:manifest.webmanifest 被 i18n middleware redirect 到 /<locale>/manifest.webmanifest 致 404
   // 加排除,让 Next.js 直接命中 src/app/manifest.ts 的根级 static manifest
+  // T-OG-IMAGE-FIX:同 manifest 道理 · opengraph-image / twitter-image 也是根级 file convention
+  // 走 i18n redirect 会找不到 src/app/[locale]/opengraph-image · 死循环 → 404
   matcher: [
-    '/((?!_next/|_vercel/|api/|branding/|favicon\\.ico|sw\\.js|robots\\.txt|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot|html)$).*)',
+    '/((?!_next/|_vercel/|api/|branding/|favicon\\.ico|sw\\.js|robots\\.txt|manifest\\.webmanifest|opengraph-image|twitter-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot|html)$).*)',
   ],
 };
