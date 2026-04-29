@@ -28,7 +28,16 @@ export default defineConfig({
         viewport: { width: 1920, height: 1080 },
         deviceScaleFactor: 1,
       },
-      testMatch: /desktop-.*\.spec\.ts/,
+      testMatch: /desktop-(trade|search)-.*\.spec\.ts/,
+    },
+    {
+      name: 'daily-smoke',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
+        deviceScaleFactor: 1,
+      },
+      testMatch: /daily-smoke\.spec\.ts/,
     },
     {
       name: 'iphone-14-pro',
