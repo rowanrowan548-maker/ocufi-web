@@ -32,6 +32,7 @@ import { PoolStatsOneHour } from './pool-stats-1h';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
 import { ErrorBoundary } from '@/components/common/error-boundary';
+import { WrapCleanupToast } from './wrap-cleanup-toast';
 
 function isValidMint(s: string): boolean {
   try {
@@ -124,6 +125,8 @@ export function TradeScreen() {
   return (
     <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:max-w-none lg:mx-0 lg:px-4 py-2 sm:py-6 space-y-2 sm:space-y-4">
       <RpcHealthBanner />
+      {/* T-PHANTOM-SPLIT-TX-FE · 检测上次有未完成 wrap · mount 时 toast */}
+      <WrapCleanupToast />
       {/* T-SEARCH-DEDUP · 删除桌面端 TokenSearchCombo 独立卡(冗余)
           切币只通过顶部 header search → /trade?mint= · trading-header 顶部仍有 SYMBOL+price */}
 

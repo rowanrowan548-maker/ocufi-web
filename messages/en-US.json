@@ -729,6 +729,12 @@
       "slippageTooLow": "Slippage too low. Try raising it to 5-10%.",
       "token2022Incompatible": "This token uses Token-2022 standard, not supported yet. Try a standard SPL token.",
       "staleBlockhash": "Transaction expired due to network latency. Please retry."
+    },
+    "wrapCleanup": {
+      "title": "Pending wrap from last attempt",
+      "desc": "Your last large-route swap needed 2 signatures · setup landed but swap didn't · you may have wrapped SOL stuck in your wallet",
+      "viewTx": "View setup tx",
+      "dismiss": "Dismiss"
     }
   },
   "portfolio": {

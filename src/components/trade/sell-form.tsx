@@ -28,8 +28,9 @@ import {
   type GasLevel,
 } from '@/lib/jupiter';
 import { recommendedSlippageBps } from '@/lib/verified-tokens';
-import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
-import { signAndSendTx, confirmTx, analyzeTx } from '@/lib/trade-tx';
+import { executeSwapPlan } from '@/lib/execute-swap-plan';
+import { markPendingWrap, clearPendingWrap } from '@/lib/wrap-cleanup';
+import { analyzeTx } from '@/lib/trade-tx';
 import { useTokenBalance } from '@/hooks/use-token-balance';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
@@ -206,25 +207,21 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
     setProgressStartedAt(Date.now());
 
     try {
-      setStage('signing');
-      // 卖出走相同 /swap-instructions 路径,feeBps=0(内部会跳过 fee ix)
-      const tx = await buildSwapTxWithFee(
+      // T-PHANTOM-SPLIT-TX-FE · 走 prepareSwapTxs · 卖出 feeBps=0(内部跳过 fee ix · 走 single 多)
+      const result = await executeSwapPlan(
         connection,
+        wallet,
         quoteData.quote,
-        wallet.publicKey.toBase58(),
         gasLevel,
-        0
+        {
+          onStage: (s) => setStage(s),
+          onSetupConfirmed: (setupSig) => markPendingWrap(setupSig, mint.trim()),
+          confirmTimeoutMs: 60_000,
+        },
       );
-
-      setStage('sending');
-      const sig = await signAndSendTx(connection, wallet, tx);
+      const sig = result.signature;
       setProgressSig(sig);
-
-      setStage('confirming');
-      const confirmed = await confirmTx(connection, sig, 60_000);
-      if (!confirmed) {
-        throw new Error(t('trade.errors.unconfirmed', { sig }));
-      }
+      clearPendingWrap();
 
       const det = await analyzeTx(connection, sig, wallet.publicKey, mint.trim());
       const feeSol = det?.feeSol ?? 0;

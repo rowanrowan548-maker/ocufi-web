@@ -729,6 +729,12 @@
       "slippageTooLow": "滑点太低,建议提到 5-10%",
       "token2022Incompatible": "此代币是 Token-2022 标准,暂不支持,请换标准 SPL",
       "staleBlockhash": "网络延迟导致交易过期,请重试"
+    },
+    "wrapCleanup": {
+      "title": "上次有未完成的 wrap",
+      "desc": "上次大路由交易需 2 步签名 · setup 已上链但 swap 未完成 · 钱包里可能有未解开的 WSOL",
+      "viewTx": "查看 setup tx",
+      "dismiss": "忽略"
     }
   },
   "portfolio": {
