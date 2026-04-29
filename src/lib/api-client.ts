@@ -52,8 +52,27 @@ export interface ApiTokenPrice {
   logo_uri?: string | null;
 }
 
+// T-PERF-FE-DEDUP-REQUESTS · /price/<mint> 60s 缓存 + inflight dedup
+// 同 mint 跨组件并发请求合并为 1 次后端调用(实测 SOL 重复 2 次 · 浪费 ~800ms)
+const PRICE_CACHE_TTL_MS = 60_000;
+const priceCache = new Map<string, { data: ApiTokenPrice; expiresAt: number }>();
+const priceInflight = new Map<string, Promise<ApiTokenPrice>>();
+
 export async function fetchPrice(mint: string): Promise<ApiTokenPrice> {
-  return apiFetch<ApiTokenPrice>(`/price/${mint}`);
+  const cached = priceCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let promise = priceInflight.get(mint);
+  if (!promise) {
+    promise = apiFetch<ApiTokenPrice>(`/price/${mint}`)
+      .then((data) => {
+        priceCache.set(mint, { data, expiresAt: Date.now() + PRICE_CACHE_TTL_MS });
+        return data;
+      })
+      .finally(() => { priceInflight.delete(mint); });
+    priceInflight.set(mint, promise);
+  }
+  return promise;
 }
 
 // ─── Day 10 points ───
