@@ -21,6 +21,7 @@
     "tokenCheck": "查币",
     "faq": "常见问题",
     "more": "更多",
+    "rewards": "💰 奖励",
     "markets": "行情",
     "trending": "热门",
     "strategy": "策略",
@@ -1938,6 +1939,48 @@
       "hundredTrades": { "name": "百单达成" },
       "inviteKing": { "name": "拉新王" },
       "pnlKing": { "name": "PnL 王" }
+    }
+  },
+  "rewards": {
+    "title": "奖励中心",
+    "subtitle": "Ocufi 把锁在 Solana 上的钱还给你 · gmgn / photon 都没这一套",
+    "summary": {
+      "wallet": "钱包",
+      "notConnected": "未连接钱包",
+      "totalRecovered": "已累计回收"
+    },
+    "tabs": {
+      "reclaim": "🎁 回收 SOL",
+      "mev": "⚡ MEV 返还",
+      "invite": "🎯 邀请返佣"
+    },
+    "reclaim": {
+      "connectFirst": "请先连接钱包查看可回收的闲置账户",
+      "loading": "扫描你的闲置 token 账户...",
+      "error": "拉取列表失败",
+      "retry": "重试",
+      "emptyTitle": "目前没有闲置账户",
+      "emptyDesc": "卖完币后空 ATA 会出现在这里 · 一键回收押金 · 每个约 0.002 SOL",
+      "summarySelected": "已选 {n} / {total}",
+      "selectAll": "全选",
+      "deselectAll": "取消全选",
+      "claimButton": "免费领取 SOL",
+      "claiming": "签名 + 上链中...",
+      "successToast": "回收 {sol} SOL · 已存入钱包",
+      "partialFail": "{n} 笔失败 · 已成功的不丢",
+      "allFailed": "全部失败 · 请重试",
+      "walletMissingSignAll": "你的钱包不支持批量签名 · 试 Phantom / Backpack"
+    },
+    "mev": {
+      "totalLabel": "MEV 返还累计",
+      "totalHint": "Helius backrun rebate · 每笔 swap confirm 后自动统计余额差",
+      "emptyTitle": "还没有 MEV 返还",
+      "emptyDesc": "做几笔交易自然会有 · gmgn / photon 把这部分套利吃了不还 · Ocufi 走 Helius rebate URL 给你 50%"
+    },
+    "invite": {
+      "title": "邀请好友拿返佣",
+      "desc": "你的好友交易 · 你拿对应手续费 · 累计可观",
+      "cta": "去邀请页"
     }
   }
 }

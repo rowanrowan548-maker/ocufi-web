@@ -767,3 +767,26 @@ export async function fetchMarketsNewPairs(limit = 50): Promise<MarketItem[]> {
   const r = await apiFetch<MarketsResp>(`/markets/new-pairs?limit=${limit}`);
   return r.items ?? [];
 }
+
+// ─── T-REWARDS-PAGE · /portfolio/empty-accounts ───
+
+export interface EmptyAccount {
+  mint: string;
+  ata_address: string;
+  rent_lamports: number;
+  token_symbol: string | null;
+  token_logo: string | null;
+}
+
+export interface EmptyAccountsResp {
+  ok: boolean;
+  wallet: string;
+  count: number;
+  accounts: EmptyAccount[];
+  total_recoverable_lamports: number;
+  total_recoverable_sol?: number;
+}
+
+export async function fetchEmptyAccounts(wallet: string): Promise<EmptyAccountsResp> {
+  return apiFetch<EmptyAccountsResp>(`/portfolio/empty-accounts?wallet=${encodeURIComponent(wallet)}`);
+}

@@ -21,6 +21,7 @@
     "tokenCheck": "Token Check",
     "faq": "FAQ",
     "more": "More",
+    "rewards": "💰 Rewards",
     "markets": "Markets",
     "trending": "Trending",
     "strategy": "Strategy",
@@ -1923,6 +1924,48 @@
       "hundredTrades": { "name": "100 Trades" },
       "inviteKing": { "name": "Invite King" },
       "pnlKing": { "name": "PnL King" }
+    }
+  },
+  "rewards": {
+    "title": "Rewards Center",
+    "subtitle": "Ocufi gives back what Solana locked up · gmgn / photon don't",
+    "summary": {
+      "wallet": "Wallet",
+      "notConnected": "Wallet not connected",
+      "totalRecovered": "Total recovered"
+    },
+    "tabs": {
+      "reclaim": "🎁 Reclaim SOL",
+      "mev": "⚡ MEV Rebates",
+      "invite": "🎯 Invite & Earn"
+    },
+    "reclaim": {
+      "connectFirst": "Connect your wallet to see reclaimable empty accounts",
+      "loading": "Scanning your empty token accounts...",
+      "error": "Failed to load list",
+      "retry": "Retry",
+      "emptyTitle": "No empty accounts right now",
+      "emptyDesc": "After selling tokens, dust ATAs show up here · one-click reclaim deposits · ~0.002 SOL each",
+      "summarySelected": "Selected {n} / {total}",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
+      "claimButton": "Claim free SOL",
+      "claiming": "Signing + sending...",
+      "successToast": "Reclaimed {sol} SOL to your wallet",
+      "partialFail": "{n} tx failed · successful ones kept",
+      "allFailed": "All failed · please retry",
+      "walletMissingSignAll": "Your wallet doesn't support batch signing · try Phantom / Backpack"
+    },
+    "mev": {
+      "totalLabel": "Total MEV rebated",
+      "totalHint": "Helius backrun rebate · auto-tracked from balance diff after each confirmed swap",
+      "emptyTitle": "No MEV rebates yet",
+      "emptyDesc": "Make a few trades · gmgn / photon pocket this; Ocufi routes via Helius and gives you 50% back"
+    },
+    "invite": {
+      "title": "Invite friends, earn fees",
+      "desc": "Your friends trade · you earn a share of fees · adds up over time",
+      "cta": "Go to Invite page"
     }
   }
 }

@@ -108,6 +108,8 @@ export const NAV_ENTRIES: NavEntry[] = [
       },
     ],
   },
+  // T-REWARDS-PAGE · 奖励中心入口(资产 与 更多 之间)
+  { type: 'link', href: '/rewards', labelKey: 'nav.rewards' },
   {
     type: 'group',
     labelKey: 'nav.more',

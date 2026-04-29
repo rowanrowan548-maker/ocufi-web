@@ -15,6 +15,7 @@ import type { WalletContextState } from '@solana/wallet-adapter-react';
 import type { JupiterQuote, GasLevel } from './jupiter';
 import { prepareSwapTxs } from './swap-with-fee';
 import { signAndSendTx, confirmTx } from './trade-tx';
+import { pushMevEntry } from './rewards-storage';
 
 export type SplitStage = 'setup-signing' | 'setup-sending' | 'setup-confirming' | 'swap-signing' | 'swap-sending' | 'swap-confirming';
 
@@ -33,6 +34,18 @@ export interface ExecuteSwapOpts {
    * undefined / env 没配 → 走默认 connection(向后兼容)
    */
   rebateForUser?: PublicKey | string;
+  /**
+   * T-REWARDS-PAGE · MEV 跟踪信息(可选)
+   * 提供时:swap confirm 后比对 expected vs actual SOL 余额 · 正 diff 写 localStorage
+   * - expectedSpentLamports:本应支出的 SOL(buy 单子的 inputSol*1e9)· buy 用
+   * - expectedGainedLamports:本应入账的 SOL(sell 单子的 outputSol 估值*1e9)· sell 用
+   * - tokenSymbol:写到 mev_history 的标签
+   */
+  mevTracking?: {
+    expectedSpentLamports?: number;
+    expectedGainedLamports?: number;
+    tokenSymbol?: string;
+  };
 }
 
 export interface ExecuteSwapResult {
@@ -67,6 +80,20 @@ export async function executeSwapPlan(
   const rebateForUser = opts.rebateForUser ?? wallet.publicKey;
   const sendOpts = { rebateForUser };
 
+  // T-REWARDS-PAGE · MEV 跟踪 · confirm 前先记预期支出/入账(单位 lamports)
+  // 后端 helius rebate 给的 SOL 会让"实际支出"少 / "实际入账"多 · diff > 0 = 用户多到的
+  const mevExpectSpent = opts.mevTracking?.expectedSpentLamports;
+  const mevExpectGained = opts.mevTracking?.expectedGainedLamports;
+  const mevTokenSymbol = opts.mevTracking?.tokenSymbol;
+  let preBalanceLamports: number | null = null;
+  if (mevExpectSpent != null || mevExpectGained != null) {
+    try {
+      preBalanceLamports = await connection.getBalance(wallet.publicKey, 'confirmed');
+    } catch {
+      preBalanceLamports = null;
+    }
+  }
+
   // 1. 决策 single / split
   const plan = await prepareSwapTxs(connection, quote, userPk, gasLevel);
 
@@ -78,6 +105,17 @@ export async function executeSwapPlan(
     onStage('confirming');
     const confirmed = await confirmTx(connection, sig, confirmTimeoutMs);
     if (!confirmed) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
+    if (preBalanceLamports != null) {
+      void recordMevIfPositive({
+        connection,
+        userPk: wallet.publicKey,
+        sig,
+        preBalanceLamports,
+        expectSpent: mevExpectSpent,
+        expectGained: mevExpectGained,
+        tokenSymbol: mevTokenSymbol,
+      });
+    }
     return { signature: sig, kind: 'single' };
   }
 
@@ -105,5 +143,59 @@ export async function executeSwapPlan(
   const swapOk = await confirmTx(connection, sig, confirmTimeoutMs);
   if (!swapOk) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
 
+  if (preBalanceLamports != null) {
+    void recordMevIfPositive({
+      connection,
+      userPk: wallet.publicKey,
+      sig,
+      preBalanceLamports,
+      expectSpent: mevExpectSpent,
+      expectGained: mevExpectGained,
+      tokenSymbol: mevTokenSymbol,
+    });
+  }
+
   return { signature: sig, setupSignature: setupSig, kind: 'split' };
+}
+
+/**
+ * confirm 后 1.5s · getBalance 比对预期 vs 实际 · 正 diff 写 localStorage
+ *
+ * 正常 swap:实际余额 = pre - expectedSpent + expectedGained - gas
+ *   gas 大约 0.000005~0.000015 SOL · 取上限 0.00002 SOL 兜底
+ * MEV rebate:rebate 让用户多到 X SOL · 实际 - 期望 = X(扣 gas 后)
+ *
+ * 仅 diff > gas 上限时才记 · 防 rounding noise
+ */
+async function recordMevIfPositive(args: {
+  connection: Connection;
+  userPk: PublicKey;
+  sig: string;
+  preBalanceLamports: number;
+  expectSpent?: number;
+  expectGained?: number;
+  tokenSymbol?: string;
+}) {
+  const { connection, userPk, sig, preBalanceLamports, expectSpent = 0, expectGained = 0, tokenSymbol } = args;
+  // 等 1.5s · 让 RPC 节点同步到最新 balance
+  await new Promise((r) => setTimeout(r, 1500));
+  let postLamports: number;
+  try {
+    postLamports = await connection.getBalance(userPk, 'confirmed');
+  } catch {
+    return;
+  }
+  // 期望余额 = pre - expectSpent + expectGained
+  const expectedPost = preBalanceLamports - expectSpent + expectGained;
+  const diff = postLamports - expectedPost;
+  // 扣 gas 上限 ~20000 lamports · diff > 这个值才视为 MEV rebate
+  const GAS_FLOOR = 20_000;
+  if (diff > GAS_FLOOR) {
+    pushMevEntry({
+      tx: sig,
+      amount_lamports: diff,
+      ts: Date.now(),
+      token_symbol: tokenSymbol,
+    });
+  }
 }
