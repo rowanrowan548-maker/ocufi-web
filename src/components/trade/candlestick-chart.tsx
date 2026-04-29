@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import {
   createChart,
   CandlestickSeries,
+  CrosshairMode,
   type IChartApi,
   type ISeriesApi,
   type Time,
@@ -36,6 +37,10 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [empty, setEmpty] = useState(false);
+  // T-CHART-FULL-3 · crosshair 悬停 tooltip · O/H/L/C + time
+  const [hover, setHover] = useState<null | {
+    o: number; h: number; l: number; c: number; t: number;
+  }>(null);
 
   // 创建 chart(只 1 次)
   useEffect(() => {
@@ -58,8 +63,14 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       },
       timeScale: { rightOffset: 4, barSpacing: 6, borderColor: 'rgba(255,255,255,0.1)' },
       rightPriceScale: { borderColor: 'rgba(255,255,255,0.1)' },
-      handleScroll: true,
-      handleScale: true,
+      // T-CHART-FULL-3 · 缩放 + 鼠标十字线
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true, axisDoubleClickReset: true },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: { color: 'rgba(255,255,255,0.2)', width: 1, style: 2, labelVisible: true },
+        horzLine: { color: 'rgba(255,255,255,0.2)', width: 1, style: 2, labelVisible: true },
+      },
     });
     const series = chart.addSeries(CandlestickSeries, {
       upColor,
@@ -72,6 +83,29 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
     chartRef.current = chart;
     seriesRef.current = series;
 
+    // T-CHART-FULL-3 · crosshair move 订阅 · 设置 hover OHLC tooltip
+    const onCrosshair = (param: Parameters<Parameters<IChartApi['subscribeCrosshairMove']>[0]>[0]) => {
+      if (!param.time || !param.point) {
+        setHover(null);
+        return;
+      }
+      const data = param.seriesData.get(series) as
+        | { open: number; high: number; low: number; close: number }
+        | undefined;
+      if (!data) {
+        setHover(null);
+        return;
+      }
+      setHover({
+        o: data.open,
+        h: data.high,
+        l: data.low,
+        c: data.close,
+        t: Number(param.time),
+      });
+    };
+    chart.subscribeCrosshairMove(onCrosshair);
+
     const onResize = () => {
       if (!containerRef.current || !chartRef.current) return;
       chartRef.current.applyOptions({
@@ -83,6 +117,7 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
     ro.observe(containerRef.current);
 
     return () => {
+      chart.unsubscribeCrosshairMove(onCrosshair);
       ro.disconnect();
       chart.remove();
       chartRef.current = null;
@@ -121,6 +156,21 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
   return (
     <div className={`relative w-full h-full ${className ?? ''}`}>
       <div ref={containerRef} className="absolute inset-0" data-testid="candlestick-chart" />
+      {/* T-CHART-FULL-3 · 鼠标悬停 OHLC tooltip · 右上角小卡片 */}
+      {hover && (
+        <div
+          data-testid="chart-hover-tooltip"
+          className="absolute top-2 right-2 z-10 bg-card/90 border border-border/40 rounded px-2 py-1 text-[10px] font-mono tabular-nums backdrop-blur pointer-events-none"
+        >
+          <div className="text-muted-foreground/70">{new Date(hover.t * 1000).toLocaleString()}</div>
+          <div className="flex gap-2 mt-0.5">
+            <span>O <span className="text-foreground">{fmtPrice(hover.o)}</span></span>
+            <span>H <span className="text-[var(--brand-up)]">{fmtPrice(hover.h)}</span></span>
+            <span>L <span className="text-[var(--brand-down)]">{fmtPrice(hover.l)}</span></span>
+            <span>C <span className={hover.c >= hover.o ? 'text-[var(--brand-up)]' : 'text-[var(--brand-down)]'}>{fmtPrice(hover.c)}</span></span>
+          </div>
+        </div>
+      )}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-card/60 text-muted-foreground gap-2 text-sm pointer-events-none">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -136,4 +186,12 @@ export function CandlestickChart({ mint, timeframe = DEFAULT_TF, className }: Pr
       )}
     </div>
   );
+}
+
+function fmtPrice(n: number): string {
+  if (!Number.isFinite(n)) return '--';
+  const abs = Math.abs(n);
+  if (abs >= 1) return n.toFixed(4);
+  if (abs >= 0.01) return n.toFixed(6);
+  return n.toFixed(8);
 }
