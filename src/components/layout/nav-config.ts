@@ -38,11 +38,10 @@ export const NAV_ENTRIES: NavEntry[] = [
     labelKey: 'nav.markets',
     items: [
       {
-        href: '/markets/trending',
+        href: '/markets',
         labelKey: 'nav.trending',
         descKey: 'nav.descriptions.trending',
         iconName: 'Flame',
-        placeholder: true,
       },
       {
         href: '/watchlist',

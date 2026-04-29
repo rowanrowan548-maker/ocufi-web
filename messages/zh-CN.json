@@ -1702,9 +1702,14 @@
   },
   "markets": {
     "title": "代币行情",
-    "subtitle": "GeckoTerminal 实时聚合 · trending 60s 缓存 · new pairs 30s",
+    "subtitle": "热门 / 新发 / 涨跌幅 / 已审 / 风险预警 · 60s 自动刷新",
     "tabs": {
-      "trending": "Trending",
+      "trending": "🔥 热门",
+      "new": "🆕 新发",
+      "gainers1h": "📈 1h 涨幅",
+      "losers24h": "📉 24h 跌幅",
+      "verified": "✅ 已审",
+      "risk": "⚠️ 风险预警",
       "newpairs": "New Pairs",
       "fav": "自选",
       "major": "主流"
@@ -1721,9 +1726,18 @@
       "quickBuyTitle": "0.1 SOL 快买 · 用默认参数",
       "quickBuyConnectFirst": "先连钱包"
     },
+    "risk": {
+      "verified": "已审代币",
+      "safe": "无明显风险",
+      "warn": "存在风险信号",
+      "risky": "高风险 · 慎入",
+      "unknown": "审计数据获取失败",
+      "pending": "审计加载中"
+    },
     "loading": "加载中…",
     "empty": "暂无数据 · 后端 worker 抓取中",
     "emptyFav": "还没有自选代币 — 点行首星标添加",
+    "goTrade": "→ 去交易页搜代币",
     "hideMajorsOff": "隐藏 SOL/USDC",
     "hideMajorsOn": "显示 SOL/USDC"
   },

@@ -1687,9 +1687,14 @@
   },
   "markets": {
     "title": "Markets",
-    "subtitle": "Live from GeckoTerminal · trending 60s cache · new pairs 30s",
+    "subtitle": "Trending / New / Movers / Verified / Risk · auto-refresh 60s",
     "tabs": {
-      "trending": "Trending",
+      "trending": "🔥 Trending",
+      "new": "🆕 New",
+      "gainers1h": "📈 1h Gainers",
+      "losers24h": "📉 24h Losers",
+      "verified": "✅ Verified",
+      "risk": "⚠️ Risk Watch",
       "newpairs": "New Pairs",
       "fav": "Watchlist",
       "major": "Major"
@@ -1706,9 +1711,18 @@
       "quickBuyTitle": "Quick buy 0.1 SOL · with your defaults",
       "quickBuyConnectFirst": "Connect wallet first"
     },
+    "risk": {
+      "verified": "Verified token",
+      "safe": "No risk signals",
+      "warn": "Some risk signals",
+      "risky": "High risk · be careful",
+      "unknown": "Audit fetch failed",
+      "pending": "Audit loading"
+    },
     "loading": "Loading…",
     "empty": "No data yet · backend worker still fetching",
     "emptyFav": "No favorites yet — tap the star to add",
+    "goTrade": "→ Go to trade page",
     "hideMajorsOff": "Hide SOL/USDC",
     "hideMajorsOn": "Show SOL/USDC"
   },
