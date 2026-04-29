@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Users, Bug, UserCog, Package, Crosshair, Flame, type LucideIcon } from 'lucide-react';
 import { fetchTokenAuditCard, isApiConfigured, type TokenAuditCard } from '@/lib/api-client';
+import { StaleBar } from './stale-bar';
 
 interface Props {
   mint: string;
@@ -66,13 +67,16 @@ export function AuditCards({ mint }: Props) {
   const lpTone: Tone = lp === null ? 'neutral' : lp >= 99 ? 'good' : lp >= 80 ? 'warn' : 'bad';
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="space-y-2">
+      <StaleBar stale={data?.stale} dataAgeSec={data?.data_age_sec} />
+      <div className="grid grid-cols-2 gap-2">
       <Cell label={t('top10')} value={fmtPct(top10)} Icon={Users} tone={top10Tone} />
       <Cell label={t('rats')} value={fmtPct(rats)} Icon={Bug} tone={ratsTone} />
       <Cell label={t('dev')} value={dev ? t(`devStatus.${dev}`) : '--'} Icon={UserCog} tone={devTone} />
       <Cell label={t('bundle')} value={fmtPct(bundle)} Icon={Package} tone={bundleTone} />
       <Cell label={t('sniper')} value={fmtPct(sniper)} Icon={Crosshair} tone={sniperTone} />
       <Cell label={t('lpBurn')} value={fmtPct(lp)} Icon={Flame} tone={lpTone} />
+      </div>
     </div>
   );
 }

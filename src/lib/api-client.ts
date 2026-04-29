@@ -350,6 +350,9 @@ export interface PoolStats1h {
   total_volume_usd: number;
   fetched_at?: number | null;
   cached?: boolean;
+  // T-FE-STALE-UI · 后端 T-PERF-STALE-FALLBACK 返旧数据时
+  stale?: boolean;
+  data_age_sec?: number | null;
   error?: string | null;
   retry_after?: number | null;
 }
@@ -368,6 +371,9 @@ export interface TokenAuditCard {
   sniper_pct?: number | null;           // 0-100
   lp_burn_pct?: number | null;          // 0-100
   cached?: boolean;
+  // T-FE-STALE-UI · 后端 T-PERF-STALE-FALLBACK 返旧数据时
+  stale?: boolean;
+  data_age_sec?: number | null;
   error?: string | null;
 }
 
@@ -727,6 +733,8 @@ export interface MarketsResp {
   items: MarketItem[];
   cached: boolean;
   stale?: boolean;
+  // T-FE-STALE-UI · 与 PoolStats1h / TokenAuditCard 同语义
+  data_age_sec?: number | null;
   fetched_at?: number | null;
   error?: string | null;
 }

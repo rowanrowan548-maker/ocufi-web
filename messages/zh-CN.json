@@ -606,6 +606,9 @@
         "active": "活跃"
       }
     },
+    "stale": {
+      "label": "数据约 {min} 分钟前 · 自动刷新中"
+    },
     "preview": {
       "pay": "支付",
       "receive": "预计收到",

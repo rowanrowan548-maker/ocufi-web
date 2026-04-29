@@ -606,6 +606,9 @@
         "active": "Active"
       }
     },
+    "stale": {
+      "label": "Data ~{min}m old · Auto-refreshing"
+    },
     "preview": {
       "pay": "You pay",
       "receive": "You receive",
