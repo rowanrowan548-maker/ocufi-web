@@ -508,7 +508,13 @@
       "pilot": "Pilot",
       "p1": "P1",
       "p2": "P2",
-      "p3": "P3"
+      "p3": "P3",
+      "tooltip": {
+        "pilot": "Pilot · {sol} SOL · slower",
+        "p1": "P1 · {sol} SOL · standard",
+        "p2": "P2 · {sol} SOL · fast",
+        "p3": "P3 · {sol} SOL · turbo"
+      }
     },
     "autoSell": {
       "label": "Auto-create sell alert after fill",

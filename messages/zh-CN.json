@@ -508,7 +508,13 @@
       "pilot": "Pilot",
       "p1": "P1",
       "p2": "P2",
-      "p3": "P3"
+      "p3": "P3",
+      "tooltip": {
+        "pilot": "Pilot · {sol} SOL · 较慢",
+        "p1": "P1 · {sol} SOL · 标准",
+        "p2": "P2 · {sol} SOL · 快",
+        "p3": "P3 · {sol} SOL · 极速"
+      }
     },
     "autoSell": {
       "label": "成交后自动设置卖出提醒",
