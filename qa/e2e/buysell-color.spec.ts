@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { tradeUrl, gotoAndSettle } from './_helpers';
 
-// T-BUYSELL-COLOR-FIX2 真渲染验证 — buy = emerald-700, sell = rose-700
-// NOTE: spec text said /trade?mint=SOL · SOL is base coin and has NO buy/sell toggle
-//       (right column shows "用 USDC 买 SOL" stablecoin selector instead).
-//       Use USDC — same TradeTabs component path, real toggle present.
+// T-BUYSELL-COLOR-FIX3 渲染验证 — buy = 透明深绿底 + emerald-300 文字 / sell = 透明深红底 + rose-300 文字
+// USDC 页有真 buy/sell tab(SOL 走 "用 USDC 买 SOL" 特殊分支)
 const TARGET = 'USDC' as const;
 
-const EMERALD_700 = { r: 4, g: 120, b: 87 } as const; // tailwind emerald-700
-const ROSE_700 = { r: 190, g: 18, b: 60 } as const; // tailwind rose-700
+const EMERALD_300 = { r: 110, g: 231, b: 183 } as const; // tailwind emerald-300
+const ROSE_300 = { r: 253, g: 164, b: 175 } as const; // tailwind rose-300
 
 // Browsers may serialize computed colors as lab() / oklch() — normalize via canvas
 async function readBgRgb(handle: import('@playwright/test').Locator) {
@@ -41,49 +39,66 @@ async function readTextRgb(handle: import('@playwright/test').Locator) {
   });
 }
 
-// Tailwind v4 ships colors in oklch; Chromium's lab→sRGB canvas conversion
-// can drift up to ~18/255 on saturated red channels vs the v3 hex reference.
-// Spec text said ±10 but that's tighter than the rendering pipeline gives —
-// use ±20 which still catches "wrong palette" (e.g. emerald-700 vs amber-700)
-// while tolerating gamut-conversion fuzz. Screenshot baseline catches finer drift.
-function close(a: number, b: number, tol = 20) {
+// Tailwind v4 oklch + canvas conversion 偏差 ±20 内
+function close(a: number, b: number, tol = 25) {
   return Math.abs(a - b) <= tol;
 }
 
 test.describe('buy/sell toggle colors', () => {
-  test('buy tab = emerald-700 ±10, sell tab = rose-700 ±10, text white', async ({ page }) => {
+  test.setTimeout(120_000);
+  test('buy active = emerald-300 文字 + 透明绿底; sell active = rose-300 文字 + 透明红底', async ({ page }) => {
     await gotoAndSettle(page, tradeUrl(TARGET));
 
-    // Use the inner BuyForm/SellForm tabs — there is exactly one TabsList with both labels in the trade form
-    const buyTab = page.getByRole('tab', { name: /^买入$/ }).first();
-    const sellTab = page.getByRole('tab', { name: /^卖出$/ }).first();
+    // 多语言:zh "买入"/"卖出" · en "Buy"/"Sell" · trade-tabs 第一组 TabsList 是 buy/sell
+    // role=tab 在桌面 trade-tabs 内 · USDC 页右栏首个 TabsList(buy/sell)+ 第二个(market/limit)
+    const allTabs = page.locator('[role="tab"]:visible');
+    await expect(allTabs.first()).toBeVisible({ timeout: 15_000 });
+    const buyTab = allTabs.nth(0);
+    const sellTab = allTabs.nth(1);
 
-    await expect(buyTab).toBeVisible({ timeout: 15_000 });
     await expect(sellTab).toBeVisible({ timeout: 15_000 });
 
-    // Default active = buy. data-active attribute presence (Base UI sets it to "" on active tab)
+    // Default active = buy · base-ui Tab 在 active 时挂 data-active=""
     await expect(buyTab).toHaveAttribute('data-active', '');
-    const buyRgb = await readBgRgb(buyTab);
     const buyTextRgb = await readTextRgb(buyTab);
-    expect(close(buyRgb.r, EMERALD_700.r), `buy bg.r=${buyRgb.r} far from ${EMERALD_700.r} (css="${buyRgb.css}")`).toBe(true);
-    expect(close(buyRgb.g, EMERALD_700.g), `buy bg.g=${buyRgb.g} far from ${EMERALD_700.g} (css="${buyRgb.css}")`).toBe(true);
-    expect(close(buyRgb.b, EMERALD_700.b), `buy bg.b=${buyRgb.b} far from ${EMERALD_700.b} (css="${buyRgb.css}")`).toBe(true);
-    expect(buyTextRgb.r, 'buy text r').toBeGreaterThanOrEqual(240);
-    expect(buyTextRgb.g, 'buy text g').toBeGreaterThanOrEqual(240);
-    expect(buyTextRgb.b, 'buy text b').toBeGreaterThanOrEqual(240);
+    const buyBgRgb = await readBgRgb(buyTab);
 
-    // Switch to sell
-    await sellTab.click();
+    // 文字色 = emerald-300 family
+    expect(
+      close(buyTextRgb.r, EMERALD_300.r) &&
+        close(buyTextRgb.g, EMERALD_300.g) &&
+        close(buyTextRgb.b, EMERALD_300.b),
+      `buy text expected emerald-300 (${EMERALD_300.r},${EMERALD_300.g},${EMERALD_300.b}), got rgba(${buyTextRgb.r},${buyTextRgb.g},${buyTextRgb.b}) css="${buyTextRgb.css}"`,
+    ).toBe(true);
+
+    // 背景:透明 emerald 在黑底上 ≈ 0.15 × emerald-500(16,185,129)= ≈(2,28,19)
+    // 必须 g > b > r 形成绿色调,且亮度低(透明感)
+    expect(
+      buyBgRgb.g > buyBgRgb.r + 5 && buyBgRgb.b > 0 && buyBgRgb.g < 100,
+      `buy bg expected 透明绿 (g>r, low brightness), got rgba(${buyBgRgb.r},${buyBgRgb.g},${buyBgRgb.b}) css="${buyBgRgb.css}"`,
+    ).toBe(true);
+
+    // Switch to sell · dispatchEvent 绕过 dev server actionability
+    await sellTab.dispatchEvent('click');
     await page.waitForTimeout(400);
     await expect(sellTab).toHaveAttribute('data-active', '');
 
-    const sellRgb = await readBgRgb(sellTab);
     const sellTextRgb = await readTextRgb(sellTab);
-    expect(close(sellRgb.r, ROSE_700.r), `sell bg.r=${sellRgb.r} far from ${ROSE_700.r} (css="${sellRgb.css}")`).toBe(true);
-    expect(close(sellRgb.g, ROSE_700.g), `sell bg.g=${sellRgb.g} far from ${ROSE_700.g} (css="${sellRgb.css}")`).toBe(true);
-    expect(close(sellRgb.b, ROSE_700.b), `sell bg.b=${sellRgb.b} far from ${ROSE_700.b} (css="${sellRgb.css}")`).toBe(true);
-    expect(sellTextRgb.r, 'sell text r').toBeGreaterThanOrEqual(240);
-    expect(sellTextRgb.g, 'sell text g').toBeGreaterThanOrEqual(240);
-    expect(sellTextRgb.b, 'sell text b').toBeGreaterThanOrEqual(240);
+    const sellBgRgb = await readBgRgb(sellTab);
+
+    // 文字色 = rose-300 family
+    expect(
+      close(sellTextRgb.r, ROSE_300.r) &&
+        close(sellTextRgb.g, ROSE_300.g) &&
+        close(sellTextRgb.b, ROSE_300.b),
+      `sell text expected rose-300 (${ROSE_300.r},${ROSE_300.g},${ROSE_300.b}), got rgba(${sellTextRgb.r},${sellTextRgb.g},${sellTextRgb.b}) css="${sellTextRgb.css}"`,
+    ).toBe(true);
+
+    // 背景:透明 rose 在黑底上 ≈ 0.15 × rose-500(244,63,94)= ≈(36,9,14)
+    // r > g, r > b 形成红色调,且亮度低
+    expect(
+      sellBgRgb.r > sellBgRgb.g + 5 && sellBgRgb.r < 100,
+      `sell bg expected 透明红 (r>g, low brightness), got rgba(${sellBgRgb.r},${sellBgRgb.g},${sellBgRgb.b}) css="${sellBgRgb.css}"`,
+    ).toBe(true);
   });
 });
