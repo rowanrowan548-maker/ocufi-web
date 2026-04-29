@@ -15,6 +15,7 @@
  * 移动端走 T-977 a-g 双栏 OKX 一屏密度
  */
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
 
 import { TokenSearchCombo } from '@/components/common/token-search-combo';
@@ -76,18 +77,20 @@ function buildFallbackDetail(mint: string): TokenDetail {
 }
 
 export function TradeScreen() {
+  const searchParams = useSearchParams();
   const [mint, setMint] = useState<string>(DEFAULT_TRADE_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
   const [defaultSide, setDefaultSide] = useState<'buy' | 'sell' | undefined>(undefined);
 
+  // T-SEARCH-FIX · 反应式跟踪 URL ?mint= 变化(原版只 mount 读一次,
+  // header search router.push 后 URL 变了但 trade-screen 不感知,然后下面的
+  // write 副作用又把 URL 同步回旧 mint · 用户表象"搜索无反应")
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const m = params.get('mint');
-    if (m && isValidMint(m)) setMint(m);
-    const s = params.get('side');
+    const m = searchParams.get('mint');
+    if (m && isValidMint(m) && m !== mint) setMint(m);
+    const s = searchParams.get('side');
     if (s === 'buy' || s === 'sell') setDefaultSide(s);
-  }, []);
+  }, [searchParams, mint]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
