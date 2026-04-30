@@ -89,13 +89,20 @@ async function maybeUnlock(context: BrowserContext, extensionId: string) {
 }
 
 async function connectWalletImpl(context: BrowserContext, extensionId: string, page: Page) {
-  // 1. Click whichever "Connect Wallet" entry point is on screen.
-  const triggers = [
-    page.getByRole('button', { name: /connect wallet|connect|连接钱包/i }).first(),
-    page.locator('[data-testid="connect-wallet"]').first(),
-  ];
+  // ocufi-web shows two top-bar entry points side by side:
+  //   1) "Phantom Connect"  → @phantom/react-sdk SDK (phantom.com web flow,
+  //      no extension popup) — DON'T click this for the AI test wallet.
+  //   2) "Other wallets"    → standard wallet-adapter modal that lists the
+  //      installed Phantom extension. THIS is the path that triggers the
+  //      extension popup we approve below.
+  // Both screens may also have a generic "Connect Wallet" trigger on /history
+  // and other pages — try that first if present, then fall back to "Other wallets".
+  const otherWalletsTrigger = page.getByRole('button', { name: /^other wallets$|其他钱包/i }).first();
+  const genericConnect = page.getByRole('button', { name: /^connect wallet$|^连接钱包$/i }).first();
+  const dataTestIdConnect = page.locator('[data-testid="connect-wallet"]').first();
+
   let clicked = false;
-  for (const t of triggers) {
+  for (const t of [otherWalletsTrigger, genericConnect, dataTestIdConnect]) {
     if (await t.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await t.click();
       clicked = true;
@@ -103,11 +110,18 @@ async function connectWalletImpl(context: BrowserContext, extensionId: string, p
     }
   }
   if (!clicked) {
-    throw new Error('Connect-wallet trigger not visible on the current page.');
+    throw new Error(
+      'Wallet entry point not visible. Expected one of: "Other wallets" / "Connect Wallet" / [data-testid="connect-wallet"].',
+    );
   }
 
-  // 2. The wallet adapter modal lists available wallets — pick Phantom.
-  const phantomOption = page.getByRole('button', { name: /phantom/i }).first();
+  // The wallet adapter modal lists available wallets — pick Phantom (extension).
+  // Use a strict-ish match so we don't accidentally re-click the "Phantom Connect"
+  // SDK button. Inside the modal, the Phantom extension entry is just "Phantom".
+  const phantomOption = page
+    .getByRole('button', { name: /^phantom$/i })
+    .or(page.getByRole('menuitem', { name: /^phantom$/i }))
+    .first();
   await phantomOption.waitFor({ state: 'visible', timeout: 10_000 });
   // The popup is opened as a side effect of this click.
   const [popup] = await Promise.all([
