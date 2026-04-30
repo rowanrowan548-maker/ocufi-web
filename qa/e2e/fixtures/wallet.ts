@@ -74,7 +74,7 @@ async function maybeUnlock(context: BrowserContext, extensionId: string) {
     const pw = popup.locator('input[type="password"]').first();
     if (await pw.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await pw.fill(password);
-      const unlock = popup.getByRole('button', { name: /unlock|sign in/i }).first();
+      const unlock = popup.getByRole('button', { name: /unlock|sign in|解锁|登录/i }).first();
       if (await unlock.isVisible({ timeout: 1_000 }).catch(() => false)) {
         await unlock.click();
       } else {
@@ -139,11 +139,42 @@ async function connectWalletImpl(context: BrowserContext, extensionId: string, p
 
   // 3. Approve the connection in Phantom's popup.
   await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
-  const approve = popup.getByRole('button', { name: /connect|approve|continue/i }).first();
-  await approve.waitFor({ state: 'visible', timeout: 15_000 });
+
+  // 3a. The popup may have come up locked (Phantom auto-locks aggressively
+  // after manual setup). Fill the password if we see a password input.
+  const popupPw = popup.locator('input[type="password"]').first();
+  if (await popupPw.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    const password = fs.readFileSync(PASSWORD_FILE, 'utf8').trim();
+    await popupPw.fill(password);
+    const unlockBtn = popup
+      .getByRole('button', { name: /unlock|sign in|解锁|登录/i })
+      .first();
+    if (await unlockBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+      await unlockBtn.click();
+    } else {
+      await popupPw.press('Enter');
+    }
+    await popup.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined);
+  }
+
+  // 3b. Find the approve/connect button (English + Chinese candidates).
+  const approve = popup
+    .getByRole('button', { name: /connect|approve|continue|trust|连接|批准|继续|信任|确认/i })
+    .first();
+  try {
+    await approve.waitFor({ state: 'visible', timeout: 15_000 });
+  } catch (err) {
+    const dump = `qa/e2e/.cache/connect-popup-fail-${Date.now()}.png`;
+    await popup.screenshot({ path: dump, fullPage: true }).catch(() => undefined);
+    throw new Error(
+      `Phantom popup never showed an approve button. Screenshot: ${dump}\nOriginal: ${(err as Error).message}`,
+    );
+  }
   await approve.click();
   // Some flows show a second confirmation step.
-  const second = popup.getByRole('button', { name: /confirm|approve/i }).first();
+  const second = popup
+    .getByRole('button', { name: /confirm|approve|确认|批准/i })
+    .first();
   if (await second.isVisible({ timeout: 1_500 }).catch(() => false)) {
     await second.click();
   }
