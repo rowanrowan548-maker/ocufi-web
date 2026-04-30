@@ -1,19 +1,19 @@
 'use client';
 
 /**
- * T-FE-SLIPPAGE-COLUMN · /history 真滑点列单元格
+ * T-FE-SLIPPAGE-COLUMN / T-FE-SLIPPAGE-BUY · /history 真滑点列单元格
  *
  * 数据源:loadSwapQuote(signature) 从 localStorage 读 ⛓️ 落地的 Jupiter quote
  *
- * V1 仅渲 sell 行(output = SOL · 不需查 token decimals)
- * V1.1 ⛓️ 加 quoteOutDecimals 后扩 buy
+ * V1.0 仅 sell(output = SOL · 不需查 token decimals)
+ * V1.1 buy 行扩展 · 用 quote.quoteOutDecimals 转 UI 单位 · 跟 r.tokenAmount 比
  *
  * 渲染规则:
  *   < 0     → '+X.XX%' 绿色(套利获益 · 罕见但好看)
  *   0-50    → 'X.XX%'  浅绿(< 0.5%)
  *   50-200  → 'X.XX%'  灰色(0.5-2%)
  *   > 200   → 'X.XX%'  红色(> 2%)
- *   null    → '—'(无 quote / buy 行 / 数据不全)
+ *   null    → '—'(无 quote / 转入 / 数据不全 / 旧 v1 条目)
  */
 import { useMemo } from 'react';
 import { computeRealizedSlippageBps } from '@/lib/slippage';
@@ -23,12 +23,13 @@ interface Props {
   signature: string;
   type: string | null | undefined;
   solAmount: number;
+  tokenAmount: number;
 }
 
-export function SlippageCell({ signature, type, solAmount }: Props) {
+export function SlippageCell({ signature, type, solAmount, tokenAmount }: Props) {
   // localStorage 读 · 同 sig 不变 · useMemo 缓存
   const bps = useMemo(() => {
-    if (type !== 'sell') return null;
+    if (type !== 'sell' && type !== 'buy') return null;
     const quote = loadSwapQuote(signature);
     if (!quote) return null;
     return computeRealizedSlippageBps({
@@ -36,8 +37,10 @@ export function SlippageCell({ signature, type, solAmount }: Props) {
       outputMint: quote.outputMint,
       quoteOutAmount: quote.quoteOutAmount,
       actualSolReceived: solAmount,
+      actualTokenReceived: tokenAmount,
+      quoteOutDecimals: quote.quoteOutDecimals,
     });
-  }, [signature, type, solAmount]);
+  }, [signature, type, solAmount, tokenAmount]);
 
   if (bps === null) return <span data-testid="slippage-empty">—</span>;
 

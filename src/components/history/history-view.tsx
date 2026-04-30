@@ -398,12 +398,12 @@ function HistoryRow({
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
         {formatExecPrice(r)}
       </TableCell>
-      {/* T-FE-SLIPPAGE-COLUMN:本地 actualSlippageBps 优先 · 没有则用 ⛓️ 落地的 quote 算真滑点(V1 仅 sell · buy 待 quoteOutDecimals)*/}
+      {/* T-FE-SLIPPAGE-COLUMN / T-FE-SLIPPAGE-BUY:本地 actualSlippageBps 优先 · 没有则用 ⛓️ 落地的 quote 算真滑点(sell + buy 都覆盖)*/}
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
         {r.actualSlippageBps != null ? (
           `${(r.actualSlippageBps / 100).toFixed(2)}%`
         ) : (
-          <SlippageCell signature={r.signature} type={r.type} solAmount={r.solAmount} />
+          <SlippageCell signature={r.signature} type={r.type} solAmount={r.solAmount} tokenAmount={r.tokenAmount} />
         )}
       </TableCell>
       {/* T-HISTORY-CHAIN-DETAIL-FE:本地 priorityFeeSol / gasFeeSol 没值 → 走 TxFeeBadge 行级懒加载 /portfolio/tx-detail */}
