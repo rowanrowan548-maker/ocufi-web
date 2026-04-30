@@ -89,6 +89,14 @@ async function maybeUnlock(context: BrowserContext, extensionId: string) {
 }
 
 async function connectWalletImpl(context: BrowserContext, extensionId: string, page: Page) {
+  // Short-circuit: if the wallet is already connected (persistent profile
+  // remembers approvals across test runs), the top bar shows the AI test
+  // wallet's shortened address (72zX…EVg4w) instead of the connect buttons.
+  const alreadyConnected = page.getByText(/72zX|EVg4w/).first();
+  if (await alreadyConnected.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    return;
+  }
+
   // ocufi-web shows two top-bar entry points side by side:
   //   1) "Phantom Connect"  → @phantom/react-sdk SDK (phantom.com web flow,
   //      no extension popup) — DON'T click this for the AI test wallet.
