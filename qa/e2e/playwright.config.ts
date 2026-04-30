@@ -40,6 +40,20 @@ export default defineConfig({
       testMatch: /daily-smoke\.spec\.ts/,
     },
     {
+      name: 'regression-desktop',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
+        deviceScaleFactor: 1,
+      },
+      testMatch: /regression-pages\.spec\.ts/,
+    },
+    {
+      name: 'regression-mobile',
+      use: { ...devices['iPhone 14 Pro'] },
+      testMatch: /regression-pages\.spec\.ts/,
+    },
+    {
       name: 'iphone-14-pro',
       use: { ...devices['iPhone 14 Pro'] },
       testMatch: /mobile-.*\.spec\.ts/,
