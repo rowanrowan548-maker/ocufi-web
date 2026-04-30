@@ -155,6 +155,34 @@ async function clickByText(page: Page, candidates: string[], opts: { timeout?: n
   fail(`none of these buttons appeared within ${timeout}ms: ${candidates.join(' | ')}`);
 }
 
+// Soft variant: returns null if no candidate appears within `timeout` (does not exit the process).
+async function tryClickByText(
+  page: Page,
+  candidates: string[],
+  opts: { timeout?: number } = {},
+): Promise<string | null> {
+  const timeout = opts.timeout ?? 4_000;
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    for (const text of candidates) {
+      const safe = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(safe, 'i');
+      for (const loc of [
+        page.getByRole('button', { name: re }),
+        page.getByRole('link', { name: re }),
+        page.getByText(re),
+      ]) {
+        if (await loc.first().isVisible().catch(() => false)) {
+          await loc.first().click();
+          return text;
+        }
+      }
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return null;
+}
+
 async function fillFirstVisible(page: Page, selector: string, value: string, opts: { timeout?: number } = {}) {
   const timeout = opts.timeout ?? 10_000;
   const start = Date.now();
@@ -173,9 +201,7 @@ async function fillFirstVisible(page: Page, selector: string, value: string, opt
 
 async function importWallet(page: Page, secret: { privateKey: string }, password: string) {
   // Step 0 (optional): a splash / "Get Started" screen on some builds. Best-effort, ok if absent.
-  await clickByText(page, ['Get Started', 'Continue', 'Get started'], { timeout: 4_000 }).catch(
-    () => undefined,
-  );
+  await tryClickByText(page, ['Get Started', 'Get started'], { timeout: 3_000 });
 
   // Step 1: "I Already Have a Wallet" / "Use Existing Wallet" / etc. Phantom changes wording across versions.
   // The clickByText uses case-insensitive substring matching so any reasonable variant works.
@@ -232,7 +258,7 @@ async function importWallet(page: Page, secret: { privateKey: string }, password
     page.getByRole('button', { name: /got it|finish|done/i }).first().waitFor({ timeout: 15_000 }).catch(() => {}),
     page.getByText(/SOL|balance/i).first().waitFor({ timeout: 15_000 }).catch(() => {}),
   ]);
-  await clickByText(page, ['Got it', 'Finish', 'Done'], { timeout: 5_000 }).catch(() => undefined);
+  await tryClickByText(page, ['Got it', 'Finish', 'Done'], { timeout: 5_000 });
 }
 
 async function main() {
