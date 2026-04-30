@@ -251,14 +251,15 @@ export function ReclaimTab() {
           </div>
         </div>
 
-        {/* 列表 */}
+        {/* 列表
+            T-FE-MOBILE-RESCUE-P0:item 高 ≥ 56px(p-4 + 内容)· checkbox 5×5 易点 · 数字 sm 易读 */}
         <ul className="divide-y divide-border/40" data-testid="reclaim-list">
           {accounts.map((a) => {
             const checked = selected.has(a.ata_address);
             return (
               <li
                 key={a.ata_address}
-                className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors cursor-pointer"
+                className="flex items-center gap-3 p-4 sm:p-3 min-h-14 hover:bg-muted/30 active:bg-muted/40 transition-colors cursor-pointer"
                 onClick={() => !busy && toggleOne(a.ata_address)}
               >
                 <input
@@ -267,7 +268,7 @@ export function ReclaimTab() {
                   disabled={busy}
                   onChange={(e) => { e.stopPropagation(); toggleOne(a.ata_address); }}
                   onClick={(e) => e.stopPropagation()}
-                  className="h-4 w-4 accent-[var(--brand-up)]"
+                  className="h-5 w-5 sm:h-4 sm:w-4 accent-[var(--brand-up)] flex-shrink-0"
                   aria-label={a.token_symbol ?? a.mint}
                 />
                 <div className="min-w-0 flex-1">
@@ -278,7 +279,7 @@ export function ReclaimTab() {
                     {a.ata_address.slice(0, 8)}…{a.ata_address.slice(-6)}
                   </div>
                 </div>
-                <div className="text-right font-mono text-xs text-[var(--brand-up)]">
+                <div className="text-right font-mono text-sm sm:text-xs text-[var(--brand-up)] flex-shrink-0">
                   +{(a.rent_lamports / 1e9).toFixed(6)} SOL
                 </div>
               </li>

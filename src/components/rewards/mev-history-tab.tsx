@@ -66,32 +66,33 @@ export function MevHistoryTab() {
       ) : (
         <Card>
           <CardContent className="p-0">
+            {/* T-FE-MOBILE-RESCUE-P0:item 高 ≥ 56px(p-4) · 数字字号 sm:text-sm · solscan 链接热区扩大 */}
             <ul className="divide-y divide-border/40" data-testid="mev-history-list">
               {history.map((e) => (
                 <li
                   key={e.tx}
-                  className="flex items-center justify-between gap-3 p-3 hover:bg-muted/30 transition-colors"
+                  className="flex items-center justify-between gap-3 p-4 sm:p-3 min-h-14"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-medium">
+                    <div className="text-sm sm:text-xs font-medium">
                       {e.token_symbol || '—'}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-[11px] sm:text-[10px] text-muted-foreground">
                       {formatTime(e.ts)}
                     </div>
                   </div>
-                  <div className="text-right font-mono">
-                    <div className="text-sm font-medium text-[var(--brand-up)]">
+                  <div className="text-right font-mono flex-shrink-0">
+                    <div className="text-base sm:text-sm font-medium text-[var(--brand-up)]">
                       +{(e.amount_lamports / 1e9).toFixed(6)} SOL
                     </div>
                     <a
                       href={`https://solscan.io/tx/${e.tx}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5"
+                      className="text-[11px] sm:text-[10px] text-muted-foreground hover:text-foreground active:text-foreground inline-flex items-center gap-0.5 py-0.5"
                     >
                       {e.tx.slice(0, 4)}…{e.tx.slice(-4)}
-                      <ExternalLink className="h-2.5 w-2.5" />
+                      <ExternalLink className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
                     </a>
                   </div>
                 </li>

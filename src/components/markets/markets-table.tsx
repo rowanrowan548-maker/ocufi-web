@@ -32,6 +32,7 @@ import {
 import { isVerifiedToken } from '@/lib/verified-tokens';
 import { SmartMoneyBadge } from './smart-money-badge';
 import { MiniChartTooltip } from './mini-chart-tooltip';
+import { MarketsCardsMobile } from './markets-cards-mobile';
 
 const HOVER_DELAY_MS = 500;
 
@@ -46,7 +47,10 @@ export function MarketsTable({ items, showRisk = false }: Props) {
   const [hover, setHover] = useState<{ mint: string; symbol: string; anchor: DOMRect } | null>(null);
 
   return (
-    <div className="overflow-x-auto">
+    <>
+    {/* T-FE-MOBILE-RESCUE-P0:< md viewport 走卡片 · ≥ md 保留表格 */}
+    <MarketsCardsMobile items={items} showRisk={showRisk} RiskBadge={RiskBadge} />
+    <div className="hidden md:block overflow-x-auto">
       <Table className="min-w-[1180px]">
         <TableHeader>
           <TableRow>
@@ -80,6 +84,7 @@ export function MarketsTable({ items, showRisk = false }: Props) {
         <MiniChartTooltip mint={hover.mint} symbol={hover.symbol} anchor={hover.anchor} />
       )}
     </div>
+    </>
   );
 }
 
