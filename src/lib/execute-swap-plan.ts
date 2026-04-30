@@ -14,14 +14,42 @@ import type { Connection, PublicKey, VersionedTransaction } from '@solana/web3.j
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import type { JupiterQuote, GasLevel } from './jupiter';
 import { prepareSwapTxs } from './swap-with-fee';
-import { signAndSendTx, confirmTx } from './trade-tx';
+import { signAndSendTx, confirmTx, getDecimals } from './trade-tx';
 import { pushMevEntry } from './rewards-storage';
 import { saveSwapQuote } from './swap-quote-storage';
 
-/** T-ONCHAIN-QUOTE-PERSIST · single + split 都用 · 拿到 swap-tx-sig 后落 quote */
-function persistQuote(sig: string, quote: JupiterQuote): void {
+const SOL_MINT_BASE58 = 'So11111111111111111111111111111111111111112';
+
+/**
+ * T-ONCHAIN-QUOTE-PERSIST + T-ONCHAIN-QUOTE-DECIMALS
+ *
+ * single + split 都用 · 拿到 swap-tx-sig 后落 quote(含 decimals · 给 BUY 行算滑点用)
+ *
+ * 异步 fire-and-forget:不阻塞 swap 流程 · decimals 查 RPC 失败兜底 9(SOL 默认)
+ * SOL mint 短路返 9 · 不查 RPC
+ */
+async function persistQuote(
+  connection: Connection,
+  sig: string,
+  quote: JupiterQuote
+): Promise<void> {
   try {
+    const isBuy = quote.inputMint === SOL_MINT_BASE58;
+    // 短路:SOL 一定 9 · 非 SOL 走 getDecimals(已有 lib · 不新加 fetch)
+    const lookupDecimals = async (mint: string): Promise<number> => {
+      if (mint === SOL_MINT_BASE58) return 9;
+      try {
+        return await getDecimals(connection, mint);
+      } catch {
+        return 9; // RPC 失败兜底 · 算滑点会偏 · 但不爆错(loadSwapQuote 校验 number 通过)
+      }
+    };
+    const [inputDecimals, quoteOutDecimals] = await Promise.all([
+      lookupDecimals(quote.inputMint),
+      lookupDecimals(quote.outputMint),
+    ]);
     saveSwapQuote({
+      version: 2,
       signature: sig,
       timestamp: Date.now(),
       inputMint: quote.inputMint,
@@ -29,7 +57,9 @@ function persistQuote(sig: string, quote: JupiterQuote): void {
       inputAmount: quote.inAmount,
       quoteOutAmount: quote.outAmount,
       slippageBps: quote.slippageBps,
-      side: quote.inputMint === 'So11111111111111111111111111111111111111112' ? 'buy' : 'sell',
+      side: isBuy ? 'buy' : 'sell',
+      inputDecimals,
+      quoteOutDecimals,
     });
   } catch (e) {
     console.warn('[execute-swap-plan] saveSwapQuote failed (non-blocking):', e);
@@ -124,7 +154,7 @@ export async function executeSwapPlan(
     onStage('confirming');
     const confirmed = await confirmTx(connection, sig, confirmTimeoutMs);
     if (!confirmed) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
-    persistQuote(sig, quote);
+    void persistQuote(connection, sig, quote);
     if (preBalanceLamports != null) {
       void recordMevIfPositive({
         connection,
@@ -162,7 +192,7 @@ export async function executeSwapPlan(
   onStage('confirming');
   const swapOk = await confirmTx(connection, sig, confirmTimeoutMs);
   if (!swapOk) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
-  persistQuote(sig, quote);
+  void persistQuote(connection, sig, quote);
 
   if (preBalanceLamports != null) {
     void recordMevIfPositive({

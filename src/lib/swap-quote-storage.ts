@@ -21,7 +21,16 @@ const INDEX_KEY = 'ocufi:quote-index';
 const MAX_AGE_MS = 30 * 24 * 3600 * 1000; // 30 天
 const MAX_INDEX_SIZE = 1000; // 防恶意 / bug 失控膨胀 · 超出按最旧裁剪
 
+/**
+ * 内部版本号 · T-ONCHAIN-QUOTE-DECIMALS(2026-04-30 晚)bump 到 2
+ *   v2 vs v1 区别:多了 inputDecimals + quoteOutDecimals
+ *   load 时 version 不匹配 → 返 null · 旧条目滑点列继续 dash · 不爆错
+ */
+const STORAGE_VERSION = 2;
+
 export interface StoredSwapQuote {
+  /** 内部版本号 · 校验用 · save 时写入 STORAGE_VERSION · load 时不匹配返 null */
+  version: number;
   /** swap tx 链上 signature(split 模式 = 第 2 笔 swap tx 的 sig)*/
   signature: string;
   /** 落地时间(epoch ms)*/
@@ -38,6 +47,10 @@ export interface StoredSwapQuote {
   slippageBps: number;
   /** buy 还是 sell · /history UI 渲染区分 */
   side: 'buy' | 'sell';
+  /** 输入 mint 的 decimals(SOL=9 · USDC=6 · meme 多变)· BUY 行算滑点用 */
+  inputDecimals: number;
+  /** 输出 mint 的 decimals · BUY 行 quoteOutAmount 转 ui 单位用 */
+  quoteOutDecimals: number;
 }
 
 const isClient = () => typeof window !== 'undefined';
@@ -90,7 +103,9 @@ export function saveSwapQuote(quote: StoredSwapQuote): void {
   if (!isClient()) return;
   if (!quote.signature) return; // 防御:sig 必须存在
   try {
-    window.localStorage.setItem(quoteKey(quote.signature), JSON.stringify(quote));
+    // 强制写入当前 STORAGE_VERSION · 调用方传 v1 也会被覆盖成 v2(防上游漏写)
+    const stamped: StoredSwapQuote = { ...quote, version: STORAGE_VERSION };
+    window.localStorage.setItem(quoteKey(quote.signature), JSON.stringify(stamped));
     // 更新索引(如果同 sig 已在,先去掉旧条目再 push)
     const idx = readIndex().filter((e) => e.signature !== quote.signature);
     idx.push({ signature: quote.signature, timestamp: quote.timestamp });
@@ -125,14 +140,18 @@ export function loadSwapQuote(signature: string): StoredSwapQuote | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     // 防御:校验 shape · 损坏的条目当不存在
+    // T-ONCHAIN-QUOTE-DECIMALS · v1 旧条目无 inputDecimals/quoteOutDecimals · version !== 2 → null
     if (
       !parsed ||
+      parsed.version !== STORAGE_VERSION ||
       typeof parsed.signature !== 'string' ||
       typeof parsed.timestamp !== 'number' ||
       typeof parsed.quoteOutAmount !== 'string' ||
       typeof parsed.inputAmount !== 'string' ||
       typeof parsed.inputMint !== 'string' ||
       typeof parsed.outputMint !== 'string' ||
+      typeof parsed.inputDecimals !== 'number' ||
+      typeof parsed.quoteOutDecimals !== 'number' ||
       (parsed.side !== 'buy' && parsed.side !== 'sell')
     ) {
       return null;

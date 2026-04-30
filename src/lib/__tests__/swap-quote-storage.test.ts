@@ -23,6 +23,7 @@ const FAKE_USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 function fakeQuote(sig: string, ts: number, side: 'buy' | 'sell'): StoredSwapQuote {
   return {
+    version: 2,
     signature: sig,
     timestamp: ts,
     inputMint: side === 'buy' ? SOL_MINT : FAKE_USDC,
@@ -31,6 +32,8 @@ function fakeQuote(sig: string, ts: number, side: 'buy' | 'sell'): StoredSwapQuo
     quoteOutAmount: '99000000',
     slippageBps: 100,
     side,
+    inputDecimals: side === 'buy' ? 9 : 6,
+    quoteOutDecimals: side === 'buy' ? 6 : 9,
   };
 }
 
@@ -166,5 +169,87 @@ describe('真实使用 · /history 滑点列接力', () => {
     const quoteOut = BigInt(loaded!.quoteOutAmount);
     const realized = Number(((quoteOut - actual) * BigInt(10000)) / quoteOut);
     expect(realized).toBeCloseTo(101, 0); // 约 1.01% 滑点
+  });
+});
+
+/**
+ * T-ONCHAIN-QUOTE-DECIMALS · v1 → v2 迁移 + decimals 字段校验
+ *
+ * 关键覆盖:
+ *   - v1 旧条目(无 version + 无 decimals)→ load 返 null · /history 显 dash
+ *   - v2 写入返 decimals 字段 · BUY 行算滑点用
+ *   - decimals 字段类型不对 → 返 null
+ *   - saveSwapQuote 强制写 version=2(防上游漏写)
+ */
+describe('T-ONCHAIN-QUOTE-DECIMALS · 版本 + decimals 字段', () => {
+  it('saveSwapQuote 写出含 inputDecimals / quoteOutDecimals / version=2', () => {
+    const q = fakeQuote('sig-v2-1', Date.now(), 'buy');
+    saveSwapQuote(q);
+    const loaded = loadSwapQuote('sig-v2-1');
+    expect(loaded?.version).toBe(2);
+    expect(loaded?.inputDecimals).toBe(9); // SOL
+    expect(loaded?.quoteOutDecimals).toBe(6); // USDC
+  });
+
+  it('v1 旧条目(无 version 字段)→ load 返 null(SPEC 要求 · /history 显 dash 不爆错)', () => {
+    const v1Entry = {
+      signature: 'sig-v1-old',
+      timestamp: Date.now(),
+      inputMint: SOL_MINT,
+      outputMint: FAKE_USDC,
+      inputAmount: '1000000',
+      quoteOutAmount: '99000000',
+      slippageBps: 100,
+      side: 'buy',
+      // 注意:无 version · 无 inputDecimals · 无 quoteOutDecimals(模拟 v1 已存的旧条目)
+    };
+    window.localStorage.setItem('ocufi:quote:sig-v1-old', JSON.stringify(v1Entry));
+    expect(loadSwapQuote('sig-v1-old')).toBeNull();
+  });
+
+  it('version=1 显式标记(老 ship 的旧版)→ load 返 null', () => {
+    const v1Entry = {
+      version: 1,
+      signature: 'sig-v1-marked',
+      timestamp: Date.now(),
+      inputMint: SOL_MINT,
+      outputMint: FAKE_USDC,
+      inputAmount: '1000000',
+      quoteOutAmount: '99000000',
+      slippageBps: 100,
+      side: 'buy',
+    };
+    window.localStorage.setItem('ocufi:quote:sig-v1-marked', JSON.stringify(v1Entry));
+    expect(loadSwapQuote('sig-v1-marked')).toBeNull();
+  });
+
+  it('inputDecimals 字段类型不对(string)→ load 返 null', () => {
+    const bad = { ...fakeQuote('sig-bad-dec', Date.now(), 'buy'), inputDecimals: '9' as unknown as number };
+    window.localStorage.setItem('ocufi:quote:sig-bad-dec', JSON.stringify(bad));
+    expect(loadSwapQuote('sig-bad-dec')).toBeNull();
+  });
+
+  it('quoteOutDecimals 字段缺失 → load 返 null', () => {
+    const bad: Partial<StoredSwapQuote> = { ...fakeQuote('sig-no-out-dec', Date.now(), 'buy') };
+    delete bad.quoteOutDecimals;
+    window.localStorage.setItem('ocufi:quote:sig-no-out-dec', JSON.stringify(bad));
+    expect(loadSwapQuote('sig-no-out-dec')).toBeNull();
+  });
+
+  it('调用方传 version=1 → save 强制覆盖为 2(防上游漏写)', () => {
+    const sneaky = { ...fakeQuote('sig-sneaky-v1', Date.now(), 'buy'), version: 1 };
+    saveSwapQuote(sneaky);
+    const loaded = loadSwapQuote('sig-sneaky-v1');
+    expect(loaded).not.toBeNull();
+    expect(loaded?.version).toBe(2);
+  });
+
+  it('BUY 行 decimals 算法预演(SOL→USDC · quoteOut 6 decimals)', () => {
+    saveSwapQuote(fakeQuote('sig-buy-decimals', Date.now(), 'buy'));
+    const loaded = loadSwapQuote('sig-buy-decimals');
+    expect(loaded?.quoteOutDecimals).toBe(6);
+    // /history BUY 算法:把 quoteOutAmount 从 raw 转成 ui · 跟实际 token 量对比
+    const quoteOutUi = Number(loaded!.quoteOutAmount) / 10 ** loaded!.quoteOutDecimals;
+    expect(quoteOutUi).toBe(99); // 99 USDC
   });
 });
