@@ -754,16 +754,23 @@ export interface BITradeSizeDist {
   max_trade_usd: number | null;
 }
 
+export interface BIVolumeTimeSeries {
+  hourly_volume_24h: BIVolumeBucket[];
+  daily_volume_30d: BIVolumeBucket[];
+}
+
 export interface BIMetricsResp {
   ok: boolean;
   window: FeeRevenueWindow;
   /** spec 降级:section 字段拿不到 → 子字段 null · 不抛 500 */
-  hourly_volume_24h: BIVolumeBucket[];
-  daily_volume_30d: BIVolumeBucket[];
-  conversion: BIConversionFunnel;
-  mev: BIMevRebate;
-  success: BISuccessRate;
-  trade_size: BITradeSizeDist;
+  volume_time_series: BIVolumeTimeSeries;
+  funnel: BIConversionFunnel;
+  mev_rebate: BIMevRebate;
+  tx_success: BISuccessRate;
+  trade_size_distribution: BITradeSizeDist;
+  fee_address?: string | null;
+  sol_price_usd?: number;
+  cached?: boolean;
   computed_at: string;
 }
 
