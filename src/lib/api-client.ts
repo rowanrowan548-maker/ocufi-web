@@ -790,3 +790,23 @@ export interface EmptyAccountsResp {
 export async function fetchEmptyAccounts(wallet: string): Promise<EmptyAccountsResp> {
   return apiFetch<EmptyAccountsResp>(`/portfolio/empty-accounts?wallet=${encodeURIComponent(wallet)}`);
 }
+
+// ─── T-HISTORY-CHAIN-DETAIL-FE · /portfolio/tx-detail ───
+// 后端契约(数学守恒 · priority + base = total · 没数据时 ok:false 字段全 0):
+//   GET /portfolio/tx-detail?signature=X
+//   → { ok, type, priority_fee_sol, base_fee_sol, total_fee_sol, cached, error?, ... }
+
+export interface TxDetail {
+  ok: boolean;
+  signature: string;
+  type: string | null;
+  priority_fee_sol: number;
+  base_fee_sol: number;
+  total_fee_sol: number;
+  cached?: boolean;
+  error?: string | null;
+}
+
+export async function fetchTxDetail(signature: string): Promise<TxDetail> {
+  return apiFetch<TxDetail>(`/portfolio/tx-detail?signature=${encodeURIComponent(signature)}`);
+}

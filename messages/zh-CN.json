@@ -1371,6 +1371,15 @@
       "success": "成功",
       "failed": "失败"
     },
+    "priorityFee": {
+      "loading": "优先费加载中"
+    },
+    "gas": {
+      "loading": "Gas 加载中"
+    },
+    "fee": {
+      "unknown": "链上数据不可用"
+    },
     "retry": "重试",
     "type": {
       "buy": "买入",

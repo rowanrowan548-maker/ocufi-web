@@ -28,6 +28,7 @@ import {
 import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
 import { formatExecPrice as formatExecPriceLib } from '@/lib/exec-price';
+import { TxFeeBadge } from './tx-fee-badge';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 
 // T-HIST-92 · 筛选状态(localStorage 持久化)
@@ -399,11 +400,12 @@ function HistoryRow({
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
         {r.actualSlippageBps != null ? `${(r.actualSlippageBps / 100).toFixed(2)}%` : '—'}
       </TableCell>
+      {/* T-HISTORY-CHAIN-DETAIL-FE:本地 priorityFeeSol / gasFeeSol 没值 → 走 TxFeeBadge 行级懒加载 /portfolio/tx-detail */}
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.priorityFeeSol != null ? `${r.priorityFeeSol.toFixed(6)}` : '—'}
+        {r.priorityFeeSol != null ? trimSolFee(r.priorityFeeSol) : <TxFeeBadge signature={r.signature} field="priority" />}
       </TableCell>
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.gasFeeSol != null ? `${r.gasFeeSol.toFixed(6)}` : '—'}
+        {r.gasFeeSol != null ? trimSolFee(r.gasFeeSol) : <TxFeeBadge signature={r.signature} field="gas" />}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">
@@ -460,6 +462,12 @@ function formatAmount(n: number): string {
   if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+// T-HISTORY-CHAIN-DETAIL-FE · 本地 priorityFeeSol / gasFeeSol 显示格式 · 跟 TxFeeBadge 后端值显示规则一致
+function trimSolFee(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  return n.toFixed(8).replace(/(\.[0-9]*?)0+$/, '$1').replace(/\.$/, '');
 }
 
 // T-HISTORY-COMPUTED-PRICE · 成交价显示算法在 src/lib/exec-price.ts(纯函数 · 有单测)

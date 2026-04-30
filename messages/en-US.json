@@ -1356,6 +1356,15 @@
       "success": "Success",
       "failed": "Failed"
     },
+    "priorityFee": {
+      "loading": "Loading priority fee"
+    },
+    "gas": {
+      "loading": "Loading gas"
+    },
+    "fee": {
+      "unknown": "On-chain data unavailable"
+    },
     "retry": "Retry",
     "type": {
       "buy": "Buy",
