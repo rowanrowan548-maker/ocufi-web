@@ -1983,5 +1983,14 @@
       "desc": "Your friends trade · you earn a share of fees · adds up over time",
       "cta": "Go to Invite page"
     }
+  },
+  "auth": {
+    "callback": {
+      "loading": "Logging in…",
+      "loadingHint": "Phantom is finishing your login · usually 1–3s",
+      "error": "Login failed",
+      "retry": "Retry",
+      "home": "Back to home"
+    }
   }
 }
