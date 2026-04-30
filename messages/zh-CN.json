@@ -1319,7 +1319,8 @@
       "making": "付出",
       "taking": "收到",
       "price": "价格",
-      "expiry": "到期"
+      "expiry": "到期",
+      "loadFailed": "挂单列表加载失败"
     }
   },
   "history": {

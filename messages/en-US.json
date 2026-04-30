@@ -1304,7 +1304,8 @@
       "making": "Paying",
       "taking": "Receiving",
       "price": "Price",
-      "expiry": "Expiry"
+      "expiry": "Expiry",
+      "loadFailed": "Failed to load orders"
     }
   },
   "history": {
