@@ -1,5 +1,13 @@
 # QA · Playwright e2e (qa/e2e/)
 
+> **🚨 AI 测试钱包安全规则 · 所有人必读**
+>
+> The AI test wallet (`72zX5u…EVg4w`, profile under `qa/e2e/.cache/`)
+> is **read-only + sim-sign only**. Connect, read state, reject popups —
+> never approve a real mainnet transaction with this profile, not even
+> dust. Real-tx verification is the user's job. Violation → stop and
+> report Tech Lead immediately.
+
 Live-prod end-to-end tests run against `https://www.ocufi.io` (prelaunch lock
 bypassed via `?preview=<key>` cookie). Independent of `tests/e2e/` (which targets
 local dev server).
@@ -8,13 +16,20 @@ local dev server).
 
 ```
 qa/e2e/
-├── playwright.config.ts        # 3 projects: desktop-1920 / iphone-14-pro / desktop-default
-├── _helpers.ts                 # MINTS map, tradeUrl(), gotoAndSettle()
-├── desktop-trade-1920.spec.ts  # T-OKX layout @ 1920×1080 · SOL/USDC/BONK + screenshot baselines
-├── mobile-trade-iphone.spec.ts # T-977 series @ iPhone 14 Pro 393×852 · BONK + SOL + baselines
-├── search-modal-click.spec.ts  # T-SEARCH-CLICK-FIX3/FIX4 · 2nd-click navigation regression
-├── buysell-color.spec.ts       # T-BUYSELL-COLOR-FIX2 · emerald-700 / rose-700 (canvas-normalized rgb)
-└── __snapshots__/              # baseline pngs · maxDiffPixelRatio 0.05
+├── playwright.config.ts          # 7 projects (desktop / mobile / regression / wallet)
+├── _helpers.ts                   # MINTS map, tradeUrl(), gotoAndSettle()
+├── desktop-trade-1920.spec.ts    # T-OKX layout @ 1920×1080 · SOL/USDC/BONK + baselines
+├── mobile-trade-iphone.spec.ts   # T-977 series @ iPhone 14 Pro 393×852 · BONK + SOL + baselines
+├── search-modal-click.spec.ts    # T-SEARCH-CLICK-FIX3/FIX4 · 2nd-click navigation regression
+├── buysell-color.spec.ts         # T-BUYSELL-COLOR-FIX2 · emerald-700 / rose-700 (canvas rgb)
+├── daily-smoke.spec.ts           # T-QA-DAILY-SMOKE · 8 desktop pages @ 1920
+├── regression-pages.spec.ts      # T-QA-REG-001 · 7 pages × desktop+mobile
+├── wallet-history-smoke.spec.ts  # T-QA-PHANTOM-EXT-SETUP · /history with AI test wallet
+├── fixtures/
+│   ├── setup-phantom.ts          # one-shot: import wallet into persistent profile
+│   ├── wallet.ts                 # walletTest fixture · connectWallet helper
+│   └── phantom-extension/        # gitignored · user supplies unpacked extension
+└── __snapshots__/                # baseline pngs · maxDiffPixelRatio 0.05
 ```
 
 ## Run locally
@@ -37,6 +52,69 @@ OCUFI_PREVIEW_KEY=newkey pnpm exec playwright test --config qa/e2e/playwright.co
 # point at a different env (e.g. preview deployment)
 OCUFI_BASE_URL=https://staging.ocufi.io pnpm exec playwright test --config qa/e2e/playwright.config.ts
 ```
+
+## Phantom extension setup (one-time, per machine)
+
+The `wallet-phantom` project drives a real Phantom extension with the AI
+test wallet imported. First-time setup is manual because Phantom doesn't
+ship a programmatic install path.
+
+1. **Get the unpacked extension.** Easiest route:
+
+   ```bash
+   # Install Phantom in your normal Chrome, then copy the unpacked dir:
+   cp -R "$HOME/Library/Application Support/Google/Chrome/Default/Extensions/bfnaelmomeimhlpmgjnjophhpkkoljpa/<version>" \
+         qa/e2e/fixtures/phantom-extension
+   ```
+
+   Or download the `.crx` from the Chrome Web Store (it's a zip with a
+   header) and unpack it with `unzip` into `qa/e2e/fixtures/phantom-extension/`.
+   The folder is in `.gitignore` — never commit the binary.
+
+2. **Run the one-shot importer.** A headed Chromium will open, drive the
+   Phantom welcome flow, and persist the unlocked profile to
+   `qa/e2e/.cache/playwright-user-data/`:
+
+   ```bash
+   pnpm exec tsx qa/e2e/fixtures/setup-phantom.ts
+   ```
+
+   Reads the AI test wallet base58 secret from
+   `~/.openclaw/workspace-taizi/.coordination/SECRETS.local.md` (the
+   "AI 测试钱包" section). A random password lands in
+   `qa/e2e/.cache/phantom-password.txt`.
+
+3. **Run the smoke spec** to verify everything is wired:
+
+   ```bash
+   pnpm exec playwright test --config qa/e2e/playwright.config.ts \
+     --project wallet-phantom
+   ```
+
+### Reset the profile
+
+If Phantom updates and breaks the unlock flow, or the wallet adapter is
+acting up, nuke the cache and re-import:
+
+```bash
+rm -rf qa/e2e/.cache && pnpm exec tsx qa/e2e/fixtures/setup-phantom.ts
+```
+
+### Writing a new wallet-aware spec
+
+```ts
+import { walletTest as test, expect } from './fixtures/wallet';
+
+test('rewards page · wallet connected', async ({ page, connectWallet }) => {
+  await page.goto('/?preview=aa112211');
+  await connectWallet(page);
+  await page.goto('/rewards?preview=aa112211');
+  await expect(page.getByText(/MEV reclaim/i)).toBeVisible();
+});
+```
+
+The fixture handles persistent context, extension load, auto-unlock, and
+the Phantom approval popup. Spec just calls `connectWallet(page)`.
 
 ## Baseline policy
 
