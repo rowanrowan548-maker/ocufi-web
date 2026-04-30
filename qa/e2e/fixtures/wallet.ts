@@ -140,10 +140,19 @@ async function connectWalletImpl(context: BrowserContext, extensionId: string, p
   // 3. Approve the connection in Phantom's popup.
   await popup.waitForLoadState('domcontentloaded').catch(() => undefined);
 
-  // 3a. The popup may have come up locked (Phantom auto-locks aggressively
-  // after manual setup). Fill the password if we see a password input.
+  // 3a. Race: either the popup shows a password input (locked) or an approve
+  // button (unlocked + ready to connect). React inside the popup needs ~3-5s
+  // to mount on a cold start, so we wait up to 12s for one of them to appear.
   const popupPw = popup.locator('input[type="password"]').first();
-  if (await popupPw.isVisible({ timeout: 2_000 }).catch(() => false)) {
+  const approveRegex = /^(connect|approve|continue|trust|连接|批准|继续|信任|确认)$/i;
+  const approveButton = () => popup.getByRole('button', { name: approveRegex }).first();
+
+  const sawPassword = await Promise.race([
+    popupPw.waitFor({ state: 'visible', timeout: 12_000 }).then(() => 'password' as const).catch(() => null),
+    approveButton().waitFor({ state: 'visible', timeout: 12_000 }).then(() => 'approve' as const).catch(() => null),
+  ]);
+
+  if (sawPassword === 'password') {
     const password = fs.readFileSync(PASSWORD_FILE, 'utf8').trim();
     await popupPw.fill(password);
     const unlockBtn = popup
@@ -154,15 +163,18 @@ async function connectWalletImpl(context: BrowserContext, extensionId: string, p
     } else {
       await popupPw.press('Enter');
     }
-    await popup.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => undefined);
+    // Wait for unlock to clear and approve screen to render.
+    await popupPw.waitFor({ state: 'hidden', timeout: 8_000 }).catch(() => undefined);
+  } else if (sawPassword === null) {
+    const dump = `qa/e2e/.cache/connect-popup-blank-${Date.now()}.png`;
+    await popup.screenshot({ path: dump, fullPage: true }).catch(() => undefined);
+    throw new Error(`Phantom popup never showed password OR approve. Screenshot: ${dump}`);
   }
 
-  // 3b. Find the approve/connect button (English + Chinese candidates).
-  const approve = popup
-    .getByRole('button', { name: /connect|approve|continue|trust|连接|批准|继续|信任|确认/i })
-    .first();
+  // 3b. Now wait for the approve button (whether we just unlocked or it was
+  // already unlocked and we won the first race).
   try {
-    await approve.waitFor({ state: 'visible', timeout: 15_000 });
+    await approveButton().waitFor({ state: 'visible', timeout: 15_000 });
   } catch (err) {
     const dump = `qa/e2e/.cache/connect-popup-fail-${Date.now()}.png`;
     await popup.screenshot({ path: dump, fullPage: true }).catch(() => undefined);
@@ -170,7 +182,7 @@ async function connectWalletImpl(context: BrowserContext, extensionId: string, p
       `Phantom popup never showed an approve button. Screenshot: ${dump}\nOriginal: ${(err as Error).message}`,
     );
   }
-  await approve.click();
+  await approveButton().click();
   // Some flows show a second confirmation step.
   const second = popup
     .getByRole('button', { name: /confirm|approve|确认|批准/i })
