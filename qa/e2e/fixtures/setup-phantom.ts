@@ -244,16 +244,20 @@ async function fillFirstVisible(page: Page, selector: string, value: string, opt
 
 async function importWallet(page: Page, secret: { privateKey: string }, password: string) {
   // Step 0 (optional): a splash / "Get Started" screen on some builds. Best-effort, ok if absent.
-  await tryClickByText(page, ['Get Started', 'Get started'], { timeout: 3_000 });
+  await tryClickByText(page, ['Get Started', 'Get started', '开始', '开始使用'], { timeout: 3_000 });
 
-  // Step 1: "I Already Have a Wallet" / "Use Existing Wallet" / etc. Phantom changes wording across versions.
-  // The clickByText uses case-insensitive substring matching so any reasonable variant works.
+  // Step 1: "I Already Have a Wallet" / "Use Existing Wallet" / 我已有一个钱包 / etc.
+  // Phantom localizes by Chrome locale — keep both English and Chinese candidates.
   await clickByText(page, [
     'I Already Have a Wallet',
     'Already Have a Wallet',
     'Use Existing Wallet',
     'Import an existing wallet',
     'Import Wallet',
+    '我已有一个钱包',
+    '我已有钱包',
+    '导入钱包',
+    '使用现有钱包',
   ]);
 
   // Step 2: pick the import method (we want private key, not seed phrase).
@@ -262,13 +266,15 @@ async function importWallet(page: Page, secret: { privateKey: string }, password
     'Private Key',
     'Use Private Key',
     'Import a Solana private key',
+    '导入私钥',
+    '私钥',
   ]);
 
   // Optional: ask for a name first.
-  const nameInput = page.locator('input[placeholder*="name" i]').first();
+  const nameInput = page.locator('input[placeholder*="name" i], input[placeholder*="名称"], input[placeholder*="账号"]').first();
   if (await nameInput.isVisible().catch(() => false)) {
     await nameInput.fill('AI Test Wallet');
-    await clickByText(page, ['Continue', 'Next']);
+    await clickByText(page, ['Continue', 'Next', '继续', '下一步']);
   }
 
   // Paste the base58 secret.
@@ -277,7 +283,7 @@ async function importWallet(page: Page, secret: { privateKey: string }, password
     'textarea, input[type="password"], input[type="text"]',
     secret.privateKey,
   );
-  await clickByText(page, ['Import', 'Continue', 'Next']);
+  await clickByText(page, ['Import', 'Continue', 'Next', '导入', '继续', '下一步']);
 
   // Password creation (some flows show two fields, some one).
   await fillFirstVisible(page, 'input[type="password"]', password);
@@ -293,15 +299,15 @@ async function importWallet(page: Page, secret: { privateKey: string }, password
     await tos.check().catch(() => undefined);
   }
 
-  await clickByText(page, ['Continue', 'Submit', 'Save', 'Done', 'Finish']);
+  await clickByText(page, ['Continue', 'Submit', 'Save', 'Done', 'Finish', '继续', '提交', '保存', '完成']);
 
   // Wait for the "all done" / dashboard screen.  Selectors vary by version,
   // so we just wait for either a "Got it" / "Finish" button or a balance UI.
   await Promise.race([
-    page.getByRole('button', { name: /got it|finish|done/i }).first().waitFor({ timeout: 15_000 }).catch(() => {}),
-    page.getByText(/SOL|balance/i).first().waitFor({ timeout: 15_000 }).catch(() => {}),
+    page.getByRole('button', { name: /got it|finish|done|完成|知道了|开始/i }).first().waitFor({ timeout: 15_000 }).catch(() => {}),
+    page.getByText(/SOL|balance|余额/i).first().waitFor({ timeout: 15_000 }).catch(() => {}),
   ]);
-  await tryClickByText(page, ['Got it', 'Finish', 'Done'], { timeout: 5_000 });
+  await tryClickByText(page, ['Got it', 'Finish', 'Done', '完成', '知道了', '开始'], { timeout: 5_000 });
 }
 
 async function main() {
