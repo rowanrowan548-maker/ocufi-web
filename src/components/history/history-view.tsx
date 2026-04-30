@@ -29,6 +29,7 @@ import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
 import { formatExecPrice as formatExecPriceLib } from '@/lib/exec-price';
 import { TxFeeBadge } from './tx-fee-badge';
+import { SlippageCell } from './slippage-cell';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 
 // T-HIST-92 · 筛选状态(localStorage 持久化)
@@ -397,8 +398,13 @@ function HistoryRow({
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
         {formatExecPrice(r)}
       </TableCell>
+      {/* T-FE-SLIPPAGE-COLUMN:本地 actualSlippageBps 优先 · 没有则用 ⛓️ 落地的 quote 算真滑点(V1 仅 sell · buy 待 quoteOutDecimals)*/}
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.actualSlippageBps != null ? `${(r.actualSlippageBps / 100).toFixed(2)}%` : '—'}
+        {r.actualSlippageBps != null ? (
+          `${(r.actualSlippageBps / 100).toFixed(2)}%`
+        ) : (
+          <SlippageCell signature={r.signature} type={r.type} solAmount={r.solAmount} />
+        )}
       </TableCell>
       {/* T-HISTORY-CHAIN-DETAIL-FE:本地 priorityFeeSol / gasFeeSol 没值 → 走 TxFeeBadge 行级懒加载 /portfolio/tx-detail */}
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
