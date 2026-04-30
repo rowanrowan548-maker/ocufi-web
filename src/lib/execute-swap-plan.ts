@@ -184,7 +184,8 @@ export async function executeSwapPlan(
 
   // 第 2 笔(swap · 用 fresh blockhash 防过期)
   const { blockhash } = await connection.getLatestBlockhash('confirmed');
-  const swapTx: VersionedTransaction = plan.buildSwapTx(blockhash);
+  // T-PHANTOM-SPLIT-TX-RORY-V2:buildSwapTx 现在 async · 内部 simulate fresh-blockhash swap
+  const swapTx: VersionedTransaction = await plan.buildSwapTx(blockhash);
 
   onStage('signing');
   onStage('sending');

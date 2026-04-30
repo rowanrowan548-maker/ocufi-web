@@ -220,11 +220,11 @@ export function buildFeeTransferOnly(
  * - kind='single':setup 空 / 单笔 size <= PHANTOM_SAFE_SIZE_LIMIT · memo 保留
  * - kind='split' :setup 不空 + 单笔 size > 1150 · setup tx + swap tx 拆开 · swap tx 删 memo
  *
- * 前端流程(kind='split'):
- *   1. wallet.signTransaction(setupTx) → connection.sendRawTransaction → confirmTx
+ * 前端流程(kind='split' · T-PHANTOM-SPLIT-TX-RORY-V2):
+ *   1. wallet.sendTransaction(setupTx, connection) → confirmTx (sign + send 一次性 · 不分离)
  *   2. const { blockhash } = await connection.getLatestBlockhash('confirmed')
- *   3. const swapTx = plan.buildSwapTx(blockhash)
- *   4. wallet.signTransaction(swapTx) → connection.sendRawTransaction → confirmTx
+ *   3. const swapTx = await plan.buildSwapTx(blockhash)  // 内部 simulate · async
+ *   4. wallet.sendTransaction(swapTx, connection) → confirmTx
  *
  * Rory 强调:setup wrap SOL 后用户取消 swap → app **必须**有 cleanup/unwrap 逃生口
  * (T-PHANTOM-SPLIT-TX-CLEANUP 后续 ship)
@@ -234,8 +234,12 @@ export type SplitTxPlan =
   | {
       kind: 'split';
       setupTx: VersionedTransaction;
-      /** setup confirm 后调 · 传 fresh blockhash · 内部不再 simulate(由 wallet send 时模拟) */
-      buildSwapTx: (latestBlockhash: string) => VersionedTransaction;
+      /**
+       * setup confirm 后调 · 传 fresh blockhash · **内部 simulate**(Rory v2 第 3 个 fix)
+       *
+       * async · 因为内部跑 simulate(防 stale blockhash 让 Phantom 红警/失败)
+       */
+      buildSwapTx: (latestBlockhash: string) => Promise<VersionedTransaction>;
     };
 
 /**
@@ -346,10 +350,13 @@ export async function prepareSwapTxs(
     ...filteredJupiterBudgetIxs.map(jsonToIx),
   ];
 
-  // 3. setup ix 集
-  const setupIxs: TransactionInstruction[] = [];
-  if (resp.tokenLedgerInstruction) setupIxs.push(jsonToIx(resp.tokenLedgerInstruction));
-  setupIxs.push(...resp.setupInstructions.map(jsonToIx));
+  // 3. setup ix 集 · T-PHANTOM-SPLIT-TX-RORY-V2(2026-05-01):
+  //    Rory 第二轮反馈:tokenLedger 属于 swap leg · 不属于 setup leg · 拆开存
+  //    setupIxs 仅含 createATA / wrap SOL 等纯 setup · tokenLedger 单独存到 swap leg
+  const setupIxs: TransactionInstruction[] = resp.setupInstructions.map(jsonToIx);
+  const tokenLedgerIxs: TransactionInstruction[] = resp.tokenLedgerInstruction
+    ? [jsonToIx(resp.tokenLedgerInstruction)]
+    : [];
 
   // 4. fee ix(transfer + 可选 memo · split 模式时调用方 includeMemo=false)
   const vault = getFeeVault();
@@ -381,10 +388,12 @@ export async function prepareSwapTxs(
   );
 
   // 7. 试组单笔 tx · 看 size 决定 single / split
+  //    T-PHANTOM-SPLIT-TX-RORY-V2:single 内 tokenLedger 在 swap 段(setup 后 / fee 前)
   const { blockhash } = await connection.getLatestBlockhash('confirmed');
   const singleAllIxs = [
     ...computeBudgetIxs,
     ...setupIxs,
+    ...tokenLedgerIxs,
     ...buildFeeIxs(true), // single 模式保留 memo
     ...swapAndCleanup,
   ];
@@ -404,21 +413,25 @@ export async function prepareSwapTxs(
   // split 模式
   console.info(
     `[swap-with-fee] split tx · single size ${singleSize} > ${PHANTOM_SAFE_SIZE_LIMIT} · ` +
-      `setup ix=${setupIxs.length} · per Rory 2026-04-30`
+      `setup ix=${setupIxs.length} · per Rory 2026-04-30 / 2026-05-01`
   );
 
   // setup tx · [computeBudget · setup]
+  //   T-PHANTOM-SPLIT-TX-RORY-V2:tokenLedger 不放这 · setup 必须只有 createATA / wrap 等纯 setup
   const setupTxIxs = [...computeBudgetIxs, ...setupIxs];
   const setupTx = compileV0Tx(userPubkey, blockhash, setupTxIxs, alts);
   assertSafeSize(setupTx, PHANTOM_SAFE_SIZE_LIMIT, 'setup');
   await simulateOrThrow(connection, setupTx);
 
   // swap tx 闭包 · 调用时拿 fresh blockhash · 不带 memo(Rory 强调删)
-  const swapTxIxs = [...computeBudgetIxs, ...buildFeeIxs(false), ...swapAndCleanup];
-  const buildSwapTx = (freshBlockhash: string): VersionedTransaction => {
+  //   T-PHANTOM-SPLIT-TX-RORY-V2:tokenLedger 跟着 swap 一起 · 拿 fresh blockhash 后必须 simulate
+  const swapTxIxs = [...computeBudgetIxs, ...tokenLedgerIxs, ...buildFeeIxs(false), ...swapAndCleanup];
+  const buildSwapTx = async (freshBlockhash: string): Promise<VersionedTransaction> => {
     const swapTx = compileV0Tx(userPubkey, freshBlockhash, swapTxIxs, alts);
     // swap tx 严格不超 Solana 上限(没法再拆,拆完仍超只能报错)
     assertSafeSize(swapTx, SOLANA_TX_SIZE_LIMIT, 'swap');
+    // Rory v2 第 3 个 fix:fresh blockhash 后必须 simulate · 防 stale/reorder 失败
+    await simulateOrThrow(connection, swapTx);
     return swapTx;
   };
 
