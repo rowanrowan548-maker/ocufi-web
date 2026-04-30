@@ -21,7 +21,7 @@
     "tokenCheck": "Token Check",
     "faq": "FAQ",
     "more": "More",
-    "rewards": "💰 Rewards",
+    "rewards": "Rewards",
     "markets": "Markets",
     "trending": "Trending",
     "strategy": "Strategy",
@@ -414,6 +414,13 @@
       "buySuccess": "Bought · received {tokens} (paid {sol} SOL)",
       "sellSuccess": "Sold · received {sol} SOL (sold {tokens})",
       "viewExplorer": "View on Solscan"
+    },
+    "sellAll": {
+      "reclaimToast": {
+        "title": "Reclaim 0.002 SOL deposit",
+        "desc": "This token's account is empty · deposit still locked · claim it back in Rewards Center",
+        "action": "Claim now"
+      }
     },
     "activity": {
       "activity": "Activity",
@@ -1691,12 +1698,12 @@
     "title": "Markets",
     "subtitle": "Trending / New / Movers / Verified / Risk · auto-refresh 60s",
     "tabs": {
-      "trending": "🔥 Trending",
-      "new": "🆕 New",
-      "gainers1h": "📈 1h Gainers",
-      "losers24h": "📉 24h Losers",
-      "verified": "✅ Verified",
-      "risk": "⚠️ Risk Watch",
+      "trending": "Trending",
+      "new": "New",
+      "gainers1h": "1h Gainers",
+      "losers24h": "24h Losers",
+      "verified": "Verified",
+      "risk": "Risk Watch",
       "newpairs": "New Pairs",
       "fav": "Watchlist",
       "major": "Major"
@@ -1928,16 +1935,16 @@
   },
   "rewards": {
     "title": "Rewards Center",
-    "subtitle": "Ocufi gives back what Solana locked up · gmgn / photon don't",
+    "subtitle": "Ocufi gives back what Solana locked up",
     "summary": {
       "wallet": "Wallet",
       "notConnected": "Wallet not connected",
       "totalRecovered": "Total recovered"
     },
     "tabs": {
-      "reclaim": "🎁 Reclaim SOL",
-      "mev": "⚡ MEV Rebates",
-      "invite": "🎯 Invite & Earn"
+      "reclaim": "Reclaim SOL",
+      "mev": "MEV Rebates",
+      "invite": "Invite & Earn"
     },
     "reclaim": {
       "connectFirst": "Connect your wallet to see reclaimable empty accounts",
@@ -1960,7 +1967,7 @@
       "totalLabel": "Total MEV rebated",
       "totalHint": "Helius backrun rebate · auto-tracked from balance diff after each confirmed swap",
       "emptyTitle": "No MEV rebates yet",
-      "emptyDesc": "Make a few trades · gmgn / photon pocket this; Ocufi routes via Helius and gives you 50% back"
+      "emptyDesc": "Make a few trades · Ocufi routes via Helius and gives you 50% MEV back"
     },
     "invite": {
       "title": "Invite friends, earn fees",

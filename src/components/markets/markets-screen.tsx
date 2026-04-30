@@ -14,7 +14,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import {
+  Loader2, Flame, Sparkles, TrendingUp, TrendingDown, BadgeCheck, AlertTriangle,
+  type LucideIcon,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   fetchMarketsTrending,
@@ -27,6 +30,14 @@ import { MarketsTable } from './markets-table';
 type TabKey = 'trending' | 'new' | 'gainers1h' | 'losers24h' | 'verified' | 'risk';
 
 const TABS: TabKey[] = ['trending', 'new', 'gainers1h', 'losers24h', 'verified', 'risk'];
+const TAB_ICONS: Record<TabKey, LucideIcon> = {
+  trending: Flame,
+  new: Sparkles,
+  gainers1h: TrendingUp,
+  losers24h: TrendingDown,
+  verified: BadgeCheck,
+  risk: AlertTriangle,
+};
 const REFRESH_MS = 60_000;
 
 export function MarketsScreen() {
@@ -70,23 +81,27 @@ export function MarketsScreen() {
         <p className="text-sm text-muted-foreground mt-0.5">{t('subtitle')}</p>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs · T-REWARDS-POLISH:emoji 换 Lucide */}
       <div className="flex flex-wrap gap-1 border-b border-border/40 pb-2">
-        {TABS.map((k) => (
-          <button
-            key={k}
-            type="button"
-            data-testid={`markets-tab-${k}`}
-            onClick={() => setTab(k)}
-            className={`px-3 py-1.5 rounded text-xs transition-colors ${
-              tab === k
-                ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
-                : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
-            }`}
-          >
-            {t(`tabs.${k}`)}
-          </button>
-        ))}
+        {TABS.map((k) => {
+          const Icon = TAB_ICONS[k];
+          return (
+            <button
+              key={k}
+              type="button"
+              data-testid={`markets-tab-${k}`}
+              onClick={() => setTab(k)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-colors ${
+                tab === k
+                  ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
+                  : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {t(`tabs.${k}`)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Body */}

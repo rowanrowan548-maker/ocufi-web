@@ -363,9 +363,15 @@ function HistoryRow({
           </Link>
         ) : r.solAmount > 0 ? (
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-              ◎
-            </div>
+            {/* T-REWARDS-POLISH:用 Solana 官方 logo · 不再紫色占位 */}
+            <Image
+              src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"
+              alt="SOL"
+              width={24}
+              height={24}
+              className="rounded-full flex-shrink-0"
+              unoptimized
+            />
             <span className="text-sm font-medium">SOL</span>
           </div>
         ) : (

@@ -274,6 +274,21 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
         }
       );
 
+      // T-REWARDS-POLISH D3 · 卖出全部 → sub-toast 提示去回收 ATA 押金
+      // fullSellRaw !== null 表示用户点了 100% · ATA 大概率清空 · 可去 /rewards#reclaim
+      if (fullSellRaw !== null) {
+        setTimeout(() => {
+          toast(t('trade.sellAll.reclaimToast.title'), {
+            description: t('trade.sellAll.reclaimToast.desc'),
+            action: {
+              label: t('trade.sellAll.reclaimToast.action'),
+              onClick: () => window.location.assign('/rewards#reclaim'),
+            },
+            duration: 12000,
+          });
+        }, 1500);
+      }
+
       if (isApiConfigured() && wallet.publicKey) {
         const usdValue = await fetchSolUsdPrice()
           .then((p) => p > 0 ? p * actualSol : undefined)

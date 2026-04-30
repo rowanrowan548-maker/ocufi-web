@@ -14,6 +14,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { Recycle, Zap, UserPlus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -71,13 +72,17 @@ export function RewardsScreen() {
       {/* 3 tab */}
       <Tabs value={tab} onValueChange={(v) => setOverride(v as TabKey)} className="w-full">
         <TabsList className="w-full justify-start">
+          {/* T-REWARDS-POLISH:emoji 换 Lucide */}
           <TabsTrigger value="reclaim" data-testid="rewards-tab-reclaim">
+            <Recycle className="h-3.5 w-3.5" />
             {t('tabs.reclaim')}
           </TabsTrigger>
           <TabsTrigger value="mev" data-testid="rewards-tab-mev">
+            <Zap className="h-3.5 w-3.5" />
             {t('tabs.mev')}
           </TabsTrigger>
           <TabsTrigger value="invite" data-testid="rewards-tab-invite">
+            <UserPlus className="h-3.5 w-3.5" />
             {t('tabs.invite')}
           </TabsTrigger>
         </TabsList>

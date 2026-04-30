@@ -21,7 +21,7 @@
     "tokenCheck": "查币",
     "faq": "常见问题",
     "more": "更多",
-    "rewards": "💰 奖励",
+    "rewards": "奖励",
     "markets": "行情",
     "trending": "热门",
     "strategy": "策略",
@@ -414,6 +414,13 @@
       "buySuccess": "买入成功 · 收到 {tokens}(花 {sol} SOL)",
       "sellSuccess": "卖出成功 · 收到 {sol} SOL(卖出 {tokens})",
       "viewExplorer": "查看 Solscan"
+    },
+    "sellAll": {
+      "reclaimToast": {
+        "title": "可领回 0.002 SOL 押金",
+        "desc": "这个币的账户已清空 · 押金还锁着 · 去奖励中心一键领回",
+        "action": "去领取"
+      }
     },
     "activity": {
       "activity": "交易活动",
@@ -1706,12 +1713,12 @@
     "title": "代币行情",
     "subtitle": "热门 / 新发 / 涨跌幅 / 已审 / 风险预警 · 60s 自动刷新",
     "tabs": {
-      "trending": "🔥 热门",
-      "new": "🆕 新发",
-      "gainers1h": "📈 1h 涨幅",
-      "losers24h": "📉 24h 跌幅",
-      "verified": "✅ 已审",
-      "risk": "⚠️ 风险预警",
+      "trending": "热门",
+      "new": "新发",
+      "gainers1h": "1h 涨幅",
+      "losers24h": "24h 跌幅",
+      "verified": "已审",
+      "risk": "风险预警",
       "newpairs": "New Pairs",
       "fav": "自选",
       "major": "主流"
@@ -1943,16 +1950,16 @@
   },
   "rewards": {
     "title": "奖励中心",
-    "subtitle": "Ocufi 把锁在 Solana 上的钱还给你 · gmgn / photon 都没这一套",
+    "subtitle": "Ocufi 把锁在 Solana 上的钱还给你",
     "summary": {
       "wallet": "钱包",
       "notConnected": "未连接钱包",
       "totalRecovered": "已累计回收"
     },
     "tabs": {
-      "reclaim": "🎁 回收 SOL",
-      "mev": "⚡ MEV 返还",
-      "invite": "🎯 邀请返佣"
+      "reclaim": "回收 SOL",
+      "mev": "MEV 返还",
+      "invite": "邀请返佣"
     },
     "reclaim": {
       "connectFirst": "请先连接钱包查看可回收的闲置账户",
@@ -1975,7 +1982,7 @@
       "totalLabel": "MEV 返还累计",
       "totalHint": "Helius backrun rebate · 每笔 swap confirm 后自动统计余额差",
       "emptyTitle": "还没有 MEV 返还",
-      "emptyDesc": "做几笔交易自然会有 · gmgn / photon 把这部分套利吃了不还 · Ocufi 走 Helius rebate URL 给你 50%"
+      "emptyDesc": "做几笔交易自然会有 · Ocufi 走 Helius rebate URL 把 50% MEV 返你"
     },
     "invite": {
       "title": "邀请好友拿返佣",
