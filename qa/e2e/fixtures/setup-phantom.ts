@@ -115,9 +115,10 @@ async function waitForWelcomePage(context: BrowserContext, extId: string, timeou
     if (p) return p;
     await new Promise((r) => setTimeout(r, 250));
   }
-  // Welcome page didn't auto-open — open it ourselves.
+  // Welcome page didn't auto-open — open onboarding.html directly (popup.html
+  // shows a splash for first-time users that varies by build).
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${extId}/popup.html`);
+  await page.goto(`chrome-extension://${extId}/onboarding.html`);
   return page;
 }
 
@@ -126,15 +127,26 @@ async function clickByText(page: Page, candidates: string[], opts: { timeout?: n
   const start = Date.now();
   while (Date.now() - start < timeout) {
     for (const text of candidates) {
-      const loc = page.getByRole('button', { name: text });
-      if (await loc.first().isVisible().catch(() => false)) {
-        await loc.first().click();
+      // Build a case-insensitive substring regex from the text candidate.
+      const safe = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(safe, 'i');
+
+      // 1) ARIA button role (most stable, works for <button> and role="button").
+      const byRole = page.getByRole('button', { name: re });
+      if (await byRole.first().isVisible().catch(() => false)) {
+        await byRole.first().click();
         return text;
       }
-      // Fallback: any clickable element with the text.
-      const any = page.locator(`text=${text}`).first();
-      if (await any.isVisible().catch(() => false)) {
-        await any.click();
+      // 2) Link role (some Phantom screens use anchors styled as buttons).
+      const byLink = page.getByRole('link', { name: re });
+      if (await byLink.first().isVisible().catch(() => false)) {
+        await byLink.first().click();
+        return text;
+      }
+      // 3) Plain text fallback (case-insensitive via getByText).
+      const byText = page.getByText(re).first();
+      if (await byText.isVisible().catch(() => false)) {
+        await byText.click();
         return text;
       }
     }
@@ -160,11 +172,28 @@ async function fillFirstVisible(page: Page, selector: string, value: string, opt
 }
 
 async function importWallet(page: Page, secret: { privateKey: string }, password: string) {
-  // Some Phantom builds drop you straight into a "Create new / I already have a wallet" choice.
-  await clickByText(page, ['I already have a wallet', 'Import an existing wallet']);
+  // Step 0 (optional): a splash / "Get Started" screen on some builds. Best-effort, ok if absent.
+  await clickByText(page, ['Get Started', 'Continue', 'Get started'], { timeout: 4_000 }).catch(
+    () => undefined,
+  );
 
-  // Then the import method picker.
-  await clickByText(page, ['Import private key', 'Private key', 'Use private key']);
+  // Step 1: "I Already Have a Wallet" / "Use Existing Wallet" / etc. Phantom changes wording across versions.
+  // The clickByText uses case-insensitive substring matching so any reasonable variant works.
+  await clickByText(page, [
+    'I Already Have a Wallet',
+    'Already Have a Wallet',
+    'Use Existing Wallet',
+    'Import an existing wallet',
+    'Import Wallet',
+  ]);
+
+  // Step 2: pick the import method (we want private key, not seed phrase).
+  await clickByText(page, [
+    'Import Private Key',
+    'Private Key',
+    'Use Private Key',
+    'Import a Solana private key',
+  ]);
 
   // Optional: ask for a name first.
   const nameInput = page.locator('input[placeholder*="name" i]').first();
