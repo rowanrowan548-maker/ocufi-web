@@ -1,0 +1,251 @@
+/**
+ * One-shot Phantom wallet setup for Playwright e2e.
+ *
+ * What it does:
+ *   1. Launches Chromium with the Phantom unpacked extension loaded.
+ *   2. Discovers the extension ID from the service-worker URL (won't be the
+ *      production hash; unpacked extensions get a key derived from the
+ *      manifest "key" field — see below).
+ *   3. Drives the Phantom welcome flow:
+ *        a. "I already have a wallet" → "Import private key"
+ *        b. Pastes the AI test wallet base58 secret read from
+ *           ../../../.coordination/SECRETS.local.md
+ *        c. Sets a random password (saved to .cache/phantom-password.txt)
+ *        d. Confirms ToS / done
+ *   4. Persists the user data dir at qa/e2e/.cache/playwright-user-data/.
+ *      Subsequent test runs reuse this profile so the wallet is already
+ *      unlocked (until the auto-lock timer fires — see wallet.ts fixture).
+ *
+ * Run once:
+ *   pnpm exec tsx qa/e2e/fixtures/setup-phantom.ts
+ *
+ * Reset (start over):
+ *   rm -rf qa/e2e/.cache && pnpm exec tsx qa/e2e/fixtures/setup-phantom.ts
+ *
+ * Hard limits (per Tech Lead 2026-04-30):
+ *   - This profile is for the AI test wallet only.
+ *   - NEVER let it sign a real mainnet tx. Read-only + reject is the rule.
+ *
+ * If a UI selector breaks (Phantom updates often), fail fast with a clear
+ * message — do NOT silently retry. Tech Lead will decide whether to patch
+ * the selector or fall back to the wallet-adapter mock path.
+ */
+
+import { chromium, type BrowserContext, type Page } from '@playwright/test';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as crypto from 'node:crypto';
+
+const ROOT = path.resolve(__dirname, '..', '..', '..');
+const EXT_DIR = path.join(ROOT, 'qa', 'e2e', 'fixtures', 'phantom-extension');
+const CACHE_DIR = path.join(ROOT, 'qa', 'e2e', '.cache');
+const USER_DATA_DIR = path.join(CACHE_DIR, 'playwright-user-data');
+const PASSWORD_FILE = path.join(CACHE_DIR, 'phantom-password.txt');
+const SECRETS_FILE = path.resolve(ROOT, '..', '.coordination', 'SECRETS.local.md');
+
+function fail(msg: string): never {
+  console.error(`\n[setup-phantom] FATAL: ${msg}\n`);
+  process.exit(1);
+}
+
+function readSecret(): { address: string; privateKey: string } {
+  if (!fs.existsSync(SECRETS_FILE)) {
+    fail(
+      `SECRETS.local.md not found at ${SECRETS_FILE} — copy from coordination repo first.`,
+    );
+  }
+  const text = fs.readFileSync(SECRETS_FILE, 'utf8');
+  // Match the "AI 测试钱包" section.  Tolerant to whitespace / formatting drift.
+  const section = text.split(/^##\s+/m).find((s) => s.startsWith('AI 测试钱包'));
+  if (!section) fail('AI 测试钱包 section not found in SECRETS.local.md');
+
+  const addr = section.match(/地址[^`]*`([1-9A-HJ-NP-Za-km-z]{32,44})`/)?.[1];
+  const key = section.match(/私钥[^`]*`([1-9A-HJ-NP-Za-km-z]{60,120})`/)?.[1];
+  if (!addr || !key) {
+    fail(
+      `could not parse AI 测试钱包 address/private key. Section was:\n---\n${section.slice(0, 400)}\n---`,
+    );
+  }
+  return { address: addr, privateKey: key };
+}
+
+function ensureExtensionPresent() {
+  if (!fs.existsSync(path.join(EXT_DIR, 'manifest.json'))) {
+    fail(
+      `Phantom extension not found at ${EXT_DIR}/manifest.json.\n` +
+        `Download the .crx from the Chrome Web Store, unpack it (it's just a zip),\n` +
+        `and put the unpacked folder there. See qa/e2e/README.md → Phantom extension setup.`,
+    );
+  }
+}
+
+function getOrCreatePassword(): string {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+  if (fs.existsSync(PASSWORD_FILE)) {
+    return fs.readFileSync(PASSWORD_FILE, 'utf8').trim();
+  }
+  const pw = crypto.randomBytes(16).toString('base64url');
+  fs.writeFileSync(PASSWORD_FILE, pw + '\n', { mode: 0o600 });
+  return pw;
+}
+
+async function findExtensionId(context: BrowserContext, timeoutMs = 15_000): Promise<string> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    for (const sw of context.serviceWorkers()) {
+      const m = sw.url().match(/^chrome-extension:\/\/([a-p]{32})\//);
+      if (m) return m[1];
+    }
+    for (const bg of context.backgroundPages()) {
+      const m = bg.url().match(/^chrome-extension:\/\/([a-p]{32})\//);
+      if (m) return m[1];
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  fail(
+    `extension service worker did not appear within ${timeoutMs}ms. ` +
+      `Check that ${EXT_DIR} contains a valid unpacked Phantom build.`,
+  );
+}
+
+async function waitForWelcomePage(context: BrowserContext, extId: string, timeoutMs = 20_000): Promise<Page> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const p = context.pages().find((pg) => pg.url().startsWith(`chrome-extension://${extId}/`));
+    if (p) return p;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  // Welcome page didn't auto-open — open it ourselves.
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extId}/popup.html`);
+  return page;
+}
+
+async function clickByText(page: Page, candidates: string[], opts: { timeout?: number } = {}) {
+  const timeout = opts.timeout ?? 15_000;
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    for (const text of candidates) {
+      const loc = page.getByRole('button', { name: text });
+      if (await loc.first().isVisible().catch(() => false)) {
+        await loc.first().click();
+        return text;
+      }
+      // Fallback: any clickable element with the text.
+      const any = page.locator(`text=${text}`).first();
+      if (await any.isVisible().catch(() => false)) {
+        await any.click();
+        return text;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  fail(`none of these buttons appeared within ${timeout}ms: ${candidates.join(' | ')}`);
+}
+
+async function fillFirstVisible(page: Page, selector: string, value: string, opts: { timeout?: number } = {}) {
+  const timeout = opts.timeout ?? 10_000;
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const inputs = await page.locator(selector).all();
+    for (const el of inputs) {
+      if (await el.isVisible().catch(() => false)) {
+        await el.fill(value);
+        return;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  fail(`no visible input matched ${selector} within ${timeout}ms`);
+}
+
+async function importWallet(page: Page, secret: { privateKey: string }, password: string) {
+  // Some Phantom builds drop you straight into a "Create new / I already have a wallet" choice.
+  await clickByText(page, ['I already have a wallet', 'Import an existing wallet']);
+
+  // Then the import method picker.
+  await clickByText(page, ['Import private key', 'Private key', 'Use private key']);
+
+  // Optional: ask for a name first.
+  const nameInput = page.locator('input[placeholder*="name" i]').first();
+  if (await nameInput.isVisible().catch(() => false)) {
+    await nameInput.fill('AI Test Wallet');
+    await clickByText(page, ['Continue', 'Next']);
+  }
+
+  // Paste the base58 secret.
+  await fillFirstVisible(
+    page,
+    'textarea, input[type="password"], input[type="text"]',
+    secret.privateKey,
+  );
+  await clickByText(page, ['Import', 'Continue', 'Next']);
+
+  // Password creation (some flows show two fields, some one).
+  await fillFirstVisible(page, 'input[type="password"]', password);
+  // Try to fill a confirm field if it exists.
+  const pwInputs = await page.locator('input[type="password"]').all();
+  if (pwInputs.length >= 2) {
+    await pwInputs[1].fill(password);
+  }
+
+  // Accept ToS checkbox if present.
+  const tos = page.locator('input[type="checkbox"]').first();
+  if (await tos.isVisible().catch(() => false)) {
+    await tos.check().catch(() => undefined);
+  }
+
+  await clickByText(page, ['Continue', 'Submit', 'Save', 'Done', 'Finish']);
+
+  // Wait for the "all done" / dashboard screen.  Selectors vary by version,
+  // so we just wait for either a "Got it" / "Finish" button or a balance UI.
+  await Promise.race([
+    page.getByRole('button', { name: /got it|finish|done/i }).first().waitFor({ timeout: 15_000 }).catch(() => {}),
+    page.getByText(/SOL|balance/i).first().waitFor({ timeout: 15_000 }).catch(() => {}),
+  ]);
+  await clickByText(page, ['Got it', 'Finish', 'Done'], { timeout: 5_000 }).catch(() => undefined);
+}
+
+async function main() {
+  ensureExtensionPresent();
+  const secret = readSecret();
+  const password = getOrCreatePassword();
+
+  console.log('[setup-phantom] launching headed Chromium with Phantom...');
+  const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
+    headless: false,
+    args: [
+      `--disable-extensions-except=${EXT_DIR}`,
+      `--load-extension=${EXT_DIR}`,
+    ],
+    viewport: { width: 1280, height: 800 },
+  });
+
+  try {
+    const extId = await findExtensionId(context);
+    console.log(`[setup-phantom] extension id: ${extId}`);
+    fs.writeFileSync(path.join(CACHE_DIR, 'phantom-extension-id.txt'), extId + '\n');
+
+    const page = await waitForWelcomePage(context, extId);
+    await page.bringToFront();
+    await page.waitForLoadState('domcontentloaded');
+
+    console.log('[setup-phantom] importing AI test wallet...');
+    await importWallet(page, secret, password);
+
+    console.log(
+      `[setup-phantom] DONE.\n` +
+        `  user data:   ${USER_DATA_DIR}\n` +
+        `  password:    ${PASSWORD_FILE}\n` +
+        `  extension id: ${extId}\n` +
+        `  wallet addr: ${secret.address}\n`,
+    );
+  } finally {
+    await context.close();
+  }
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
