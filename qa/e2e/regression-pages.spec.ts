@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { gotoAndSettle, PREVIEW_KEY } from './_helpers';
 
-// T-QA-REG-001 · 7 页全站回归 e2e × 桌面 + 移动 = 14 截图基线
+// T-QA-REG-001 · 9 页全站回归 e2e × 桌面 + 移动 = 18 截图基线
 // 不重叠 daily-smoke(daily 是日常巡检 · 这条是回归基线 · 跑频更低 · 包 /alerts)
+// 2026-04-30: T-QA-MOBILE-REBASELINE 加 /markets + /rewards(7→9 页)
 //
 // 跑:
 //   pnpm exec playwright test --config qa/e2e/playwright.config.ts \
@@ -23,6 +24,8 @@ const PAGES: Array<{ name: string; url: string }> = [
   { name: 'history', url: withPreview('/history') },
   { name: 'alerts', url: withPreview('/alerts') },
   { name: 'invite', url: withPreview('/invite') },
+  { name: 'markets', url: withPreview('/markets') },
+  { name: 'rewards', url: withPreview('/rewards') },
 ];
 
 test.describe('regression-pages · 7 pages × desktop/mobile baselines', () => {
