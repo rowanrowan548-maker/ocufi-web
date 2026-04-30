@@ -239,7 +239,32 @@ async function fillFirstVisible(page: Page, selector: string, value: string, opt
     }
     await new Promise((r) => setTimeout(r, 300));
   }
+  await dumpDiagnostics(page, `fillFirstVisible-fail-${Date.now()}`).catch(() => undefined);
   fail(`no visible input matched ${selector} within ${timeout}ms`);
+}
+
+// Find the first visible empty input/textarea (any type) and fill it.
+// Used when we don't know the placeholder text or label and just want to
+// fill the next form field that's waiting for input.
+async function fillFirstEmpty(page: Page, value: string, opts: { timeout?: number; types?: string[] } = {}) {
+  const timeout = opts.timeout ?? 10_000;
+  const types = opts.types ?? ['textarea', 'input[type="text"]', 'input[type="password"]', 'input:not([type])'];
+  const selector = types.join(', ');
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const inputs = await page.locator(selector).all();
+    for (const el of inputs) {
+      if (!(await el.isVisible().catch(() => false))) continue;
+      if (await el.isDisabled().catch(() => false)) continue;
+      const current = await el.inputValue().catch(() => '');
+      if (current.length > 0) continue; // skip already-filled fields
+      await el.fill(value);
+      return;
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  await dumpDiagnostics(page, `fillFirstEmpty-fail-${Date.now()}`).catch(() => undefined);
+  fail(`no visible empty input found within ${timeout}ms (types: ${types.join('|')})`);
 }
 
 async function importWallet(page: Page, secret: { privateKey: string }, password: string) {
@@ -270,19 +295,44 @@ async function importWallet(page: Page, secret: { privateKey: string }, password
     '私钥',
   ]);
 
-  // Optional: ask for a name first.
-  const nameInput = page.locator('input[placeholder*="name" i], input[placeholder*="名称"], input[placeholder*="账号"]').first();
-  if (await nameInput.isVisible().catch(() => false)) {
-    await nameInput.fill('AI Test Wallet');
-    await clickByText(page, ['Continue', 'Next', '继续', '下一步']);
+  // Step 3: Some flows show a wallet-name screen before the private-key screen.
+  // We can't rely on placeholder text (varies by locale + version) so we look for
+  // the first visible empty input/textarea on the current page. If a "继续/Next"
+  // button is enabled afterward, we treat it as the name step; otherwise it's
+  // the private-key step and we move on.
+  // Strategy: peek at the page — if it has only a single short text input visible,
+  // assume name step. Try-fill name + try-click next. If the next page still has
+  // an empty input, it's the private-key step.
+  const visibleEmptyCount = async () => {
+    const inputs = await page
+      .locator('textarea, input[type="text"], input[type="password"], input:not([type])')
+      .all();
+    let n = 0;
+    for (const el of inputs) {
+      if (!(await el.isVisible().catch(() => false))) continue;
+      if ((await el.inputValue().catch(() => '')).length === 0) n++;
+    }
+    return n;
+  };
+
+  // Wait until at least one empty input is visible (the page rendered).
+  for (let i = 0; i < 30; i++) {
+    if ((await visibleEmptyCount()) > 0) break;
+    await new Promise((r) => setTimeout(r, 200));
   }
 
-  // Paste the base58 secret.
-  await fillFirstVisible(
-    page,
-    'textarea, input[type="password"], input[type="text"]',
-    secret.privateKey,
-  );
+  // Heuristic: if there's exactly ONE empty text input AND no textarea, it's the name step.
+  const textareaCount = await page.locator('textarea').count();
+  const emptyCount = await visibleEmptyCount();
+  if (textareaCount === 0 && emptyCount === 1) {
+    await fillFirstEmpty(page, 'AI Test Wallet');
+    await clickByText(page, ['Continue', 'Next', '继续', '下一步', 'Import', '导入']);
+  }
+
+  // Step 4: paste the base58 secret. Use fillFirstEmpty so we don't try to fill
+  // the name field again if it's still on the page; the secret field is usually
+  // a textarea but we accept any empty text input.
+  await fillFirstEmpty(page, secret.privateKey);
   await clickByText(page, ['Import', 'Continue', 'Next', '导入', '继续', '下一步']);
 
   // Password creation (some flows show two fields, some one).
