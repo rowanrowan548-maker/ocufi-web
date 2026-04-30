@@ -152,7 +152,50 @@ async function clickByText(page: Page, candidates: string[], opts: { timeout?: n
     }
     await new Promise((r) => setTimeout(r, 300));
   }
+  // Diagnostic dump before failing — write HTML + screenshot + visible-text outline
+  // so we can patch selectors quickly when Phantom changes the welcome flow.
+  await dumpDiagnostics(page, `clickByText-fail-${Date.now()}`).catch(() => undefined);
   fail(`none of these buttons appeared within ${timeout}ms: ${candidates.join(' | ')}`);
+}
+
+async function dumpDiagnostics(page: Page, label: string): Promise<void> {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+  const htmlPath = path.join(CACHE_DIR, `${label}.html`);
+  const pngPath = path.join(CACHE_DIR, `${label}.png`);
+  const outlinePath = path.join(CACHE_DIR, `${label}.outline.txt`);
+  try {
+    const html = await page.content();
+    fs.writeFileSync(htmlPath, html, 'utf8');
+  } catch {}
+  try {
+    await page.screenshot({ path: pngPath, fullPage: true });
+  } catch {}
+  try {
+    // Outline of every visible button / link / clickable text element
+    const outline = await page.evaluate(() => {
+      const out: string[] = [];
+      const tags = ['button', 'a', '[role="button"]', '[role="link"]', '[type="submit"]'];
+      for (const sel of tags) {
+        document.querySelectorAll(sel).forEach((el) => {
+          const text = (el as HTMLElement).innerText?.trim() || '';
+          const aria = el.getAttribute('aria-label') || '';
+          const dataTestId = el.getAttribute('data-testid') || '';
+          if (text || aria || dataTestId) {
+            out.push(`<${el.tagName.toLowerCase()}> "${text.slice(0, 80)}" aria="${aria}" data-testid="${dataTestId}"`);
+          }
+        });
+      }
+      const url = window.location.href;
+      const title = document.title;
+      return `URL: ${url}\nTITLE: ${title}\n\nCLICKABLES:\n${out.join('\n')}`;
+    });
+    fs.writeFileSync(outlinePath, outline, 'utf8');
+  } catch {}
+  console.error(`\n[setup-phantom] DIAGNOSTIC dump:`);
+  console.error(`  HTML     → ${htmlPath}`);
+  console.error(`  PNG      → ${pngPath}`);
+  console.error(`  OUTLINE  → ${outlinePath}`);
+  console.error(`  Share the OUTLINE file with Tech Lead — it has every visible button/link.\n`);
 }
 
 // Soft variant: returns null if no candidate appears within `timeout` (does not exit the process).
