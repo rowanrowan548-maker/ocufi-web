@@ -22,6 +22,7 @@ import { Search, X, ClipboardPaste, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { fetchMarketsTrending, type MarketItem } from '@/lib/api-client';
 import { searchTokens, type TokenInfo } from '@/lib/portfolio';
+import { prefetchTokenForTrade } from '@/lib/prefetch';
 
 interface Props {
   open: boolean;
@@ -396,7 +397,11 @@ export function HeaderSearchModal({ open, onClose }: Props) {
                       onSelect={() =>
                         handleNavigate({ mint: r.mint, symbol: r.symbol, logo: r.logo })
                       }
-                      onHover={() => setActiveIdx(i)}
+                      onHover={() => {
+                        setActiveIdx(i);
+                        // T-FE-PERF-V2-PREFETCH:hover 搜索结果立刻 prefetch · 用户真点 = warm
+                        prefetchTokenForTrade(r.mint);
+                      }}
                     />
                   ))}
                 </div>

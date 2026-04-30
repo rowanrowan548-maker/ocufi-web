@@ -24,6 +24,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { MarketItem } from '@/lib/api-client';
 import { SmartMoneyBadge } from './smart-money-badge';
+import { prefetchTokenForTrade } from '@/lib/prefetch';
 import { Zap } from 'lucide-react';
 
 interface Props {
@@ -59,6 +60,9 @@ function MarketCard({
       data-testid="markets-card-mobile"
       data-mint={it.mint}
       className="px-3 py-3 hover:bg-muted/30 transition-colors"
+      // T-FE-PERF-V2-PREFETCH:touch 立刻预取 · 移动端没 mouseenter · touchstart 是首次接触信号
+      onTouchStart={() => prefetchTokenForTrade(it.mint)}
+      onMouseEnter={() => prefetchTokenForTrade(it.mint)}
     >
       {/* 顶 · token 信息 + smart money + risk */}
       <div className="flex items-start gap-2.5">

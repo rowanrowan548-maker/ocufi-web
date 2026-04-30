@@ -465,8 +465,28 @@ export interface TokenAuditCard {
   error?: string | null;
 }
 
+// T-FE-PERF-V2-PREFETCH · audit-card 加 60s cache + inflight dedup(参 fetchPrice 同模式)
+//   - hover 预取 + 组件 mount 真用 → 共享 1 次请求 · 不双发
+//   - cache 60s · 重复访问同 mint 不调 backend
+const AUDIT_CACHE_TTL_MS = 60_000;
+const auditCardCache = new Map<string, { data: TokenAuditCard; expiresAt: number }>();
+const auditCardInflight = new Map<string, Promise<TokenAuditCard>>();
+
 export async function fetchTokenAuditCard(mint: string): Promise<TokenAuditCard> {
-  return apiFetch(`/token/audit-card?mint=${encodeURIComponent(mint)}`);
+  const cached = auditCardCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let promise = auditCardInflight.get(mint);
+  if (!promise) {
+    promise = apiFetch<TokenAuditCard>(`/token/audit-card?mint=${encodeURIComponent(mint)}`)
+      .then((data) => {
+        auditCardCache.set(mint, { data, expiresAt: Date.now() + AUDIT_CACHE_TTL_MS });
+        return data;
+      })
+      .finally(() => { auditCardInflight.delete(mint); });
+    auditCardInflight.set(mint, promise);
+  }
+  return promise;
 }
 
 // T-OKX-4C-be · 按地址标签筛选 trades

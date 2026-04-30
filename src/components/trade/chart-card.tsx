@@ -23,13 +23,17 @@
  *   - 加载中 → spinner
  *   - 无 pool / fetch 失败 → "暂无 K 线数据" / "图表服务暂时不可用"
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
 import { Loader2, LineChart, TrendingUp, Sparkles } from 'lucide-react';
 import { fetchTokenInfo } from '@/lib/portfolio';
 import { SOL_MINT } from '@/lib/jupiter';
-import { CandlestickChart } from './candlestick-chart';
+// T-FE-PERF-V2-PREFETCH:K 线 lazy split · 减首屏 bundle(lightweight-charts ~140KB gzipped)
+//   只有用户切到 self chart 才下 chunk · GT iframe 路径完全不下
+const CandlestickChart = lazy(() =>
+  import('./candlestick-chart').then((m) => ({ default: m.CandlestickChart })),
+);
 import {
   useChartTimeframe,
   useSetChartTimeframe,
@@ -234,9 +238,18 @@ export function ChartCard({ mint }: Props) {
       {/* T-CHART-COMPRESS · 桌面降 400 让一屏看到 ActivityBoard / 审计 / 持仓
           T-CHART-FULL-9 · 移动 280px / 平板 360px / 桌面 400px */}
       <div className="relative h-[280px] sm:h-[360px] lg:h-[400px]">
-        {/* T-CHART-FULL-1+2 · 自家蜡烛图(brand 色 · 走 /chart/ohlc 后端代理) */}
+        {/* T-CHART-FULL-1+2 · 自家蜡烛图(brand 色 · 走 /chart/ohlc 后端代理)
+            T-FE-PERF-V2-PREFETCH · React.lazy + Suspense · 切到 self chart 才下 chunk */}
         {showSelfChart && mint && (
-          <CandlestickChart mint={mint} timeframe={tf} />
+          <Suspense
+            fallback={
+              <div className="h-full w-full flex items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/60" />
+              </div>
+            }
+          >
+            <CandlestickChart mint={mint} timeframe={tf} />
+          </Suspense>
         )}
         {iframeSrc && chartSource === 'gt' && (
           <iframe
