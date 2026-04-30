@@ -72,6 +72,14 @@ export default defineConfig({
       use: { baseURL: BASE_URL },
       testMatch: /wallet-.*\.spec\.ts/,
     },
+    {
+      name: 'admin-smoke',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /admin-smoke\.spec\.ts/,
+    },
   ],
 });
 

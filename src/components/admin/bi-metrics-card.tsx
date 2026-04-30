@@ -82,15 +82,18 @@ export function BIMetricsCard({ adminKey }: { adminKey: string }) {
           </div>
         ) : (
           <>
-            <VolumeTimeSeries hourly={data.hourly_volume_24h} daily={data.daily_volume_30d} />
+            <VolumeTimeSeries
+              hourly={data.volume_time_series?.hourly_volume_24h ?? []}
+              daily={data.volume_time_series?.daily_volume_30d ?? []}
+            />
             <SectionDivider />
-            <ConversionFunnelSection data={data.conversion} />
+            <ConversionFunnelSection data={data.funnel} />
             <SectionDivider />
-            <MevRebateSection data={data.mev} />
+            <MevRebateSection data={data.mev_rebate} />
             <SectionDivider />
-            <SuccessRateSection data={data.success} />
+            <SuccessRateSection data={data.tx_success} />
             <SectionDivider />
-            <TradeSizeDistSection data={data.trade_size} />
+            <TradeSizeDistSection data={data.trade_size_distribution} />
 
             {/* 顶 timestamp + loading */}
             <div className="pt-2 border-t border-border/30 flex items-center justify-between gap-3 text-[11px] text-muted-foreground/70">
@@ -277,7 +280,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 
 // ─── Section 2 · Conversion funnel ─────────────────────────────
 
-function ConversionFunnelSection({ data }: { data: BIMetricsResp['conversion'] }) {
+function ConversionFunnelSection({ data }: { data: BIMetricsResp['funnel'] }) {
   const has = data.connect_count > 0 || (data.quote_request_count ?? 0) > 0 || data.swap_count > 0;
 
   return (
@@ -334,7 +337,7 @@ function FunnelStage({
 
 // ─── Section 3 · MEV rebate ────────────────────────────────────
 
-function MevRebateSection({ data }: { data: BIMetricsResp['mev'] }) {
+function MevRebateSection({ data }: { data: BIMetricsResp['mev_rebate'] }) {
   const has = data.total_mev_rebate_sol > 0 || data.unique_recipients > 0;
 
   return (
@@ -379,7 +382,7 @@ function SubStat({ label, value }: { label: string; value: string }) {
 
 // ─── Section 4 · 成功率 ────────────────────────────────────────
 
-function SuccessRateSection({ data }: { data: BIMetricsResp['success'] }) {
+function SuccessRateSection({ data }: { data: BIMetricsResp['tx_success'] }) {
   const total = data.swap_success_count + data.swap_fail_count;
   if (data.success_rate_pct == null || total === 0) {
     return (
@@ -443,7 +446,7 @@ function SuccessRateSection({ data }: { data: BIMetricsResp['success'] }) {
 
 // ─── Section 5 · trade size 分布 ─────────────────────────────
 
-function TradeSizeDistSection({ data }: { data: BIMetricsResp['trade_size'] }) {
+function TradeSizeDistSection({ data }: { data: BIMetricsResp['trade_size_distribution'] }) {
   const allNull =
     data.min_trade_usd == null &&
     data.median_trade_usd == null &&
