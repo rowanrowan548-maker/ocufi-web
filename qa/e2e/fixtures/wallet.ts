@@ -115,13 +115,21 @@ async function connectWalletImpl(context: BrowserContext, extensionId: string, p
     );
   }
 
-  // The wallet adapter modal lists available wallets — pick Phantom (extension).
-  // Use a strict-ish match so we don't accidentally re-click the "Phantom Connect"
-  // SDK button. Inside the modal, the Phantom extension entry is just "Phantom".
-  const phantomOption = page
-    .getByRole('button', { name: /^phantom$/i })
-    .or(page.getByRole('menuitem', { name: /^phantom$/i }))
-    .first();
+  // Wait for the @solana/wallet-adapter-react-ui modal to mount (rendered in
+  // a portal at body level — has class "wallet-adapter-modal").
+  const modal = page.locator('.wallet-adapter-modal').first();
+  await modal.waitFor({ state: 'visible', timeout: 10_000 }).catch(async () => {
+    // Save a screenshot so we can see what actually rendered.
+    const dump = `qa/e2e/.cache/connect-modal-fail-${Date.now()}.png`;
+    await page.screenshot({ path: dump, fullPage: true }).catch(() => undefined);
+    throw new Error(`wallet-adapter modal did not appear after clicking "Other wallets". Screenshot: ${dump}`);
+  });
+
+  // Inside the modal, find the Phantom row. The standard wallet-adapter-react-ui
+  // markup is `<li><button>...Phantom <span>Detected</span></button></li>`, so the
+  // button accessible name is usually "Phantom Detected" or just "Phantom".
+  // Scope to the modal so we don't accidentally re-click the top-bar buttons.
+  const phantomOption = modal.getByRole('button', { name: /phantom/i }).first();
   await phantomOption.waitFor({ state: 'visible', timeout: 10_000 });
   // The popup is opened as a side effect of this click.
   const [popup] = await Promise.all([
