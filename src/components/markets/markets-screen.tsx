@@ -81,8 +81,9 @@ export function MarketsScreen() {
         <p className="text-sm text-muted-foreground mt-0.5">{t('subtitle')}</p>
       </div>
 
-      {/* Tabs · T-REWARDS-POLISH:emoji 换 Lucide */}
-      <div className="flex flex-wrap gap-1 border-b border-border/40 pb-2">
+      {/* Tabs · T-REWARDS-POLISH:emoji 换 Lucide
+          T-FE-MOBILE-RESCUE-P0:触控热区 ≥ 40px(py-2 · iOS HIG) + flex-wrap 防 6 tab 横滚 */}
+      <div className="flex flex-wrap gap-1.5 border-b border-border/40 pb-2">
         {TABS.map((k) => {
           const Icon = TAB_ICONS[k];
           return (
@@ -91,13 +92,13 @@ export function MarketsScreen() {
               type="button"
               data-testid={`markets-tab-${k}`}
               onClick={() => setTab(k)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3 py-2 min-h-10 rounded text-xs transition-colors ${
                 tab === k
                   ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
-                  : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
+                  : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 active:bg-muted/60'
               }`}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-4 w-4" />
               {t(`tabs.${k}`)}
             </button>
           );

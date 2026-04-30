@@ -16,23 +16,24 @@ export function InviteRedirectTab() {
 
   return (
     <Card>
+      {/* T-FE-MOBILE-RESCUE-P0:CTA 全宽(< sm)+ 触控 ≥ 48px · icon 居中 */}
       <CardContent
         className="p-6 text-center space-y-3"
         data-testid="invite-redirect"
       >
-        <Users className="h-10 w-10 mx-auto text-[var(--brand-up)]/70" />
-        <div className="text-sm font-medium">{t('title')}</div>
-        <div className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+        <Users className="h-12 w-12 sm:h-10 sm:w-10 mx-auto text-[var(--brand-up)]/70" />
+        <div className="text-base sm:text-sm font-medium">{t('title')}</div>
+        <div className="text-sm sm:text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
           {t('desc')}
         </div>
         <div className="pt-1">
           <Link
             href="/invite"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[var(--brand-up)]/15 text-[var(--brand-up)] text-sm font-medium hover:bg-[var(--brand-up)]/25 transition-colors"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-6 h-12 sm:h-10 rounded-md bg-[var(--brand-up)]/15 text-[var(--brand-up)] text-sm font-medium hover:bg-[var(--brand-up)]/25 active:bg-[var(--brand-up)]/30 transition-colors"
             data-testid="invite-go"
           >
             {t('cta')}
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </CardContent>

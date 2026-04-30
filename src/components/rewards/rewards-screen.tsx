@@ -69,20 +69,21 @@ export function RewardsScreen() {
         </CardContent>
       </Card>
 
-      {/* 3 tab */}
+      {/* 3 tab
+          T-FE-MOBILE-RESCUE-P0:tab 高 12 (48px ≥ iOS HIG 44px) · 桌面回 9 · 全宽分配 */}
       <Tabs value={tab} onValueChange={(v) => setOverride(v as TabKey)} className="w-full">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full h-12 md:h-9 justify-stretch">
           {/* T-REWARDS-POLISH:emoji 换 Lucide */}
-          <TabsTrigger value="reclaim" data-testid="rewards-tab-reclaim">
-            <Recycle className="h-3.5 w-3.5" />
+          <TabsTrigger value="reclaim" data-testid="rewards-tab-reclaim" className="text-xs sm:text-sm">
+            <Recycle className="h-4 w-4" />
             {t('tabs.reclaim')}
           </TabsTrigger>
-          <TabsTrigger value="mev" data-testid="rewards-tab-mev">
-            <Zap className="h-3.5 w-3.5" />
+          <TabsTrigger value="mev" data-testid="rewards-tab-mev" className="text-xs sm:text-sm">
+            <Zap className="h-4 w-4" />
             {t('tabs.mev')}
           </TabsTrigger>
-          <TabsTrigger value="invite" data-testid="rewards-tab-invite">
-            <UserPlus className="h-3.5 w-3.5" />
+          <TabsTrigger value="invite" data-testid="rewards-tab-invite" className="text-xs sm:text-sm">
+            <UserPlus className="h-4 w-4" />
             {t('tabs.invite')}
           </TabsTrigger>
         </TabsList>
