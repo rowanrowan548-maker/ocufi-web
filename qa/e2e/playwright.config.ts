@@ -80,6 +80,17 @@ export default defineConfig({
       },
       testMatch: /admin-smoke\.spec\.ts/,
     },
+    {
+      // Stubs the API via page.route — slower than baseline specs because of
+      // the timeout case (~17s wait to trigger the AbortController path).
+      name: 'error-degradation',
+      timeout: 90_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /error-degradation\.spec\.ts/,
+    },
   ],
 });
 
