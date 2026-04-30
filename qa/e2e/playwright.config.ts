@@ -63,6 +63,15 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: /(search-modal-click|buysell-color)\.spec\.ts/,
     },
+    {
+      // Wallet specs override `context` themselves (persistent profile +
+      // unpacked Phantom). The project just needs the right matcher and
+      // a longer expect timeout — popups take time to appear.
+      name: 'wallet-phantom',
+      timeout: 180_000,
+      use: { baseURL: BASE_URL },
+      testMatch: /wallet-.*\.spec\.ts/,
+    },
   ],
 });
 
