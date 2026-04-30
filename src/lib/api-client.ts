@@ -712,6 +712,70 @@ export async function fetchAdminTradeVolume(
   });
 }
 
+// ─── T-FE-ADMIN-V1.5-DASHBOARD · BI 全套指标 ───
+
+export interface BIVolumeBucket {
+  /** hourly 时 = 'YYYY-MM-DDTHH:00:00Z' · daily 时 = 'YYYY-MM-DD' */
+  bucket: string;
+  trade_count: number;
+  volume_usd: number;
+}
+
+export interface BIConversionFunnel {
+  connect_count: number;
+  /** 没事件就回 null · 不强报错(spec 降级原则)*/
+  quote_request_count: number | null;
+  swap_count: number;
+  /** 0-100 · 子段为 null 时也回 null */
+  connect_to_swap_rate: number | null;
+}
+
+export interface BIMevRebate {
+  total_mev_rebate_sol: number;
+  total_mev_rebate_usd: number;
+  unique_recipients: number;
+  mev_24h_sol: number;
+  mev_7d_sol: number;
+}
+
+export interface BISuccessRate {
+  swap_success_count: number;
+  swap_fail_count: number;
+  /** 0-100 · 总数为 0 时回 null */
+  success_rate_pct: number | null;
+}
+
+export interface BITradeSizeDist {
+  /** 全 null 表示 trade size 数据不足(<3 笔) */
+  min_trade_usd: number | null;
+  median_trade_usd: number | null;
+  mean_trade_usd: number | null;
+  p95_trade_usd: number | null;
+  max_trade_usd: number | null;
+}
+
+export interface BIMetricsResp {
+  ok: boolean;
+  window: FeeRevenueWindow;
+  /** spec 降级:section 字段拿不到 → 子字段 null · 不抛 500 */
+  hourly_volume_24h: BIVolumeBucket[];
+  daily_volume_30d: BIVolumeBucket[];
+  conversion: BIConversionFunnel;
+  mev: BIMevRebate;
+  success: BISuccessRate;
+  trade_size: BITradeSizeDist;
+  computed_at: string;
+}
+
+export async function fetchAdminBIMetrics(
+  key: string,
+  window: FeeRevenueWindow = '7d',
+): Promise<BIMetricsResp> {
+  return apiFetch<BIMetricsResp>(`/admin/bi-metrics?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
 // ─── Public stats(无鉴权 · Landing 数据条用) ───
 
 export interface PublicStats {

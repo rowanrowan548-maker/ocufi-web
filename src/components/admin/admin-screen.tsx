@@ -22,6 +22,7 @@ import { fetchAdminStats, isApiConfigured, type AdminStats } from '@/lib/api-cli
 import { DailyBarChart, HourlyHeatmap } from './admin-charts';
 import { FeeRevenueCard } from './fee-revenue-card';
 import { TradeVolumeCard } from './trade-volume-card';
+import { BIMetricsCard } from './bi-metrics-card';
 
 const REFRESH_MS = 30_000;
 
@@ -179,6 +180,9 @@ export function AdminScreen() {
 
             {/* T-FE-ADMIN-TRADE-VOLUME-CARD · GMV + Top 代币 · 60s 自刷 */}
             <TradeVolumeCard adminKey={key} />
+
+            {/* T-FE-ADMIN-V1.5-DASHBOARD · BI 5 section 全套 · 60s 自刷 */}
+            <BIMetricsCard adminKey={key} />
 
             {/* 时间序列图表 */}
             <div className="grid lg:grid-cols-2 gap-4">
