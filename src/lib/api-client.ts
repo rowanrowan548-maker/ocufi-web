@@ -681,6 +681,37 @@ export async function fetchAdminFeeRevenue(
   });
 }
 
+// ─── T-FE-ADMIN-TRADE-VOLUME-CARD · 累计 GMV + Top 代币 ───
+
+export interface TradeVolumeTopToken {
+  mint: string;
+  symbol: string;
+  logo_url: string | null;
+  trade_count: number;
+  volume_usd: number;
+}
+
+export interface TradeVolumeResp {
+  ok: boolean;
+  window: FeeRevenueWindow;
+  total_trades: number;
+  total_volume_usd: number;
+  avg_trade_usd: number;
+  buy_count: number;
+  sell_count: number;
+  top_tokens: TradeVolumeTopToken[];
+  computed_at: string;
+}
+
+export async function fetchAdminTradeVolume(
+  key: string,
+  window: FeeRevenueWindow = '7d',
+): Promise<TradeVolumeResp> {
+  return apiFetch<TradeVolumeResp>(`/admin/trade-volume?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
 // ─── Public stats(无鉴权 · Landing 数据条用) ───
 
 export interface PublicStats {

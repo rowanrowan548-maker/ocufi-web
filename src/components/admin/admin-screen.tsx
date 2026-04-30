@@ -21,6 +21,7 @@ import {
 import { fetchAdminStats, isApiConfigured, type AdminStats } from '@/lib/api-client';
 import { DailyBarChart, HourlyHeatmap } from './admin-charts';
 import { FeeRevenueCard } from './fee-revenue-card';
+import { TradeVolumeCard } from './trade-volume-card';
 
 const REFRESH_MS = 30_000;
 
@@ -175,6 +176,9 @@ export function AdminScreen() {
 
             {/* T-FE-ADMIN-FEE-DASHBOARD · 0.1% 买入费聚合 · 60s 自刷 */}
             <FeeRevenueCard adminKey={key} />
+
+            {/* T-FE-ADMIN-TRADE-VOLUME-CARD · GMV + Top 代币 · 60s 自刷 */}
+            <TradeVolumeCard adminKey={key} />
 
             {/* 时间序列图表 */}
             <div className="grid lg:grid-cols-2 gap-4">
