@@ -16,6 +16,25 @@ import type { JupiterQuote, GasLevel } from './jupiter';
 import { prepareSwapTxs } from './swap-with-fee';
 import { signAndSendTx, confirmTx } from './trade-tx';
 import { pushMevEntry } from './rewards-storage';
+import { saveSwapQuote } from './swap-quote-storage';
+
+/** T-ONCHAIN-QUOTE-PERSIST · single + split 都用 · 拿到 swap-tx-sig 后落 quote */
+function persistQuote(sig: string, quote: JupiterQuote): void {
+  try {
+    saveSwapQuote({
+      signature: sig,
+      timestamp: Date.now(),
+      inputMint: quote.inputMint,
+      outputMint: quote.outputMint,
+      inputAmount: quote.inAmount,
+      quoteOutAmount: quote.outAmount,
+      slippageBps: quote.slippageBps,
+      side: quote.inputMint === 'So11111111111111111111111111111111111111112' ? 'buy' : 'sell',
+    });
+  } catch (e) {
+    console.warn('[execute-swap-plan] saveSwapQuote failed (non-blocking):', e);
+  }
+}
 
 export type SplitStage = 'setup-signing' | 'setup-sending' | 'setup-confirming' | 'swap-signing' | 'swap-sending' | 'swap-confirming';
 
@@ -105,6 +124,7 @@ export async function executeSwapPlan(
     onStage('confirming');
     const confirmed = await confirmTx(connection, sig, confirmTimeoutMs);
     if (!confirmed) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
+    persistQuote(sig, quote);
     if (preBalanceLamports != null) {
       void recordMevIfPositive({
         connection,
@@ -142,6 +162,7 @@ export async function executeSwapPlan(
   onStage('confirming');
   const swapOk = await confirmTx(connection, sig, confirmTimeoutMs);
   if (!swapOk) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
+  persistQuote(sig, quote);
 
   if (preBalanceLamports != null) {
     void recordMevIfPositive({
