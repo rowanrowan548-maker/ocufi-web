@@ -645,6 +645,42 @@ export async function fetchAdminStats(key: string): Promise<AdminStats> {
   });
 }
 
+// ─── T-FE-ADMIN-FEE-DASHBOARD · 费用收入聚合 ───
+
+export type FeeRevenueWindow = '24h' | '7d' | '30d' | 'all';
+
+export interface FeeTopSender {
+  address: string;
+  tx_count: number;
+  total_sol: number;
+}
+
+export interface FeeDailyBucket {
+  date: string;  // YYYY-MM-DD
+  sol: number;
+  tx_count: number;
+}
+
+export interface FeeRevenueResp {
+  fee_address: string;
+  window: FeeRevenueWindow;
+  total_sol: number;
+  total_usd: number;
+  tx_count: number;
+  top_senders: FeeTopSender[];
+  daily: FeeDailyBucket[];
+  computed_at: string;
+}
+
+export async function fetchAdminFeeRevenue(
+  key: string,
+  window: FeeRevenueWindow = '7d',
+): Promise<FeeRevenueResp> {
+  return apiFetch<FeeRevenueResp>(`/admin/fee-revenue?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
 // ─── Public stats(无鉴权 · Landing 数据条用) ───
 
 export interface PublicStats {

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import { fetchAdminStats, isApiConfigured, type AdminStats } from '@/lib/api-client';
 import { DailyBarChart, HourlyHeatmap } from './admin-charts';
+import { FeeRevenueCard } from './fee-revenue-card';
 
 const REFRESH_MS = 30_000;
 
@@ -171,6 +172,9 @@ export function AdminScreen() {
                 delta={`PV ${stats.page_views_24h} · 7d 独立 ${stats.unique_visitors_7d}`}
               />
             </div>
+
+            {/* T-FE-ADMIN-FEE-DASHBOARD · 0.1% 买入费聚合 · 60s 自刷 */}
+            <FeeRevenueCard adminKey={key} />
 
             {/* 时间序列图表 */}
             <div className="grid lg:grid-cols-2 gap-4">

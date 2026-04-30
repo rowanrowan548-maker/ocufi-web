@@ -34,11 +34,15 @@ const SAMPLE: MarketItem[] = [
     change24h: 5.6,
     liquidityUsd: 12_345_678,
     marketCapUsd: 9_876_543_210,
+    fdvUsd: null,
     volumeH24: 234_567,
+    buys24h: null,
+    sells24h: null,
     holdersCount: 100,
     ageHours: 48,
+    topPoolAddress: null,
     createdAt: 0,
-  } as MarketItem,
+  } as unknown as MarketItem,
   {
     mint: 'TokenB',
     symbol: 'BBB',
@@ -50,11 +54,15 @@ const SAMPLE: MarketItem[] = [
     change24h: -10,
     liquidityUsd: 1_000,
     marketCapUsd: null,
+    fdvUsd: null,
     volumeH24: null,
+    buys24h: null,
+    sells24h: null,
     holdersCount: 5,
     ageHours: null,
+    topPoolAddress: null,
     createdAt: 0,
-  } as MarketItem,
+  } as unknown as MarketItem,
 ];
 
 describe('MarketsCardsMobile · 防回归', () => {
