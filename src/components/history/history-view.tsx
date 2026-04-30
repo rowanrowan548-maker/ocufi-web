@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
+import { formatExecPrice as formatExecPriceLib } from '@/lib/exec-price';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 
 // T-HIST-92 · 筛选状态(localStorage 持久化)
@@ -390,9 +391,10 @@ function HistoryRow({
       <TableCell className="text-right font-mono text-sm text-muted-foreground">
         {r.tokenMint && r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
       </TableCell>
-      {/* T-929-cont #91:成交价 / 滑点 / 优先费 / Gas */}
+      {/* T-929-cont #91:成交价 / 滑点 / 优先费 / Gas
+          T-HISTORY-COMPUTED-PRICE:后端没给 → 用 SOL ÷ 代币数量 算 SOL/token 价 · 不再 — */}
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.executionPriceUsd != null ? formatAmount(r.executionPriceUsd) : '—'}
+        {formatExecPrice(r)}
       </TableCell>
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
         {r.actualSlippageBps != null ? `${(r.actualSlippageBps / 100).toFixed(2)}%` : '—'}
@@ -458,6 +460,17 @@ function formatAmount(n: number): string {
   if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+// T-HISTORY-COMPUTED-PRICE · 成交价显示算法在 src/lib/exec-price.ts(纯函数 · 有单测)
+function formatExecPrice(r: EnrichedTxRecord): string {
+  return formatExecPriceLib({
+    type: r.type,
+    tokenMint: r.tokenMint,
+    tokenAmount: r.tokenAmount,
+    solAmount: r.solAmount,
+    execPriceUsd: r.executionPriceUsd,
+  }, formatAmount);
 }
 
 // T-HIST-92 · 筛选条
