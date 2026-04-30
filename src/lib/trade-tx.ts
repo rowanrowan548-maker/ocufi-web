@@ -16,6 +16,7 @@ import {
   ParsedTransactionWithMeta,
 } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
+import { getRebateConnection } from './rpc-rebate';
 
 /** 反序列化 Jupiter swapTransaction base64 字节 */
 export function decodeSwapTx(base64: string): VersionedTransaction {
@@ -28,6 +29,16 @@ export interface SignAndSendOptions {
   skipPreflight?: boolean;
   /** 网络抖动(503/fetch fail)重试次数。blockhash 类错误不重试(避免 OKX 双签风控)。default 1 */
   networkRetries?: number;
+  /**
+   * T-MEV-REBATE · 用户钱包(PublicKey 或 base58 string)
+   *
+   * 提供时 → sendRawTransaction 走 Helius rebate URL · MEV 50% 返用户钱包
+   * 不提供 / env 没配 / 不是 Helius URL → 走传入的 connection(原行为)
+   *
+   * 注意:仅 sendRawTransaction 这一步切 · simulate / balance / confirm 仍走默认
+   * connection(避免吃 Helius RPS 配额)
+   */
+  rebateForUser?: PublicKey | string;
 }
 
 /**
@@ -53,10 +64,15 @@ export async function signAndSendTx(
   const signed = await wallet.signTransaction(tx);
   const raw = signed.serialize();
 
+  // T-MEV-REBATE · 提供 rebateForUser + env 配 Helius → sendRawTransaction 走 rebate URL
+  // 否则 fallback 走传入的 connection(向后兼容)
+  const sendConn =
+    (opts.rebateForUser ? getRebateConnection(opts.rebateForUser) : null) ?? connection;
+
   let lastErr: unknown;
   for (let attempt = 0; attempt <= networkRetries; attempt++) {
     try {
-      return await connection.sendRawTransaction(raw, {
+      return await sendConn.sendRawTransaction(raw, {
         skipPreflight,
         maxRetries: 3,
       });

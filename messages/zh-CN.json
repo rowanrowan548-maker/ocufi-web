@@ -21,6 +21,7 @@
     "tokenCheck": "查币",
     "faq": "常见问题",
     "more": "更多",
+    "rewards": "奖励",
     "markets": "行情",
     "trending": "热门",
     "strategy": "策略",
@@ -87,7 +88,7 @@
     "hero": {
       "title": "Ocufi 天眼 · 链上交易,你看得见的每一笔",
       "subtitle": "更低的手续费 · 更透明的价格 · 更少的中间人。我们还在成长,但每一步都从用户出发。",
-      "tagline": "0.2% 手续费 · 链上最低",
+      "tagline": "0.1% 手续费 · 链上最低",
       "searchPlaceholder": "粘贴 Solana 合约地址,例如 So111…1112",
       "hotTokens": "热门",
       "cta_connect": "连接钱包开始",
@@ -137,7 +138,7 @@
         "desc": "私钥 100% 在你手里,Ocufi 永远碰不到你的钱"
       },
       "lowFee": {
-        "title": "0.2% 手续费",
+        "title": "0.1% 手续费",
         "desc": "对标竞品 0.8%-1%,一次交易省下一半以上"
       },
       "safety": {
@@ -340,11 +341,25 @@
       "retry": "重试",
       "solBaseFallback": "SOL 是 Solana 基础币",
       "solBaseHint": "K 线请在 USDC / USDT 等交易对中查看",
+      "myCost": "我的成本",
+      "limitBuy": "挂单买",
+      "limitSell": "挂单卖",
+      "alertAt": "提醒 $",
       "toolbar": {
         "price": "价格",
         "marketCap": "市值",
         "devBuys": "Dev Buys",
-        "gtNote": "USD/SOL · 时间段切换 → GT 图内"
+        "gtNote": "USD/SOL · 时间段切换 → GT 图内",
+        "gtChart": "GT 图",
+        "selfChart": "自家图",
+        "tf": {
+          "minute_1": "1m",
+          "minute_5": "5m",
+          "minute_15": "15m",
+          "hour_1": "1h",
+          "hour_4": "4h",
+          "day_1": "1d"
+        }
       }
     },
     "trust": {
@@ -399,6 +414,13 @@
       "buySuccess": "买入成功 · 收到 {tokens}(花 {sol} SOL)",
       "sellSuccess": "卖出成功 · 收到 {sol} SOL(卖出 {tokens})",
       "viewExplorer": "查看 Solscan"
+    },
+    "sellAll": {
+      "reclaimToast": {
+        "title": "可领回 0.002 SOL 押金",
+        "desc": "这个币的账户已清空 · 押金还锁着 · 去奖励中心一键领回",
+        "action": "去领取"
+      }
     },
     "activity": {
       "activity": "交易活动",
@@ -583,6 +605,7 @@
     },
     "rightTabs": {
       "detail": "详情",
+      "risk": "风险",
       "devTokens": "开发者代币",
       "sameName": "同名代币",
       "description": "描述",
@@ -605,6 +628,9 @@
         "holding": "持有",
         "active": "活跃"
       }
+    },
+    "stale": {
+      "label": "数据约 {min} 分钟前 · 自动刷新中"
     },
     "preview": {
       "pay": "支付",
@@ -712,6 +738,12 @@
       "slippageTooLow": "滑点太低,建议提到 5-10%",
       "token2022Incompatible": "此代币是 Token-2022 标准,暂不支持,请换标准 SPL",
       "staleBlockhash": "网络延迟导致交易过期,请重试"
+    },
+    "wrapCleanup": {
+      "title": "上次有未完成的 wrap",
+      "desc": "上次大路由交易需 2 步签名 · setup 已上链但 swap 未完成 · 钱包里可能有未解开的 WSOL",
+      "viewTx": "查看 setup tx",
+      "dismiss": "忽略"
     }
   },
   "portfolio": {
@@ -971,7 +1003,7 @@
       {
         "group": "交易",
         "q": "手续费怎么收?",
-        "a": "买入时从你付的 SOL 里扣 0.1% 自动打到 Ocufi 金库。\n\n卖出暂时不收(V1 阶段,避免收到一堆 meme 币垃圾)。所以总手续费 = 0.1%(买)+ 0 (卖) = 0.2% 目标的一半,还没满。"
+        "a": "买入时从你付的 SOL 里扣 0.1% 自动打到 Ocufi 金库。\n\n卖出暂时不收(V1 阶段,避免收到一堆 meme 币垃圾)。单笔实际收 = 买入 0.1% · 卖出 0%。\n\n竞品(GMGN / Photon / BullX)普遍 0.8-1% · 我们便宜约 10 倍。"
       },
       {
         "group": "交易",
@@ -1056,7 +1088,7 @@
       {
         "group": "其他",
         "q": "Ocufi 是什么?",
-        "a": "一个基于 Solana 的链上交易终端。\n\n特点:\n· 非托管 —— 你的私钥永远在自己钱包里\n· 低费 —— 0.2% 手续费(买卖各 0.1%),竞品普遍 0.8-1%\n· 安全审查 —— 每个代币下单前给你做 RugCheck + 蓝筹白名单\n· 开源 —— 前端代码 GitHub 可审计"
+        "a": "一个基于 Solana 的链上交易终端。\n\n特点:\n· 非托管 —— 你的私钥永远在自己钱包里\n· 低费 —— 0.1% 手续费(买入 0.1% · 卖出免费 V1),竞品普遍 0.8-1%\n· 安全审查 —— 每个代币下单前给你做 RugCheck + 蓝筹白名单\n· 开源 —— 前端代码 GitHub 可审计"
       }
     ]
   },
@@ -1339,6 +1371,15 @@
       "success": "成功",
       "failed": "失败"
     },
+    "priorityFee": {
+      "loading": "优先费加载中"
+    },
+    "gas": {
+      "loading": "Gas 加载中"
+    },
+    "fee": {
+      "unknown": "链上数据不可用"
+    },
     "retry": "重试",
     "type": {
       "buy": "买入",
@@ -1517,8 +1558,8 @@
       "wechatHint": "微信不支持直链,请截屏二维码或复制链接发送",
       "copyUrl": "复制链接",
       "copied": "已复制",
-      "twitterTemplate": "我用 @Ocufi_io 在 Solana 链上交易 · 0.2% 手续费(竞品 1%)· 非托管 · 链上最低 — 用我的码加入(ref={code}):",
-      "telegramTemplate": "Ocufi · Solana 链上交易 0.2% 手续费 · 非托管 · 用我的邀请码加入:{code}"
+      "twitterTemplate": "我用 @Ocufi_io 在 Solana 链上交易 · 0.1% 手续费(竞品 1%)· 非托管 · 链上最低 — 用我的码加入(ref={code}):",
+      "telegramTemplate": "Ocufi · Solana 链上交易 0.1% 手续费 · 非托管 · 用我的邀请码加入:{code}"
     },
     "stats": {
       "invited": "已邀请",
@@ -1563,7 +1604,7 @@
       "s2": "对方单笔交易 ≥ 100 美元等值,邀请关系自动激活。",
       "s3": "激活后,对方每笔交易产生的积分,你自动 +10%(终身,不一次性)。",
       "s4": "积分用于实物周边兑换;未来可能关联更多权益。",
-      "note": "我们不分手续费(0.2% 是产品护城河),分积分。积分由我们出,等于零成本拉新,长期可持续。"
+      "note": "我们不分手续费(0.1% 是产品护城河),分积分。积分由我们出,等于零成本拉新,长期可持续。"
     },
     "myInvitees": {
       "title": "我邀请的人",
@@ -1679,9 +1720,14 @@
   },
   "markets": {
     "title": "代币行情",
-    "subtitle": "GeckoTerminal 实时聚合 · trending 60s 缓存 · new pairs 30s",
+    "subtitle": "热门 / 新发 / 涨跌幅 / 已审 / 风险预警 · 60s 自动刷新",
     "tabs": {
-      "trending": "Trending",
+      "trending": "热门",
+      "new": "新发",
+      "gainers1h": "1h 涨幅",
+      "losers24h": "24h 跌幅",
+      "verified": "已审",
+      "risk": "风险预警",
       "newpairs": "New Pairs",
       "fav": "自选",
       "major": "主流"
@@ -1698,9 +1744,27 @@
       "quickBuyTitle": "0.1 SOL 快买 · 用默认参数",
       "quickBuyConnectFirst": "先连钱包"
     },
+    "smartMoney": {
+      "label": "{count} 个聪明钱在买",
+      "topBuyers": "Top 买家(30 天净盈利)",
+      "tooltipHint": "聪明钱 = 30 天净盈利 > $10K"
+    },
+    "risk": {
+      "verified": "已审代币",
+      "safe": "无明显风险",
+      "warn": "存在风险信号",
+      "risky": "高风险 · 慎入",
+      "unknown": "审计数据获取失败",
+      "pending": "审计加载中",
+      "safeDetail": "持仓集中度 / 老鼠仓 / 捆绑 / 狙击手 / LP 烧池子 6 项审计全过 · 可放心交易",
+      "warnDetail": "1 项以上审计在中等风险区间(如 top 10 持仓 20-40% / LP 烧池 80-99%)· 建议先看明细",
+      "riskyDetail": "1 项以上审计在高风险区间(如 top 10 持仓 ≥40% / 蜜罐 / 开发者活跃倾销 / LP 未烧)· 慎入",
+      "clickHint": "→ 点击看完整审计明细"
+    },
     "loading": "加载中…",
     "empty": "暂无数据 · 后端 worker 抓取中",
     "emptyFav": "还没有自选代币 — 点行首星标添加",
+    "goTrade": "→ 去交易页搜代币",
     "hideMajorsOff": "隐藏 SOL/USDC",
     "hideMajorsOn": "显示 SOL/USDC"
   },
@@ -1749,8 +1813,8 @@
         "b": "Ocufi 已提交 Phantom Portal 审核流程(目录列表中的「已验证」标识),通过后用户在 Phantom 钱包内打开 ocufi.io 可看到官方蓝色对勾。当前审核状态请见 #devlog。"
       },
       "s7": {
-        "h": "7. 0.2% 透明费率",
-        "b": "Ocufi 收 0.1% 买 + 0% 卖(总目标 0.2%)· 直接打到金库地址,链上可查。\n\n竞品(GMGN / Photon / BullX)普遍 0.8-1%,我们 V1 阶段把费率压到行业 1/4-1/5,赚的不是手续费而是用户长期信任。"
+        "h": "7. 0.1% 透明费率",
+        "b": "Ocufi 收 0.1% 买入 + 0% 卖出(V1)· 直接打到金库地址,链上可查。\n\n竞品(GMGN / Photon / BullX)普遍 0.8-1%,我们便宜约 10 倍 · 赚的不是手续费而是用户长期信任。"
       }
     },
     "privacy": {
@@ -1891,6 +1955,48 @@
       "hundredTrades": { "name": "百单达成" },
       "inviteKing": { "name": "拉新王" },
       "pnlKing": { "name": "PnL 王" }
+    }
+  },
+  "rewards": {
+    "title": "奖励中心",
+    "subtitle": "Ocufi 把锁在 Solana 上的钱还给你",
+    "summary": {
+      "wallet": "钱包",
+      "notConnected": "未连接钱包",
+      "totalRecovered": "已累计回收"
+    },
+    "tabs": {
+      "reclaim": "回收 SOL",
+      "mev": "MEV 返还",
+      "invite": "邀请返佣"
+    },
+    "reclaim": {
+      "connectFirst": "请先连接钱包查看可回收的闲置账户",
+      "loading": "扫描你的闲置 token 账户...",
+      "error": "拉取列表失败",
+      "retry": "重试",
+      "emptyTitle": "目前没有闲置账户",
+      "emptyDesc": "卖完币后空 ATA 会出现在这里 · 一键回收押金 · 每个约 0.002 SOL",
+      "summarySelected": "已选 {n} / {total}",
+      "selectAll": "全选",
+      "deselectAll": "取消全选",
+      "claimButton": "免费领取 SOL",
+      "claiming": "签名 + 上链中...",
+      "successToast": "回收 {sol} SOL · 已存入钱包",
+      "partialFail": "{n} 笔失败 · 已成功的不丢",
+      "allFailed": "全部失败 · 请重试",
+      "walletMissingSignAll": "你的钱包不支持批量签名 · 试 Phantom / Backpack"
+    },
+    "mev": {
+      "totalLabel": "MEV 返还累计",
+      "totalHint": "Helius backrun rebate · 每笔 swap confirm 后自动统计余额差",
+      "emptyTitle": "还没有 MEV 返还",
+      "emptyDesc": "做几笔交易自然会有 · Ocufi 走 Helius rebate URL 把 50% MEV 返你"
+    },
+    "invite": {
+      "title": "邀请好友拿返佣",
+      "desc": "你的好友交易 · 你拿对应手续费 · 累计可观",
+      "cta": "去邀请页"
     }
   }
 }

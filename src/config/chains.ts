@@ -56,7 +56,7 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
       limitOrderUrl: 'https://api.jup.ag/limit/v2',
       priceUrl: 'https://api.jup.ag/price/v3',
       feeReceiver: SOLANA_FEE_RECEIVER,
-      platformFeeBps: 10,   // 0.1%(买卖各一次 = 总 0.2%)
+      platformFeeBps: 10,   // 0.1%(V1 仅买入收 · sell 0%)
     },
     walletAdapters: ['phantom', 'solflare'] as const,
     enabled: true,

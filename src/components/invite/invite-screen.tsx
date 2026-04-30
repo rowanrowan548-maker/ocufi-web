@@ -9,7 +9,7 @@
  *  - #112 数字卡:已邀请 N 人 / 累计返佣 X SOL ($Y) / 待提现 X SOL [一键提现]
  *  - #113 下线列表:钱包(截断)/ 加入时间 / 累计贡献(SOL)/ 状态
  *  - #114 一键提现按钮 → POST /invite/claim
- *  - #115 Twitter 预制推文已含 Ocufi_io @ + 0.2% + ref code
+ *  - #115 Twitter 预制推文已含 Ocufi_io @ + 0.1% + ref code
  */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';

@@ -7,11 +7,16 @@
  * 行为:点任一行跳 /history · 整体 Card 也有"全部"链接
  */
 import Link from 'next/link';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { ArrowDownRight, ArrowUpRight, ArrowRight, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
+import { SOL_MINT } from '@/lib/portfolio';
+
+const SOL_LOGO_URL =
+  'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png';
 
 const LIMIT = 5;
 
@@ -66,14 +71,31 @@ function RecentRow({ r, explorer }: { r: EnrichedTxRecord; explorer: string }) {
   const isBuy = r.type === 'buy';
   const isSell = r.type === 'sell';
   const Icon = isBuy ? ArrowDownRight : isSell ? ArrowUpRight : null;
-  const tone = isBuy ? 'text-emerald-500' : isSell ? 'text-red-500' : 'text-muted-foreground';
+  const tone = isBuy ? 'text-success' : isSell ? 'text-danger' : 'text-muted-foreground';
+  // T-REWARDS-POLISH:加 logo · SOL 特例 + tokenLogo · fallback 首字母
+  const isSolOnly = !r.tokenMint || r.tokenMint === SOL_MINT;
   const symbol = r.tokenSymbol || (r.tokenMint ? r.tokenMint.slice(0, 4) : 'SOL');
+  const logoUrl = isSolOnly ? SOL_LOGO_URL : r.tokenLogo;
   return (
     <Link
       href="/history"
-      className="grid grid-cols-[16px_minmax(0,1fr)_auto_16px] items-center gap-2 py-1.5 px-1 -mx-1 rounded text-xs hover:bg-muted/40 transition-colors"
+      className="grid grid-cols-[16px_18px_minmax(0,1fr)_auto_16px] items-center gap-2 py-1.5 px-1 -mx-1 rounded text-xs hover:bg-muted/40 transition-colors"
     >
       {Icon ? <Icon className={`h-3 w-3 ${tone} flex-shrink-0`} /> : <span className="h-3 w-3" />}
+      {logoUrl ? (
+        <Image
+          src={logoUrl}
+          alt={symbol}
+          width={18}
+          height={18}
+          className="rounded-full flex-shrink-0"
+          unoptimized
+        />
+      ) : (
+        <span className="h-[18px] w-[18px] rounded-full bg-muted flex items-center justify-center text-[8px] font-bold text-muted-foreground flex-shrink-0">
+          {symbol.slice(0, 2).toUpperCase()}
+        </span>
+      )}
       <span className={`truncate ${tone}`}>{symbol}</span>
       <span className="font-mono tabular-nums text-foreground whitespace-nowrap">
         {formatSol(r.solAmount)} SOL

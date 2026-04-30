@@ -12,6 +12,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { fetchTokenInfo } from '@/lib/portfolio';
 import { fetchPoolStats1h, isApiConfigured, type PoolStats1h } from '@/lib/api-client';
+import { StaleBar } from './stale-bar';
 
 interface Props {
   mint: string;
@@ -96,6 +97,7 @@ export function PoolStatsOneHour({ mint }: Props) {
   return (
     <Card className="p-3 space-y-2">
       {SectionHeader}
+      <StaleBar stale={stats.stale} dataAgeSec={stats.data_age_sec} />
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-muted-foreground">{t('totalVolume')}</span>

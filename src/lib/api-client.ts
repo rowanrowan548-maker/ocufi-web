@@ -52,8 +52,27 @@ export interface ApiTokenPrice {
   logo_uri?: string | null;
 }
 
+// T-PERF-FE-DEDUP-REQUESTS · /price/<mint> 60s 缓存 + inflight dedup
+// 同 mint 跨组件并发请求合并为 1 次后端调用(实测 SOL 重复 2 次 · 浪费 ~800ms)
+const PRICE_CACHE_TTL_MS = 60_000;
+const priceCache = new Map<string, { data: ApiTokenPrice; expiresAt: number }>();
+const priceInflight = new Map<string, Promise<ApiTokenPrice>>();
+
 export async function fetchPrice(mint: string): Promise<ApiTokenPrice> {
-  return apiFetch<ApiTokenPrice>(`/price/${mint}`);
+  const cached = priceCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let promise = priceInflight.get(mint);
+  if (!promise) {
+    promise = apiFetch<ApiTokenPrice>(`/price/${mint}`)
+      .then((data) => {
+        priceCache.set(mint, { data, expiresAt: Date.now() + PRICE_CACHE_TTL_MS });
+        return data;
+      })
+      .finally(() => { priceInflight.delete(mint); });
+    priceInflight.set(mint, promise);
+  }
+  return promise;
 }
 
 // ─── Day 10 points ───
@@ -350,6 +369,9 @@ export interface PoolStats1h {
   total_volume_usd: number;
   fetched_at?: number | null;
   cached?: boolean;
+  // T-FE-STALE-UI · 后端 T-PERF-STALE-FALLBACK 返旧数据时
+  stale?: boolean;
+  data_age_sec?: number | null;
   error?: string | null;
   retry_after?: number | null;
 }
@@ -368,6 +390,9 @@ export interface TokenAuditCard {
   sniper_pct?: number | null;           // 0-100
   lp_burn_pct?: number | null;          // 0-100
   cached?: boolean;
+  // T-FE-STALE-UI · 后端 T-PERF-STALE-FALLBACK 返旧数据时
+  stale?: boolean;
+  data_age_sec?: number | null;
   error?: string | null;
 }
 
@@ -727,6 +752,8 @@ export interface MarketsResp {
   items: MarketItem[];
   cached: boolean;
   stale?: boolean;
+  // T-FE-STALE-UI · 与 PoolStats1h / TokenAuditCard 同语义
+  data_age_sec?: number | null;
   fetched_at?: number | null;
   error?: string | null;
 }
@@ -739,4 +766,47 @@ export async function fetchMarketsTrending(timeframe: MarketsTimeframe, limit = 
 export async function fetchMarketsNewPairs(limit = 50): Promise<MarketItem[]> {
   const r = await apiFetch<MarketsResp>(`/markets/new-pairs?limit=${limit}`);
   return r.items ?? [];
+}
+
+// ─── T-REWARDS-PAGE · /portfolio/empty-accounts ───
+
+export interface EmptyAccount {
+  mint: string;
+  ata_address: string;
+  rent_lamports: number;
+  token_symbol: string | null;
+  token_logo: string | null;
+}
+
+export interface EmptyAccountsResp {
+  ok: boolean;
+  wallet: string;
+  count: number;
+  accounts: EmptyAccount[];
+  total_recoverable_lamports: number;
+  total_recoverable_sol?: number;
+}
+
+export async function fetchEmptyAccounts(wallet: string): Promise<EmptyAccountsResp> {
+  return apiFetch<EmptyAccountsResp>(`/portfolio/empty-accounts?wallet=${encodeURIComponent(wallet)}`);
+}
+
+// ─── T-HISTORY-CHAIN-DETAIL-FE · /portfolio/tx-detail ───
+// 后端契约(数学守恒 · priority + base = total · 没数据时 ok:false 字段全 0):
+//   GET /portfolio/tx-detail?signature=X
+//   → { ok, type, priority_fee_sol, base_fee_sol, total_fee_sol, cached, error?, ... }
+
+export interface TxDetail {
+  ok: boolean;
+  signature: string;
+  type: string | null;
+  priority_fee_sol: number;
+  base_fee_sol: number;
+  total_fee_sol: number;
+  cached?: boolean;
+  error?: string | null;
+}
+
+export async function fetchTxDetail(signature: string): Promise<TxDetail> {
+  return apiFetch<TxDetail>(`/portfolio/tx-detail?signature=${encodeURIComponent(signature)}`);
 }

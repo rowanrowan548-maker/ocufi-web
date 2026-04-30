@@ -25,8 +25,9 @@ import {
   type GasLevel,
 } from '@/lib/jupiter';
 import { recommendedSlippageBps } from '@/lib/verified-tokens';
-import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
-import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
+import { executeSwapPlan } from '@/lib/execute-swap-plan';
+import { markPendingWrap, clearPendingWrap } from '@/lib/wrap-cleanup';
+import { analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, isApiConfigured } from '@/lib/api-client';
@@ -148,18 +149,19 @@ export function QuickBuyConfirm({
     if (!quoteData || !wallet.publicKey) return;
     setConfirming(true);
     try {
-      const tx = await buildSwapTxWithFee(
+      // T-PHANTOM-SPLIT-TX-FE · 走 prepareSwapTxs · GAS_LEVEL='fast' 通常 single
+      const result = await executeSwapPlan(
         connection,
+        wallet,
         quoteData.quote,
-        wallet.publicKey.toBase58(),
         GAS_LEVEL,
-        FEE_BPS,
+        {
+          onSetupConfirmed: (setupSig) => markPendingWrap(setupSig, mint),
+          confirmTimeoutMs: 60_000,
+        },
       );
-      const sig = await signAndSendTx(connection, wallet, tx);
-      const confirmed = await confirmTx(connection, sig, 60_000);
-      if (!confirmed) {
-        throw new Error(t('trade.errors.unconfirmed', { sig }));
-      }
+      const sig = result.signature;
+      clearPendingWrap();
 
       const det = await analyzeTx(connection, sig, wallet.publicKey, mint);
       const actualTokens = det?.tokenDelta ?? quoteData.outTokens;

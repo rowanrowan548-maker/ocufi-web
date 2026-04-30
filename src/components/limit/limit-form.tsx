@@ -199,7 +199,10 @@ export function LimitForm({ onCreated, side: sideProp, mint: mintProp, compact }
       const tx = VersionedTransaction.deserialize(
         Buffer.from(order.transaction, 'base64')
       );
-      const sigStr = await signAndSendTx(connection, wallet, tx);
+      // T-MEV-REBATE-FE · 触发 Helius rebate URL
+      const sigStr = await signAndSendTx(connection, wallet, tx, {
+        rebateForUser: wallet.publicKey ?? undefined,
+      });
 
       setStage('confirming');
       const confirmed = await confirmTx(connection, sigStr, 60_000);

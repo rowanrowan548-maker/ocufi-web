@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     template: '%s · Ocufi',
   },
   description:
-    '非托管 · 低费 · 透明 · 开源的 Solana 链上交易终端。0.2% 手续费,免费安全审查,代码开源可审计。',
+    '非托管 · 低费 · 透明 · 开源的 Solana 链上交易终端。0.1% 手续费,免费安全审查,代码开源可审计。',
   keywords: [
     'Solana', 'DEX', '交易', 'meme', 'Jupiter', '非托管',
     'on-chain', 'crypto', 'wallet', 'open-source',
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: 'Ocufi',
     title: 'Ocufi · Solana Trading Terminal',
     description:
-      '非托管 · 0.2% 手续费 · 免费安全审查 · 代码开源。Solana 链上交易终端。',
+      '非托管 · 0.1% 手续费 · 免费安全审查 · 代码开源。Solana 链上交易终端。',
     url: 'https://www.ocufi.io',
     locale: 'zh_CN',
     images: [
