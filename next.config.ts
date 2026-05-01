@@ -24,9 +24,13 @@ const csp = [
   "img-src 'self' data: https: blob:",
   // 外部数据源 + Vercel Analytics 上报 endpoint
   // T-820:补 api.gopluslabs.io(GoPlus token security 二次审查 API)
-  "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://api.gopluslabs.io https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+  // T1.3 (2026-05-01):加 *.phantom.app + *.phantom.com · Phantom Connect SDK
+  // 内部要调 time.phantom.app/utc 拿 UTC 时间(OAuth 签名 + token 过期校验)·
+  // 没放行 → CSP 拒 → Auth2Stamper init 死循环 → 红条
+  "connect-src 'self' https://*.dexscreener.com https://api.geckoterminal.com https://api.rugcheck.xyz https://api.gopluslabs.io https://*.jup.ag https://lite-api.jup.ag https://*.helius-rpc.com https://*.helius.xyz https://api.mainnet-beta.solana.com wss://*.helius-rpc.com wss://api.mainnet-beta.solana.com https://*.solana.com https://*.up.railway.app https://va.vercel-scripts.com https://vitals.vercel-insights.com https://*.phantom.app https://*.phantom.com",
   // T-708:K 线换 GT embed iframe,放行 geckoterminal.com 嵌入
-  "frame-src 'self' https://dexscreener.com https://*.dexscreener.com https://www.geckoterminal.com",
+  // T1.3 (2026-05-01):加 *.phantom.app + *.phantom.com · OAuth popup / iframe 走 phantom 子域
+  "frame-src 'self' https://dexscreener.com https://*.dexscreener.com https://www.geckoterminal.com https://*.phantom.app https://*.phantom.com",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",

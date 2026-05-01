@@ -1,41 +1,49 @@
 'use client';
 
 /**
- * Locale-级 Error Boundary
+ * T-FE-STABILITY-ERROR-BOUNDARIES · 路由级 error boundary 共享渲染
  *
- * 任何 server / client 渲染异常被这里兜住。Next 16 自动注册成 fallback,
- * 在 layout 内捕获子树报错(layout 自己挂掉走 global-error.tsx)
+ * 6 个 route-level error.tsx 都是 Next 16 的 client component fallback ·
+ * 几乎一样:接 { error, reset } props · render 一段中性提示 + 重试按钮 ·
+ * 只在标题 / 描述上区分页面专属文案。
  *
- * T-FE-STABILITY-ERROR-BOUNDARIES:加 trace_id 显示 + "复制错误信息"按钮
- *   - 复制内容 = digest + message + timestamp · 用户报 bug 时直接粘贴给我们
- *   - 不暴露 stack trace(SSR 环境敏感)
+ * 把 render 抽到这里 · 6 个 page error 文件每个只剩 2 行(import + 调用)·
+ * 减少重复 · 统一视觉。
  *
- * 思路:展示中性错误页 + Reset 按钮(reset() 会让 Next 重新尝试渲染当前路由),
- *       避免任何敏感堆栈泄露给用户
+ * 注意:Next 16 的 error boundary 必须是 client + default export · 不能 抽成 server
+ *      component · 所以 route 文件本身也得是 use client + default export · 仅
+ *      composition 抽出来。
  */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertOctagon, RefreshCw, Home, Copy, Check } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function LocaleError({
-  error,
-  reset,
-}: {
+interface Props {
+  /** 页面专属标题(eg "交易页加载失败")*/
+  title: string;
+  /** 页面专属描述(eg "可能是行情接口波动 · 重试一下试试")*/
+  description: string;
+  /** Next 16 注入的 error 对象 */
   error: Error & { digest?: string };
+  /** Next 16 注入的 reset · 让 Next 重渲染当前路由 */
   reset: () => void;
-}) {
+  /** 在 console.error 标签 · 默认 'page-error' */
+  logTag?: string;
+}
+
+export function PageError({ title, description, error, reset, logTag = 'page-error' }: Props) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // 上报到 console(V2 接 Sentry / PostHog)
-    console.error('[locale-error]', error);
-  }, [error]);
+    console.error(`[${logTag}]`, error);
+  }, [error, logTag]);
 
   const copyDiag = async () => {
     const ts = new Date().toISOString();
     const payload = [
-      `Ocufi error report · ${ts}`,
+      `Ocufi error · ${ts}`,
+      `tag: ${logTag}`,
       error.digest ? `digest: ${error.digest}` : null,
       error.message ? `message: ${error.message}` : null,
       typeof window !== 'undefined' ? `path: ${window.location.pathname}` : null,
@@ -45,21 +53,23 @@ export default function LocaleError({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard 写失败(老浏览器/无 https)· 静默 · 用户能看到 ref 也行
+      // clipboard 失败 · 静默
     }
   };
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center">
+    <main
+      className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center"
+      data-testid="page-error"
+      data-tag={logTag}
+    >
       <div className="max-w-md w-full space-y-5">
-        <div className="h-16 w-16 mx-auto rounded-full bg-danger/10 flex items-center justify-center">
-          <AlertOctagon className="h-8 w-8 text-danger" />
+        <div className="h-14 w-14 mx-auto rounded-full bg-[var(--brand-down)]/10 flex items-center justify-center">
+          <AlertCircle className="h-7 w-7 text-[var(--brand-down)]" />
         </div>
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">页面出错了</h1>
-          <p className="text-sm text-muted-foreground">
-            刚才那一步跑出问题了,可以重试或者回首页继续。
-          </p>
+          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+          <p className="text-sm text-muted-foreground">{description}</p>
           {error.digest && (
             <p className="text-[10px] font-mono text-muted-foreground/50 pt-2">
               ref: {error.digest}
@@ -67,7 +77,7 @@ export default function LocaleError({
           )}
         </div>
         <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-          <Button onClick={reset} className="w-full sm:w-auto">
+          <Button onClick={reset} className="w-full sm:w-auto" data-testid="page-error-retry">
             <RefreshCw className="h-4 w-4 mr-2" />
             重试
           </Button>
@@ -78,11 +88,11 @@ export default function LocaleError({
             </Button>
           </Link>
         </div>
-        <div className="pt-2">
+        <div className="pt-1">
           <button
             type="button"
             onClick={copyDiag}
-            data-testid="error-copy-diag"
+            data-testid="page-error-copy"
             className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-foreground/80 transition-colors"
           >
             {copied ? (

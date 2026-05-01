@@ -13,10 +13,11 @@ import { VersionedTransaction } from '@solana/web3.js';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
-import { RefreshCw, X, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
+import { RefreshCw, X, ExternalLink, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ErrorCard } from '@/components/ui/error-card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -131,11 +132,14 @@ export function OrderList({ refreshTick = 0 }: Props) {
         </Button>
       </div>
 
+      {/* T-FE-STABILITY-ERROR-BOUNDARIES:统一用 ErrorCard 替代裸 div · 给重试入口 + 详情可折叠 */}
       {err && (
-        <div className="flex gap-2 items-start p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <span className="break-all">{err}</span>
-        </div>
+        <ErrorCard
+          title={t('limit.orders.loadFailed')}
+          message={err}
+          onRetry={refresh}
+          testId="limit-orders-error"
+        />
       )}
 
       {orders.length === 0 && !loading ? (

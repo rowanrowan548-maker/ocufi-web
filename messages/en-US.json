@@ -623,6 +623,7 @@
       "bundle": "Bundlers",
       "sniper": "Snipers",
       "lpBurn": "LP burn",
+      "comingSoon": "Coming in V2",
       "devStatus": {
         "cleared": "Cleared",
         "holding": "Holding",
@@ -951,7 +952,7 @@
     "riskDetails": "Risk Details",
     "topHolders": "Top 10 Holders",
     "risk": {
-      "verified": "🛡 Verified",
+      "verified": "Verified",
       "low": "✅ Low risk",
       "medium": "⚠️ Medium risk",
       "high": "🚨 High risk",
@@ -1304,7 +1305,8 @@
       "making": "Paying",
       "taking": "Receiving",
       "price": "Price",
-      "expiry": "Expiry"
+      "expiry": "Expiry",
+      "loadFailed": "Failed to load orders"
     }
   },
   "history": {
@@ -1982,6 +1984,15 @@
       "title": "Invite friends, earn fees",
       "desc": "Your friends trade · you earn a share of fees · adds up over time",
       "cta": "Go to Invite page"
+    }
+  },
+  "auth": {
+    "callback": {
+      "loading": "Logging in…",
+      "loadingHint": "Phantom is finishing your login · usually 1–3s",
+      "error": "Login failed",
+      "retry": "Retry",
+      "home": "Back to home"
     }
   }
 }

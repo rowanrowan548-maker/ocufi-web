@@ -33,6 +33,7 @@ import { isVerifiedToken } from '@/lib/verified-tokens';
 import { SmartMoneyBadge } from './smart-money-badge';
 import { MiniChartTooltip } from './mini-chart-tooltip';
 import { MarketsCardsMobile } from './markets-cards-mobile';
+import { prefetchTokenForTrade } from '@/lib/prefetch';
 
 const HOVER_DELAY_MS = 500;
 
@@ -116,6 +117,9 @@ function Row({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleEnter = () => {
+    // T-FE-PERF-V2-PREFETCH:hover 立刻 fire-and-forget 预取(price + audit + token-info)
+    //   节流在 prefetch.ts 内做(同 mint 1.5s 内不重发)· 滑过几行无脑打也不浪费
+    prefetchTokenForTrade(it.mint);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       const el = rowRef.current;

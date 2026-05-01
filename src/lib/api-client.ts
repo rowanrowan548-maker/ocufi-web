@@ -2,27 +2,96 @@
  * 统一封装 ocufi-api 后端请求
  *
  * 基础 URL 来自 NEXT_PUBLIC_API_URL(空则禁用后端相关功能)
+ *
+ * T-FE-STABILITY-ERROR-BOUNDARIES:
+ *   - 加 15s AbortController timeout · 防 fetch 卡死
+ *   - 抛 ApiError(extends Error · 含 status / path / body)· 上层 instanceof 区分 4xx/5xx/timeout
+ *   - 不加 retry:对 POST(claim / alerts / invite)retry 可能重复扣费 / 双发 · 由调用方按需决定
+ *   - backward compat:ApiError.message 跟旧 `API ${status} ${path}: ${text}` 字串兼容 · 现有 catch (e) 仍能 e.message 拿到信息
  */
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const DEFAULT_TIMEOUT_MS = 15_000;
 
 export function isApiConfigured(): boolean {
   return !!API_URL;
 }
 
+/** ApiFetch 失败时抛的 structured error · 上层可 instanceof ApiError 区分类型 */
+export class ApiError extends Error {
+  /** HTTP status · 0 = network/timeout · 511 = NEXT_PUBLIC_API_URL 未配 */
+  readonly status: number;
+  /** 请求路径(eg '/admin/stats')*/
+  readonly path: string;
+  /** body 头 200 字符 · 给 detail 显示用 */
+  readonly body: string;
+  /** true = AbortController 超时 / network 失败(无 status)· 上层可决定要不要 retry */
+  readonly isNetwork: boolean;
+
+  constructor(opts: { status: number; path: string; body: string; isNetwork: boolean }) {
+    // 跟旧 throw `API ${status} ${path}: ${text}` 字串兼容 · 老 catch (e) e.message 仍读得到
+    super(
+      opts.isNetwork
+        ? `API network ${opts.path}: ${opts.body}`
+        : `API ${opts.status} ${opts.path}: ${opts.body}`,
+    );
+    this.name = 'ApiError';
+    this.status = opts.status;
+    this.path = opts.path;
+    this.body = opts.body;
+    this.isNetwork = opts.isNetwork;
+  }
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
-  init?: RequestInit
+  init?: RequestInit & { timeoutMs?: number }
 ): Promise<T> {
-  if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL not configured');
+  if (!API_URL) {
+    throw new ApiError({
+      status: 511,
+      path,
+      body: 'NEXT_PUBLIC_API_URL not configured',
+      isNetwork: false,
+    });
+  }
   const url = `${API_URL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-    cache: 'no-store',
-  });
+  const timeoutMs = init?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  // AbortController timeout · 防止 fetch 卡死
+  // init 也可能自带 signal · 优先用调用方的(允许外部取消)· 否则用我们的 timeout signal
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  const signal = init?.signal ?? ctl.signal;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      signal,
+      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      cache: 'no-store',
+    });
+  } catch (e: unknown) {
+    clearTimeout(t);
+    const isAbort = (e instanceof DOMException && e.name === 'AbortError') ||
+      (e instanceof Error && e.name === 'AbortError');
+    throw new ApiError({
+      status: 0,
+      path,
+      body: isAbort ? `timeout ${timeoutMs}ms` : (e instanceof Error ? e.message : String(e)),
+      isNetwork: true,
+    });
+  }
+  clearTimeout(t);
+
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`API ${res.status} ${path}: ${text.slice(0, 200)}`);
+    throw new ApiError({
+      status: res.status,
+      path,
+      body: text.slice(0, 200),
+      isNetwork: false,
+    });
   }
   return (await res.json()) as T;
 }
@@ -396,8 +465,28 @@ export interface TokenAuditCard {
   error?: string | null;
 }
 
+// T-FE-PERF-V2-PREFETCH · audit-card 加 60s cache + inflight dedup(参 fetchPrice 同模式)
+//   - hover 预取 + 组件 mount 真用 → 共享 1 次请求 · 不双发
+//   - cache 60s · 重复访问同 mint 不调 backend
+const AUDIT_CACHE_TTL_MS = 60_000;
+const auditCardCache = new Map<string, { data: TokenAuditCard; expiresAt: number }>();
+const auditCardInflight = new Map<string, Promise<TokenAuditCard>>();
+
 export async function fetchTokenAuditCard(mint: string): Promise<TokenAuditCard> {
-  return apiFetch(`/token/audit-card?mint=${encodeURIComponent(mint)}`);
+  const cached = auditCardCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let promise = auditCardInflight.get(mint);
+  if (!promise) {
+    promise = apiFetch<TokenAuditCard>(`/token/audit-card?mint=${encodeURIComponent(mint)}`)
+      .then((data) => {
+        auditCardCache.set(mint, { data, expiresAt: Date.now() + AUDIT_CACHE_TTL_MS });
+        return data;
+      })
+      .finally(() => { auditCardInflight.delete(mint); });
+    auditCardInflight.set(mint, promise);
+  }
+  return promise;
 }
 
 // T-OKX-4C-be · 按地址标签筛选 trades
@@ -754,16 +843,23 @@ export interface BITradeSizeDist {
   max_trade_usd: number | null;
 }
 
+export interface BIVolumeTimeSeries {
+  hourly_volume_24h: BIVolumeBucket[];
+  daily_volume_30d: BIVolumeBucket[];
+}
+
 export interface BIMetricsResp {
   ok: boolean;
   window: FeeRevenueWindow;
   /** spec 降级:section 字段拿不到 → 子字段 null · 不抛 500 */
-  hourly_volume_24h: BIVolumeBucket[];
-  daily_volume_30d: BIVolumeBucket[];
-  conversion: BIConversionFunnel;
-  mev: BIMevRebate;
-  success: BISuccessRate;
-  trade_size: BITradeSizeDist;
+  volume_time_series: BIVolumeTimeSeries;
+  funnel: BIConversionFunnel;
+  mev_rebate: BIMevRebate;
+  tx_success: BISuccessRate;
+  trade_size_distribution: BITradeSizeDist;
+  fee_address?: string | null;
+  sol_price_usd?: number;
+  cached?: boolean;
   computed_at: string;
 }
 
