@@ -91,6 +91,14 @@ export default defineConfig({
       },
       testMatch: /error-degradation\.spec\.ts/,
     },
+    {
+      name: 'user-reported-bugs',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /user-reported-bugs-.*\.spec\.ts/,
+    },
   ],
 });
 
