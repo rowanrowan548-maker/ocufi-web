@@ -120,7 +120,24 @@ export function extractSolanaPublicKey(
   return solana?.address ?? accounts[0]?.address ?? null;
 }
 
-/** 检查 Phantom Connect 是否可用(env 配置完整)· 前端连接前调一次防裸调 */
+/**
+ * V1 disable feature flag · T1.6 (2026-05-01)
+ *
+ * Phantom Portal hosted OAuth(connect.phantom.app/login)实测报 400 Bad Request ·
+ * 来自 Phantom 服务器 · 不在我们代码控制范围。用户拍板 V1 隐藏全部 Phantom
+ * Connect 入口 · 只走扩展 + 标准 wallet adapter(行业现状 · 80%+ Sol 用户用扩展)。
+ *
+ * 修好 5 分钟恢复:Vercel 设 NEXT_PUBLIC_PHANTOM_CONNECT_ENABLED=true 重 deploy。
+ *
+ * 全站 Phantom Connect 入口都基于 isPhantomConnectConfigured() · flag false 时:
+ *   - PhantomConnectButton 全 variant 不渲染(landing/header/modal)
+ *   - DeferredPhantomMount 不挂 PhantomProvider · SDK 完全不 init · console 干净
+ *   - /auth/phantom-callback 路由 PhantomCallbackScreen 走 not-configured 错误态
+ */
+const PHANTOM_CONNECT_ENABLED = process.env.NEXT_PUBLIC_PHANTOM_CONNECT_ENABLED === 'true';
+
+/** 检查 Phantom Connect 是否可用(env 配置完整 + V1 flag 开启)· 前端连接前调一次防裸调 */
 export function isPhantomConnectConfigured(): boolean {
+  if (!PHANTOM_CONNECT_ENABLED) return false;
   return PHANTOM_APP_ID.length > 0;
 }
