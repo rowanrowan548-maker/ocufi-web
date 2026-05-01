@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * T-OKX-4C-fe · GMGN 风子 tab 行 · 按地址标签筛选 trades
+ * R-TAB-TRADES · GMGN 风子 tab 行 · 按地址标签筛选 trades
  *
- * 后端: GET /trades/by-tag?pool=&tag=&limit= (T-OKX-4C-be a668538)
+ * 后端: GET /trades/by-tag?mint=&tag=&limit= (autopool 后端 7fcd4a5 用 mint 自查 pool)
  *
  * 行为:
- *  - 主 tab "交易活动" 内,表格上方加 ToggleGroup 12 选 1
+ *  - 主 tab "交易活动" 内,表格上方加 ToggleGroup 11 选 1
  *  - 默认 'all' → 用 GT trades(parent 提供)
- *  - 选其他 tag → fetch by-tag 数据,加"标签"列
+ *  - 选其他 tag → fetch by-tag 数据 · 加"标签"列
  *  - 桌面 lg+ 显 · 移动不显(sub tab 占空间)
  */
 import { useEffect, useState } from 'react';
@@ -21,7 +21,6 @@ import {
   type TradeByTagItem,
 } from '@/lib/api-client';
 import type { GTTrade } from '@/lib/geckoterminal';
-import { fetchTokenInfo } from '@/lib/portfolio';
 
 const TAGS: TradeTag[] = [
   'all', 'kol', 'rat', 'whale', 'sniper', 'phishing',
@@ -39,34 +38,24 @@ export function TradesTagFilter({ mint, gtTrades, gtLoading, explorer }: Props) 
   const t = useTranslations('trade.activity');
   const tTag = useTranslations('trade.activity.tags');
   const [activeTag, setActiveTag] = useState<TradeTag>('all');
-  const [pool, setPool] = useState<string | null>(null);
   const [byTagItems, setByTagItems] = useState<TradeByTagItem[] | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // mint → pool
+  // tag !== 'all' → fetch /trades/by-tag?mint=...&tag=...
+  // 后端用 mint 自查 top pool · 前端不再 fetchTokenInfo 来回
   useEffect(() => {
-    if (!mint) { setPool(null); return; }
-    let cancelled = false;
-    fetchTokenInfo(mint)
-      .then((info) => { if (!cancelled) setPool(info?.topPoolAddress ?? null); })
-      .catch(() => { if (!cancelled) setPool(null); });
-    return () => { cancelled = true; };
-  }, [mint]);
-
-  // tag !== 'all' → fetch /trades/by-tag
-  useEffect(() => {
-    if (activeTag === 'all' || !pool || !isApiConfigured()) {
+    if (activeTag === 'all' || !mint || !isApiConfigured()) {
       setByTagItems(null);
       return;
     }
     let cancelled = false;
     setLoading(true);
-    fetchTradesByTag(pool, activeTag, 100)
-      .then((r) => { if (!cancelled) setByTagItems(r.items ?? []); })
+    fetchTradesByTag(mint, activeTag, 100)
+      .then((r) => { if (!cancelled) setByTagItems(r.trades ?? []); })
       .catch(() => { if (!cancelled) setByTagItems([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [activeTag, pool]);
+  }, [activeTag, mint]);
 
   return (
     <div className="space-y-2">

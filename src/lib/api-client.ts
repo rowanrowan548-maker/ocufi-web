@@ -505,17 +505,30 @@ export interface TradeByTagItem {
 
 export interface TradesByTagResp {
   ok: boolean;
-  items: TradeByTagItem[];
+  /** 后端 7fcd4a5 改名:items → trades · 老 FE 读 items 拿 undefined → 用户截图 9 tab 全空根因 */
+  trades: TradeByTagItem[];
+  /** 后端解析 mint → top pool 的结果 · null 表示找不到 */
+  pool?: string | null;
+  /** 'no_pool_found' 等业务态 · 给前端区分"没数据"和"系统错" */
+  note?: string | null;
   cached?: boolean;
+  fetched_at?: number | null;
   error?: string | null;
+  retry_after?: number | null;
 }
 
+/**
+ * 按地址标签筛选 trades · R-TAB-TRADES
+ *
+ * 后端 `7fcd4a5` 让 pool 变 optional · 加 mint 参数 · 后端用 _resolve_top_pool(mint) 自查 pool
+ * 前端不再需要预先 fetchTokenInfo → topPoolAddress 来回一趟
+ */
 export async function fetchTradesByTag(
-  pool: string,
+  mint: string,
   tag: TradeTag = 'all',
   limit = 100,
 ): Promise<TradesByTagResp> {
-  const url = `/trades/by-tag?pool=${encodeURIComponent(pool)}&tag=${tag}&limit=${limit}`;
+  const url = `/trades/by-tag?mint=${encodeURIComponent(mint)}&tag=${tag}&limit=${limit}`;
   return apiFetch(url);
 }
 
