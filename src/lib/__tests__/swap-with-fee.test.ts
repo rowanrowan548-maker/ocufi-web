@@ -476,4 +476,104 @@ describe('T-PHANTOM-SPLIT-TX-RORY-V2 · prepareSwapTxs ix 拆桶', () => {
     const plan = await prepareSwapTxs(stub as any, fakeQuote, FAKE_USER.toBase58());
     expect(plan.kind).toBe('single');
   });
+
+  /**
+   * R10-CHAIN · extraMemoText 跟单溯源
+   *
+   * - single 模式:memo 挂 instructions 末尾(swap+cleanup 之后)
+   * - split 模式:memo 挂 setup leg(Rory size 约束 · 不挂 swap leg)
+   */
+  it('case 5 · single + extraMemoText · memo 挂末尾 · 文本可解析回原值', async () => {
+    const jupResp = makeFakeJupResponse({ setupCount: 0, hasTokenLedger: false });
+    (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;
+    const { stub } = makeStubConnection(jupResp);
+
+    const { prepareSwapTxs } = await import('@/lib/swap-with-fee');
+    const fakeQuote = {
+      inputMint: 'So11111111111111111111111111111111111111112',
+      outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      inAmount: '1000000',
+      outAmount: '999000',
+      otherAmountThreshold: '0',
+      swapMode: 'ExactIn',
+      slippageBps: 50,
+      priceImpactPct: '0.1',
+      routePlan: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const COPY_MEMO = 'ocufi-copy-5sv1jdRj';
+    const plan = await prepareSwapTxs(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stub as any,
+      fakeQuote,
+      FAKE_USER.toBase58(),
+      'fast',
+      { extraMemoText: COPY_MEMO }
+    );
+    expect(plan.kind).toBe('single');
+    if (plan.kind !== 'single') return;
+
+    const ids = programIdsOf(plan.tx);
+    const memoIdx = ids.indexOf('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+    const swapIdx = ids.indexOf(jupResp.swapInstruction.programId);
+    // memo 在 swap 之后(末尾)
+    expect(memoIdx).toBeGreaterThan(swapIdx);
+
+    // 解析 memo data
+    const memoIxIdx = plan.tx.message.compiledInstructions.findIndex(
+      (ix) =>
+        plan.tx.message.staticAccountKeys[ix.programIdIndex].toBase58() ===
+        'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'
+    );
+    expect(memoIxIdx).toBeGreaterThan(-1);
+    const memoData = Buffer.from(
+      plan.tx.message.compiledInstructions[memoIxIdx].data
+    ).toString('utf-8');
+    expect(memoData).toBe(COPY_MEMO);
+  });
+
+  it('case 6 · split + extraMemoText · memo 挂 setup leg · 不挂 swap leg', async () => {
+    const jupResp = makeFakeJupResponse({ setupCount: 10, hasTokenLedger: true });
+    (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;
+    const { stub } = makeStubConnection(jupResp);
+
+    const { prepareSwapTxs } = await import('@/lib/swap-with-fee');
+    const fakeQuote = {
+      inputMint: 'So11111111111111111111111111111111111111112',
+      outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      inAmount: '1000000',
+      outAmount: '999000',
+      otherAmountThreshold: '0',
+      swapMode: 'ExactIn',
+      slippageBps: 50,
+      priceImpactPct: '0.1',
+      routePlan: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const COPY_MEMO = 'ocufi-copy-deadbeef';
+    const plan = await prepareSwapTxs(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stub as any,
+      fakeQuote,
+      FAKE_USER.toBase58(),
+      'fast',
+      { extraMemoText: COPY_MEMO }
+    );
+    if (plan.kind !== 'split') {
+      // mock setup ix dedup 后没超 1150 · 跳过(case 2 同样宽容)
+      return;
+    }
+
+    // setup leg 含 memo program
+    const setupIds = programIdsOf(plan.setupTx);
+    expect(setupIds).toContain('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+
+    // swap leg 不含 memo program(Rory size 约束)
+    const FRESH_BLOCKHASH = Keypair.generate().publicKey.toBase58();
+    const swapTx = await plan.buildSwapTx(FRESH_BLOCKHASH);
+    const swapIds = programIdsOf(swapTx);
+    expect(swapIds).not.toContain('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+  });
 });

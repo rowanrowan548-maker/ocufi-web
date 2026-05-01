@@ -243,6 +243,18 @@ export type SplitTxPlan =
     };
 
 /**
+ * prepareSwapTxs 可选参数
+ *
+ * - extraMemoText:R10-CHAIN · 额外的 SPL Memo 文本(链上溯源 · 跟单 leader_sig 绑定)
+ *   - single 模式:append 到 instructions 末尾(swap+cleanup 之后)
+ *   - split 模式:挂在 setup leg 末尾(Rory 强调 swap leg 必须 size 紧凑 · 不挂 swap leg)
+ *   - 长度建议 ≤ 64 字节(memo 太长会撑爆 size · 内部有 size 自检兜底)
+ */
+export interface PrepareSwapTxsOpts {
+  extraMemoText?: string;
+}
+
+/**
  * 准备 swap 交易计划 · 自动决策 single / split
  *
  * 1. ATA 余额 sanity(卖出场景)
@@ -257,7 +269,8 @@ export async function prepareSwapTxs(
   connection: Connection,
   quote: JupiterQuote,
   userPublicKey: string,
-  gasLevel: GasLevel = 'fast'
+  gasLevel: GasLevel = 'fast',
+  opts: PrepareSwapTxsOpts = {}
 ): Promise<SplitTxPlan> {
   const chain = getCurrentChain();
   const gas = GAS_CONFIG[gasLevel];
@@ -375,6 +388,19 @@ export async function prepareSwapTxs(
   const swapAndCleanup: TransactionInstruction[] = [jsonToIx(resp.swapInstruction)];
   if (resp.cleanupInstruction) swapAndCleanup.push(jsonToIx(resp.cleanupInstruction));
 
+  // 5.5 extraMemo · R10-CHAIN 跟单溯源
+  //   single:append 到末尾(整体 size 仍受 PHANTOM_SAFE_SIZE_LIMIT 约束)
+  //   split :挂 setup leg 末尾(Rory 强调 swap leg size 紧凑 · 不挂 swap leg)
+  const extraMemoIxs: TransactionInstruction[] = opts.extraMemoText
+    ? [
+        new TransactionInstruction({
+          programId: MEMO_PROGRAM_ID,
+          keys: [{ pubkey: userPubkey, isSigner: true, isWritable: false }],
+          data: Buffer.from(opts.extraMemoText, 'utf-8'),
+        }),
+      ]
+    : [];
+
   // 6. 加载 ALT
   const alts: AddressLookupTableAccount[] = await Promise.all(
     resp.addressLookupTableAddresses.map(async (addr) => {
@@ -389,6 +415,7 @@ export async function prepareSwapTxs(
 
   // 7. 试组单笔 tx · 看 size 决定 single / split
   //    T-PHANTOM-SPLIT-TX-RORY-V2:single 内 tokenLedger 在 swap 段(setup 后 / fee 前)
+  //    R10-CHAIN:extraMemo 挂末尾(swap+cleanup 之后)· 不参与 fee 流程
   const { blockhash } = await connection.getLatestBlockhash('confirmed');
   const singleAllIxs = [
     ...computeBudgetIxs,
@@ -396,6 +423,7 @@ export async function prepareSwapTxs(
     ...tokenLedgerIxs,
     ...buildFeeIxs(true), // single 模式保留 memo
     ...swapAndCleanup,
+    ...extraMemoIxs,
   ];
   const singleTx = compileV0Tx(userPubkey, blockhash, singleAllIxs, alts);
   const singleSize = singleTx.serialize().length;
@@ -416,9 +444,10 @@ export async function prepareSwapTxs(
       `setup ix=${setupIxs.length} · per Rory 2026-04-30 / 2026-05-01`
   );
 
-  // setup tx · [computeBudget · setup]
+  // setup tx · [computeBudget · setup · extraMemo?]
   //   T-PHANTOM-SPLIT-TX-RORY-V2:tokenLedger 不放这 · setup 必须只有 createATA / wrap 等纯 setup
-  const setupTxIxs = [...computeBudgetIxs, ...setupIxs];
+  //   R10-CHAIN:extraMemo 挂这里(setup leg)· 不挂 swap leg(Rory size 约束)
+  const setupTxIxs = [...computeBudgetIxs, ...setupIxs, ...extraMemoIxs];
   const setupTx = compileV0Tx(userPubkey, blockhash, setupTxIxs, alts);
   assertSafeSize(setupTx, PHANTOM_SAFE_SIZE_LIMIT, 'setup');
   await simulateOrThrow(connection, setupTx);
