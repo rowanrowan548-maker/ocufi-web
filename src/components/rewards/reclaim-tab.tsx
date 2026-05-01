@@ -18,7 +18,7 @@ import { useTranslations } from 'next-intl';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, type VersionedTransaction } from '@solana/web3.js';
 import { toast } from 'sonner';
-import { Loader2, Coins, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Loader2, Coins, RefreshCw, CheckCircle2, Copy, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +29,7 @@ import {
 import { buildBatchCloseAccountTxs, type CloseTarget } from '@/lib/close-accounts';
 import { confirmTx } from '@/lib/trade-tx';
 import { addClaimedLamports } from '@/lib/rewards-storage';
+import { lookupTokenDisplay, shortMint } from '@/lib/token-display';
 
 export function ReclaimTab() {
   const t = useTranslations('rewards.reclaim');
@@ -257,36 +258,87 @@ export function ReclaimTab() {
           {accounts.map((a) => {
             const checked = selected.has(a.ata_address);
             return (
-              <li
+              <ReclaimRow
                 key={a.ata_address}
-                className="flex items-center gap-3 p-4 sm:p-3 min-h-14 hover:bg-muted/30 active:bg-muted/40 transition-colors cursor-pointer"
-                onClick={() => !busy && toggleOne(a.ata_address)}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={busy}
-                  onChange={(e) => { e.stopPropagation(); toggleOne(a.ata_address); }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-5 w-5 sm:h-4 sm:w-4 accent-[var(--brand-up)] flex-shrink-0"
-                  aria-label={a.token_symbol ?? a.mint}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium truncate">
-                    {a.token_symbol || `${a.mint.slice(0, 4)}…${a.mint.slice(-4)}`}
-                  </div>
-                  <div className="font-mono text-[10px] text-muted-foreground truncate">
-                    {a.ata_address.slice(0, 8)}…{a.ata_address.slice(-6)}
-                  </div>
-                </div>
-                <div className="text-right font-mono text-sm sm:text-xs text-[var(--brand-up)] flex-shrink-0">
-                  +{(a.rent_lamports / 1e9).toFixed(6)} SOL
-                </div>
-              </li>
+                account={a}
+                checked={checked}
+                disabled={busy}
+                onToggle={() => toggleOne(a.ata_address)}
+              />
             );
           })}
         </ul>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * R4 (2026-05-01) · 列表行 · 显 token symbol+name + mint 缩写 + 复制按钮
+ * 比 inline JSX 抽组件:复制按钮的 copied state 局部 · 不污染父 setState
+ */
+function ReclaimRow({
+  account, checked, disabled, onToggle,
+}: {
+  account: EmptyAccount;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const display = lookupTokenDisplay(account.mint, account.token_symbol);
+
+  const copyMint = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(account.mint);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* */ }
+  };
+
+  return (
+    <li
+      data-testid="reclaim-item"
+      className="flex items-center gap-3 p-4 sm:p-3 min-h-14 hover:bg-muted/30 active:bg-muted/40 transition-colors cursor-pointer"
+      onClick={() => !disabled && onToggle()}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => { e.stopPropagation(); onToggle(); }}
+        onClick={(e) => e.stopPropagation()}
+        className="h-5 w-5 sm:h-4 sm:w-4 accent-[var(--brand-up)] flex-shrink-0"
+        aria-label={display.symbol}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium truncate flex items-baseline gap-1.5">
+          <span>{display.symbol}</span>
+          {display.name && (
+            <span className="text-[11px] text-muted-foreground/80 font-normal truncate">
+              · {display.name}
+            </span>
+          )}
+        </div>
+        <div className="font-mono text-[10px] text-muted-foreground/60 truncate flex items-center gap-1">
+          <span title={account.mint}>{shortMint(account.mint)}</span>
+          <button
+            type="button"
+            onClick={copyMint}
+            aria-label="Copy mint address"
+            className="hover:text-foreground transition-colors p-0.5"
+          >
+            {copied
+              ? <Check className="h-3 w-3 text-[var(--brand-up)]" />
+              : <Copy className="h-3 w-3" />
+            }
+          </button>
+        </div>
+      </div>
+      <div className="text-right font-mono text-sm sm:text-xs text-[var(--brand-up)] flex-shrink-0">
+        +{(account.rent_lamports / 1e9).toFixed(6)} SOL
+      </div>
+    </li>
   );
 }
