@@ -623,6 +623,7 @@
       "bundle": "捆绑交易",
       "sniper": "狙击手",
       "lpBurn": "烧池子",
+      "comingSoon": "V2 即将上线",
       "devStatus": {
         "cleared": "清仓",
         "holding": "持有",
@@ -951,7 +952,7 @@
     "riskDetails": "风险明细",
     "topHolders": "前 10 持有者",
     "risk": {
-      "verified": "🛡 已验证代币",
+      "verified": "已验证代币",
       "low": "✅ 低风险",
       "medium": "⚠️ 中等风险",
       "high": "🚨 高风险",
