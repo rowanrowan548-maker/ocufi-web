@@ -1,22 +1,25 @@
 'use client';
 
 /**
- * T-PHANTOM-CONNECT-fe · "通过 Phantom Connect 连接" 大按钮
+ * T-PHANTOM-CONNECT-fe · "通过 Phantom Connect 连接" 大按钮(延迟 mount 版)
  *
- * 行为:
- *  - 点击调 SDK useModal().show() 弹 Phantom Connect 官方弹窗(google / apple / phantom 三轨)
- *  - 已配置 NEXT_PUBLIC_PHANTOM_APP_ID 时显;否则隐藏(由 isPhantomConnectConfigured 守护)
- *  - 错误友好化(同 T-INV-165 风格 toast)
+ * T1.5 (2026-05-01) · 配合 PhantomConnectProvider 延迟 mount:
+ *  - 默认 SDK 没挂 · button 用 shell 版本(纯 onClick)
+ *  - 用户点击 → requestMount() → PhantomProvider 挂载 → inner button 替换 ·
+ *    inner 用 useEffect 检测 pendingOpen flag · 立即调 modal.open()
+ *  - 已 mount 后(连完一次 / OAuth 回跳)· button 直接走 inner 不再触发 mount
  *
  * 注意:Phantom Connect SDK 走自己的 connection 状态,不走 @solana/wallet-adapter
  *      连接成功后用户 publicKey 在 SDK 的 useAccounts() 里,下游交易代码
  *      仍读 @solana/wallet-adapter 的 useWallet() — 这是 V1 的妥协,Phantom
  *      Portal 通过审核所必须的"明确集成"。完整 bridge 是后续 V2 工作。
  */
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useModal, usePhantom } from '@phantom/react-sdk';
 import { Button } from '@/components/ui/button';
 import { isPhantomConnectConfigured } from '@/lib/phantom-connect';
+import { usePhantomMount } from '@/components/providers/phantom-connect-provider';
 import { toast } from 'sonner';
 
 interface Props {
@@ -37,25 +40,61 @@ const PHANTOM_LOGO_SVG = (
   </svg>
 );
 
+type T = ReturnType<typeof useTranslations>;
+
 export function PhantomConnectButton({ variant = 'modal', onAfterClick }: Props) {
   const t = useTranslations('wallet.phantomConnect');
 
   // 守护:env 未配置时不渲染
   if (!isPhantomConnectConfigured()) return null;
 
-  return <PhantomConnectButtonInner variant={variant} onAfterClick={onAfterClick} t={t} />;
+  return <PhantomConnectButtonOuter variant={variant} onAfterClick={onAfterClick} t={t} />;
+}
+
+function PhantomConnectButtonOuter({
+  variant, onAfterClick, t,
+}: { variant: 'landing' | 'header' | 'modal'; onAfterClick?: () => void; t: T }) {
+  const mount = usePhantomMount();
+
+  // mount 后 → 用 inner(可调 useModal · 自动消化 pendingOpen)
+  if (mount.isMounted) {
+    return <PhantomConnectButtonInner variant={variant} onAfterClick={onAfterClick} t={t} />;
+  }
+
+  // 未 mount → shell 版 · 点击触发 mount + pendingOpen
+  return (
+    <PhantomConnectButtonShell
+      variant={variant}
+      t={t}
+      onClick={() => mount.requestMount()}
+    />
+  );
 }
 
 // SDK hook 必须在 PhantomProvider context 内才能调用
-// 外层 isPhantomConnectConfigured() 已守护,这里安全用 useModal()
-type T = ReturnType<typeof useTranslations>;
+// 此组件只在 mount.isMounted=true 时才 render · useModal/usePhantom 安全
 function PhantomConnectButtonInner({
   variant, onAfterClick, t,
 }: { variant: 'landing' | 'header' | 'modal'; onAfterClick?: () => void; t: T }) {
   const modal = useModal();
-  // T1.1:开 modal 前清掉 autoConnect 残留错(防顶部红条吓用户)
-  // PhantomCleanupGuard 已自动 disconnect · 这里再保底清一遍
   const { clearError } = usePhantom();
+  const mount = usePhantomMount();
+
+  // Outer 触发 mount 是为了打开 modal · mount 完成后立即 open
+  useEffect(() => {
+    if (!mount.pendingOpen) return;
+    clearError('connect');
+    try {
+      modal.open();
+      onAfterClick?.();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(t('error', { reason: msg.slice(0, 60) || 'unknown' }));
+    } finally {
+      mount.consumePendingOpen();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mount.pendingOpen]);
 
   const handleClick = () => {
     try {
@@ -68,11 +107,17 @@ function PhantomConnectButtonInner({
     }
   };
 
+  return <PhantomConnectButtonShell variant={variant} t={t} onClick={handleClick} />;
+}
+
+function PhantomConnectButtonShell({
+  variant, t, onClick,
+}: { variant: 'landing' | 'header' | 'modal'; t: T; onClick: () => void }) {
   if (variant === 'header') {
     return (
       <Button
         size="sm"
-        onClick={handleClick}
+        onClick={onClick}
         className="gap-1.5 bg-[#551BF9] hover:bg-[#4316d4] text-white"
       >
         {PHANTOM_LOGO_SVG}
@@ -85,7 +130,7 @@ function PhantomConnectButtonInner({
     return (
       <Button
         size="lg"
-        onClick={handleClick}
+        onClick={onClick}
         className="w-full sm:min-w-[260px] gap-2 bg-[#551BF9] hover:bg-[#4316d4] text-white"
       >
         {PHANTOM_LOGO_SVG}
@@ -98,7 +143,7 @@ function PhantomConnectButtonInner({
   return (
     <Button
       size="lg"
-      onClick={handleClick}
+      onClick={onClick}
       className="w-full gap-2 h-12 bg-[#551BF9] hover:bg-[#4316d4] text-white"
     >
       {PHANTOM_LOGO_SVG}
