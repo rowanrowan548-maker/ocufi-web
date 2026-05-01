@@ -15,6 +15,8 @@
 /playwright-report
 /test-results
 /playwright/.cache
+qa/e2e/fixtures/phantom-extension/
+qa/e2e/.cache/
 
 # next.js
 /.next/

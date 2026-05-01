@@ -95,7 +95,8 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
 
   return (
     <Card className={compact ? 'p-2 flex flex-col h-full' : 'p-6 w-full max-w-xl'}>
-      {/* 外层 Buy/Sell · T-BUYSELL-COLOR · 买入绿 / 卖出红(对齐 OKX + 品牌主色) */}
+      {/* 外层 Buy/Sell · T-BRAND-COLOR-ROLLOUT · 用 --brand-up / --brand-down token
+          双前缀 dark:data-active: + ! 后缀仍保留(战胜 ui/tabs.tsx 基类 dark variant specificity) */}
       <Tabs value={side} onValueChange={(v) => v && setSide(v as Side)}>
         <TabsList className={compact ? 'grid w-full grid-cols-2 mb-2 h-8 bg-transparent gap-1 p-0' : 'grid w-full grid-cols-2 mb-3 bg-transparent gap-1.5 p-0'}>
           <TabsTrigger
@@ -103,12 +104,9 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
             className={[
               compact ? 'text-xs h-8' : 'h-9',
               'rounded-md border font-medium transition-colors',
-              'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40',
-              // T-BUYSELL-COLOR-FIX2 真因:基类 ui/tabs.tsx 用了 `dark:data-active:bg-input/30`
-              // 比无 dark 前缀的覆盖 specificity 高 · 我们必须挂 `dark:` 才能赢
-              // 用实底色(spec)而非透明 · 跟黑底融合时仍醒目 · ! 后缀(Tailwind v4 important)再加保险
-              'data-active:bg-emerald-700! data-active:text-white! data-active:border-emerald-500!',
-              'dark:data-active:bg-emerald-700! dark:data-active:text-white! dark:data-active:border-emerald-500!',
+              'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40 hover:text-foreground',
+              'data-active:bg-[var(--brand-up)]/15! data-active:text-[var(--brand-up)]! data-active:border-[var(--brand-up)]/60!',
+              'dark:data-active:bg-[var(--brand-up)]/15! dark:data-active:text-[var(--brand-up)]! dark:data-active:border-[var(--brand-up)]/60!',
             ].join(' ')}
           >
             {t('trade.tabs.buy')}
@@ -118,9 +116,9 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
             className={[
               compact ? 'text-xs h-8' : 'h-9',
               'rounded-md border font-medium transition-colors',
-              'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40',
-              'data-active:bg-rose-700! data-active:text-white! data-active:border-rose-500!',
-              'dark:data-active:bg-rose-700! dark:data-active:text-white! dark:data-active:border-rose-500!',
+              'bg-transparent border-border/40 text-muted-foreground hover:bg-muted/40 hover:text-foreground',
+              'data-active:bg-[var(--brand-down)]/15! data-active:text-[var(--brand-down)]! data-active:border-[var(--brand-down)]/60!',
+              'dark:data-active:bg-[var(--brand-down)]/15! dark:data-active:text-[var(--brand-down)]! dark:data-active:border-[var(--brand-down)]/60!',
             ].join(' ')}
           >
             {t('trade.tabs.sell')}

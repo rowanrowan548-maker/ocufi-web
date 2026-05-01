@@ -18,7 +18,15 @@
  *   - 类型 alias(自定义,不依赖 SDK 包,前端装包后 cast 即可用)
  *   - 工具函数(extractPublicKey / 校验 appId / 构造 config)
  * 不放 React hooks(链上工程师领域 · `src/lib/` 不放 hooks · 前端去用 SDK 自带 hook)
- * 不装 npm 包(留给前端 T-PHANTOM-CONNECT-fe `pnpm add @phantom/react-sdk`)
+ *
+ * T1 · T-PHANTOM-CONNECT-INIT-FIX(2026-05-01):
+ *   - **真因**:之前传 `addressTypes: ['solana']`(小写) · SDK 期望 `AddressType` enum
+ *     值 = `'Solana'`(大写 S · `@phantom/openapi-wallet-service` 的 derivation-info.js)
+ *     SDK 解析 config 失败 → 内部 Auth2Stamper 没 init → useModal() 抛
+ *     "Failed to get wallet addresses: Auth2Stamper not initialized."
+ *   - 改成 `[AddressType.solana]`(类型安全 + 值正确)· TS Record<string, any> 一并去除
+ *   - 第二必查:Vercel 必须设 NEXT_PUBLIC_PHANTOM_APP_ID(env 缺时 isPhantomConnectConfigured()
+ *     已早返,但 build 警告靠 .env.example 提醒)
  */
 
 /**
@@ -30,10 +38,17 @@ export const PHANTOM_APP_ID = process.env.NEXT_PUBLIC_PHANTOM_APP_ID ?? '';
 /**
  * OAuth 回调 URL · Phantom Connect 走 google/apple 时需要回跳
  * 默认用站点根 + /auth/phantom-callback,前端可在 layout 路由层补上对应 page
+ *
+ * T-SEARCH-CLICK-FIX5 · 真因:此值是 module-scope 常量,作为 PhantomProvider config
+ * 的 authOptions.redirectUrl 传下去 · 必须 SSR/CSR 两端一致 · 否则 React #418 hydration
+ * mismatch · 导致整个 desktop 子树 re-create · 第一个 click handler 没绑成 → 用户表象
+ * "搜索 modal 点击不跳转 · 4 次 v4 log 都触发但 URL 不动"
+ *
+ * 修:删 `typeof window` 分支(SSR='', CSR='http://...')· 一律用 prod URL 兜底
  */
 export const PHANTOM_REDIRECT_URL =
   process.env.NEXT_PUBLIC_PHANTOM_REDIRECT_URL ??
-  (typeof window !== 'undefined' ? `${window.location.origin}/auth/phantom-callback` : '');
+  'https://www.ocufi.io/auth/phantom-callback';
 
 /** 显示在 Phantom Connect 弹窗顶部的 app 名 */
 export const PHANTOM_APP_NAME = 'Ocufi · Solana Trading Terminal';
@@ -63,16 +78,18 @@ export const PHANTOM_PROVIDERS: PhantomProviderKind[] = [
 /**
  * Phantom Connect Provider 的 config object · 前端直接传给 <PhantomProvider config={}>
  *
- * 类型 loose(unknown)是因为本 lib 不依赖 `@phantom/react-sdk` npm 包(前端装),
- * 前端 import 后 cast 成 SDK 自己的 ProviderConfig type 即可。
+ * T1 fix:用 SDK 的 AddressType enum(值 = "Solana" 大写)· 不再传字符串
+ * SDK 类型完整 · 不再 Record<string, any>
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const PHANTOM_PROVIDER_CONFIG: Record<string, any> = {
+// @phantom/browser-sdk 是 react-sdk 的传依赖 · pnpm 不暴露顶层 import · 走 react-sdk re-export
+// PhantomSDKConfig = BrowserSDKConfig(react-sdk 的 alias)
+import { AddressType } from '@phantom/react-sdk';
+import type { PhantomSDKConfig } from '@phantom/react-sdk';
+
+export const PHANTOM_PROVIDER_CONFIG: PhantomSDKConfig = {
   appId: PHANTOM_APP_ID,
   providers: PHANTOM_PROVIDERS,
-  // SDK 接受 AddressType.solana enum value;前端装包后可改用 enum,
-  // 这里给字符串 'solana' SDK 会按 wallet standard 自动识别
-  addressTypes: ['solana'],
+  addressTypes: [AddressType.solana],
   authOptions: {
     redirectUrl: PHANTOM_REDIRECT_URL,
   },
@@ -103,7 +120,24 @@ export function extractSolanaPublicKey(
   return solana?.address ?? accounts[0]?.address ?? null;
 }
 
-/** 检查 Phantom Connect 是否可用(env 配置完整)· 前端连接前调一次防裸调 */
+/**
+ * V1 disable feature flag · T1.6 (2026-05-01)
+ *
+ * Phantom Portal hosted OAuth(connect.phantom.app/login)实测报 400 Bad Request ·
+ * 来自 Phantom 服务器 · 不在我们代码控制范围。用户拍板 V1 隐藏全部 Phantom
+ * Connect 入口 · 只走扩展 + 标准 wallet adapter(行业现状 · 80%+ Sol 用户用扩展)。
+ *
+ * 修好 5 分钟恢复:Vercel 设 NEXT_PUBLIC_PHANTOM_CONNECT_ENABLED=true 重 deploy。
+ *
+ * 全站 Phantom Connect 入口都基于 isPhantomConnectConfigured() · flag false 时:
+ *   - PhantomConnectButton 全 variant 不渲染(landing/header/modal)
+ *   - DeferredPhantomMount 不挂 PhantomProvider · SDK 完全不 init · console 干净
+ *   - /auth/phantom-callback 路由 PhantomCallbackScreen 走 not-configured 错误态
+ */
+const PHANTOM_CONNECT_ENABLED = process.env.NEXT_PUBLIC_PHANTOM_CONNECT_ENABLED === 'true';
+
+/** 检查 Phantom Connect 是否可用(env 配置完整 + V1 flag 开启)· 前端连接前调一次防裸调 */
 export function isPhantomConnectConfigured(): boolean {
+  if (!PHANTOM_CONNECT_ENABLED) return false;
   return PHANTOM_APP_ID.length > 0;
 }

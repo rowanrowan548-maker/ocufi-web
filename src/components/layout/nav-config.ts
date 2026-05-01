@@ -38,11 +38,10 @@ export const NAV_ENTRIES: NavEntry[] = [
     labelKey: 'nav.markets',
     items: [
       {
-        href: '/markets/trending',
+        href: '/markets',
         labelKey: 'nav.trending',
         descKey: 'nav.descriptions.trending',
         iconName: 'Flame',
-        placeholder: true,
       },
       {
         href: '/watchlist',
@@ -109,6 +108,8 @@ export const NAV_ENTRIES: NavEntry[] = [
       },
     ],
   },
+  // T-REWARDS-PAGE · 奖励中心入口(资产 与 更多 之间)
+  { type: 'link', href: '/rewards', labelKey: 'nav.rewards' },
   {
     type: 'group',
     labelKey: 'nav.more',

@@ -23,14 +23,34 @@
  *   - 加载中 → spinner
  *   - 无 pool / fetch 失败 → "暂无 K 线数据" / "图表服务暂时不可用"
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/card';
-import { Loader2, LineChart, TrendingUp } from 'lucide-react';
+import { Loader2, LineChart, TrendingUp, Sparkles } from 'lucide-react';
 import { fetchTokenInfo } from '@/lib/portfolio';
 import { SOL_MINT } from '@/lib/jupiter';
+// T-FE-PERF-V2-PREFETCH:K 线 lazy split · 减首屏 bundle(lightweight-charts ~140KB gzipped)
+//   只有用户切到 self chart 才下 chunk · GT iframe 路径完全不下
+const CandlestickChart = lazy(() =>
+  import('./candlestick-chart').then((m) => ({ default: m.CandlestickChart })),
+);
+import {
+  useChartTimeframe,
+  useSetChartTimeframe,
+  TIMEFRAMES,
+} from '@/lib/chart-timeframe-store';
+import {
+  useChartUnit,
+  useSetChartUnit,
+} from '@/lib/chart-unit-store';
+import {
+  useChartSource,
+  useSetChartSource,
+} from '@/lib/chart-source-store';
+import type { Timeframe } from '@/lib/ohlc';
 
 type ChartType = 'price' | 'market_cap';
+type ChartSource = 'gt' | 'self';   // T-CHART-FULL-1 · 自家图 vs GT iframe
 
 interface Props {
   mint?: string | null;
@@ -46,6 +66,15 @@ export function ChartCard({ mint }: Props) {
   const [errored, setErrored] = useState(false);
   // T-OKX-3 · Price / 市值 toggle(GT iframe 支持的唯一动态参数)
   const [chartType, setChartType] = useState<ChartType>('price');
+  // T-CHART-FULL-1+10 · 自家图 / GT 图 toggle · 默认 GT(稳定)· zustand 持久化用户选择
+  const chartSource = useChartSource() as ChartSource;
+  const setChartSource = useSetChartSource();
+  // T-CHART-FULL-2 · 时间段(zustand 持久化 · 6 档 · 仅自家图生效)
+  const tf = useChartTimeframe();
+  const setTf = useSetChartTimeframe();
+  // T-CHART-FULL-8 · 价格单位 USD / SOL(仅自家图生效)
+  const unit = useChartUnit();
+  const setUnit = useSetChartUnit();
 
   // mint → topPoolAddress(复用 portfolio.fetchTokenInfo,30s 缓存自带,无新外部请求)
   useEffect(() => {
@@ -100,10 +129,12 @@ export function ChartCard({ mint }: Props) {
       `?embed=1&info=0&swaps=0&grayscale=0&light_chart=0&chart_type=${chartType}`
     : null;
 
+  const showSelfChart = chartSource === 'self' && pool && typeof pool === 'string';
+
   return (
     <Card className="overflow-hidden p-0">
-      {/* T-OKX-3 · OKX 风 toolbar · 价格/市值 functional toggle + Dev Buys 静态标签 */}
-      {showIframe && (
+      {/* T-OKX-3 + T-CHART-FULL-1 · toolbar · 价格/市值 + 自家图/GT 图 toggle */}
+      {(showIframe || showSelfChart) && (
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 border-b border-border/40 bg-card/60 text-[11px]">
           <div className="inline-flex rounded border border-border/40 overflow-hidden">
             <button
@@ -134,12 +165,93 @@ export function ChartCard({ mint }: Props) {
             <TrendingUp className="h-3 w-3" />
             {t('toolbar.devBuys')}
           </span>
-          <span className="text-muted-foreground/40 ml-auto">{t('toolbar.gtNote')}</span>
+          {/* T-CHART-FULL-8 · USD / SOL 价格单位 · 仅自家图模式显 */}
+          {chartSource === 'self' && (
+            <div className="ml-auto inline-flex rounded border border-border/40 overflow-hidden">
+              {(['USD', 'SOL'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setUnit(opt)}
+                  data-testid={`chart-unit-${opt}`}
+                  className={`px-2 py-0.5 transition-colors text-[10px] ${
+                    unit === opt
+                      ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
+                      : 'text-muted-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* T-CHART-FULL-2 · 时间段 6 档 · 仅自家图模式显 */}
+          {chartSource === 'self' && (
+            <div className="inline-flex rounded border border-border/40 overflow-hidden">
+              {TIMEFRAMES.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setTf(opt)}
+                  data-testid={`tf-${opt}`}
+                  className={`px-2 py-0.5 transition-colors text-[10px] ${
+                    tf === opt
+                      ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
+                      : 'text-muted-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {t(`toolbar.tf.${opt}` as 'toolbar.tf.minute_5')}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* T-CHART-FULL-1 · 自家图 / GT 图 切换 · 默认 GT */}
+          <div className={`${chartSource === 'self' ? '' : 'ml-auto'} inline-flex rounded border border-border/40 overflow-hidden`}>
+            <button
+              type="button"
+              onClick={() => setChartSource('gt')}
+              data-testid="chart-source-gt"
+              className={`px-2 py-0.5 transition-colors ${
+                chartSource === 'gt'
+                  ? 'bg-muted text-foreground font-medium'
+                  : 'text-muted-foreground hover:bg-muted/40'
+              }`}
+            >
+              {t('toolbar.gtChart')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartSource('self')}
+              data-testid="chart-source-self"
+              className={`px-2 py-0.5 transition-colors inline-flex items-center gap-1 ${
+                chartSource === 'self'
+                  ? 'bg-[var(--brand-up)]/15 text-[var(--brand-up)] font-medium'
+                  : 'text-muted-foreground hover:bg-muted/40'
+              }`}
+            >
+              <Sparkles className="h-3 w-3" />
+              {t('toolbar.selfChart')}
+            </button>
+          </div>
         </div>
       )}
-      {/* T-CHART-COMPRESS · 桌面降 560→400 让一屏看到 ActivityBoard / 审计 / 持仓 */}
-      <div className="relative h-[420px] sm:h-[480px] lg:h-[400px]">
-        {iframeSrc && (
+      {/* T-CHART-COMPRESS · 桌面降 400 让一屏看到 ActivityBoard / 审计 / 持仓
+          T-CHART-FULL-9 · 移动 280px / 平板 360px / 桌面 400px */}
+      <div className="relative h-[280px] sm:h-[360px] lg:h-[400px]">
+        {/* T-CHART-FULL-1+2 · 自家蜡烛图(brand 色 · 走 /chart/ohlc 后端代理)
+            T-FE-PERF-V2-PREFETCH · React.lazy + Suspense · 切到 self chart 才下 chunk */}
+        {showSelfChart && mint && (
+          <Suspense
+            fallback={
+              <div className="h-full w-full flex items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/60" />
+              </div>
+            }
+          >
+            <CandlestickChart mint={mint} timeframe={tf} />
+          </Suspense>
+        )}
+        {iframeSrc && chartSource === 'gt' && (
           <iframe
             key={`${pool}-${chartType}`}
             src={iframeSrc}

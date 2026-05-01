@@ -63,6 +63,53 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: /(search-modal-click|buysell-color)\.spec\.ts/,
     },
+    {
+      // Wallet specs override `context` themselves (persistent profile +
+      // unpacked Phantom). The project just needs the right matcher and
+      // a longer expect timeout — popups take time to appear.
+      name: 'wallet-phantom',
+      timeout: 180_000,
+      use: { baseURL: BASE_URL },
+      testMatch: /wallet-.*\.spec\.ts/,
+    },
+    {
+      name: 'admin-smoke',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /admin-smoke\.spec\.ts/,
+    },
+    {
+      // Real-machine perf baseline against live prod. Numbers go to stdout
+      // and are summarised in REPORTS/perf-stage2.md.
+      name: 'perf-baseline',
+      timeout: 180_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /perf-baseline\.spec\.ts/,
+    },
+    {
+      // Stubs the API via page.route — slower than baseline specs because of
+      // the timeout case (~17s wait to trigger the AbortController path).
+      name: 'error-degradation',
+      timeout: 90_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /error-degradation\.spec\.ts/,
+    },
+    {
+      name: 'user-reported-bugs',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /user-reported-bugs-.*\.spec\.ts/,
+    },
   ],
 });
 

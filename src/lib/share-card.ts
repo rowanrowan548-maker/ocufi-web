@@ -8,7 +8,7 @@
  *   │ Brand + BUY/SELL + symbol        │  Token logo(大圆)            │
  *   │ Amount / SOL / USD               │  24h 价格曲线 + 涨跌%        │
  *   ├──────────────────────────────────┴──────────────────────────────┤
- *   │ Powered by Ocufi · 0.2% fee     ocufi.io/?ref=xxxxxx            │
+ *   │ Powered by Ocufi · 0.1% fee     ocufi.io/?ref=xxxxxx            │
  *   └─────────────────────────────────────────────────────────────────┘
  *
  * 不依赖外部 lib;Logo 跨域失败用 symbol 圆形大字代替
@@ -93,7 +93,7 @@ export async function buildTradeCard(data: ShareCardData): Promise<Blob> {
   // ── 顶部品牌锁层 · Logo (绿) + Wordmark (白) ──
   drawBrandLockup(ctx, 60, 100, {
     wordmark: 'OCUFI',
-    subtitle: 'Solana · Non-custodial · 0.2% fee',
+    subtitle: 'Solana · Non-custodial · 0.1% fee',
   });
 
   // 右上角社交账号

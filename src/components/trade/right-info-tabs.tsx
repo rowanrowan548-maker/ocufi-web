@@ -2,10 +2,12 @@
 
 /**
  * T-OKX-1B · 桌面右栏底部 3 tab(详情 / 开发者代币 / 同名代币)
+ * T-MARKETS-DIFFER-V2(2026-04-30):加 risk tab(独立挂 6 项审计) · 监听 #risk hash 自动打开
  *
- * 默认 tab = 详情(description + 部署源 + 6 项审计卡占位 · T-OKX-1C-fe 接后端后填实)
+ * 默认 tab = 详情;URL hash 为 `#risk` 时初始 tab = risk(从 markets 页风险标 click 跳进来)
  * 仅 lg+ · 移动不显
  */
+import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,19 +19,42 @@ interface Props {
   detail: TokenInfo | null | undefined;
 }
 
+type TabKey = 'detail' | 'risk' | 'devTokens' | 'sameName';
+
+const subscribeHash = (cb: () => void) => {
+  window.addEventListener('hashchange', cb);
+  return () => window.removeEventListener('hashchange', cb);
+};
+const getHashTab = (): TabKey =>
+  window.location.hash === '#risk' ? 'risk' : 'detail';
+const getServerTab = (): TabKey => 'detail';
+
 export function RightInfoTabs({ mint, detail }: Props) {
   const t = useTranslations('trade.rightTabs');
+  // useSyncExternalStore · React 19 推荐方式同步 URL hash · 不触发 setState-in-effect 警告
+  const hashTab = useSyncExternalStore(subscribeHash, getHashTab, getServerTab);
+  // 用户点 tab 切换时本地 override · 优先于 hash(避免 hash 锁死手动选择)
+  const [override, setOverride] = useState<TabKey | null>(null);
+  const tab = override ?? hashTab;
+  const setTab = (v: TabKey) => setOverride(v);
 
   return (
     <Card>
       <CardContent className="p-0">
-        <Tabs defaultValue="detail" className="w-full">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)} className="w-full">
           <TabsList className="w-full justify-start rounded-none border-b border-border/40 bg-transparent p-0 h-9">
             <TabsTrigger
               value="detail"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs h-9 px-3"
             >
               {t('detail')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="risk"
+              data-testid="right-tab-risk"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs h-9 px-3"
+            >
+              {t('risk')}
             </TabsTrigger>
             <TabsTrigger
               value="devTokens"
@@ -47,6 +72,10 @@ export function RightInfoTabs({ mint, detail }: Props) {
 
           <TabsContent value="detail" className="p-3 space-y-2 text-xs">
             <DetailPanel mint={mint} detail={detail} />
+          </TabsContent>
+
+          <TabsContent value="risk" className="p-3 text-xs" data-testid="right-tab-risk-content">
+            <AuditCards mint={mint} />
           </TabsContent>
 
           <TabsContent value="devTokens" className="p-4 text-xs text-muted-foreground/60 text-center">

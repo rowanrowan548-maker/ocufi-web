@@ -21,6 +21,7 @@
     "tokenCheck": "Token Check",
     "faq": "FAQ",
     "more": "More",
+    "rewards": "Rewards",
     "markets": "Markets",
     "trending": "Trending",
     "strategy": "Strategy",
@@ -87,7 +88,7 @@
     "hero": {
       "title": "On-chain trading, brought home",
       "subtitle": "Lower fees · Transparent pricing · No middleman tax. Still growing — but every decision starts with you.",
-      "tagline": "0.2% fee · Lowest on Solana",
+      "tagline": "0.1% fee · Lowest on Solana",
       "searchPlaceholder": "Paste a Solana contract address, e.g. So111…1112",
       "hotTokens": "Trending",
       "cta_connect": "Connect Wallet",
@@ -137,7 +138,7 @@
         "desc": "Your keys stay yours. Ocufi never holds your funds."
       },
       "lowFee": {
-        "title": "0.2% fees",
+        "title": "0.1% fees",
         "desc": "Half of what the competitors charge — no hidden skim."
       },
       "safety": {
@@ -340,11 +341,25 @@
       "error": "Chart failed to load",
       "solBaseFallback": "SOL is Solana's base asset",
       "solBaseHint": "View charts via USDC / USDT pairs",
+      "myCost": "My cost",
+      "limitBuy": "Buy @",
+      "limitSell": "Sell @",
+      "alertAt": "Alert $",
       "toolbar": {
         "price": "Price",
         "marketCap": "Market cap",
         "devBuys": "Dev Buys",
-        "gtNote": "USD/SOL · timeframe → inside GT chart"
+        "gtNote": "USD/SOL · timeframe → inside GT chart",
+        "gtChart": "GT chart",
+        "selfChart": "Native chart",
+        "tf": {
+          "minute_1": "1m",
+          "minute_5": "5m",
+          "minute_15": "15m",
+          "hour_1": "1h",
+          "hour_4": "4h",
+          "day_1": "1d"
+        }
       }
     },
     "trust": {
@@ -399,6 +414,13 @@
       "buySuccess": "Bought · received {tokens} (paid {sol} SOL)",
       "sellSuccess": "Sold · received {sol} SOL (sold {tokens})",
       "viewExplorer": "View on Solscan"
+    },
+    "sellAll": {
+      "reclaimToast": {
+        "title": "Reclaim 0.002 SOL deposit",
+        "desc": "This token's account is empty · deposit still locked · claim it back in Rewards Center",
+        "action": "Claim now"
+      }
     },
     "activity": {
       "activity": "Activity",
@@ -583,6 +605,7 @@
     },
     "rightTabs": {
       "detail": "Details",
+      "risk": "Risk",
       "devTokens": "Dev tokens",
       "sameName": "Same name",
       "description": "Description",
@@ -600,11 +623,15 @@
       "bundle": "Bundlers",
       "sniper": "Snipers",
       "lpBurn": "LP burn",
+      "comingSoon": "Coming in V2",
       "devStatus": {
         "cleared": "Cleared",
         "holding": "Holding",
         "active": "Active"
       }
+    },
+    "stale": {
+      "label": "Data ~{min}m old · Auto-refreshing"
     },
     "preview": {
       "pay": "You pay",
@@ -712,6 +739,12 @@
       "slippageTooLow": "Slippage too low. Try raising it to 5-10%.",
       "token2022Incompatible": "This token uses Token-2022 standard, not supported yet. Try a standard SPL token.",
       "staleBlockhash": "Transaction expired due to network latency. Please retry."
+    },
+    "wrapCleanup": {
+      "title": "Pending wrap from last attempt",
+      "desc": "Your last large-route swap needed 2 signatures · setup landed but swap didn't · you may have wrapped SOL stuck in your wallet",
+      "viewTx": "View setup tx",
+      "dismiss": "Dismiss"
     }
   },
   "portfolio": {
@@ -919,7 +952,7 @@
     "riskDetails": "Risk Details",
     "topHolders": "Top 10 Holders",
     "risk": {
-      "verified": "🛡 Verified",
+      "verified": "Verified",
       "low": "✅ Low risk",
       "medium": "⚠️ Medium risk",
       "high": "🚨 High risk",
@@ -1041,7 +1074,7 @@
       {
         "group": "Other",
         "q": "What is Ocufi?",
-        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.2% (half what gmgn/bullx charge)\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
+        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.1% (buy 0.1% · sell free in V1) · ~10x cheaper than gmgn/bullx\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
       }
     ]
   },
@@ -1272,7 +1305,8 @@
       "making": "Paying",
       "taking": "Receiving",
       "price": "Price",
-      "expiry": "Expiry"
+      "expiry": "Expiry",
+      "loadFailed": "Failed to load orders"
     }
   },
   "history": {
@@ -1323,6 +1357,15 @@
     "status": {
       "success": "Success",
       "failed": "Failed"
+    },
+    "priorityFee": {
+      "loading": "Loading priority fee"
+    },
+    "gas": {
+      "loading": "Loading gas"
+    },
+    "fee": {
+      "unknown": "On-chain data unavailable"
     },
     "retry": "Retry",
     "type": {
@@ -1502,8 +1545,8 @@
       "wechatHint": "WeChat blocks direct links — screenshot the QR or copy the URL to share",
       "copyUrl": "Copy URL",
       "copied": "Copied",
-      "twitterTemplate": "Trading on Solana with @Ocufi_io · 0.2% fee (vs 1% elsewhere) · self-custody · the lowest on chain — join with my code (ref={code}):",
-      "telegramTemplate": "Ocufi · Solana on-chain trading · 0.2% fee · self-custody · join with my invite code: {code}"
+      "twitterTemplate": "Trading on Solana with @Ocufi_io · 0.1% fee (vs 1% elsewhere) · self-custody · the lowest on chain — join with my code (ref={code}):",
+      "telegramTemplate": "Ocufi · Solana on-chain trading · 0.1% fee · self-custody · join with my invite code: {code}"
     },
     "stats": {
       "invited": "Invited",
@@ -1548,7 +1591,7 @@
       "s2": "Once they make a trade ≥ $100, the invite is auto-activated.",
       "s3": "After activation, every trade they make earns you +10% of their points — forever, not a one-time bonus.",
       "s4": "Points redeem for merch; may unlock more perks later.",
-      "note": "We don't share trading fees (0.2% is the moat). We share points — printed by us, near-zero cost, sustainable long-term."
+      "note": "We don't share trading fees (0.1% is the moat). We share points — printed by us, near-zero cost, sustainable long-term."
     },
     "myInvitees": {
       "title": "People you've invited",
@@ -1664,9 +1707,14 @@
   },
   "markets": {
     "title": "Markets",
-    "subtitle": "Live from GeckoTerminal · trending 60s cache · new pairs 30s",
+    "subtitle": "Trending / New / Movers / Verified / Risk · auto-refresh 60s",
     "tabs": {
       "trending": "Trending",
+      "new": "New",
+      "gainers1h": "1h Gainers",
+      "losers24h": "24h Losers",
+      "verified": "Verified",
+      "risk": "Risk Watch",
       "newpairs": "New Pairs",
       "fav": "Watchlist",
       "major": "Major"
@@ -1683,9 +1731,27 @@
       "quickBuyTitle": "Quick buy 0.1 SOL · with your defaults",
       "quickBuyConnectFirst": "Connect wallet first"
     },
+    "smartMoney": {
+      "label": "{count} smart wallets buying",
+      "topBuyers": "Top buyers (30d net PnL)",
+      "tooltipHint": "Smart money = 30d net PnL > $10K"
+    },
+    "risk": {
+      "verified": "Verified token",
+      "safe": "No risk signals",
+      "warn": "Some risk signals",
+      "risky": "High risk · be careful",
+      "unknown": "Audit fetch failed",
+      "pending": "Audit loading",
+      "safeDetail": "All 6 audit checks pass (top10 / rats / bundle / sniper / dev / LP burn) · safe to trade",
+      "warnDetail": "1+ checks in mid-risk range (e.g. top10 20-40% / LP burn 80-99%) · review details first",
+      "riskyDetail": "1+ checks in high-risk range (e.g. top10 ≥40% / honeypot / dev dumping / LP not burned) · be careful",
+      "clickHint": "→ Click for full audit"
+    },
     "loading": "Loading…",
     "empty": "No data yet · backend worker still fetching",
     "emptyFav": "No favorites yet — tap the star to add",
+    "goTrade": "→ Go to trade page",
     "hideMajorsOff": "Hide SOL/USDC",
     "hideMajorsOn": "Show SOL/USDC"
   },
@@ -1734,8 +1800,8 @@
         "b": "Ocufi is in the Phantom Portal review pipeline (the \"Verified\" badge in the directory). Once approved, users opening ocufi.io inside Phantom will see the official blue checkmark. See #devlog for current status."
       },
       "s7": {
-        "h": "7. 0.2% transparent fee",
-        "b": "Ocufi charges 0.1% on buys + 0% on sells (target 0.2% total) · paid directly to a public treasury address, fully verifiable on-chain.\n\nCompetitors (GMGN / Photon / BullX) typically charge 0.8-1%. We've cut V1 fees to 1/4-1/5 of the industry — long-term user trust > short-term revenue."
+        "h": "7. 0.1% transparent fee",
+        "b": "Ocufi charges 0.1% on buys + 0% on sells (V1) · paid directly to a public treasury address, fully verifiable on-chain.\n\nCompetitors (GMGN / Photon / BullX) typically charge 0.8-1% — we're ~10x cheaper. Long-term user trust > short-term revenue."
       }
     },
     "privacy": {
@@ -1876,6 +1942,57 @@
       "hundredTrades": { "name": "100 Trades" },
       "inviteKing": { "name": "Invite King" },
       "pnlKing": { "name": "PnL King" }
+    }
+  },
+  "rewards": {
+    "title": "Rewards Center",
+    "subtitle": "Ocufi gives back what Solana locked up",
+    "summary": {
+      "wallet": "Wallet",
+      "notConnected": "Wallet not connected",
+      "totalRecovered": "Total recovered"
+    },
+    "tabs": {
+      "reclaim": "Reclaim SOL",
+      "mev": "MEV Rebates",
+      "invite": "Invite & Earn"
+    },
+    "reclaim": {
+      "connectFirst": "Connect your wallet to see reclaimable empty accounts",
+      "loading": "Scanning your empty token accounts...",
+      "error": "Failed to load list",
+      "retry": "Retry",
+      "emptyTitle": "No empty accounts right now",
+      "emptyDesc": "After selling tokens, dust ATAs show up here · one-click reclaim deposits · ~0.002 SOL each",
+      "summarySelected": "Selected {n} / {total}",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
+      "claimButton": "Claim free SOL",
+      "claiming": "Signing + sending...",
+      "successToast": "Reclaimed {sol} SOL to your wallet",
+      "partialFail": "{n} tx failed · successful ones kept",
+      "allFailed": "All failed · please retry",
+      "walletMissingSignAll": "Your wallet doesn't support batch signing · try Phantom / Backpack"
+    },
+    "mev": {
+      "totalLabel": "Total MEV rebated",
+      "totalHint": "Helius backrun rebate · auto-tracked from balance diff after each confirmed swap",
+      "emptyTitle": "No MEV rebates yet",
+      "emptyDesc": "Make a few trades · Ocufi routes via Helius and gives you 50% MEV back"
+    },
+    "invite": {
+      "title": "Invite friends, earn fees",
+      "desc": "Your friends trade · you earn a share of fees · adds up over time",
+      "cta": "Go to Invite page"
+    }
+  },
+  "auth": {
+    "callback": {
+      "loading": "Logging in…",
+      "loadingHint": "Phantom is finishing your login · usually 1–3s",
+      "error": "Login failed",
+      "retry": "Retry",
+      "home": "Back to home"
     }
   }
 }

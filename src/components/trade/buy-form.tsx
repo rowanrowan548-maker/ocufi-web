@@ -29,8 +29,9 @@ import {
   type GasLevel,
 } from '@/lib/jupiter';
 import { recommendedSlippageBps } from '@/lib/verified-tokens';
-import { buildSwapTxWithFee } from '@/lib/swap-with-fee';
-import { signAndSendTx, confirmTx, analyzeTx, getDecimals } from '@/lib/trade-tx';
+import { executeSwapPlan } from '@/lib/execute-swap-plan';
+import { markPendingWrap, clearPendingWrap } from '@/lib/wrap-cleanup';
+import { analyzeTx, getDecimals } from '@/lib/trade-tx';
 import { humanize } from '@/lib/friendly-error';
 import { track } from '@/lib/analytics';
 import { claimPoints, createAlert, isApiConfigured } from '@/lib/api-client';
@@ -263,26 +264,24 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons }: BuyFormProps
     setProgressStartedAt(Date.now());
 
     try {
-      setStage('signing');
-      // 自组 tx:在 Jupiter swap 前插一条 SystemProgram.transfer 收 0.1% SOL fee
-      // vault 地址来自 NEXT_PUBLIC_OCUFI_FEE_VAULT env;未配则不插 fee
-      const tx = await buildSwapTxWithFee(
+      // T-PHANTOM-SPLIT-TX-FE · 走 prepareSwapTxs · 自动 single / split
+      // split:setup 已 confirm 后 markPendingWrap · 后续 swap 失败 → 下次进 trade 页弹 toast
+      const result = await executeSwapPlan(
         connection,
+        wallet,
         quoteData.quote,
-        wallet.publicKey.toBase58(),
         gasLevel,
-        10
+        {
+          onStage: (s) => setStage(s),
+          onSetupConfirmed: (setupSig) => markPendingWrap(setupSig, mint.trim()),
+          confirmTimeoutMs: 60_000,
+        },
       );
-
-      setStage('sending');
-      const sig = await signAndSendTx(connection, wallet, tx);
+      const sig = result.signature;
       setProgressSig(sig);
 
-      setStage('confirming');
-      const confirmed = await confirmTx(connection, sig, 60_000);
-      if (!confirmed) {
-        throw new Error(t('trade.errors.unconfirmed', { sig }));
-      }
+      // swap 走完 · 没遗留 wrap · 清 marker(防永远显)
+      clearPendingWrap();
 
       const det = await analyzeTx(connection, sig, wallet.publicKey, mint.trim());
       const actualTokens = det?.tokenDelta ?? quoteData.outTokens;

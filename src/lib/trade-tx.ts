@@ -16,6 +16,7 @@ import {
   ParsedTransactionWithMeta,
 } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
+import { getRebateConnection } from './rpc-rebate';
 
 /** 反序列化 Jupiter swapTransaction base64 字节 */
 export function decodeSwapTx(base64: string): VersionedTransaction {
@@ -28,15 +29,33 @@ export interface SignAndSendOptions {
   skipPreflight?: boolean;
   /** 网络抖动(503/fetch fail)重试次数。blockhash 类错误不重试(避免 OKX 双签风控)。default 1 */
   networkRetries?: number;
+  /**
+   * T-MEV-REBATE · 用户钱包(PublicKey 或 base58 string)
+   *
+   * 提供时 → sendRawTransaction 走 Helius rebate URL · MEV 50% 返用户钱包
+   * 不提供 / env 没配 / 不是 Helius URL → 走传入的 connection(原行为)
+   *
+   * 注意:仅 sendRawTransaction 这一步切 · simulate / balance / confirm 仍走默认
+   * connection(避免吃 Helius RPS 配额)
+   */
+  rebateForUser?: PublicKey | string;
 }
 
 /**
- * 直接签名 + 广播已构造好的 VersionedTransaction(新路径,配合 swap-with-fee)
+ * 签名 + 广播已构造好的 VersionedTransaction
+ *
+ * T-PHANTOM-SPLIT-TX-RORY-V2(2026-05-01 · Rory 第二轮反馈):
+ *   不再用 wallet.signTransaction + connection.sendRawTransaction 分离的两步
+ *   走 wallet-adapter 的 sendTransaction(tx, connection) · 内部为 Phantom 等
+ *   钱包适配器调 provider.signAndSendTransaction · "Phantom 真在执行它批准的那笔 tx"
+ *   旧路径在签和发之间钱包能感知到 tx 内容变 · 红警 / 失败概率高
  *
  * 错误分流:
  *  - blockhash 失效 / block height exceeded → 直接抛(让 friendly-error 翻译为 __ERR_BLOCKHASH_EXPIRED)
  *  - 其他网络错误(503 / fetch fail / TLS 抖动)→ 等 500-1000ms jitter 后重试,最多 networkRetries 次
- *  - 所有重试用同一份已签名 raw bytes,不重新签(避免 OKX 风控对短时间多签敏感)
+ *  - sendTransaction 整体重试 · 钱包适配器内部一笔 sign+send 原子 · 重试只重发 send · 不重签
+ *
+ * T-MEV-REBATE:opts.rebateForUser 提供时 · 内部用 Helius rebate Connection 发 send
  */
 export async function signAndSendTx(
   connection: Connection,
@@ -44,19 +63,21 @@ export async function signAndSendTx(
   tx: VersionedTransaction,
   opts: SignAndSendOptions = {}
 ): Promise<TransactionSignature> {
-  if (!wallet.signTransaction) {
-    throw new Error('钱包不支持 signTransaction');
+  if (!wallet.sendTransaction) {
+    throw new Error('钱包不支持 sendTransaction');
   }
   const skipPreflight = opts.skipPreflight ?? false;
   const networkRetries = opts.networkRetries ?? 1;
 
-  const signed = await wallet.signTransaction(tx);
-  const raw = signed.serialize();
+  // T-MEV-REBATE · 提供 rebateForUser + env 配 Helius → 用 rebate URL Connection 发 swap
+  // 否则 fallback 传入 connection(向后兼容)
+  const sendConn =
+    (opts.rebateForUser ? getRebateConnection(opts.rebateForUser) : null) ?? connection;
 
   let lastErr: unknown;
   for (let attempt = 0; attempt <= networkRetries; attempt++) {
     try {
-      return await connection.sendRawTransaction(raw, {
+      return await wallet.sendTransaction(tx, sendConn, {
         skipPreflight,
         maxRetries: 3,
       });

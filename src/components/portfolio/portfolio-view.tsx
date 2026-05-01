@@ -220,9 +220,9 @@ export function PortfolioView() {
   }, [recordsInRange]);
 
   // T-900a:已节省手续费 · 复用 SavingsCard 计算逻辑
-  // ocufi 0.2% · 平均费率 0.5% · 节省 = volumeSol × 0.3%
+  // ocufi 0.1% (V1 buy only) · 竞品平均 1% · 节省 = volumeSol × 0.9%
   const savedSol =
-    fees.volumeSol > 0 ? fees.volumeSol * 0.003 : 0;
+    fees.volumeSol > 0 ? fees.volumeSol * 0.009 : 0;
   const savedUsd = savedSol * solUsdPrice;
 
   // 胜率

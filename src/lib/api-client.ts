@@ -2,27 +2,96 @@
  * 统一封装 ocufi-api 后端请求
  *
  * 基础 URL 来自 NEXT_PUBLIC_API_URL(空则禁用后端相关功能)
+ *
+ * T-FE-STABILITY-ERROR-BOUNDARIES:
+ *   - 加 15s AbortController timeout · 防 fetch 卡死
+ *   - 抛 ApiError(extends Error · 含 status / path / body)· 上层 instanceof 区分 4xx/5xx/timeout
+ *   - 不加 retry:对 POST(claim / alerts / invite)retry 可能重复扣费 / 双发 · 由调用方按需决定
+ *   - backward compat:ApiError.message 跟旧 `API ${status} ${path}: ${text}` 字串兼容 · 现有 catch (e) 仍能 e.message 拿到信息
  */
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const DEFAULT_TIMEOUT_MS = 15_000;
 
 export function isApiConfigured(): boolean {
   return !!API_URL;
 }
 
+/** ApiFetch 失败时抛的 structured error · 上层可 instanceof ApiError 区分类型 */
+export class ApiError extends Error {
+  /** HTTP status · 0 = network/timeout · 511 = NEXT_PUBLIC_API_URL 未配 */
+  readonly status: number;
+  /** 请求路径(eg '/admin/stats')*/
+  readonly path: string;
+  /** body 头 200 字符 · 给 detail 显示用 */
+  readonly body: string;
+  /** true = AbortController 超时 / network 失败(无 status)· 上层可决定要不要 retry */
+  readonly isNetwork: boolean;
+
+  constructor(opts: { status: number; path: string; body: string; isNetwork: boolean }) {
+    // 跟旧 throw `API ${status} ${path}: ${text}` 字串兼容 · 老 catch (e) e.message 仍读得到
+    super(
+      opts.isNetwork
+        ? `API network ${opts.path}: ${opts.body}`
+        : `API ${opts.status} ${opts.path}: ${opts.body}`,
+    );
+    this.name = 'ApiError';
+    this.status = opts.status;
+    this.path = opts.path;
+    this.body = opts.body;
+    this.isNetwork = opts.isNetwork;
+  }
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
-  init?: RequestInit
+  init?: RequestInit & { timeoutMs?: number }
 ): Promise<T> {
-  if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL not configured');
+  if (!API_URL) {
+    throw new ApiError({
+      status: 511,
+      path,
+      body: 'NEXT_PUBLIC_API_URL not configured',
+      isNetwork: false,
+    });
+  }
   const url = `${API_URL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
-    cache: 'no-store',
-  });
+  const timeoutMs = init?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  // AbortController timeout · 防止 fetch 卡死
+  // init 也可能自带 signal · 优先用调用方的(允许外部取消)· 否则用我们的 timeout signal
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  const signal = init?.signal ?? ctl.signal;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      signal,
+      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      cache: 'no-store',
+    });
+  } catch (e: unknown) {
+    clearTimeout(t);
+    const isAbort = (e instanceof DOMException && e.name === 'AbortError') ||
+      (e instanceof Error && e.name === 'AbortError');
+    throw new ApiError({
+      status: 0,
+      path,
+      body: isAbort ? `timeout ${timeoutMs}ms` : (e instanceof Error ? e.message : String(e)),
+      isNetwork: true,
+    });
+  }
+  clearTimeout(t);
+
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`API ${res.status} ${path}: ${text.slice(0, 200)}`);
+    throw new ApiError({
+      status: res.status,
+      path,
+      body: text.slice(0, 200),
+      isNetwork: false,
+    });
   }
   return (await res.json()) as T;
 }
@@ -52,8 +121,27 @@ export interface ApiTokenPrice {
   logo_uri?: string | null;
 }
 
+// T-PERF-FE-DEDUP-REQUESTS · /price/<mint> 60s 缓存 + inflight dedup
+// 同 mint 跨组件并发请求合并为 1 次后端调用(实测 SOL 重复 2 次 · 浪费 ~800ms)
+const PRICE_CACHE_TTL_MS = 60_000;
+const priceCache = new Map<string, { data: ApiTokenPrice; expiresAt: number }>();
+const priceInflight = new Map<string, Promise<ApiTokenPrice>>();
+
 export async function fetchPrice(mint: string): Promise<ApiTokenPrice> {
-  return apiFetch<ApiTokenPrice>(`/price/${mint}`);
+  const cached = priceCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let promise = priceInflight.get(mint);
+  if (!promise) {
+    promise = apiFetch<ApiTokenPrice>(`/price/${mint}`)
+      .then((data) => {
+        priceCache.set(mint, { data, expiresAt: Date.now() + PRICE_CACHE_TTL_MS });
+        return data;
+      })
+      .finally(() => { priceInflight.delete(mint); });
+    priceInflight.set(mint, promise);
+  }
+  return promise;
 }
 
 // ─── Day 10 points ───
@@ -350,6 +438,9 @@ export interface PoolStats1h {
   total_volume_usd: number;
   fetched_at?: number | null;
   cached?: boolean;
+  // T-FE-STALE-UI · 后端 T-PERF-STALE-FALLBACK 返旧数据时
+  stale?: boolean;
+  data_age_sec?: number | null;
   error?: string | null;
   retry_after?: number | null;
 }
@@ -368,11 +459,34 @@ export interface TokenAuditCard {
   sniper_pct?: number | null;           // 0-100
   lp_burn_pct?: number | null;          // 0-100
   cached?: boolean;
+  // T-FE-STALE-UI · 后端 T-PERF-STALE-FALLBACK 返旧数据时
+  stale?: boolean;
+  data_age_sec?: number | null;
   error?: string | null;
 }
 
+// T-FE-PERF-V2-PREFETCH · audit-card 加 60s cache + inflight dedup(参 fetchPrice 同模式)
+//   - hover 预取 + 组件 mount 真用 → 共享 1 次请求 · 不双发
+//   - cache 60s · 重复访问同 mint 不调 backend
+const AUDIT_CACHE_TTL_MS = 60_000;
+const auditCardCache = new Map<string, { data: TokenAuditCard; expiresAt: number }>();
+const auditCardInflight = new Map<string, Promise<TokenAuditCard>>();
+
 export async function fetchTokenAuditCard(mint: string): Promise<TokenAuditCard> {
-  return apiFetch(`/token/audit-card?mint=${encodeURIComponent(mint)}`);
+  const cached = auditCardCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  let promise = auditCardInflight.get(mint);
+  if (!promise) {
+    promise = apiFetch<TokenAuditCard>(`/token/audit-card?mint=${encodeURIComponent(mint)}`)
+      .then((data) => {
+        auditCardCache.set(mint, { data, expiresAt: Date.now() + AUDIT_CACHE_TTL_MS });
+        return data;
+      })
+      .finally(() => { auditCardInflight.delete(mint); });
+    auditCardInflight.set(mint, promise);
+  }
+  return promise;
 }
 
 // T-OKX-4C-be · 按地址标签筛选 trades
@@ -620,6 +734,144 @@ export async function fetchAdminStats(key: string): Promise<AdminStats> {
   });
 }
 
+// ─── T-FE-ADMIN-FEE-DASHBOARD · 费用收入聚合 ───
+
+export type FeeRevenueWindow = '24h' | '7d' | '30d' | 'all';
+
+export interface FeeTopSender {
+  address: string;
+  tx_count: number;
+  total_sol: number;
+}
+
+export interface FeeDailyBucket {
+  date: string;  // YYYY-MM-DD
+  sol: number;
+  tx_count: number;
+}
+
+export interface FeeRevenueResp {
+  fee_address: string;
+  window: FeeRevenueWindow;
+  total_sol: number;
+  total_usd: number;
+  tx_count: number;
+  top_senders: FeeTopSender[];
+  daily: FeeDailyBucket[];
+  computed_at: string;
+}
+
+export async function fetchAdminFeeRevenue(
+  key: string,
+  window: FeeRevenueWindow = '7d',
+): Promise<FeeRevenueResp> {
+  return apiFetch<FeeRevenueResp>(`/admin/fee-revenue?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
+// ─── T-FE-ADMIN-TRADE-VOLUME-CARD · 累计 GMV + Top 代币 ───
+
+export interface TradeVolumeTopToken {
+  mint: string;
+  symbol: string;
+  logo_url: string | null;
+  trade_count: number;
+  volume_usd: number;
+}
+
+export interface TradeVolumeResp {
+  ok: boolean;
+  window: FeeRevenueWindow;
+  total_trades: number;
+  total_volume_usd: number;
+  avg_trade_usd: number;
+  buy_count: number;
+  sell_count: number;
+  top_tokens: TradeVolumeTopToken[];
+  computed_at: string;
+}
+
+export async function fetchAdminTradeVolume(
+  key: string,
+  window: FeeRevenueWindow = '7d',
+): Promise<TradeVolumeResp> {
+  return apiFetch<TradeVolumeResp>(`/admin/trade-volume?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
+// ─── T-FE-ADMIN-V1.5-DASHBOARD · BI 全套指标 ───
+
+export interface BIVolumeBucket {
+  /** hourly 时 = 'YYYY-MM-DDTHH:00:00Z' · daily 时 = 'YYYY-MM-DD' */
+  bucket: string;
+  trade_count: number;
+  volume_usd: number;
+}
+
+export interface BIConversionFunnel {
+  connect_count: number;
+  /** 没事件就回 null · 不强报错(spec 降级原则)*/
+  quote_request_count: number | null;
+  swap_count: number;
+  /** 0-100 · 子段为 null 时也回 null */
+  connect_to_swap_rate: number | null;
+}
+
+export interface BIMevRebate {
+  total_mev_rebate_sol: number;
+  total_mev_rebate_usd: number;
+  unique_recipients: number;
+  mev_24h_sol: number;
+  mev_7d_sol: number;
+}
+
+export interface BISuccessRate {
+  swap_success_count: number;
+  swap_fail_count: number;
+  /** 0-100 · 总数为 0 时回 null */
+  success_rate_pct: number | null;
+}
+
+export interface BITradeSizeDist {
+  /** 全 null 表示 trade size 数据不足(<3 笔) */
+  min_trade_usd: number | null;
+  median_trade_usd: number | null;
+  mean_trade_usd: number | null;
+  p95_trade_usd: number | null;
+  max_trade_usd: number | null;
+}
+
+export interface BIVolumeTimeSeries {
+  hourly_volume_24h: BIVolumeBucket[];
+  daily_volume_30d: BIVolumeBucket[];
+}
+
+export interface BIMetricsResp {
+  ok: boolean;
+  window: FeeRevenueWindow;
+  /** spec 降级:section 字段拿不到 → 子字段 null · 不抛 500 */
+  volume_time_series: BIVolumeTimeSeries;
+  funnel: BIConversionFunnel;
+  mev_rebate: BIMevRebate;
+  tx_success: BISuccessRate;
+  trade_size_distribution: BITradeSizeDist;
+  fee_address?: string | null;
+  sol_price_usd?: number;
+  cached?: boolean;
+  computed_at: string;
+}
+
+export async function fetchAdminBIMetrics(
+  key: string,
+  window: FeeRevenueWindow = '7d',
+): Promise<BIMetricsResp> {
+  return apiFetch<BIMetricsResp>(`/admin/bi-metrics?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
 // ─── Public stats(无鉴权 · Landing 数据条用) ───
 
 export interface PublicStats {
@@ -727,6 +979,8 @@ export interface MarketsResp {
   items: MarketItem[];
   cached: boolean;
   stale?: boolean;
+  // T-FE-STALE-UI · 与 PoolStats1h / TokenAuditCard 同语义
+  data_age_sec?: number | null;
   fetched_at?: number | null;
   error?: string | null;
 }
@@ -739,4 +993,47 @@ export async function fetchMarketsTrending(timeframe: MarketsTimeframe, limit = 
 export async function fetchMarketsNewPairs(limit = 50): Promise<MarketItem[]> {
   const r = await apiFetch<MarketsResp>(`/markets/new-pairs?limit=${limit}`);
   return r.items ?? [];
+}
+
+// ─── T-REWARDS-PAGE · /portfolio/empty-accounts ───
+
+export interface EmptyAccount {
+  mint: string;
+  ata_address: string;
+  rent_lamports: number;
+  token_symbol: string | null;
+  token_logo: string | null;
+}
+
+export interface EmptyAccountsResp {
+  ok: boolean;
+  wallet: string;
+  count: number;
+  accounts: EmptyAccount[];
+  total_recoverable_lamports: number;
+  total_recoverable_sol?: number;
+}
+
+export async function fetchEmptyAccounts(wallet: string): Promise<EmptyAccountsResp> {
+  return apiFetch<EmptyAccountsResp>(`/portfolio/empty-accounts?wallet=${encodeURIComponent(wallet)}`);
+}
+
+// ─── T-HISTORY-CHAIN-DETAIL-FE · /portfolio/tx-detail ───
+// 后端契约(数学守恒 · priority + base = total · 没数据时 ok:false 字段全 0):
+//   GET /portfolio/tx-detail?signature=X
+//   → { ok, type, priority_fee_sol, base_fee_sol, total_fee_sol, cached, error?, ... }
+
+export interface TxDetail {
+  ok: boolean;
+  signature: string;
+  type: string | null;
+  priority_fee_sol: number;
+  base_fee_sol: number;
+  total_fee_sol: number;
+  cached?: boolean;
+  error?: string | null;
+}
+
+export async function fetchTxDetail(signature: string): Promise<TxDetail> {
+  return apiFetch<TxDetail>(`/portfolio/tx-detail?signature=${encodeURIComponent(signature)}`);
 }

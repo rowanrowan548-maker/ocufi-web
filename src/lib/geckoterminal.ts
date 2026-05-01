@@ -26,19 +26,51 @@ export interface GTTrade {
   usdValue: number;
 }
 
-/** 入口:mint → 一把拉到 trades(失败返回空数组) */
+// T-PERF-FE-DEDUP-REQUESTS · mint 级缓存 + inflight dedup
+// activity-board(limit=100)+ mini-trade-flow(limit=8)同 mint 共享 1 次后端请求
+// 统一拉 limit=100 · 调用方按需 slice
+const TRADES_CACHE_TTL_MS = 30_000;
+const FETCH_LIMIT = 100;
+const tradesCache = new Map<string, { data: GTTrade[]; expiresAt: number }>();
+const tradesInflight = new Map<string, Promise<GTTrade[]>>();
+
+/** 入口:mint → 一把拉到 trades(失败返回空数组)
+ * limit 参数仅用于调用方切片 · 后端实际固定拉 100 · 同 mint 跨组件共享缓存 */
 export async function fetchMintTrades(mint: string, limit = 100): Promise<GTTrade[]> {
   if (!mint) return [];
+
+  // 命中 fresh 缓存 · 直接 slice 返
+  const cached = tradesCache.get(mint);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data.slice(0, Math.max(1, Math.floor(limit)));
+  }
+
+  // 复用同 mint 正在飞的请求(防 activity-board + mini-trade-flow 同时挂载发 2 次)
+  let promise = tradesInflight.get(mint);
+  if (!promise) {
+    promise = doFetchMintTrades(mint).then((data) => {
+      tradesCache.set(mint, { data, expiresAt: Date.now() + TRADES_CACHE_TTL_MS });
+      return data;
+    }).finally(() => {
+      tradesInflight.delete(mint);
+    });
+    tradesInflight.set(mint, promise);
+  }
+
+  const data = await promise;
+  return data.slice(0, Math.max(1, Math.floor(limit)));
+}
+
+async function doFetchMintTrades(mint: string): Promise<GTTrade[]> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!apiUrl) {
     // 后端未配置 → 不走直击 GT 回落(防 BUG-035 限速复燃),返空
     console.warn('[gt-trades] NEXT_PUBLIC_API_URL not set, trades disabled');
     return [];
   }
-  const safeLimit = Math.min(Math.max(1, Math.floor(limit) || 100), 1000);
   const url =
     `${apiUrl.replace(/\/$/, '')}/token/trades` +
-    `?mint=${encodeURIComponent(mint)}&limit=${safeLimit}`;
+    `?mint=${encodeURIComponent(mint)}&limit=${FETCH_LIMIT}`;
 
   try {
     const res = await fetch(url, {

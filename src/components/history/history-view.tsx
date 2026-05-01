@@ -27,6 +27,9 @@ import {
 } from '@/components/ui/table';
 import { useTxHistory, type EnrichedTxRecord } from '@/hooks/use-tx-history';
 import { getCurrentChain } from '@/config/chains';
+import { formatExecPrice as formatExecPriceLib } from '@/lib/exec-price';
+import { TxFeeBadge } from './tx-fee-badge';
+import { SlippageCell } from './slippage-cell';
 import { fetchSolUsdPrice } from '@/lib/portfolio';
 
 // T-HIST-92 · 筛选状态(localStorage 持久化)
@@ -277,8 +280,8 @@ function Stat({
   label, value, sub, tone,
 }: { label: string; value: string; sub?: string; tone?: 'pos' | 'neg' }) {
   const toneClass =
-    tone === 'pos' ? 'text-emerald-500' :
-    tone === 'neg' ? 'text-red-500' :
+    tone === 'pos' ? 'text-success' :
+    tone === 'neg' ? 'text-danger' :
     'text-foreground';
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
@@ -363,9 +366,15 @@ function HistoryRow({
           </Link>
         ) : r.solAmount > 0 ? (
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-              ◎
-            </div>
+            {/* T-REWARDS-POLISH:用 Solana 官方 logo · 不再紫色占位 */}
+            <Image
+              src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png"
+              alt="SOL"
+              width={24}
+              height={24}
+              className="rounded-full flex-shrink-0"
+              unoptimized
+            />
             <span className="text-sm font-medium">SOL</span>
           </div>
         ) : (
@@ -384,18 +393,25 @@ function HistoryRow({
       <TableCell className="text-right font-mono text-sm text-muted-foreground">
         {r.tokenMint && r.solAmount > 0 ? `${formatAmount(r.solAmount)} SOL` : '—'}
       </TableCell>
-      {/* T-929-cont #91:成交价 / 滑点 / 优先费 / Gas */}
+      {/* T-929-cont #91:成交价 / 滑点 / 优先费 / Gas
+          T-HISTORY-COMPUTED-PRICE:后端没给 → 用 SOL ÷ 代币数量 算 SOL/token 价 · 不再 — */}
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.executionPriceUsd != null ? formatAmount(r.executionPriceUsd) : '—'}
+        {formatExecPrice(r)}
+      </TableCell>
+      {/* T-FE-SLIPPAGE-COLUMN / T-FE-SLIPPAGE-BUY:本地 actualSlippageBps 优先 · 没有则用 ⛓️ 落地的 quote 算真滑点(sell + buy 都覆盖)*/}
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+        {r.actualSlippageBps != null ? (
+          `${(r.actualSlippageBps / 100).toFixed(2)}%`
+        ) : (
+          <SlippageCell signature={r.signature} type={r.type} solAmount={r.solAmount} tokenAmount={r.tokenAmount} />
+        )}
+      </TableCell>
+      {/* T-HISTORY-CHAIN-DETAIL-FE:本地 priorityFeeSol / gasFeeSol 没值 → 走 TxFeeBadge 行级懒加载 /portfolio/tx-detail */}
+      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
+        {r.priorityFeeSol != null ? trimSolFee(r.priorityFeeSol) : <TxFeeBadge signature={r.signature} field="priority" />}
       </TableCell>
       <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.actualSlippageBps != null ? `${(r.actualSlippageBps / 100).toFixed(2)}%` : '—'}
-      </TableCell>
-      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.priorityFeeSol != null ? `${r.priorityFeeSol.toFixed(6)}` : '—'}
-      </TableCell>
-      <TableCell className="text-right font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-        {r.gasFeeSol != null ? `${r.gasFeeSol.toFixed(6)}` : '—'}
+        {r.gasFeeSol != null ? trimSolFee(r.gasFeeSol) : <TxFeeBadge signature={r.signature} field="gas" />}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">
@@ -452,6 +468,23 @@ function formatAmount(n: number): string {
   if (n >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
   if (n >= 0.0001) return n.toFixed(6);
   return n.toFixed(9);
+}
+
+// T-HISTORY-CHAIN-DETAIL-FE · 本地 priorityFeeSol / gasFeeSol 显示格式 · 跟 TxFeeBadge 后端值显示规则一致
+function trimSolFee(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  return n.toFixed(8).replace(/(\.[0-9]*?)0+$/, '$1').replace(/\.$/, '');
+}
+
+// T-HISTORY-COMPUTED-PRICE · 成交价显示算法在 src/lib/exec-price.ts(纯函数 · 有单测)
+function formatExecPrice(r: EnrichedTxRecord): string {
+  return formatExecPriceLib({
+    type: r.type,
+    tokenMint: r.tokenMint,
+    tokenAmount: r.tokenAmount,
+    solAmount: r.solAmount,
+    execPriceUsd: r.executionPriceUsd,
+  }, formatAmount);
 }
 
 // T-HIST-92 · 筛选条

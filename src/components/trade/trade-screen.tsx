@@ -14,8 +14,8 @@
  * T-985a · 桌面再删 TrustSignals(信息冗余 trading-header 风险标签 + ActivityBoard 风险 tab)
  * 移动端走 T-977 a-g 双栏 OKX 一屏密度
  */
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { PublicKey } from '@solana/web3.js';
 
 import { RpcHealthBanner } from '@/components/common/rpc-health-banner';
@@ -32,6 +32,7 @@ import { PoolStatsOneHour } from './pool-stats-1h';
 import { fetchTokenDetail, overallRisk, riskReasons, type TokenDetail } from '@/lib/token-info';
 import { DEFAULT_TRADE_MINT } from '@/lib/preset-tokens';
 import { ErrorBoundary } from '@/components/common/error-boundary';
+import { WrapCleanupToast } from './wrap-cleanup-toast';
 
 function isValidMint(s: string): boolean {
   try {
@@ -76,36 +77,34 @@ function buildFallbackDetail(mint: string): TokenDetail {
 }
 
 export function TradeScreen() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [mint, setMint] = useState<string>(DEFAULT_TRADE_MINT);
   const [detail, setDetail] = useState<TokenDetail | null>(null);
-  const [defaultSide, setDefaultSide] = useState<'buy' | 'sell' | undefined>(undefined);
 
-  // T-SEARCH-FIX · 反应式跟踪 URL ?mint= 变化(原版只 mount 读一次,
-  // header search router.push 后 URL 变了但 trade-screen 不感知,然后下面的
-  // write 副作用又把 URL 同步回旧 mint · 用户表象"搜索无反应")
-  useEffect(() => {
-    const m = searchParams.get('mint');
-    if (m && isValidMint(m) && m !== mint) setMint(m);
-    const s = searchParams.get('side');
-    if (s === 'buy' || s === 'sell') setDefaultSide(s);
-  }, [searchParams, mint]);
+  // T-SEARCH-CLICK-FIX4 · single source of truth = URL
+  // 真因(FIX3 仍 fail):trade-screen 用 useState mint + 双向同步 effect,
+  // 加上 header-search router.refresh() 触发 RSC re-fetch · 在 push commit 前
+  // 用旧 URL 拉 server payload 把刚 push 的 client state 覆盖回去 · 第二次点死锁
+  // 修:删 useState mint / defaultSide · 直接派生自 useSearchParams · setMint
+  // 改成 helper 调 router.push(唯一 URL 操作者)· useSearchParams 自动反应
+  const mintParam = searchParams.get('mint');
+  const mint = mintParam && isValidMint(mintParam) ? mintParam : DEFAULT_TRADE_MINT;
+  const sideParam = searchParams.get('side');
+  const defaultSide: 'buy' | 'sell' | undefined =
+    sideParam === 'buy' || sideParam === 'sell' ? sideParam : undefined;
 
-  // T-SEARCH-CLICK-FIX3 · 真因:write effect 用 history.replaceState 直接改 URL
-  // 跳过 Next router · 导致 router 内部 state 跟实际 URL desync · 第二次 router.push
-  // 同 pathname 不同 query 时被 dedup 不刷新
-  // 修:URL 已经一致就 skip · 不抢 router state · 只在 mount 后清理 default mint
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!isValidMint(mint)) return;
-    const url = new URL(window.location.href);
-    const target = mint === DEFAULT_TRADE_MINT ? null : mint;
-    const current = url.searchParams.get('mint');
-    if (current === target) return; // already in sync · 不写
-    if (target === null) url.searchParams.delete('mint');
-    else url.searchParams.set('mint', mint);
-    window.history.replaceState({}, '', url.toString());
-  }, [mint]);
+  const setMint = useCallback(
+    (m: string, side?: 'buy' | 'sell') => {
+      if (!isValidMint(m)) return;
+      const params = new URLSearchParams();
+      if (m !== DEFAULT_TRADE_MINT) params.set('mint', m);
+      if (side) params.set('side', side);
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname);
+    },
+    [router, pathname],
+  );
 
   // 中央 fetch 一次,所有子组件复用
   // BUG-027:fetchTokenDetail 可能抛错(无缓存 + 上游全挂),detail 永远 null UI 永远 skeleton
@@ -126,12 +125,14 @@ export function TradeScreen() {
   return (
     <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:max-w-none lg:mx-0 lg:px-4 py-2 sm:py-6 space-y-2 sm:space-y-4">
       <RpcHealthBanner />
+      {/* T-PHANTOM-SPLIT-TX-FE · 检测上次有未完成 wrap · mount 时 toast */}
+      <WrapCleanupToast />
       {/* T-SEARCH-DEDUP · 删除桌面端 TokenSearchCombo 独立卡(冗余)
           切币只通过顶部 header search → /trade?mint= · trading-header 顶部仍有 SYMBOL+price */}
 
       {/* T-962/T-977b:移动端 TradingHeader sticky top + 桌面正常流(padding 压扁) */}
       <div className="lg:static lg:bg-transparent lg:backdrop-blur-none sticky top-0 lg:top-auto z-30 -mx-2 sm:-mx-6 px-2 sm:px-6 lg:mx-0 lg:px-0 py-1 lg:py-0 bg-background/95 backdrop-blur lg:backdrop-blur-none">
-        <TradingHeader mint={mint} detail={detail} onSelectMint={setMint} />
+        <TradingHeader mint={mint} detail={detail} onSelectMint={(m) => setMint(m)} />
       </div>
 
       {/* T-984c · 删 InfoPanel + SafetyPanel(已并入 trading-header + TrustSignals)
@@ -145,7 +146,7 @@ export function TradeScreen() {
               risk={detail ? overallRisk(detail) : undefined}
               reasons={detail ? riskReasons(detail) : undefined}
               defaultSide={defaultSide}
-              onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+              onPickMint={(m, s) => setMint(m, s)}
             />
           </ErrorBoundary>
           {/* T-985b · 4 数字栏 总买入/总卖出/余额/总收益 · 仅桌面 */}
@@ -186,7 +187,7 @@ export function TradeScreen() {
               risk={detail ? overallRisk(detail) : undefined}
               reasons={detail ? riskReasons(detail) : undefined}
               defaultSide={defaultSide}
-              onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+              onPickMint={(m, s) => setMint(m, s)}
             />
           </div>
           <div className="min-w-0 flex flex-col gap-2">
@@ -215,7 +216,7 @@ export function TradeScreen() {
         symbol={detail?.symbol}
         risk={detail ? overallRisk(detail) : undefined}
         reasons={detail ? riskReasons(detail) : undefined}
-        onPickMint={(m, s) => { setMint(m); setDefaultSide(s); }}
+        onPickMint={(m, s) => setMint(m, s)}
       />
     </div>
   );
