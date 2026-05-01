@@ -1181,6 +1181,87 @@
     "saved": "已保存",
     "reset": "恢复默认"
   },
+  "copyTrading": {
+    "page": {
+      "title": "跟单",
+      "subtitle": "自动跟随博主钱包的买卖 · 每笔你自己签 · 我们不托管你的私钥"
+    },
+    "tabs": {
+      "discover": "发现",
+      "mine": "我跟的",
+      "history": "历史"
+    },
+    "wallet": {
+      "connectPrompt": "连接钱包后查看和管理跟单订阅",
+      "connect": "连接钱包"
+    },
+    "stats": {
+      "totalSubs": "总订阅",
+      "active": "进行中",
+      "spent": "累计 SOL",
+      "pending": "待签"
+    },
+    "discover": {
+      "comingSoon": "聪明钱博主榜建设中 · 当前可从 /markets 复制博主钱包后手动添加",
+      "manualFollow": "添加跟单博主",
+      "manualHint": "粘贴博主 Solana 钱包(44 字符)· 下一步设跟单比例 / 上限 / 滑点"
+    },
+    "mine": {
+      "empty": "你还没跟任何博主 · 去「发现」添加一个",
+      "leader": "博主",
+      "ratioMode": "跟单模式",
+      "perTrade": "单笔上限",
+      "totalCap": "总额上限",
+      "spent": "已用",
+      "slippage": "滑点",
+      "status": "状态",
+      "actions": "操作",
+      "pause": "暂停",
+      "resume": "恢复",
+      "stop": "停止",
+      "emergencyStop": "紧急停",
+      "noTotalCap": "不限"
+    },
+    "history": {
+      "empty": "还没有跟单记录 · 博主下一笔买卖后会自动出现",
+      "leader": "博主",
+      "action": "动作",
+      "amount": "应跟 SOL",
+      "status": "状态",
+      "leaderTx": "博主 tx",
+      "yourTx": "你的 tx",
+      "time": "时间"
+    },
+    "ratioMode": {
+      "fixed": "固定",
+      "fixedDesc": "每笔都用单笔上限(忽略博主下注大小)",
+      "mirror": "等比例",
+      "mirrorDesc": "按博主下注比例跟 · 仍受单笔上限封顶"
+    },
+    "jobStatus": {
+      "pending": "待签",
+      "skipped": "已跳过",
+      "queued": "排队中",
+      "signed": "已签",
+      "submitted": "已提交",
+      "confirmed": "已确认",
+      "failed": "失败"
+    },
+    "skipReason": {
+      "blacklisted_mint": "mint 在黑名单",
+      "over_per_trade_limit": "超单笔上限",
+      "over_total_limit": "超总额上限",
+      "emergency_stop": "紧急停",
+      "disabled": "订阅已暂停",
+      "user_canceled": "你取消了"
+    },
+    "errors": {
+      "invalidTargetWallet": "博主钱包必须是 44 字符的 Solana 地址",
+      "selfFollow": "不能跟你自己的钱包",
+      "loadFailed": "加载失败 · 点重试",
+      "saveFailed": "保存失败 · 再试一次"
+    }
+  },
   "alerts": {
     "page": {
       "title": "价格提醒",

@@ -1166,6 +1166,87 @@
     "saved": "Saved",
     "reset": "Reset"
   },
+  "copyTrading": {
+    "page": {
+      "title": "Copy Trading",
+      "subtitle": "Auto-mirror swaps from KOL wallets — you sign each tx, we never hold your keys"
+    },
+    "tabs": {
+      "discover": "Discover",
+      "mine": "Following",
+      "history": "History"
+    },
+    "wallet": {
+      "connectPrompt": "Connect your wallet to view and manage copy-trading subscriptions",
+      "connect": "Connect Wallet"
+    },
+    "stats": {
+      "totalSubs": "Total subs",
+      "active": "Active",
+      "spent": "Spent SOL",
+      "pending": "Pending"
+    },
+    "discover": {
+      "comingSoon": "Smart-money leader discovery is in progress — for now, paste a target wallet from /markets to follow",
+      "manualFollow": "Follow a wallet",
+      "manualHint": "Paste a Solana wallet address (44 chars). You'll set ratio / cap / slippage in the next step."
+    },
+    "mine": {
+      "empty": "You're not following any wallet yet. Click Discover to add one.",
+      "leader": "Leader",
+      "ratioMode": "Ratio mode",
+      "perTrade": "Per-trade cap",
+      "totalCap": "Total cap",
+      "spent": "Spent",
+      "slippage": "Slippage",
+      "status": "Status",
+      "actions": "Actions",
+      "pause": "Pause",
+      "resume": "Resume",
+      "stop": "Stop",
+      "emergencyStop": "Emergency stop",
+      "noTotalCap": "no cap"
+    },
+    "history": {
+      "empty": "No copy-trading executions yet. They'll show up here as KOL swaps trigger your subs.",
+      "leader": "Leader",
+      "action": "Action",
+      "amount": "Proposed SOL",
+      "status": "Status",
+      "leaderTx": "Leader tx",
+      "yourTx": "Your tx",
+      "time": "Time"
+    },
+    "ratioMode": {
+      "fixed": "Fixed",
+      "fixedDesc": "Always use per-trade cap (ignore KOL size)",
+      "mirror": "Mirror",
+      "mirrorDesc": "Match KOL swap proportionally · still capped at per-trade limit"
+    },
+    "jobStatus": {
+      "pending": "Pending sign",
+      "skipped": "Skipped",
+      "queued": "Queued",
+      "signed": "Signed",
+      "submitted": "Submitted",
+      "confirmed": "Confirmed",
+      "failed": "Failed"
+    },
+    "skipReason": {
+      "blacklisted_mint": "Mint is blacklisted",
+      "over_per_trade_limit": "Over per-trade cap",
+      "over_total_limit": "Over total cap",
+      "emergency_stop": "Emergency stop",
+      "disabled": "Subscription paused",
+      "user_canceled": "You canceled"
+    },
+    "errors": {
+      "invalidTargetWallet": "Target wallet must be a 44-char Solana address",
+      "selfFollow": "Can't follow your own wallet",
+      "loadFailed": "Failed to load — retry?",
+      "saveFailed": "Save failed — try again"
+    }
+  },
   "alerts": {
     "page": {
       "title": "Price Alerts",
