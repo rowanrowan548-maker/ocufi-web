@@ -1023,6 +1023,38 @@ export async function fetchPortfolioHoldings(wallet: string): Promise<HoldingsRe
   return apiFetch<HoldingsResponse>(`/portfolio/holdings?wallet=${encodeURIComponent(wallet)}`);
 }
 
+// ─── R3-FE · /search/tokens(后端 R3-BE `3a631f4` ship · Birdeye 主 + GT 兜底) ───
+
+export interface SearchTokenItem {
+  mint: string;
+  symbol: string | null;
+  name: string | null;
+  logoURI?: string | null;
+  price_usd?: number | null;
+  liquidity_usd?: number | null;
+  market_cap_usd?: number | null;
+  volume_24h_usd?: number | null;
+}
+
+export interface SearchTokensResp {
+  ok: boolean;
+  items: SearchTokenItem[];
+  source?: string;
+  cached?: boolean;
+  fetched_at?: number | null;
+  error?: string | null;
+}
+
+export async function fetchSearchTokens(q: string, limit = 20): Promise<SearchTokenItem[]> {
+  const trimmed = q.trim().slice(0, 80);
+  if (trimmed.length < 1) return [];
+  const safeLimit = Math.min(50, Math.max(1, Math.floor(limit)));
+  const url = `/search/tokens?q=${encodeURIComponent(trimmed)}&limit=${safeLimit}`;
+  // 5s timeout · 后端有 GT 兜底 + 60s cache · 前端再加一层防御防 Railway 冷启卡死
+  const r = await apiFetch<SearchTokensResp>(url, { timeoutMs: 5_000 });
+  return r.items ?? [];
+}
+
 // ─── T-REWARDS-PAGE · /portfolio/empty-accounts ───
 
 export interface EmptyAccount {
