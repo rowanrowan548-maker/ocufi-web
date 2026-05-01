@@ -8,7 +8,7 @@ import { tradeUrl, MINTS, PREVIEW_KEY } from './_helpers';
  * 每个 case 独立 · 不串测 · 失败一个不挂其它。
  *
  * 1. Phantom Connect 流程(无 Phantom env 时 skip)· 不报 Auth2Stamper
- * 2. /trade?mint=USDC · audit-card V2 占位 tag visible
+ * 2. R1 后端 /token/audit-card · BONK · 4 个 Birdeye 字段(rats/dev/bundle/sniper)至少 2/4 真填(R1-FE ship 后 V2 占位 UI 已删 · 2026-05-01 改验后端真接通)
  * 3. /markets · smart-money badge 至少有几行(T5 ship 后期望 ≥ 5,但保底 ≥ 1)
  * 4. /trade · verified 绿盾去重 · 单一 visible BadgeCheck · 旁无 emoji
  * 5. /trade · 成交活动 tag filter · 点 KOL/老鼠仓 tab · 至少 render(数据可空但不挂)
@@ -37,13 +37,33 @@ test.describe('T7 · 用户手测 6 类 bug 回归', () => {
     expect(auth2, `Auth2Stamper init 错仍出:\n${auth2.join('\n')}`).toEqual([]);
   });
 
-  // ── case 2: /trade?mint=USDC · V2 占位 tag visible ─────────────────────────
-  test('case 2 · /trade USDC · audit-card V2 占位 "即将上线" tag', async ({ page }) => {
+  // ── case 2: R1 后端 /token/audit-card · 4 个 Birdeye 字段真填 ───────────────
+  // R1-FE (087a913) ship 后 V2 占位 UI 已删 · null 时回 `--` · 旧 selector `audit-cell-coming-soon` 失效。
+  // R1 SPEC 要求"4 个 V2 占位字段接 Birdeye 真填" · 这里直接 query 后端验真接通 · 至少 2/4 != null。
+  test('case 2 · R1 audit-card · BONK · 4 个 Birdeye 字段至少 2/4 真填', async ({ page, request }) => {
+    const apiBase = process.env.OCUFI_API_BASE_URL ?? 'https://ocufi-api-production.up.railway.app';
+    const bonk = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+    const r = await request.get(`${apiBase}/token/audit-card?mint=${bonk}`, { timeout: 15_000 });
+    expect(r.ok(), `R1 audit-card 后端 HTTP 不 OK · status ${r.status()}`).toBeTruthy();
+    const j = (await r.json()) as Record<string, unknown>;
+    const r1 = {
+      rat_warehouse_pct: j.rat_warehouse_pct,
+      dev_status: j.dev_status,
+      bundle_pct: j.bundle_pct,
+      sniper_pct: j.sniper_pct,
+    };
+    const filled = Object.values(r1).filter((v) => v !== null && v !== undefined).length;
+    // eslint-disable-next-line no-console
+    console.log(`[r1-audit-card] BONK ${JSON.stringify(r1)} · 真填 ${filled}/4`);
+    expect(
+      filled,
+      `R1 后端 audit-card BONK 4 字段(rats/dev/bundle/sniper)只填了 ${filled}/4 · Birdeye 集成可能没接通(BIRDEYE_API_KEY?)`,
+    ).toBeGreaterThanOrEqual(2);
+    // 同时 page 不挂 · 验前端没崩
     await page.goto(tradeUrl('USDC'), { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(4_000); // audit-card 拉数据
-    // T3 ship 加了 data-testid="audit-cell-coming-soon" · V1 后端没做 rats/dev/bundle/sniper · 应该至少有 1 个
-    const placeholderCount = await page.locator('[data-testid="audit-cell-coming-soon"]').count();
-    expect(placeholderCount, '应至少 1 个 V2 占位 tag · 否则 T3 ship 没生效').toBeGreaterThan(0);
+    await page.waitForTimeout(2_000);
+    const cellCount = await page.locator('[data-testid="audit-cell"]').count();
+    expect(cellCount, 'audit-cards UI 6 个 cell 应都 render').toBeGreaterThanOrEqual(6);
   });
 
   // ── case 3: /markets · smart-money badge column 真渲染 ─────────────────────
