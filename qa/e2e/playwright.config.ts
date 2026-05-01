@@ -80,6 +80,17 @@ export default defineConfig({
       },
       testMatch: /admin-smoke\.spec\.ts/,
     },
+    {
+      // Real-machine perf baseline against live prod. Numbers go to stdout
+      // and are summarised in REPORTS/perf-stage2.md.
+      name: 'perf-baseline',
+      timeout: 180_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /perf-baseline\.spec\.ts/,
+    },
   ],
 });
 
