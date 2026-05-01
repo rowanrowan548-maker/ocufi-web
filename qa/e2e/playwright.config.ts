@@ -110,6 +110,18 @@ export default defineConfig({
       },
       testMatch: /user-reported-bugs-.*\.spec\.ts/,
     },
+    {
+      // T-QA-FULLSITE-DEEP-AUDIT 阶段 2 · 14 页 + /trade × 4 mint 非数据维度。
+      // 数据维度(audit-card 真填 / 9 chip 数据 / 持币地址 数据 / search modal 真出
+      // 结果 / markets tab 真有数据)用 test.fixme 占位 · BUG-046 修后激活。
+      name: 'fullsite-deep-audit',
+      timeout: 120_000,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+      },
+      testMatch: /fullsite-deep-audit\.spec\.ts/,
+    },
   ],
 });
 
