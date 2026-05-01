@@ -14,7 +14,7 @@
  *      Portal 通过审核所必须的"明确集成"。完整 bridge 是后续 V2 工作。
  */
 import { useTranslations } from 'next-intl';
-import { useModal } from '@phantom/react-sdk';
+import { useModal, usePhantom } from '@phantom/react-sdk';
 import { Button } from '@/components/ui/button';
 import { isPhantomConnectConfigured } from '@/lib/phantom-connect';
 import { toast } from 'sonner';
@@ -53,9 +53,13 @@ function PhantomConnectButtonInner({
   variant, onAfterClick, t,
 }: { variant: 'landing' | 'header' | 'modal'; onAfterClick?: () => void; t: T }) {
   const modal = useModal();
+  // T1.1:开 modal 前清掉 autoConnect 残留错(防顶部红条吓用户)
+  // PhantomCleanupGuard 已自动 disconnect · 这里再保底清一遍
+  const { clearError } = usePhantom();
 
   const handleClick = () => {
     try {
+      clearError('connect');
       modal.open();
       onAfterClick?.();
     } catch (e: unknown) {
