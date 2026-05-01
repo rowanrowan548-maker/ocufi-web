@@ -20,9 +20,8 @@ export function PhantomConnectProvider({ children }: { children: React.ReactNode
   }
   return (
     <PhantomProvider
-      // SDK 类型 ProviderConfig 私有 · lib 已 cast 为 Record<string, any>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      config={PHANTOM_PROVIDER_CONFIG as any}
+      // T1 fix:lib 现已用真 BrowserSDKConfig 类型 · 不再需要 any cast
+      config={PHANTOM_PROVIDER_CONFIG}
       appName={PHANTOM_APP_NAME}
       appIcon={PHANTOM_APP_ICON}
     >

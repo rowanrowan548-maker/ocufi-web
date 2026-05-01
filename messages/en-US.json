@@ -623,6 +623,7 @@
       "bundle": "Bundlers",
       "sniper": "Snipers",
       "lpBurn": "LP burn",
+      "comingSoon": "Coming in V2",
       "devStatus": {
         "cleared": "Cleared",
         "holding": "Holding",
@@ -951,7 +952,7 @@
     "riskDetails": "Risk Details",
     "topHolders": "Top 10 Holders",
     "risk": {
-      "verified": "🛡 Verified",
+      "verified": "Verified",
       "low": "✅ Low risk",
       "medium": "⚠️ Medium risk",
       "high": "🚨 High risk",
