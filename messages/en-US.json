@@ -363,7 +363,7 @@
       }
     },
     "trust": {
-      "title": "🛡 Safety Signals",
+      "title": "Safety Signals",
       "labels": {
         "lpLocked": "LP Locked",
         "top1Holder": "Top1 Holder",
@@ -371,8 +371,8 @@
         "freezeAuthority": "Freeze Auth"
       },
       "values": {
-        "renounced": "✅ Renounced",
-        "active": "⚠️ Active",
+        "renounced": "Renounced",
+        "active": "Active",
         "unknown": "—"
       },
       "overall": {
@@ -643,7 +643,7 @@
       "platformFee": "Ocufi fee 0.1%",
       "platformFeeNone": "0 (not charged)",
       "networkFee": "Network gas (max)",
-      "slippageWarn": "⚠️ Slippage {impact}% · {sol} SOL ≈ ${loss} USD loss — try {suggested}%",
+      "slippageWarn": "Slippage {impact}% · {sol} SOL ≈ ${loss} USD loss — try {suggested}%",
       "slippageApply": "Raise to {bps}%",
       "currentSlipGasHint": "Slippage {slippage}% · Priority {gasLabel}",
       "minReceiveTooltip": "Slippage floor at {pct}%",
@@ -670,9 +670,9 @@
       "blocked": "🚫 High-risk token blocked",
       "blockedHint": "Hard-blocked due to the following honeypot / blacklist signals:",
       "highRisk": {
-        "title": "⚠️ High-risk token",
-        "titleCritical": "🚨 Critical risk · likely total loss",
-        "titleUnknown": "❓ Risk data unavailable",
+        "title": "High-risk token",
+        "titleCritical": "Critical risk · likely total loss",
+        "titleUnknown": "Risk data unavailable",
         "desc": "RugCheck + GoPlus dual safety review flagged the issues below. You could lose your entire principal.",
         "descUnknown": "Neither RugCheck nor GoPlus returned data. Could be a brand-new mint, rate-limit, or network issue. We do NOT silently let this through — please confirm risk yourself.",
         "ack": "I understand the risk and want to continue",
@@ -953,16 +953,16 @@
     "topHolders": "Top 10 Holders",
     "risk": {
       "verified": "Verified",
-      "low": "✅ Low risk",
-      "medium": "⚠️ Medium risk",
-      "high": "🚨 High risk",
-      "critical": "🚨 Critical risk",
-      "unknown": "❓ Unknown"
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk",
+      "critical": "Critical risk",
+      "unknown": "Unknown"
     },
     "verifiedNote": "Blue-chip / stablecoin on verified allowlist. Some 'risk' signals don't apply: e.g., USDC must keep mint authority to issue against reserves — regulatory, not rug.",
     "status": {
       "renounced": "Renounced",
-      "active": "Active ⚠️"
+      "active": "Active"
     },
     "age": {
       "minutes": "{n}m ago",
@@ -1209,7 +1209,7 @@
       "unboundTitle": "💬 Telegram not connected",
       "unboundDesc": "Alerts only fire while your browser is open — connect TG to push price alerts directly",
       "unboundCta": "Connect TG",
-      "boundTitle": "✅ Telegram connected",
+      "boundTitle": "Telegram connected",
       "boundDesc": "@{username} · Price alerts will push to your TG",
       "boundUnknown": "Connected · Price alerts will push to your TG",
       "unbind": "Disconnect",

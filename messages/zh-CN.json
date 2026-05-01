@@ -363,7 +363,7 @@
       }
     },
     "trust": {
-      "title": "🛡 安全信号",
+      "title": "安全信号",
       "labels": {
         "lpLocked": "LP 锁定",
         "top1Holder": "Top1 持仓",
@@ -371,8 +371,8 @@
         "freezeAuthority": "Freeze 权"
       },
       "values": {
-        "renounced": "✅ 已放弃",
-        "active": "⚠️ 未放弃",
+        "renounced": "已放弃",
+        "active": "未放弃",
         "unknown": "—"
       },
       "overall": {
@@ -643,7 +643,7 @@
       "platformFee": "Ocufi 手续费 0.1%",
       "platformFeeNone": "0(本笔不收)",
       "networkFee": "网络 Gas(上限)",
-      "slippageWarn": "⚠️ 滑点 {impact}% · {sol} SOL 约损失 ${loss} USD,建议改 {suggested}%",
+      "slippageWarn": "滑点 {impact}% · {sol} SOL 约损失 ${loss} USD,建议改 {suggested}%",
       "slippageApply": "拉到 {bps}%",
       "currentSlipGasHint": "滑点 {slippage}% · 优先级 {gasLabel}",
       "minReceiveTooltip": "滑点 {pct}% 兜底",
@@ -670,9 +670,9 @@
       "blocked": "🚫 高危代币禁止买入",
       "blockedHint": "命中以下硬封禁信号,无法继续:",
       "highRisk": {
-        "title": "⚠️ 高风险代币",
-        "titleCritical": "🚨 严重风险 · 极可能损失本金",
-        "titleUnknown": "❓ 风险数据不可用",
+        "title": "高风险代币",
+        "titleCritical": "严重风险 · 极可能损失本金",
+        "titleUnknown": "风险数据不可用",
         "desc": "RugCheck + GoPlus 双源审查命中以下风险信号。继续交易可能损失全部本金。",
         "descUnknown": "RugCheck 和 GoPlus 都没返回数据。可能是新发币 / 接口被限速 / 网络问题。在数据缺失情况下不静默放行,请你自行确认。",
         "ack": "我已知晓风险,仍要继续",
@@ -953,16 +953,16 @@
     "topHolders": "前 10 持有者",
     "risk": {
       "verified": "已验证代币",
-      "low": "✅ 低风险",
-      "medium": "⚠️ 中等风险",
-      "high": "🚨 高风险",
-      "critical": "🚨 严重风险",
-      "unknown": "❓ 风险未知"
+      "low": "低风险",
+      "medium": "中等风险",
+      "high": "高风险",
+      "critical": "严重风险",
+      "unknown": "风险未知"
     },
     "verifiedNote": "主流蓝筹/稳定币,已通过人工白名单。例:USDC 必须保留 mint 权限以发行储备,属合规需要,不是跑路风险。",
     "status": {
       "renounced": "已放弃",
-      "active": "未放弃 ⚠️"
+      "active": "未放弃"
     },
     "age": {
       "minutes": "{n} 分钟前",
@@ -1224,7 +1224,7 @@
       "unboundTitle": "💬 没绑 Telegram?",
       "unboundDesc": "提醒只在浏览器开着才工作 — 绑定 TG 后到价自动推送",
       "unboundCta": "绑定 TG",
-      "boundTitle": "✅ 已绑定 Telegram",
+      "boundTitle": "已绑定 Telegram",
       "boundDesc": "@{username} · 价格提醒会推送到 TG",
       "boundUnknown": "已绑定 · 价格提醒会推送到 TG",
       "unbind": "解绑",
