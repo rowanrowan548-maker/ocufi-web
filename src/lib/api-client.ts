@@ -995,6 +995,34 @@ export async function fetchMarketsNewPairs(limit = 50): Promise<MarketItem[]> {
   return r.items ?? [];
 }
 
+// ─── R6-FE · /portfolio/holdings ───
+
+export interface HoldingItem {
+  mint: string;
+  symbol: string;
+  name: string;
+  amount: number;
+  decimals: number;
+  /** null = Helius fallback · 后端无价 */
+  price_usd: number | null;
+  value_usd: number | null;
+  price_change_24h_pct?: number | null;
+  logo_uri?: string | null;
+}
+
+export interface HoldingsResponse {
+  ok: boolean;
+  items: HoldingItem[];
+  total_usd?: number | null;
+  /** 'birdeye' | 'helius' | 'none' */
+  source?: string;
+  cached?: boolean;
+}
+
+export async function fetchPortfolioHoldings(wallet: string): Promise<HoldingsResponse> {
+  return apiFetch<HoldingsResponse>(`/portfolio/holdings?wallet=${encodeURIComponent(wallet)}`);
+}
+
 // ─── T-REWARDS-PAGE · /portfolio/empty-accounts ───
 
 export interface EmptyAccount {

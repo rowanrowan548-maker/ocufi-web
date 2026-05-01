@@ -9,12 +9,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import {
-  fetchWalletTokens,
-  fetchTokensInfoBatch,
   fetchSolUsdPrice,
-  type TokenInfo,
   SOL_MINT,
 } from '@/lib/portfolio';
+import {
+  fetchPortfolioHoldings,
+  isApiConfigured,
+  type HoldingItem,
+} from '@/lib/api-client';
 import { useSwapRefresh } from '@/lib/swap-refresh-store';
 
 export interface PortfolioToken {
@@ -77,46 +79,39 @@ export function usePortfolio(): PortfolioState {
       if (cancelled) return;
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
-        // 并行:SOL 余额 + 钱包 SPL token 列表 + SOL 美元价
-        const [lamports, walletTokens, solUsd] = await Promise.all([
+        // 并行:SOL 余额(链上) + 后端持仓列表 + SOL 美元价
+        const [lamports, holdings, solUsd] = await Promise.all([
           connection.getBalance(publicKey, 'confirmed'),
-          fetchWalletTokens(connection, publicKey),
+          isApiConfigured()
+            ? fetchPortfolioHoldings(publicKey.toBase58())
+            : Promise.resolve({ ok: false, items: [] as HoldingItem[] }),
           fetchSolUsdPrice(),
         ]);
         if (cancelled) return;
 
         // T-PF-129 · WSOL 余额并入 SOL 显示 · WSOL 不单独占行
-        // (jupiter swap 留下的 WSOL 临时账户经济上等同 SOL)
-        const wsolEntry = walletTokens.find((t) => t.mint === SOL_MINT);
-        const wsolAmount = wsolEntry?.amount ?? 0;
-        const nonWsolTokens = walletTokens.filter((t) => t.mint !== SOL_MINT);
+        const wsolItem = holdings.items.find((i) => i.mint === SOL_MINT);
+        const wsolAmount = wsolItem?.amount ?? 0;
+        const nonWsolItems = holdings.items.filter((i) => i.mint !== SOL_MINT);
 
         const nativeSolAmount = lamports / LAMPORTS_PER_SOL;
         const solAmount = nativeSolAmount + wsolAmount;
         const solValueUsd = solAmount * solUsd;
 
-        // 查每个 token 的价格/符号
-        const infos = nonWsolTokens.length
-          ? await fetchTokensInfoBatch(nonWsolTokens.map((t) => t.mint))
-          : new Map<string, TokenInfo>();
-        if (cancelled) return;
-
-        const tokens: PortfolioToken[] = nonWsolTokens.map((wt) => {
-          const info = infos.get(wt.mint);
-          const priceUsd = info?.priceUsd ?? 0;
-          return {
-            mint: wt.mint,
-            amount: wt.amount,
-            decimals: wt.decimals,
-            symbol: info?.symbol ?? wt.mint.slice(0, 6),
-            name: info?.name ?? '',
-            priceUsd,
-            valueUsd: wt.amount * priceUsd,
-            logoUri: info?.logoUri,
-            liquidityUsd: info?.liquidityUsd ?? 0,
-            marketCap: info?.marketCap ?? 0,
-          };
-        });
+        const tokens: PortfolioToken[] = nonWsolItems
+          .filter((i) => i.amount > 0)
+          .map((i) => ({
+            mint: i.mint,
+            amount: i.amount,
+            decimals: i.decimals,
+            symbol: i.symbol || i.mint.slice(0, 6),
+            name: i.name || '',
+            priceUsd: i.price_usd ?? 0,
+            valueUsd: i.value_usd ?? 0,
+            logoUri: i.logo_uri ?? undefined,
+            liquidityUsd: 0,
+            marketCap: 0,
+          }));
 
         // 按价值降序
         tokens.sort((a, b) => b.valueUsd - a.valueUsd);
