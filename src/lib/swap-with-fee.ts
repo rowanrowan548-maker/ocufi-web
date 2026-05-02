@@ -229,8 +229,16 @@ export function buildFeeTransferOnly(
  * Rory 强调:setup wrap SOL 后用户取消 swap → app **必须**有 cleanup/unwrap 逃生口
  * (T-PHANTOM-SPLIT-TX-CLEANUP 后续 ship)
  */
+/**
+ * SplitTxPlan 共享字段
+ *
+ * - includesSenderTip:T-CHAIN-MEV-PROTECTION Phase B · 实际 tx 里有没有挂 Helius Sender tip ix
+ *   - single 模式 + 上层传了 senderTipLamports + senderTipAccount → true
+ *   - split 模式 v1 → 永远 false(决策 4:split 不走 Sender · 走老 RPC)
+ *   - 上层 execute-swap-plan 据此决定 signAndSendTx 是否传 useSender=true
+ */
 export type SplitTxPlan =
-  | { kind: 'single'; tx: VersionedTransaction }
+  | { kind: 'single'; tx: VersionedTransaction; includesSenderTip: boolean }
   | {
       kind: 'split';
       setupTx: VersionedTransaction;
@@ -240,6 +248,8 @@ export type SplitTxPlan =
        * async · 因为内部跑 simulate(防 stale blockhash 让 Phantom 红警/失败)
        */
       buildSwapTx: (latestBlockhash: string) => Promise<VersionedTransaction>;
+      /** 永远 false · split v1 决策不走 Sender */
+      includesSenderTip: false;
     };
 
 /**
@@ -249,9 +259,18 @@ export type SplitTxPlan =
  *   - single 模式:append 到 instructions 末尾(swap+cleanup 之后)
  *   - split 模式:挂在 setup leg 末尾(Rory 强调 swap leg 必须 size 紧凑 · 不挂 swap leg)
  *   - 长度建议 ≤ 64 字节(memo 太长会撑爆 size · 内部有 size 自检兜底)
+ *
+ * - senderTipLamports / senderTipAccount:T-CHAIN-MEV-PROTECTION Phase B · Helius Sender 强制 tip ix
+ *   - 决策 4(TL 拍):tip 第一条 ix(最 Jito 友好 · 便于 bundle parser)
+ *   - single 模式:tip ix 插 instructions 第一条(在 ComputeBudget 之前)
+ *   - split 模式 v1:**不挂 tip ix**(走老 RPC · 不走 Sender)· 上层 execute-swap-plan 也跳过 useSender
+ *     · 等真有 split 用户案例再迭代 v2 · 不让 split 阻塞 ship
+ *   - 两个字段必须同时提供 · 否则视为不挂 tip(防误配)
  */
 export interface PrepareSwapTxsOpts {
   extraMemoText?: string;
+  senderTipLamports?: number;
+  senderTipAccount?: PublicKey;
 }
 
 /**
@@ -401,6 +420,21 @@ export async function prepareSwapTxs(
       ]
     : [];
 
+  // 5.6 senderTip · T-CHAIN-MEV-PROTECTION Phase B · Helius Sender 强制 tip ix
+  //   决策 4:tip 第一条 ix(最 Jito 友好)· single 模式插 instructions 开头
+  //   split 模式 v1 跳过(下方 8 节 split 路径不挂 tip · 上层不走 Sender)
+  //   两个字段必须同时提供 · 防误配
+  const senderTipIxs: TransactionInstruction[] =
+    opts.senderTipLamports && opts.senderTipLamports > 0 && opts.senderTipAccount
+      ? [
+          SystemProgram.transfer({
+            fromPubkey: userPubkey,
+            toPubkey: opts.senderTipAccount,
+            lamports: opts.senderTipLamports,
+          }),
+        ]
+      : [];
+
   // 6. 加载 ALT
   const alts: AddressLookupTableAccount[] = await Promise.all(
     resp.addressLookupTableAddresses.map(async (addr) => {
@@ -416,8 +450,10 @@ export async function prepareSwapTxs(
   // 7. 试组单笔 tx · 看 size 决定 single / split
   //    T-PHANTOM-SPLIT-TX-RORY-V2:single 内 tokenLedger 在 swap 段(setup 后 / fee 前)
   //    R10-CHAIN:extraMemo 挂末尾(swap+cleanup 之后)· 不参与 fee 流程
+  //    T-CHAIN-MEV-PROTECTION Phase B:senderTip 第一条(决策 4 · Jito bundle parser 友好)
   const { blockhash } = await connection.getLatestBlockhash('confirmed');
   const singleAllIxs = [
+    ...senderTipIxs, // ★ Phase B · tip 第一条
     ...computeBudgetIxs,
     ...setupIxs,
     ...tokenLedgerIxs,
@@ -435,7 +471,11 @@ export async function prepareSwapTxs(
     // single 模式 · 走原 buildSwapTxWithFee 行为 · simulate 自检
     assertSafeSize(singleTx, SOLANA_TX_SIZE_LIMIT, 'single');
     await simulateOrThrow(connection, singleTx);
-    return { kind: 'single', tx: singleTx };
+    return {
+      kind: 'single',
+      tx: singleTx,
+      includesSenderTip: senderTipIxs.length > 0,
+    };
   }
 
   // split 模式
@@ -464,7 +504,7 @@ export async function prepareSwapTxs(
     return swapTx;
   };
 
-  return { kind: 'split', setupTx, buildSwapTx };
+  return { kind: 'split', setupTx, buildSwapTx, includesSenderTip: false };
 }
 
 /**

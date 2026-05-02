@@ -533,6 +533,147 @@ describe('T-PHANTOM-SPLIT-TX-RORY-V2 · prepareSwapTxs ix 拆桶', () => {
     expect(memoData).toBe(COPY_MEMO);
   });
 
+  /**
+   * T-CHAIN-MEV-PROTECTION Phase B · senderTipLamports + senderTipAccount
+   *
+   * 决策 4(TL 拍):tip 第一条 ix · single 模式插 instructions 开头(ComputeBudget 之前)
+   * split 模式 v1 跳过(走老 RPC)· 即:senderTip 不挂 split 任何 leg · plan.includesSenderTip=false
+   */
+  it('case 7 · single + senderTip · tip ix 在 instructions 第一条', async () => {
+    const jupResp = makeFakeJupResponse({ setupCount: 0, hasTokenLedger: false });
+    (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;
+    const { stub } = makeStubConnection(jupResp);
+
+    const { prepareSwapTxs } = await import('@/lib/swap-with-fee');
+    const fakeQuote = {
+      inputMint: 'So11111111111111111111111111111111111111112',
+      outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      inAmount: '1000000',
+      outAmount: '999000',
+      otherAmountThreshold: '0',
+      swapMode: 'ExactIn',
+      slippageBps: 50,
+      priceImpactPct: '0.1',
+      routePlan: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const TIP_ACCOUNT = new (await import('@solana/web3.js')).PublicKey(
+      '4ACfpUFoaSD9bfPdeu6DBt89gB6ENTeHBXCAi87NhDEE'
+    );
+
+    const plan = await prepareSwapTxs(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stub as any,
+      fakeQuote,
+      FAKE_USER.toBase58(),
+      'fast',
+      { senderTipLamports: 100_000, senderTipAccount: TIP_ACCOUNT }
+    );
+    expect(plan.kind).toBe('single');
+    if (plan.kind !== 'single') return;
+    expect(plan.includesSenderTip).toBe(true);
+
+    const ids = programIdsOf(plan.tx);
+    // tip ix 是 SystemProgram.transfer · programId = 11111111111111111111111111111111
+    // tip 必须在第一条(决策 4)
+    expect(ids[0]).toBe('11111111111111111111111111111111');
+  });
+
+  it('case 8 · single 不传 senderTip · plan.includesSenderTip=false · tip 不挂', async () => {
+    const jupResp = makeFakeJupResponse({ setupCount: 0, hasTokenLedger: false });
+    (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;
+    const { stub } = makeStubConnection(jupResp);
+
+    const { prepareSwapTxs } = await import('@/lib/swap-with-fee');
+    const fakeQuote = {
+      inputMint: 'So11111111111111111111111111111111111111112',
+      outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      inAmount: '1000000',
+      outAmount: '999000',
+      otherAmountThreshold: '0',
+      swapMode: 'ExactIn',
+      slippageBps: 50,
+      priceImpactPct: '0.1',
+      routePlan: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plan = await prepareSwapTxs(stub as any, fakeQuote, FAKE_USER.toBase58());
+    expect(plan.kind).toBe('single');
+    if (plan.kind !== 'single') return;
+    expect(plan.includesSenderTip).toBe(false);
+  });
+
+  it('case 9 · senderTipLamports 无 senderTipAccount · 视为不挂(防误配)', async () => {
+    const jupResp = makeFakeJupResponse({ setupCount: 0, hasTokenLedger: false });
+    (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;
+    const { stub } = makeStubConnection(jupResp);
+
+    const { prepareSwapTxs } = await import('@/lib/swap-with-fee');
+    const fakeQuote = {
+      inputMint: 'So11111111111111111111111111111111111111112',
+      outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      inAmount: '1000000',
+      outAmount: '999000',
+      otherAmountThreshold: '0',
+      swapMode: 'ExactIn',
+      slippageBps: 50,
+      priceImpactPct: '0.1',
+      routePlan: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plan = await prepareSwapTxs(stub as any, fakeQuote, FAKE_USER.toBase58(), 'fast', {
+      senderTipLamports: 100_000,
+      // 故意不传 senderTipAccount
+    });
+    expect(plan.kind).toBe('single');
+    if (plan.kind !== 'single') return;
+    expect(plan.includesSenderTip).toBe(false);
+  });
+
+  it('case 10 · split 模式 + senderTip · split 强制 includesSenderTip=false(决策 4)', async () => {
+    const jupResp = makeFakeJupResponse({ setupCount: 10, hasTokenLedger: true });
+    (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;
+    const { stub } = makeStubConnection(jupResp);
+
+    const { prepareSwapTxs } = await import('@/lib/swap-with-fee');
+    const fakeQuote = {
+      inputMint: 'So11111111111111111111111111111111111111112',
+      outputMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+      inAmount: '1000000',
+      outAmount: '999000',
+      otherAmountThreshold: '0',
+      swapMode: 'ExactIn',
+      slippageBps: 50,
+      priceImpactPct: '0.1',
+      routePlan: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+    const TIP_ACCOUNT = new (await import('@solana/web3.js')).PublicKey(
+      '4ACfpUFoaSD9bfPdeu6DBt89gB6ENTeHBXCAi87NhDEE'
+    );
+
+    const plan = await prepareSwapTxs(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stub as any,
+      fakeQuote,
+      FAKE_USER.toBase58(),
+      'fast',
+      { senderTipLamports: 100_000, senderTipAccount: TIP_ACCOUNT }
+    );
+    if (plan.kind !== 'split') {
+      // mock 没超 1150 · single + tip ix 也 OK · 跳过 split assertion
+      expect(plan.kind).toBe('single');
+      return;
+    }
+    // split v1 决策强制不走 Sender · includesSenderTip 必须 false
+    expect(plan.includesSenderTip).toBe(false);
+  });
+
   it('case 6 · split + extraMemoText · memo 挂 setup leg · 不挂 swap leg', async () => {
     const jupResp = makeFakeJupResponse({ setupCount: 10, hasTokenLedger: true });
     (globalThis as Record<string, unknown>).__JUP_RESP = jupResp;

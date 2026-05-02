@@ -17,6 +17,7 @@ import {
 } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import { getRebateConnection } from './rpc-rebate';
+import { getSenderConnection } from './helius-sender';
 
 /** 反序列化 Jupiter swapTransaction base64 字节 */
 export function decodeSwapTx(base64: string): VersionedTransaction {
@@ -39,6 +40,33 @@ export interface SignAndSendOptions {
    * connection(避免吃 Helius RPS 配额)
    */
   rebateForUser?: PublicKey | string;
+  /**
+   * T-CHAIN-MEV-PROTECTION Phase B · 走 Helius Sender 主路径
+   *
+   * 决策 3(TL 拍 · 方案 A):wallet.sendTransaction(tx, senderConn, { skipPreflight: true, maxRetries: 0 })
+   *
+   * 调用方(execute-swap-plan)只在 plan.includesSenderTip === true 时传 useSender=true
+   *   · 即:plan.kind === 'single' + 上层提供了 senderTipLamports + senderTipAccount
+   *
+   * 决策 3 失败回退:senderConn null(env 没配)/ Sender RPC 抛错 → 自动回退普通 connection
+   *   · 用同一已签 tx 重发(钱包不二次弹窗 · 不双签风控)
+   *
+   * 决策 3 跟 rebateForUser 互斥:
+   *   · 同时提供时 useSender 优先(Sender 内部已含 Jito · rebate 是 Helius 普通 RPC 的功能)
+   */
+  useSender?: boolean;
+}
+
+/**
+ * signAndSendTx 返回结构 · Phase B 引入
+ *
+ * 字符串签名(向后兼容)由 wrapper 层提供 · 内部主调用返此 detail · 让上层 recordMevProtection
+ * 知道 used_sender 真值。
+ */
+export interface SignAndSendResult {
+  signature: TransactionSignature;
+  /** 实际发送通道是不是 Sender · senderConn null 或 Sender 抛错回退普通 RPC 时为 false */
+  usedSender: boolean;
 }
 
 /**
@@ -63,24 +91,63 @@ export async function signAndSendTx(
   tx: VersionedTransaction,
   opts: SignAndSendOptions = {}
 ): Promise<TransactionSignature> {
+  const { signature } = await signAndSendTxDetailed(connection, wallet, tx, opts);
+  return signature;
+}
+
+/**
+ * Phase B 内部 detailed 版本 · 返 signature + usedSender · 给 execute-swap-plan 用
+ *
+ * 公开为 named export · 现有 caller(form 组件)用 signAndSendTx 拿 string · 不感知 detail
+ */
+export async function signAndSendTxDetailed(
+  connection: Connection,
+  wallet: WalletContextState,
+  tx: VersionedTransaction,
+  opts: SignAndSendOptions = {}
+): Promise<SignAndSendResult> {
   if (!wallet.sendTransaction) {
     throw new Error('钱包不支持 sendTransaction');
   }
+
+  // T-CHAIN-MEV-PROTECTION Phase B · 决策 3 · 优先尝试 Sender 路径
+  if (opts.useSender) {
+    const senderConn = getSenderConnection();
+    if (senderConn) {
+      try {
+        const sig = await wallet.sendTransaction(tx, senderConn, {
+          skipPreflight: true, // Sender 强制 true
+          maxRetries: 0, // Sender 强制 0 · adapter 透传(实测 Phantom 透传 · OKX 待验)
+        });
+        return { signature: sig, usedSender: true };
+      } catch (e) {
+        // Sender 拒 / 网络挂 · 静默回退普通路径(用户不感知)
+        console.warn(
+          '[trade-tx] Helius Sender 失败 · 回退普通 RPC:',
+          e instanceof Error ? e.message : String(e)
+        );
+        // 继续走下方普通路径(同一已签 tx · 钱包不二次弹窗)
+      }
+    } else {
+      // env 没配 / Sender 未启用 · 静默走普通路径
+      console.info('[trade-tx] useSender=true 但 senderConn null · 走普通路径');
+    }
+  }
+
+  // 普通路径(rebate 或默认 connection · Phase A 行为)
   const skipPreflight = opts.skipPreflight ?? false;
   const networkRetries = opts.networkRetries ?? 1;
-
-  // T-MEV-REBATE · 提供 rebateForUser + env 配 Helius → 用 rebate URL Connection 发 swap
-  // 否则 fallback 传入 connection(向后兼容)
   const sendConn =
     (opts.rebateForUser ? getRebateConnection(opts.rebateForUser) : null) ?? connection;
 
   let lastErr: unknown;
   for (let attempt = 0; attempt <= networkRetries; attempt++) {
     try {
-      return await wallet.sendTransaction(tx, sendConn, {
+      const sig = await wallet.sendTransaction(tx, sendConn, {
         skipPreflight,
         maxRetries: 3,
       });
+      return { signature: sig, usedSender: false };
     } catch (e) {
       lastErr = e;
       const msg = e instanceof Error ? e.message : String(e);

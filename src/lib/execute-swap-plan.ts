@@ -14,10 +14,15 @@ import type { Connection, PublicKey, VersionedTransaction } from '@solana/web3.j
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import type { JupiterQuote, GasLevel } from './jupiter';
 import { prepareSwapTxs } from './swap-with-fee';
-import { signAndSendTx, confirmTx, getDecimals, analyzeTx } from './trade-tx';
+import { signAndSendTx, signAndSendTxDetailed, confirmTx, getDecimals, analyzeTx } from './trade-tx';
 import { pushMevEntry } from './rewards-storage';
 import { saveSwapQuote } from './swap-quote-storage';
 import { estimateMevSavings, reportMevProtection } from './mev-protection';
+import {
+  shouldUseSender,
+  getSenderTipLamports,
+  pickTipAccount,
+} from './helius-sender';
 
 const SOL_MINT_BASE58 = 'So11111111111111111111111111111111111111112';
 
@@ -144,14 +149,33 @@ export async function executeSwapPlan(
     }
   }
 
+  // T-CHAIN-MEV-PROTECTION Phase B · 决策 4 · single 模式才走 Sender(split v1 跳过)
+  //   先按 Sender 配置准备 prepareSwapTxs opts · prepareSwapTxs 内部按 size 决定 single/split
+  //   返回的 plan.includesSenderTip 告诉我们 tip 真挂没挂(split 路径强制 false)· 据此决定 useSender
+  const wantSender = shouldUseSender();
+  const prepOpts = wantSender
+    ? {
+        senderTipLamports: getSenderTipLamports(),
+        senderTipAccount: pickTipAccount(),
+      }
+    : {};
+
   // 1. 决策 single / split
-  const plan = await prepareSwapTxs(connection, quote, userPk, gasLevel);
+  const plan = await prepareSwapTxs(connection, quote, userPk, gasLevel, prepOpts);
 
   if (plan.kind === 'single') {
-    // 老路径
     onStage('signing');
     onStage('sending');
-    const sig = await signAndSendTx(connection, wallet, plan.tx, sendOpts);
+    // 决策 3 + 4 串通:plan 真挂了 tip 才传 useSender · 否则走老路径
+    const sendOptsForSingle = plan.includesSenderTip
+      ? { ...sendOpts, useSender: true }
+      : sendOpts;
+    const { signature: sig, usedSender: actuallyUsedSender } = await signAndSendTxDetailed(
+      connection,
+      wallet,
+      plan.tx,
+      sendOptsForSingle
+    );
     onStage('confirming');
     const confirmed = await confirmTx(connection, sig, confirmTimeoutMs);
     if (!confirmed) throw new Error(`__ERR_UNCONFIRMED:${sig}`);
@@ -167,15 +191,14 @@ export async function executeSwapPlan(
         tokenSymbol: mevTokenSymbol,
       });
     }
-    // T-CHAIN-MEV-PROTECTION Phase A · 上报 MEV 保护估算(并行 fire-and-forget)
+    // T-CHAIN-MEV-PROTECTION · usedSender 真布尔从 signAndSendTxDetailed 拿 · 上报后端真值
     void recordMevProtection({
       connection,
       userPk: wallet.publicKey,
       sig,
       quote,
       amountSol: mevExpectSpent != null ? mevExpectSpent / 1e9 : 0,
-      // Phase B Sender 切完后改 true
-      usedSender: false,
+      usedSender: actuallyUsedSender,
     });
     return { signature: sig, kind: 'single' };
   }
@@ -258,7 +281,7 @@ async function recordMevProtection(args: {
   sig: string;
   quote: JupiterQuote;
   amountSol: number;
-  /** Phase B Sender 切完后传 true · Phase A 永远 false */
+  /** Phase B 起从 signAndSendTxDetailed.usedSender 真值传入 · 默认 false */
   usedSender?: boolean;
 }) {
   const { connection, userPk, sig, quote, amountSol, usedSender = false } = args;
