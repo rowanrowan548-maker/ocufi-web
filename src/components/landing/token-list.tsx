@@ -73,7 +73,9 @@ export function TokenList() {
   const wallet = useWallet();
   const [tab, setTab] = useState<Tab>('trending');
   const [tf, setTf] = useState<MarketsTimeframe>('1h');
-  const [hideMajors, setHideMajors] = useState(false); // #27 SOL/USDC toggle
+  // #27 · 默认 ON 隐藏 SOL/USDC(用户截图反馈:第 1 行总是 SOL 没意义 · 占榜首)
+  // 持久化:'0' 用户显式选了"显示" · '1' 或 null 都默认隐藏
+  const [hideMajors, setHideMajors] = useState(true);
   const [trendingItems, setTrendingItems] = useState<MarketItem[]>([]);
   const [newPairsItems, setNewPairsItems] = useState<MarketItem[]>([]);
   const [presetItems, setPresetItems] = useState<MarketItem[]>([]);
@@ -82,12 +84,15 @@ export function TokenList() {
 
   const { favorites, isFavorite, toggle } = useFavorites();
 
-  // 持久 hideMajors
+  // 持久 hideMajors · tristate
+  //  - null(没存过)→ 默认 ON(隐藏)· 用户首访就不见 SOL 顶榜
+  //  - '0' 用户显式选了"显示" → 关掉 hide
+  //  - '1' 用户显式选了"隐藏" → 保持默认 ON
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const v = window.localStorage.getItem(HIDE_KEY);
-      if (v === '1') setHideMajors(true);
+      if (v === '0') setHideMajors(false);
     } catch { /* */ }
   }, []);
   function toggleHideMajors() {
