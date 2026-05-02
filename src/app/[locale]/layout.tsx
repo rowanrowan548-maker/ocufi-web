@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
+import { Space_Grotesk, Inter, JetBrains_Mono, Geist, Geist_Mono, Newsreader } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -35,6 +35,26 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
   subsets: ['latin'],
+  display: 'swap',
+});
+
+// T-UI-OVERHAUL v2 · luxury dark glass · 范围:首页 / 持仓 / 奖励
+// v1 字体(Space_Grotesk/Inter/JetBrains_Mono)保留 · 老页面继续用 · 不动
+const geist = Geist({
+  variable: '--font-geist',
+  subsets: ['latin'],
+  display: 'swap',
+});
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
+});
+// Newsreader · 关键数字 / accent · 必带 italic
+const newsreader = Newsreader({
+  variable: '--font-newsreader',
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
   display: 'swap',
 });
 
@@ -114,7 +134,7 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${geist.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <NextIntlClientProvider locale={locale} messages={messages}>
