@@ -1293,17 +1293,10 @@
       "rewards": "Rewards",
       "more": "More",
       "moreItems": {
-        "watchlist": "Watchlist",
-        "limit": "Limit orders",
-        "alerts": "Price alerts",
-        "history": "History",
         "points": "Points",
         "invite": "Invite",
         "badges": "Badges",
-        "status": "System status",
-        "settings": "Settings",
-        "docs": "Docs",
-        "faq": "FAQ"
+        "settings": "Settings"
       },
       "connect": "Connect wallet"
     },

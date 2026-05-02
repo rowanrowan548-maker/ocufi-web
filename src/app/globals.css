@@ -298,4 +298,17 @@
     background: var(--bg-card-hover) !important;
     color: var(--ink-100) !important;
   }
+
+  /* 5.4-HOTFIX #5 · MoreMenu mobile solid 不 blur(防 iOS Safari 双层 blur 卡死)
+     mobile < md 用 --bg-deep 实色 · desktop md+ 才走 luxury blur */
+  .more-menu-v2 {
+    background: var(--bg-deep);
+  }
+  @media (min-width: 768px) {
+    .more-menu-v2 {
+      background: rgba(14, 17, 23, 0.95);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+    }
+  }
 }

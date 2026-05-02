@@ -1308,17 +1308,10 @@
       "rewards": "奖励",
       "more": "更多",
       "moreItems": {
-        "watchlist": "自选",
-        "limit": "限价单",
-        "alerts": "价格提醒",
-        "history": "历史",
         "points": "积分",
         "invite": "邀请",
         "badges": "徽章",
-        "status": "系统状态",
-        "settings": "设置",
-        "docs": "文档",
-        "faq": "FAQ"
+        "settings": "设置"
       },
       "connect": "连接钱包"
     },
