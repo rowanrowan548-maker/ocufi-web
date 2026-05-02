@@ -261,4 +261,35 @@
     opacity: 0.5;
     mix-blend-mode: overlay;
   }
+
+  /* ──────────────────────────────────────────────────────
+     v2 组件 hover / active · :hover 不能写 inline · 这里写
+     ────────────────────────────────────────────────────── */
+
+  /* MetalButton · 主 CTA · hover 浮起 + glow 加深 · active 回弹 */
+  .metal-button-v2:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.15) inset,
+      0 0 0 1px rgba(25, 251, 155, 0.5),
+      0 12px 32px -8px rgba(25, 251, 155, 0.55),
+      0 2px 6px -2px rgba(25, 251, 155, 0.3);
+  }
+  .metal-button-v2:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  /* GhostButton · 次级 · hover bg + border 加亮 */
+  .ghost-button-v2:hover:not(:disabled) {
+    background: var(--bg-card-hover) !important;
+    border-color: var(--border-strong) !important;
+  }
+
+  /* GlassCard hover 浮起(只有 hoverable=true 时挂这个 class)*/
+  .glass-card-hoverable:hover {
+    background: var(--bg-card-hover) !important;
+    border-color: var(--border-strong) !important;
+    transform: translateY(-3px);
+  }
 }
