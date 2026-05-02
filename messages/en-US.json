@@ -1286,6 +1286,46 @@
         "pillMev": "MEV protection",
         "pillAta": "ATA reclaim"
       }
+    },
+    "rewards": {
+      "wallet": {
+        "connectPrompt": "Connect wallet to see your rewards · ATA refund + MEV savings",
+        "connect": "Connect Wallet"
+      },
+      "tabs": {
+        "ata": "Reclaim SOL",
+        "mev": "MEV protection"
+      },
+      "loading": "Loading…",
+      "error": "Failed to load · retry",
+      "ata": {
+        "eyebrow": "YOU CAN RECLAIM",
+        "subPrefix": "≈ ",
+        "subFromPrefix": " · from ",
+        "subFromSuffix": " empty accounts",
+        "btn": "C l a i m   a l l   →",
+        "claiming": "Signing…",
+        "successTitle": "All set",
+        "successDesc": "{sol} SOL claimed · {n} accounts closed",
+        "emptyTitle": "All clean",
+        "emptyDesc": "No empty token accounts to reclaim · come back after your next sell",
+        "listTitle": "Pending reclaim",
+        "listMeta": "{n} items · sorted by date",
+        "rowSaved": "+{sol} SOL"
+      },
+      "mev": {
+        "eyebrow": "MEV PROTECTED",
+        "sub": "Across {n} swaps · {sender} routed via Helius Sender",
+        "emptyTitle": "Nothing to show yet",
+        "emptyDesc": "MEV savings track once your trades route through our protected lane",
+        "listTitle": "Recent protected swaps",
+        "listMeta": "{n} swaps",
+        "rowSenderYes": "✦ Sender",
+        "rowSenderNo": "Standard",
+        "rowSaved": "+{sol} SOL"
+      },
+      "faqTitle": "What is ATA deposit?",
+      "faqBody": "Holding each token on Solana costs ~0.002 SOL to create the Associated Token Account. That deposit can be reclaimed when balance is 0 — but other terminals don't auto-close · adds up to real money over a year. Ocufi auto-detects empty accounts · one-click claim."
     }
   },
   "copyTrading": {

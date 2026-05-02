@@ -1301,6 +1301,46 @@
         "pillMev": "MEV 保护",
         "pillAta": "ATA 回收"
       }
+    },
+    "rewards": {
+      "wallet": {
+        "connectPrompt": "连接钱包查看你的奖励 · ATA 押金 + MEV 节省",
+        "connect": "连接钱包"
+      },
+      "tabs": {
+        "ata": "回收 SOL",
+        "mev": "MEV 保护"
+      },
+      "loading": "加载中…",
+      "error": "加载失败 · 点重试",
+      "ata": {
+        "eyebrow": "你 能 回 收",
+        "subPrefix": "≈ ",
+        "subFromPrefix": " · 来自 ",
+        "subFromSuffix": " 个空账户",
+        "btn": "一  键  全  收  →",
+        "claiming": "签名中…",
+        "successTitle": "完成",
+        "successDesc": "{sol} SOL 已到账 · {n} 个账户已 close",
+        "emptyTitle": "全部干净",
+        "emptyDesc": "没有空账户可回收 · 下次卖出后再来看",
+        "listTitle": "待回收清单",
+        "listMeta": "{n} 个 · 按时间排序",
+        "rowSaved": "+{sol} SOL"
+      },
+      "mev": {
+        "eyebrow": "MEV 已 保 护",
+        "sub": "{n} 笔交易里 · {sender} 笔走 Helius Sender 通道",
+        "emptyTitle": "还没数据",
+        "emptyDesc": "等你下一笔交易走 Sender 保护通道 · MEV 节省自动累计",
+        "listTitle": "近期保护记录",
+        "listMeta": "{n} 笔",
+        "rowSenderYes": "✦ Sender",
+        "rowSenderNo": "标准通道",
+        "rowSaved": "+{sol} SOL"
+      },
+      "faqTitle": "什么是 ATA 押金",
+      "faqBody": "Solana 上持有每个代币需要 ~0.002 SOL 创建关联账户(Associated Token Account)。余额为 0 时可回收 · 但别家终端不主动 close · 一年下来累积是真钱。Ocufi 自动检测空账户 · 一键全收。"
     }
   },
   "copyTrading": {
