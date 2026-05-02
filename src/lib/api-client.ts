@@ -941,6 +941,32 @@ export async function fetchPortfolioSavings(wallet: string): Promise<PortfolioSa
   );
 }
 
+// T-UI-OVERHAUL · /portfolio/mev-savings · MEV 节省专项(后端 023b856 ship)
+export interface PortfolioMevTradeRow {
+  signature: string;
+  saved_sol?: number | null;
+  block_time?: number | null;
+  used_sender?: boolean | null;
+}
+
+export interface PortfolioMevSavingsResponse {
+  ok: boolean;
+  wallet: string;
+  total_saved_sol: number;
+  total_trades: number;
+  trades_using_sender: number;
+  per_trade: PortfolioMevTradeRow[];
+  cached?: boolean;
+  fetched_at?: number | null;
+  error?: string | null;
+}
+
+export async function fetchPortfolioMevSavings(wallet: string): Promise<PortfolioMevSavingsResponse> {
+  return apiFetch<PortfolioMevSavingsResponse>(
+    `/portfolio/mev-savings?wallet=${encodeURIComponent(wallet)}`,
+  );
+}
+
 // ─── T-960 · /version backend (后端 commit + build time)───
 
 export interface VersionInfo {

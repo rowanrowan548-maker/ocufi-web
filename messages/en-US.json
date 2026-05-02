@@ -1229,6 +1229,63 @@
       "sub": "0.1% fee · MEV protection · ATA refund — every cent in your account",
       "cta": "Connect wallet · Start saving",
       "trust": "Non-custodial · 100% on-chain · open source on GitHub"
+    },
+    "portfolio": {
+      "wallet": {
+        "connectPrompt": "Connect your wallet to see your holdings + savings",
+        "connect": "Connect Wallet"
+      },
+      "loading": "Loading…",
+      "loadFailed": "Failed to load · retry",
+      "totalEyebrow": "TOTAL HOLDINGS",
+      "savings": {
+        "eyebrow": "YOU'VE SAVED",
+        "subPrefix": "≈ ",
+        "subFromPrefix": " · from ",
+        "subFromSuffix": " trades"
+      },
+      "breakdown": {
+        "feeLabel": "Fee saved",
+        "feeHint": "Others charge 1.0% · we take 0.1%",
+        "mevLabel": "MEV protected",
+        "mevHint": "No sandwich front-runs",
+        "ataLabel": "ATA reclaimed",
+        "ataHint": "Deposit refund others keep"
+      },
+      "holdings": {
+        "title": "Holdings",
+        "metaCount": "{n} tokens · sorted by value",
+        "empty": "No tokens in this wallet",
+        "expandLookup": {
+          "context": "You bought {amount} {symbol} on {date} for {sol} SOL · price was {price} / {symbol}",
+          "usLabel": "OCUFI ACTUAL",
+          "usRatio": "with 0.1% fee",
+          "themLabel": "ELSEWHERE",
+          "themRatio": "1.0% fee + ~0.15% MEV slip",
+          "savedLabel": "YOU SAVED",
+          "savedRatio": "≈ {usd} / this swap",
+          "actionTx": "→ on-chain tx",
+          "actionCopy": "Copy tx hash",
+          "actionExport": "Export CSV"
+        }
+      },
+      "ata": {
+        "text": "✦ {n} ATA deposit can be reclaimed · {sol} SOL",
+        "meta": "{n} empty accounts · forgot to close after sell · ≈ {usd}",
+        "btn": "Claim all  →",
+        "noneText": "All ATA deposits are clean",
+        "noneMeta": "No empty token accounts to reclaim"
+      },
+      "empty": {
+        "titleA": "You haven't traded ",
+        "titleAccent": "on Ocufi",
+        "titleB": " yet",
+        "sub": "Once you start trading · we'll track every cent you save · in real time",
+        "cta": "Start now · 90% off your first swap",
+        "pillFee": "0.1% fee",
+        "pillMev": "MEV protection",
+        "pillAta": "ATA reclaim"
+      }
     }
   },
   "copyTrading": {

@@ -1244,6 +1244,63 @@
       "sub": "0.1% 手续费 · MEV 保护 · ATA 回收 · 每一分钱都留在你账户里",
       "cta": "连接钱包 · 立即开始省钱",
       "trust": "不托管资金 · 全程链上 · 开源在 GitHub"
+    },
+    "portfolio": {
+      "wallet": {
+        "connectPrompt": "连接钱包查看持仓和已省金额",
+        "connect": "连接钱包"
+      },
+      "loading": "加载中…",
+      "loadFailed": "加载失败 · 点重试",
+      "totalEyebrow": "总持仓",
+      "savings": {
+        "eyebrow": "你已经省了",
+        "subPrefix": "≈ ",
+        "subFromPrefix": " · 来自 ",
+        "subFromSuffix": " 笔交易"
+      },
+      "breakdown": {
+        "feeLabel": "手续费省",
+        "feeHint": "在别家会被抽 1.0% · 我们只收 0.1%",
+        "mevLabel": "MEV 保护省",
+        "mevHint": "没被抢跑机器人三明治",
+        "ataLabel": "ATA 押金回收",
+        "ataHint": "别家不会退给你的 SOL · 我们替你收回"
+      },
+      "holdings": {
+        "title": "持仓清单",
+        "metaCount": "{n} 个 · 按价值排序",
+        "empty": "钱包里还没代币",
+        "expandLookup": {
+          "context": "你在 {date} 买入 {amount} {symbol} · 花了 {sol} SOL · 当时 {price} / {symbol}",
+          "usLabel": "OCUFI 实付",
+          "usRatio": "含 0.1% 手续费",
+          "themLabel": "别家会收",
+          "themRatio": "1.0% 费 + ~0.15% MEV 损失",
+          "savedLabel": "你省了",
+          "savedRatio": "≈ {usd} / 这一笔",
+          "actionTx": "→ 链上交易记录",
+          "actionCopy": "复制 tx hash",
+          "actionExport": "导出 CSV"
+        }
+      },
+      "ata": {
+        "text": "✦ 你还有 {sol} SOL 押金没收 · {n} 个空账户",
+        "meta": "卖完忘了 close · ≈ {usd}",
+        "btn": "一键全收  →",
+        "noneText": "ATA 押金全部干净",
+        "noneMeta": "没有空账户可回收"
+      },
+      "empty": {
+        "titleA": "你还没在 Ocufi ",
+        "titleAccent": "交易过",
+        "titleB": "",
+        "sub": "第一笔交易开始 · 我们就替你算每一分钱省在哪里 · 实时更新省钱总账",
+        "cta": "立即开始 · 第一笔就便宜 90%",
+        "pillFee": "手续费 0.1%",
+        "pillMev": "MEV 保护",
+        "pillAta": "ATA 回收"
+      }
     }
   },
   "copyTrading": {

@@ -20,3 +20,8 @@ export { BreakdownRow } from './breakdown-row';
 export { AtaBanner } from './ata-banner';
 export { EmptyStatePortfolio } from './empty-state-portfolio';
 export { HoldingRow, type ChangeDirection } from './holding-row';
+export {
+  TradeReverseLookup,
+  type ReverseLookupColumn,
+  type ReverseLookupAction,
+} from './trade-reverse-lookup';
