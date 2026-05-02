@@ -2161,9 +2161,9 @@
   },
   "launch": {
     "comingSoon": {
-      "badge": "PRELAUNCH · COMING SOON",
-      "title": "链上交易,\n应该回到你手里。",
-      "subtitle": "Ocufi 是一个<b>非托管 · 低费 · 透明 · 开源</b>的 Solana 链上交易终端。竞品收 1% 手续费,我们只收 0.1%。",
+      "badge": "重构中 · REBUILDING IN PUBLIC",
+      "title": "我们在重做 —\n更轻 · 更快 · 更省。",
+      "subtitle": "Ocufi 正在升级下一代 Solana 链上交易终端 —— <b>0.1% 手续费</b>(行业普遍 1%)· <b>非托管</b> · <b>开源</b> · <b>链上即时</b>。下个版本 · 见。",
       "chips": {
         "fee": "0.1% 手续费",
         "nonCustodial": "非托管",
@@ -2171,10 +2171,10 @@
         "onChain": "链上即时"
       },
       "email": {
-        "placeholder": "你的邮箱 · 上线就通知你"
+        "placeholder": "邮箱 · 重开第一时间通知你"
       },
-      "submit": "早鸟登记",
-      "submitted": "✓ 已加入早鸟列表,上线第一时间通知你",
+      "submit": "通知我",
+      "submitted": "✓ 已记下 · 重开就发邮件",
       "footer": {
         "follow": "关注更新",
         "privacy": "隐私",

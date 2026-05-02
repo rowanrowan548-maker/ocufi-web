@@ -2146,9 +2146,9 @@
   },
   "launch": {
     "comingSoon": {
-      "badge": "PRELAUNCH · COMING SOON",
-      "title": "On-chain trading,\nback in your hands.",
-      "subtitle": "Ocufi is a <b>self-custody · low-fee · transparent · open-source</b> Solana trading terminal. Competitors charge 1% fees — we charge 0.1%.",
+      "badge": "REBUILDING · STAY TUNED",
+      "title": "We're rebuilding —\nlighter, faster, cheaper.",
+      "subtitle": "Ocufi is shipping the next-gen Solana trading terminal — <b>0.1% fee</b> (industry standard 1%) · <b>non-custodial</b> · <b>open source</b> · <b>on-chain</b>. See you in the next release.",
       "chips": {
         "fee": "0.1% fee",
         "nonCustodial": "Self-custody",
@@ -2156,10 +2156,10 @@
         "onChain": "On-chain"
       },
       "email": {
-        "placeholder": "you@example.com · we'll notify you at launch"
+        "placeholder": "your email · we'll ping you when we relaunch"
       },
-      "submit": "Join waitlist",
-      "submitted": "✓ You're on the waitlist — we'll notify you at launch.",
+      "submit": "Notify me",
+      "submitted": "✓ Logged — we'll email you at relaunch.",
       "footer": {
         "follow": "Follow for updates",
         "privacy": "Privacy",
