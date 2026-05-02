@@ -2156,10 +2156,10 @@
         "onChain": "On-chain"
       },
       "email": {
-        "placeholder": "your email · we'll ping you when we relaunch"
+        "placeholder": "Email me when you're back"
       },
       "submit": "Notify me",
-      "submitted": "✓ Logged — we'll email you at relaunch.",
+      "submitted": "✓ Got it. We'll email you when we relaunch.",
       "footer": {
         "follow": "Follow for updates",
         "privacy": "Privacy",
