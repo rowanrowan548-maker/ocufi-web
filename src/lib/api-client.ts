@@ -892,10 +892,53 @@ export interface PublicStats {
   total_trades: number;
   total_token_checks: number;
   unique_visitors_30d: number;
+  // T-UI-OVERHAUL · 后端扩展(commit 1ddc4d2)· landing 第 4 屏 social 用
+  total_users_saved_count?: number;
+  total_saved_sol?: number;
+  total_saved_usd?: number;
 }
 
 export async function fetchPublicStats(): Promise<PublicStats> {
   return apiFetch<PublicStats>('/public/stats');
+}
+
+// T-UI-OVERHAUL · /portfolio/savings · 持仓页 SavingsCard + 老/新用户分流
+export interface PortfolioSavingsTotals {
+  saved_sol: number;
+  saved_usd: number;
+  fee_saved_sol: number;
+  mev_saved_sol: number;
+  ata_reclaimed_sol: number;
+}
+
+export interface PortfolioSavingsTradeRow {
+  signature: string;
+  block_time?: number | null;
+  input_mint?: string | null;
+  output_mint?: string | null;
+  saved_sol?: number | null;
+  saved_usd?: number | null;
+  fee_saved_sol?: number | null;
+  mev_saved_sol?: number | null;
+  ata_reclaimed_sol?: number | null;
+}
+
+export interface PortfolioSavingsResponse {
+  ok: boolean;
+  wallet: string;
+  trade_count: number;
+  first_trade_at: string | null;
+  totals: PortfolioSavingsTotals;
+  per_trade: PortfolioSavingsTradeRow[];
+  cached?: boolean;
+  fetched_at?: number | null;
+  error?: string | null;
+}
+
+export async function fetchPortfolioSavings(wallet: string): Promise<PortfolioSavingsResponse> {
+  return apiFetch<PortfolioSavingsResponse>(
+    `/portfolio/savings?wallet=${encodeURIComponent(wallet)}`,
+  );
 }
 
 // ─── T-960 · /version backend (后端 commit + build time)───

@@ -1181,6 +1181,71 @@
     "saved": "已保存",
     "reset": "恢复默认"
   },
+  "landingV2": {
+    "eyebrow": "SOLANA TRADING TERMINAL",
+    "hero": {
+      "lineA": "同一笔交易",
+      "lineB": "你",
+      "accent": "少花 90%",
+      "subPrefix": "行业普遍收 ",
+      "subPercent": "1%",
+      "subMid": " 手续费 · Ocufi 只收 ",
+      "subOcufi": "0.1%",
+      "subSuffix": " · 加 MEV 保护 + ATA 自动回收 · 你的钱真留在你账户里",
+      "ctaPrimary": "连接钱包 · 立即开始",
+      "ctaSecondary": "看一笔实测对比 ↓",
+      "trustA": "无需注册",
+      "trustB": "不托管资金",
+      "trustC": "全程链上"
+    },
+    "demo": {
+      "titlePrefix": "买入 1 SOL 的 BONK · ",
+      "titleAccent": "同一笔交易",
+      "subtitle": "下面是真实成本对比 · 数字基于当前市场行情",
+      "themLabel": "行业平均",
+      "themName": "其他交易终端",
+      "themMeta": "普遍 1.0% 收费 + 无 MEV 保护",
+      "usLabel": "OCUFI",
+      "usName": "Ocufi · 0.1% Forever",
+      "usMeta": "永远 0.1% + Helius MEV 保护 + 自动回收",
+      "rowPrincipal": "你的本金",
+      "rowFee": "交易手续费",
+      "rowMev": "MEV 抢跑损失",
+      "rowAta": "ATA 押金",
+      "rowMevProtected": "已保护 · 0.000",
+      "rowAtaRefund": "→ 0.002 退回",
+      "rowTotal": "总成本",
+      "savingsLabel": "你 在 这 一 笔 省 了",
+      "savingsMeta": "≈ $1.93 / 笔 · 一年 100 笔 = 节省 ≈ $193"
+    },
+    "pillars": {
+      "titlePrefix": "为什么 ",
+      "titleAccent": "真的",
+      "titleSuffix": " 便宜",
+      "p1Title": "手续费 0.1%",
+      "p1Desc": "不分等级 · 不阶梯定价 · 不搞 VIP · 永远 0.1% · 这就是我们对你的承诺。",
+      "p1Stat": "行业普遍 1.0% · 我们 1/10",
+      "p2Title": "MEV 保护",
+      "p2Desc": "走 Helius Sender + Jito 通道 · 抢跑机器人吃不到夹子三明治 · 你看到的价 = 真实成交价。",
+      "p2Stat": "实测平均省 0.3% – 1.2% 价差",
+      "p3Title": "ATA 自动回收",
+      "p3Desc": "每笔卖出后自动 close 空账户 · 退回 0.002 SOL 押金 · 别家不退 · 累积一年是真钱。",
+      "p3Stat": "100 笔 ≈ 0.2 SOL ≈ $17 / 用户"
+    },
+    "social": {
+      "trader": "交易者 · 在 Ocufi",
+      "saved": "累计已为用户节省",
+      "savedUsd": "≈ 折合 USD"
+    },
+    "finalCta": {
+      "titlePrefix": "别再为 ",
+      "titleAccent": "中间商",
+      "titleSuffix": " 付费",
+      "sub": "0.1% 手续费 · MEV 保护 · ATA 回收 · 每一分钱都留在你账户里",
+      "cta": "连接钱包 · 立即开始省钱",
+      "trust": "不托管资金 · 全程链上 · 开源在 GitHub"
+    }
+  },
   "copyTrading": {
     "page": {
       "title": "跟单",

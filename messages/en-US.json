@@ -1166,6 +1166,71 @@
     "saved": "Saved",
     "reset": "Reset"
   },
+  "landingV2": {
+    "eyebrow": "SOLANA TRADING TERMINAL",
+    "hero": {
+      "lineA": "Same swap,",
+      "lineB": "you pay",
+      "accent": "90% less",
+      "subPrefix": "Industry charges ",
+      "subPercent": "1%",
+      "subMid": " · Ocufi only ",
+      "subOcufi": "0.1%",
+      "subSuffix": " — plus MEV protection + auto ATA refund · your money stays yours",
+      "ctaPrimary": "Connect wallet · Start now",
+      "ctaSecondary": "See a real comparison ↓",
+      "trustA": "No signup",
+      "trustB": "Non-custodial",
+      "trustC": "100% on-chain"
+    },
+    "demo": {
+      "titlePrefix": "Buying 1 SOL of BONK · ",
+      "titleAccent": "same swap",
+      "subtitle": "Real cost comparison · numbers based on current market",
+      "themLabel": "INDUSTRY AVG",
+      "themName": "Other terminals",
+      "themMeta": "Typical 1.0% fee + no MEV protection",
+      "usLabel": "OCUFI",
+      "usName": "Ocufi · 0.1% Forever",
+      "usMeta": "Always 0.1% + Helius MEV protection + auto refund",
+      "rowPrincipal": "Principal",
+      "rowFee": "Trading fee",
+      "rowMev": "MEV loss",
+      "rowAta": "ATA deposit",
+      "rowMevProtected": "Protected · 0.000",
+      "rowAtaRefund": "→ refunded 0.002",
+      "rowTotal": "Total cost",
+      "savingsLabel": "YOU SAVED",
+      "savingsMeta": "≈ $1.93 / swap · 100 swaps a year ≈ $193 saved"
+    },
+    "pillars": {
+      "titlePrefix": "Why we are ",
+      "titleAccent": "really",
+      "titleSuffix": " cheaper",
+      "p1Title": "0.1% fee",
+      "p1Desc": "No tiers · no VIP · no surge · always 0.1% — that's our promise to you.",
+      "p1Stat": "Industry 1.0% · we're 1/10",
+      "p2Title": "MEV protection",
+      "p2Desc": "Routes via Helius Sender + Jito · sandwich bots can't front-run · what you see is what you get.",
+      "p2Stat": "Average saves 0.3% – 1.2% on slippage",
+      "p3Title": "Auto ATA refund",
+      "p3Desc": "Every sell auto-closes empty accounts · refunds 0.002 SOL deposit · others keep it · adds up over a year.",
+      "p3Stat": "100 swaps ≈ 0.2 SOL ≈ $17 / user"
+    },
+    "social": {
+      "trader": "traders on Ocufi",
+      "saved": "SOL saved cumulatively",
+      "savedUsd": "≈ USD saved"
+    },
+    "finalCta": {
+      "titlePrefix": "Stop paying for ",
+      "titleAccent": "middlemen",
+      "titleSuffix": "",
+      "sub": "0.1% fee · MEV protection · ATA refund — every cent in your account",
+      "cta": "Connect wallet · Start saving",
+      "trust": "Non-custodial · 100% on-chain · open source on GitHub"
+    }
+  },
   "copyTrading": {
     "page": {
       "title": "Copy Trading",
