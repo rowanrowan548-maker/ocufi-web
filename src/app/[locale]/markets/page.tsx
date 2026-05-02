@@ -1,13 +1,7 @@
-import { Metadata } from 'next';
-import { MarketsScreen } from '@/components/markets/markets-screen';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: '行情 · Ocufi',
-  description: '热门 / 新发 / 涨跌幅 / 已审 / 风险预警 · 6 维度看 Solana 市场',
-};
-
-export const dynamic = 'force-dynamic';
-
+// T-UI-OVERHAUL Stage 5.4 · 砍 nav 不砍代码 · /markets 不再有 UI 入口
+// URL 直接访问 → redirect 到首页 · 旧 MarketsScreen 组件保留以便回滚
 export default function MarketsPage() {
-  return <MarketsScreen />;
+  redirect('/');
 }

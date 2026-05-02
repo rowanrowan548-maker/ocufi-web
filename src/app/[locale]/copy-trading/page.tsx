@@ -1,26 +1,7 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { CopyTradingView } from '@/components/copy-trading/copy-trading-view';
+import { redirect } from 'next/navigation';
 
-export default async function CopyTradingPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations('copyTrading.page');
-
-  return (
-    <main className="flex flex-1 flex-col items-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-5xl flex flex-col gap-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            {t('title')}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
-        </div>
-        <CopyTradingView />
-      </div>
-    </main>
-  );
+// T-UI-OVERHAUL Stage 5.4 · 跟单功能 R10 · 用户拍板"放最后" · 精简战略不展开
+// nav 入口已无 · URL 直接访问 → redirect 到 / · CopyTradingView 文件保留供 R10 续做
+export default function CopyTradingPage() {
+  redirect('/');
 }

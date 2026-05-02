@@ -1302,6 +1302,26 @@
         "pillAta": "ATA 回收"
       }
     },
+    "navV2": {
+      "trade": "交易",
+      "portfolio": "持仓",
+      "rewards": "奖励",
+      "more": "更多",
+      "moreItems": {
+        "watchlist": "自选",
+        "limit": "限价单",
+        "alerts": "价格提醒",
+        "history": "历史",
+        "points": "积分",
+        "invite": "邀请",
+        "badges": "徽章",
+        "status": "系统状态",
+        "settings": "设置",
+        "docs": "文档",
+        "faq": "FAQ"
+      },
+      "connect": "连接钱包"
+    },
     "rewards": {
       "wallet": {
         "connectPrompt": "连接钱包查看你的奖励 · ATA 押金 + MEV 节省",

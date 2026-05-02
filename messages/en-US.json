@@ -1287,6 +1287,26 @@
         "pillAta": "ATA reclaim"
       }
     },
+    "navV2": {
+      "trade": "Trade",
+      "portfolio": "Portfolio",
+      "rewards": "Rewards",
+      "more": "More",
+      "moreItems": {
+        "watchlist": "Watchlist",
+        "limit": "Limit orders",
+        "alerts": "Price alerts",
+        "history": "History",
+        "points": "Points",
+        "invite": "Invite",
+        "badges": "Badges",
+        "status": "System status",
+        "settings": "Settings",
+        "docs": "Docs",
+        "faq": "FAQ"
+      },
+      "connect": "Connect wallet"
+    },
     "rewards": {
       "wallet": {
         "connectPrompt": "Connect wallet to see your rewards · ATA refund + MEV savings",

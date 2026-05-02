@@ -292,4 +292,10 @@
     border-color: var(--border-strong) !important;
     transform: translateY(-3px);
   }
+
+  /* MoreMenu item hover */
+  .more-menu-item-v2:hover {
+    background: var(--bg-card-hover) !important;
+    color: var(--ink-100) !important;
+  }
 }

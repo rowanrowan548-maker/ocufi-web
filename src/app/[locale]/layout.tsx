@@ -9,7 +9,9 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { PageTracker } from '@/components/analytics/page-tracker';
 import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
-import { SiteHeader } from '@/components/layout/site-header';
+// T-UI-OVERHAUL Stage 5.4 · 用 TopNavV2(luxury 3 主 tab + ⋯ MoreMenu)替代旧 SiteHeader
+// 旧 SiteHeader 文件保留(精简战略"砍 UI 不砍代码")· 不引用就不渲染
+import { TopNavV2 } from '@/components/layout-v2/top-nav-v2';
 import { FeedbackButton } from '@/components/feedback/feedback-button';
 import { SwRegister } from '@/components/pwa/sw-register';
 import { InstallPrompt } from '@/components/pwa/install-prompt';
@@ -144,7 +146,7 @@ export default async function LocaleLayout({
             <RefCapture />
             <WalletBind />
             <PageTracker />
-            <SiteHeader />
+            <TopNavV2 />
             {children}
             <FeedbackButton />
             <InstallPrompt />
