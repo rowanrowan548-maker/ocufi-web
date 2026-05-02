@@ -14,9 +14,10 @@ import type { Connection, PublicKey, VersionedTransaction } from '@solana/web3.j
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 import type { JupiterQuote, GasLevel } from './jupiter';
 import { prepareSwapTxs } from './swap-with-fee';
-import { signAndSendTx, confirmTx, getDecimals } from './trade-tx';
+import { signAndSendTx, confirmTx, getDecimals, analyzeTx } from './trade-tx';
 import { pushMevEntry } from './rewards-storage';
 import { saveSwapQuote } from './swap-quote-storage';
+import { estimateMevSavings, reportMevProtection } from './mev-protection';
 
 const SOL_MINT_BASE58 = 'So11111111111111111111111111111111111111112';
 
@@ -166,6 +167,16 @@ export async function executeSwapPlan(
         tokenSymbol: mevTokenSymbol,
       });
     }
+    // T-CHAIN-MEV-PROTECTION Phase A · 上报 MEV 保护估算(并行 fire-and-forget)
+    void recordMevProtection({
+      connection,
+      userPk: wallet.publicKey,
+      sig,
+      quote,
+      amountSol: mevExpectSpent != null ? mevExpectSpent / 1e9 : 0,
+      // Phase B Sender 切完后改 true
+      usedSender: false,
+    });
     return { signature: sig, kind: 'single' };
   }
 
@@ -206,6 +217,15 @@ export async function executeSwapPlan(
       tokenSymbol: mevTokenSymbol,
     });
   }
+  // T-CHAIN-MEV-PROTECTION Phase A · 上报 MEV 保护估算(并行 fire-and-forget)
+  void recordMevProtection({
+    connection,
+    userPk: wallet.publicKey,
+    sig,
+    quote,
+    amountSol: mevExpectSpent != null ? mevExpectSpent / 1e9 : 0,
+    usedSender: false,
+  });
 
   return { signature: sig, setupSignature: setupSig, kind: 'split' };
 }
@@ -219,6 +239,59 @@ export async function executeSwapPlan(
  *
  * 仅 diff > gas 上限时才记 · 防 rounding noise
  */
+/**
+ * T-CHAIN-MEV-PROTECTION · Phase A · MEV 节省估算 + 上报后端
+ *
+ * 跟 recordMevIfPositive 不冲突:
+ *   - recordMevIfPositive (T-MEV-REBATE) · 比 wallet balance pre/post · 抓 Helius rebate
+ *   - recordMevProtection (本) · 比 quote vs analyzeTx actual_out · 抓 sandwich 滑点损失
+ *
+ * 完全独立 · 同一 sig 两边都会跑 · DB 落不同表(rewards-storage local · mev_protection_log 后端)
+ *
+ * 失败策略:
+ *   - analyzeTx 返 null(RPC indexer 慢)→ 静默 skip(不上报半截数据)
+ *   - estimate / report 任一抛 → console.warn · 不阻断 swap UX
+ */
+async function recordMevProtection(args: {
+  connection: Connection;
+  userPk: PublicKey;
+  sig: string;
+  quote: JupiterQuote;
+  amountSol: number;
+  /** Phase B Sender 切完后传 true · Phase A 永远 false */
+  usedSender?: boolean;
+}) {
+  const { connection, userPk, sig, quote, amountSol, usedSender = false } = args;
+  try {
+    // SELL 场景输出是 SOL · BUY 场景输出是 SPL · 用 quote.outputMint 区分
+    const outputMint = quote.outputMint;
+    const analysis = await analyzeTx(connection, sig, userPk, outputMint);
+    if (!analysis) {
+      // RPC indexer 滞后 · 不上报半截数据
+      return;
+    }
+    // tokenDelta 是 ui amount(已 / 10^decimals)· 转回 raw 算 bps
+    const decimals = await getDecimals(connection, outputMint).catch(() => 9);
+    const actualOutRaw = BigInt(Math.max(0, Math.round(analysis.tokenDelta * 10 ** decimals)));
+
+    const estimate = estimateMevSavings({ quote, actualOutRaw, amountSol });
+
+    void reportMevProtection({
+      sig,
+      wallet: userPk.toBase58(),
+      mint: outputMint,
+      amount_sol: amountSol,
+      expected_out: estimate.expectedOut.toString(),
+      actual_out: estimate.actualOut.toString(),
+      mev_saved_sol_estimate: estimate.mevSavedSol,
+      used_sender: usedSender,
+      realized_slippage_bps: estimate.realizedSlippageBps,
+    });
+  } catch (e) {
+    console.warn('[execute-swap-plan] recordMevProtection failed (non-blocking):', e);
+  }
+}
+
 async function recordMevIfPositive(args: {
   connection: Connection;
   userPk: PublicKey;
