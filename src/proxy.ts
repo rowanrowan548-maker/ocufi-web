@@ -51,12 +51,28 @@ function pathAllowedDuringPreview(pathname: string): boolean {
   return ALLOW_PREFIX.some((p) => stripped.startsWith(p));
 }
 
+/**
+ * P2-V2-DEFAULT · 顶层裸 locale / 根访问默认进 V2
+ * Phase 4 软发布前临时方案 · V1 老路径(/portfolio /trade /token/* 等)直接 URL 仍可访问 · 防回退
+ */
+function maybeV2DefaultRedirect(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  const stripped = pathname.replace(/^\/(zh-CN|en-US)(?=\/|$)/, '') || '/';
+  if (stripped !== '/') return null;
+  const locale = pathname.startsWith('/en-US') ? 'en-US' : 'zh-CN';
+  const url = request.nextUrl.clone();
+  url.pathname = `/${locale}/v2`;
+  return NextResponse.redirect(url);
+}
+
 export default function middleware(request: NextRequest) {
   const launchMode = process.env.LAUNCH_MODE;
   const launchKey = process.env.LAUNCH_KEY;
 
-  // 不在预发布模式 → 直接走 i18n
+  // 不在预发布模式 → 先看是否要 V2 默认跳转 · 否则走 i18n
   if (launchMode !== 'preview') {
+    const v2 = maybeV2DefaultRedirect(request);
+    if (v2) return v2;
     return intlMiddleware(request);
   }
 
@@ -80,8 +96,10 @@ export default function middleware(request: NextRequest) {
     return res;
   }
 
-  // 已有解锁 cookie → 正常走 i18n
+  // 已有解锁 cookie → 先看是否要 V2 默认跳转 · 否则走 i18n
   if (request.cookies.get(COOKIE_NAME)?.value) {
+    const v2 = maybeV2DefaultRedirect(request);
+    if (v2) return v2;
     return intlMiddleware(request);
   }
 
