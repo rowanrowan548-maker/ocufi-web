@@ -90,8 +90,9 @@ export function usePortfolio(): PortfolioState {
         if (cancelled) return;
 
         // T-PF-129 · WSOL 余额并入 SOL 显示 · WSOL 不单独占行
+        // P3-FE-5 · 字段名跟后端 camelCase 对齐
         const wsolItem = holdings.items.find((i) => i.mint === SOL_MINT);
-        const wsolAmount = wsolItem?.amount ?? 0;
+        const wsolAmount = wsolItem?.uiAmount ?? 0;
         const nonWsolItems = holdings.items.filter((i) => i.mint !== SOL_MINT);
 
         const nativeSolAmount = lamports / LAMPORTS_PER_SOL;
@@ -99,16 +100,16 @@ export function usePortfolio(): PortfolioState {
         const solValueUsd = solAmount * solUsd;
 
         const tokens: PortfolioToken[] = nonWsolItems
-          .filter((i) => i.amount > 0)
+          .filter((i) => i.uiAmount > 0)
           .map((i) => ({
             mint: i.mint,
-            amount: i.amount,
+            amount: i.uiAmount,
             decimals: i.decimals,
             symbol: i.symbol || i.mint.slice(0, 6),
             name: i.name || '',
-            priceUsd: i.price_usd ?? 0,
-            valueUsd: i.value_usd ?? 0,
-            logoUri: i.logo_uri ?? undefined,
+            priceUsd: i.priceUsd ?? 0,
+            valueUsd: i.valueUsd ?? 0,
+            logoUri: i.logoURI ?? undefined,
             liquidityUsd: 0,
             marketCap: 0,
           }));

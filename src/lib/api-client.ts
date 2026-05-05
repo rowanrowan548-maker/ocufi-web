@@ -1078,24 +1078,27 @@ export async function fetchMarketsNewPairs(limit = 50): Promise<MarketItem[]> {
 }
 
 // ─── R6-FE · /portfolio/holdings ───
+// P3-FE-5 · 后端 Pydantic 真返 camelCase · 字段名跟 backend 对齐 · TL curl 验过
+//   logoURI / uiAmount / priceUsd / valueUsd / totalValueUsd
 
 export interface HoldingItem {
   mint: string;
   symbol: string;
   name: string;
-  amount: number;
+  /** UI display amount(decimals 应用后)· 后端字段 uiAmount */
+  uiAmount: number;
   decimals: number;
   /** null = Helius fallback · 后端无价 */
-  price_usd: number | null;
-  value_usd: number | null;
-  price_change_24h_pct?: number | null;
-  logo_uri?: string | null;
+  priceUsd: number | null;
+  valueUsd: number | null;
+  priceChange24hPct?: number | null;
+  logoURI?: string | null;
 }
 
 export interface HoldingsResponse {
   ok: boolean;
   items: HoldingItem[];
-  total_usd?: number | null;
+  totalValueUsd?: number | null;
   /** 'birdeye' | 'helius' | 'none' */
   source?: string;
   cached?: boolean;

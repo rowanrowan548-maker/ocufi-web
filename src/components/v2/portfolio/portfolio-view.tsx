@@ -153,7 +153,7 @@ export function PortfolioView() {
     );
   }
 
-  const totalUsd = holdings?.total_usd ?? 0;
+  const totalUsd = holdings?.totalValueUsd ?? 0;
   const items = holdings?.items ?? [];
   const tradeCount = savings?.trade_count ?? 0;
   const savedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
@@ -162,9 +162,9 @@ export function PortfolioView() {
   const mevSavedUsd = (mev?.total_saved_sol ?? 0) * SOL_USD;
 
   // 拆 dust(<$0.01)· P2-HOTFIX-3 #3 · Phantom-style folding · 主列表干净
-  const mainItems: HoldingItem[] = items.filter((h) => (h.value_usd ?? 0) >= DUST_USD);
-  const dustItems: HoldingItem[] = items.filter((h) => (h.value_usd ?? 0) < DUST_USD);
-  const dustTotalUsd = dustItems.reduce((s, h) => s + (h.value_usd ?? 0), 0);
+  const mainItems: HoldingItem[] = items.filter((h) => (h.valueUsd ?? 0) >= DUST_USD);
+  const dustItems: HoldingItem[] = items.filter((h) => (h.valueUsd ?? 0) < DUST_USD);
+  const dustTotalUsd = dustItems.reduce((s, h) => s + (h.valueUsd ?? 0), 0);
 
   // P3-FE-4 polish 1 · empty state 条件改成"全新钱包"(tradeCount === 0)
   // 之前 mainItems.length === 0 也显空 → 用户做过 swap 但全 dust 也被当新人 · 死板
@@ -227,10 +227,10 @@ export function PortfolioView() {
   }
 
   // mainItems 算 allocations(dust 不参与百分比)
-  const mainTotalUsd = mainItems.reduce((s, h) => s + (h.value_usd ?? 0), 0);
+  const mainTotalUsd = mainItems.reduce((s, h) => s + (h.valueUsd ?? 0), 0);
   const allocations = mainItems.map((h) => ({
     ...h,
-    pct: mainTotalUsd > 0 ? ((h.value_usd ?? 0) / mainTotalUsd) * 100 : 0,
+    pct: mainTotalUsd > 0 ? ((h.valueUsd ?? 0) / mainTotalUsd) * 100 : 0,
   }));
 
   return (
@@ -389,7 +389,7 @@ export function PortfolioView() {
             <span style={{ textAlign: 'right' }}>{t('table.action')}</span>
           </div>
           {allocations.map((h) => {
-            const change = h.price_change_24h_pct;
+            const change = h.priceChange24hPct;
             const changeUp = change != null && change >= 0;
             const sellHref = `/v2/token/${h.mint}?action=sell`;
             return (
@@ -412,9 +412,9 @@ export function PortfolioView() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                  {h.logo_uri ? (
+                  {h.logoURI ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={h.logo_uri} alt="" width={36} height={36} style={{ borderRadius: '50%', flexShrink: 0 }} />
+                    <img src={h.logoURI} alt="" width={36} height={36} style={{ borderRadius: '50%', flexShrink: 0 }} />
                   ) : (
                     <div
                       style={{
@@ -456,10 +456,10 @@ export function PortfolioView() {
                   </span>
                 </div>
                 <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13 }}>
-                  {fmtAmount(h.amount, h.decimals)}
+                  {fmtAmount(h.uiAmount, h.decimals)}
                 </div>
                 <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13, color: 'var(--ink-100)', fontWeight: 500 }}>
-                  {fmtUsd(h.value_usd ?? 0)}
+                  {fmtUsd(h.valueUsd ?? 0)}
                 </div>
                 <div
                   style={{
@@ -564,9 +564,9 @@ export function PortfolioView() {
                         color: 'var(--ink-60)',
                       }}
                     >
-                      {h.logo_uri ? (
+                      {h.logoURI ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={h.logo_uri} alt="" width={20} height={20} style={{ borderRadius: '50%', flexShrink: 0 }} />
+                        <img src={h.logoURI} alt="" width={20} height={20} style={{ borderRadius: '50%', flexShrink: 0 }} />
                       ) : (
                         <span
                           style={{
@@ -586,10 +586,10 @@ export function PortfolioView() {
                         </span>
                       )}
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {h.symbol || '—'} · {fmtAmount(h.amount, h.decimals)}
+                        {h.symbol || '—'} · {fmtAmount(h.uiAmount, h.decimals)}
                       </span>
                       <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-                        {fmtUsd(h.value_usd ?? 0, 4)}
+                        {fmtUsd(h.valueUsd ?? 0, 4)}
                       </span>
                     </li>
                   ))}

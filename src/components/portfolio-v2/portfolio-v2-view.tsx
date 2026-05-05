@@ -209,7 +209,7 @@ function OldUserView({
 }) {
   const totalUsd = computeTotalUsd(holdings);
   const items = (holdings?.items ?? []).slice().sort(
-    (a, b) => (b.value_usd ?? 0) - (a.value_usd ?? 0),
+    (a, b) => (b.valueUsd ?? 0) - (a.valueUsd ?? 0),
   );
   const totals = savings?.totals;
   const ataCount = empty?.count ?? 0;
@@ -344,17 +344,17 @@ function OldUserView({
           <GlassCard radius={16} className="overflow-hidden">
             {items.map((it, i) => {
               const expanded = expandedMint === it.mint;
-              const change = computeChangeDir(it.price_change_24h_pct);
+              const change = computeChangeDir(it.priceChange24hPct);
               return (
                 <div key={it.mint}>
                   <HoldingRow
                     symbol={it.symbol || it.mint.slice(0, 4)}
                     name={it.name || undefined}
                     icon={
-                      it.logo_uri ? (
+                      it.logoURI ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={it.logo_uri}
+                          src={it.logoURI}
                           alt=""
                           width={36}
                           height={36}
@@ -364,11 +364,11 @@ function OldUserView({
                         <span>{(it.symbol || it.mint).slice(0, 2).toUpperCase()}</span>
                       )
                     }
-                    amount={`${formatTokenAmount(it.amount)} ${it.symbol || ''}`}
-                    value={it.value_usd != null ? `$${formatThousand(it.value_usd)}` : '—'}
+                    amount={`${formatTokenAmount(it.uiAmount)} ${it.symbol || ''}`}
+                    value={it.valueUsd != null ? `$${formatThousand(it.valueUsd)}` : '—'}
                     change={
-                      it.price_change_24h_pct != null
-                        ? `${change === 'up' ? '↑ +' : change === 'down' ? '↓ ' : '— '}${Math.abs(it.price_change_24h_pct).toFixed(2)}%`
+                      it.priceChange24hPct != null
+                        ? `${change === 'up' ? '↑ +' : change === 'down' ? '↓ ' : '— '}${Math.abs(it.priceChange24hPct).toFixed(2)}%`
                         : '—'
                     }
                     changeDir={change}
@@ -485,8 +485,8 @@ function ExpandedLookup({
 
 function computeTotalUsd(holdings: HoldingsResponse | null): number {
   if (!holdings) return 0;
-  if (holdings.total_usd != null) return holdings.total_usd;
-  return (holdings.items ?? []).reduce((acc, it) => acc + (it.value_usd ?? 0), 0);
+  if (holdings.totalValueUsd != null) return holdings.totalValueUsd;
+  return (holdings.items ?? []).reduce((acc, it) => acc + (it.valueUsd ?? 0), 0);
 }
 
 function computeChangeDir(pct: number | null | undefined): ChangeDirection {
@@ -511,9 +511,9 @@ function formatTokenAmount(n: number): string {
 
 function estimateSolUsd(holdings: HoldingsResponse | null): number {
   if (!holdings) return 0;
-  // 找 SOL/wrapped SOL · 取 price_usd · 兜底 0
+  // 找 SOL/wrapped SOL · 取 priceUsd · 兜底 0
   const sol = (holdings.items ?? []).find(
     (x) => x.mint === 'So11111111111111111111111111111111111111112' || x.symbol === 'SOL',
   );
-  return sol?.price_usd ?? 0;
+  return sol?.priceUsd ?? 0;
 }
