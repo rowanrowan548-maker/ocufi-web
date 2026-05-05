@@ -23,6 +23,7 @@ import {
   getSenderTipLamports,
   pickTipAccount,
 } from './helius-sender';
+import { recordTransparency } from './transparency-report';
 
 const SOL_MINT_BASE58 = 'So11111111111111111111111111111111111111112';
 
@@ -200,6 +201,14 @@ export async function executeSwapPlan(
       amountSol: mevExpectSpent != null ? mevExpectSpent / 1e9 : 0,
       usedSender: actuallyUsedSender,
     });
+    // T-V2-PHASE-3 P3-CHAIN-1 · 透明度报告(并行 · 跟 mev-protection 独立 · TL 推荐并存)
+    void recordTransparency({
+      connection,
+      userPk: wallet.publicKey,
+      sig,
+      quote,
+      usedSender: actuallyUsedSender,
+    });
     return { signature: sig, kind: 'single' };
   }
 
@@ -247,6 +256,14 @@ export async function executeSwapPlan(
     sig,
     quote,
     amountSol: mevExpectSpent != null ? mevExpectSpent / 1e9 : 0,
+    usedSender: false,
+  });
+  // T-V2-PHASE-3 P3-CHAIN-1 · 透明度报告(split 路径 usedSender=false · 决策 4 v1)
+  void recordTransparency({
+    connection,
+    userPk: wallet.publicKey,
+    sig,
+    quote,
     usedSender: false,
   });
 
