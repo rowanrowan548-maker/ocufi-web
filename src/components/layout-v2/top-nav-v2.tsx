@@ -44,6 +44,9 @@ export function TopNavV2() {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
 
+  // V2 routes own their own nav (top-nav-v3) · don't double-render V1 nav
+  if (pathname?.includes('/v2/') || pathname?.endsWith('/v2')) return null;
+
   // 5.4-HOTFIX #5 · pointerdown 替代 mousedown(iOS 触屏不发 mousedown · 弹了关不掉)
   useEffect(() => {
     if (!moreOpen) return;

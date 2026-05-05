@@ -235,6 +235,29 @@
 
     /* v2 显示字体 · React 端 next/font 注入 --font-newsreader */
     --font-display: var(--font-newsreader), 'Newsreader', Georgia, serif;
+
+    /* T-V2-PHASE-2 · V2 luxury 公式 · OG 卡 / TX hero / glass-card 共用
+       (P0-2-HOTFIX-2 mockup 已锁定 · React 端复用同 token) */
+    --shadow-glow-v2: 0 0 60px rgba(25, 251, 155, 0.12), 0 28px 56px -16px rgba(0, 0, 0, 0.55), 0 1px 0 0 rgba(255, 255, 255, 0.06) inset;
+    --shadow-card-v2: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --brand-glow-strong: rgba(25, 251, 155, 0.28);
+    --border-brand-soft: rgba(25, 251, 155, 0.18);
+    --bg-card-v2: rgba(255, 255, 255, 0.03);
+    --border-v2-strong: rgba(255, 255, 255, 0.18);
+  }
+
+  /* T-V2-PHASE-2 · 微浮动 keyframes(给 og-card / tx-hero / chip hover 用) */
+  @keyframes v2-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes v2-float-home {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes v2-scroll-hint {
+    0%, 100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+    50% { opacity: 0.5; transform: translateX(-50%) translateY(2px); }
   }
 
   /* 全局光晕 · 中心青绿 + 右下青绿副 + 左中蓝紫极淡 */
@@ -309,6 +332,71 @@
       background: rgba(14, 17, 23, 0.95);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────
+     T-V2-PHASE-2 · V2 全局 mobile 重排 · 视觉锚扩散
+     mockup 视觉 frozen at commit 218caef · 1:1 React 落地
+     ────────────────────────────────────────────────────── */
+
+  /* scroll hint · mobile only(桌面 hide) */
+  .v2-scroll-hint { display: none; }
+
+  /* V2 home input :focus brand glow */
+  .v2-home-input:focus {
+    border-color: var(--border-brand) !important;
+    box-shadow: 0 0 0 4px var(--brand-glow) !important;
+  }
+
+  /* V2 nav 顶部 brand 1px glow line · 已 inline · 仅 mobile padding 收紧 */
+
+  /* V2 mobile · 第一屏架构重排 · halo 提靠桌面但仍弱 */
+  @media (max-width: 768px) {
+    .v2-scroll-hint { display: block; }
+
+    .v2-top-nav {
+      padding: 0 16px !important;
+      height: 64px !important;
+    }
+    .v2-nav-links { display: none !important; }
+
+    .v2-home-hero-grid {
+      grid-template-columns: 1fr !important;
+      padding: 24px 20px 32px !important;
+      gap: 16px !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .v2-home-hero-left {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 14px !important;
+    }
+    .v2-home-eyebrow { margin-bottom: 0 !important; }
+    .v2-home-title {
+      font-size: 38px !important;
+      line-height: 1.08 !important;
+      margin-bottom: 0 !important;
+    }
+    .v2-home-og-mobile { display: block !important; margin: 0 !important; }
+    .v2-home-sub {
+      order: 99 !important;
+      font-size: 16px !important;
+      margin: 24px 0 0 !important;
+      max-width: 100% !important;
+      color: var(--ink-60) !important;
+    }
+    .v2-home-recents {
+      max-width: 100% !important;
+      gap: 6px !important;
+    }
+    .v2-home-hero-og { display: none !important; } /* 桌面右列 hide · mobile 用 inner */
+
+    .v2-home-pillars {
+      grid-template-columns: 1fr !important;
+      padding: 32px 20px 80px !important;
+      gap: 12px !important;
     }
   }
 }

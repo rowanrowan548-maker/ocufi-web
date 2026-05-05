@@ -2144,6 +2144,51 @@
       }
     }
   },
+  "v2": {
+    "nav": {
+      "home": "Home",
+      "token": "Token",
+      "portfolio": "Portfolio",
+      "tx": "Report"
+    },
+    "home": {
+      "eyebrow": "Solana · Non-custodial · 0.1% fee",
+      "titleA": "On-chain trading,",
+      "titleB": "every trade",
+      "titleEm": "in the open",
+      "titleC": ".",
+      "sub": "Paste a token address, swap in one tap. Each fill auto-generates a transparency report — route, slippage, gas, MEV protection — fully shareable.",
+      "inputPlaceholder": "Paste token address · or search symbol (BONK / WIF / POPCAT)",
+      "inputNoResult": "No token found · try pasting the mint address",
+      "inputError": "Search failed · try again",
+      "recentsLabel": "Recent",
+      "ogCard": {
+        "label": "OCUFI · TX REPORT",
+        "line": "SAVED 0.0045 SOL",
+        "lineMobile": "SAVED 0.0045 SOL",
+        "sub": "on $BONK · vs BullX · 0.1% fee · MEV protected",
+        "footLeft": "5fX...abc",
+        "viewLink": "View report →"
+      },
+      "pillars": [
+        {
+          "num": "0.1%",
+          "h": "Fee",
+          "p": "Industry charges 1%. We charge 0.1%. Sells 0%. 10× cheaper isn't a stunt — it's math."
+        },
+        {
+          "num": "Non-custodial",
+          "h": "Your wallet stays yours",
+          "p": "Every trade signs in your wallet. We never touch your private key, never touch your money."
+        },
+        {
+          "num": "Transparent",
+          "h": "A report for every fill",
+          "p": "Route, slippage, gas, fee, MEV detection. One URL, one click to share."
+        }
+      ]
+    }
+  },
   "launch": {
     "comingSoon": {
       "badge": "REBUILDING · STAY TUNED",

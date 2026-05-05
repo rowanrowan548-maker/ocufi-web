@@ -2159,6 +2159,51 @@
       }
     }
   },
+  "v2": {
+    "nav": {
+      "home": "首页",
+      "token": "代币",
+      "portfolio": "持仓",
+      "tx": "报告"
+    },
+    "home": {
+      "eyebrow": "Solana · 非托管 · 0.1% 手续费",
+      "titleA": "链上交易 ·",
+      "titleB": "每一笔都",
+      "titleEm": "看得见",
+      "titleC": "。",
+      "sub": "粘贴 token 地址,一键交易。每笔成交后自动生成「透明度报告」—— 路由 / 滑点 / Gas / 防夹保护,全部可分享。",
+      "inputPlaceholder": "粘贴 token 地址 · 或搜索符号(BONK / WIF / POPCAT)",
+      "inputNoResult": "没找到这个 token · 试试粘贴 mint 地址",
+      "inputError": "搜索失败 · 重试",
+      "recentsLabel": "最近",
+      "ogCard": {
+        "label": "OCUFI · TX REPORT",
+        "line": "SAVED 0.0045 SOL",
+        "lineMobile": "SAVED 0.0045 SOL",
+        "sub": "on $BONK · vs BullX · 0.1% fee · MEV protected",
+        "footLeft": "5fX...abc",
+        "viewLink": "View report →"
+      },
+      "pillars": [
+        {
+          "num": "0.1%",
+          "h": "手续费",
+          "p": "行业标准 1%。我们 0.1%。卖出 0%。10× 便宜不是噱头,是数学。"
+        },
+        {
+          "num": "非托管",
+          "h": "钱包永远在你手里",
+          "p": "每笔交易在你的钱包签名。我们摸不到你的私钥,也摸不到你的钱。"
+        },
+        {
+          "num": "透明",
+          "h": "每笔成交一份报告",
+          "p": "路由、滑点、Gas、手续费、MEV 检测。一个 URL,一键分享。"
+        }
+      ]
+    }
+  },
   "launch": {
     "comingSoon": {
       "badge": "重构中 · REBUILDING IN PUBLIC",
