@@ -458,5 +458,23 @@
     }
     .v2-pf-list-row > div:nth-child(2),
     .v2-pf-list-row > div:nth-child(3) { display: none !important; }
+
+    /* /v2/tx/[sig] mobile */
+    .v2-tx-meta { padding: 16px 20px 12px !important; gap: 8px !important; }
+    .v2-tx-hero-wrap { padding: 0 16px !important; }
+    .v2-tx-cards {
+      grid-template-columns: 1fr !important;
+      padding: 24px 16px !important;
+      gap: 10px !important;
+    }
+    .v2-tx-share { padding: 32px 16px 16px !important; }
+    .v2-tx-share-btns {
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+    .v2-tx-share-btns > button {
+      width: 100% !important;
+      justify-content: center !important;
+    }
   }
 }
