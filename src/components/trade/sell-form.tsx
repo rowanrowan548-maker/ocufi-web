@@ -288,6 +288,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, o
 
       // T-REWARDS-POLISH D3 · 卖出全部 → sub-toast 提示去回收 ATA 押金
       // fullSellRaw !== null 表示用户点了 100% · ATA 大概率清空 · 可去 /rewards#reclaim
+      // P3-FE-8 · 1.5s → 3s · 给链上 ATA close + RPC 索引 sync 时间 · 用户点真能拉到
       if (fullSellRaw !== null) {
         setTimeout(() => {
           toast(t('trade.sellAll.reclaimToast.title'), {
@@ -298,7 +299,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, o
             },
             duration: 12000,
           });
-        }, 1500);
+        }, 3000);
       }
 
       if (isApiConfigured() && wallet.publicKey) {

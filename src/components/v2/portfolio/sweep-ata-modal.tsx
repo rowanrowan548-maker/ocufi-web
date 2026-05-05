@@ -45,6 +45,8 @@ export function SweepAtaModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // P3-FE-8 · 链上 RPC 索引延迟 5-15s · 拿到 0 个时自动 retry · 期间显"扫描中"
+  const [retrying, setRetrying] = useState(false);
 
   // 锁滚 + Esc 关
   useEffect(() => {
@@ -61,26 +63,48 @@ export function SweepAtaModal({ open, onClose }: Props) {
     };
   }, [open, onClose]);
 
-  // 拉空 ATA · open 切 true 时
+  // P3-FE-8 · 拉空 ATA · open 切 true 时 · 0 个时 auto-retry 5×2s 救场链上 RPC 索引延迟
   useEffect(() => {
     if (!open || !addr) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let tries = 0;
+    const MAX_TRIES = 5;
+    const RETRY_MS = 2_000;
+
     setLoading(true);
+    setRetrying(false);
     setErr(null);
-    fetchEmptyAccounts(addr)
-      .then((r) => {
+
+    const attempt = async () => {
+      if (cancelled) return;
+      tries += 1;
+      try {
+        const r = await fetchEmptyAccounts(addr);
         if (cancelled) return;
-        setAccounts(r.accounts ?? []);
-      })
-      .catch((e: unknown) => {
+        const list = r.accounts ?? [];
+        if (list.length > 0 || tries >= MAX_TRIES) {
+          setAccounts(list);
+          setLoading(false);
+          setRetrying(false);
+          return;
+        }
+        // 拿到 0 · 还没到 MAX · 进 retry 轮
+        setAccounts(list);
+        setLoading(false);
+        setRetrying(true);
+        timer = setTimeout(attempt, RETRY_MS);
+      } catch (e: unknown) {
         if (cancelled) return;
         setErr(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+        setLoading(false);
+        setRetrying(false);
+      }
+    };
+    attempt();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [open, addr]);
 
@@ -234,16 +258,20 @@ export function SweepAtaModal({ open, onClose }: Props) {
             >
               {loading
                 ? '查询中…'
+                : retrying
+                ? '扫描可回收 ATA 中…'
                 : accounts && accounts.length > 0
                 ? `+${(totalLamports / 1e9).toFixed(4)} SOL`
-                : '钱包很干净'}
+                : '暂无可回收'}
             </div>
             <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-60)' }}>
               {loading
                 ? '正在扫所有空 ATA · 不需签名'
+                : retrying
+                ? '链上索引延迟 5-15 秒 · 自动重试中'
                 : accounts && accounts.length > 0
                 ? `${accounts.length} 个空账户 · 一键签名全部回收`
-                : '没有可回收的空 ATA · 你的钱包已经精简过了'}
+                : '请稍后再试 · 链上 RPC 索引可能还在 sync'}
             </div>
           </div>
           <button
@@ -269,6 +297,11 @@ export function SweepAtaModal({ open, onClose }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'var(--ink-60)' }}>
               <Loader2 size={18} className="v2-spin" style={{ animation: 'spin 1s linear infinite', marginRight: 8 }} />
               加载中
+            </div>
+          ) : retrying ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'var(--ink-60)' }}>
+              <Loader2 size={18} className="v2-spin" style={{ animation: 'spin 1s linear infinite', marginRight: 8 }} />
+              扫描可回收 ATA 中…
             </div>
           ) : err ? (
             <div style={{ padding: 24, color: 'var(--warn, #FF6B6B)', fontSize: 13, textAlign: 'center' }}>

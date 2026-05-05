@@ -15,7 +15,7 @@
  *   - 6 列 token 表(桌面)/ 2 行布局(mobile)
  *   - ATA 1 行 banner + 一键清扫 CTA(暂 placeholder · 复用 V1 reclaim 留 P3)
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -29,6 +29,7 @@ import {
   type PortfolioMevSavingsResponse,
   type HoldingItem,
 } from '@/lib/api-client';
+import { useSwapRefresh } from '@/lib/swap-refresh-store';
 import { SweepAtaModal } from './sweep-ata-modal';
 
 // P3-FE-2 bug 3 · 阈值 $0.01 太严 · 0.001 SOL 小测试单全被折叠
@@ -69,30 +70,61 @@ export function PortfolioView() {
   const [err, setErr] = useState<string | null>(null);
   const [sweepOpen, setSweepOpen] = useState(false);
   const [dustExpandedRaw, setDustExpanded] = useState(false);
+  // P3-FE-8 · swap 后链上 RPC + birdeye sync 延迟 5-30s · banner 显数据在 sync
+  const [syncing, setSyncing] = useState(false);
+  // P3-FE-8 · 订阅 swap 完成事件 · BuyForm/SellForm onSuccess → bumpSwap()
+  const swapVersion = useSwapRefresh((s) => s.swapVersion);
+  const prevSwapVersion = useRef(swapVersion);
 
   const wallet = publicKey?.toBase58();
 
+  // P3-FE-8 · 主 fetch + swap 后 5s/15s/30s 三次 polling 救场
   useEffect(() => {
     if (!connected || !wallet) return;
     let cancelled = false;
-    setLoading(true);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    const isSwapTrigger = swapVersion !== prevSwapVersion.current;
+    prevSwapVersion.current = swapVersion;
+
+    const doFetch = () => {
+      if (cancelled) return Promise.resolve();
+      return Promise.all([
+        fetchPortfolioHoldings(wallet).catch(() => null),
+        fetchPortfolioSavings(wallet).catch(() => null),
+        fetchPortfolioMevSavings(wallet).catch(() => null),
+      ]).then(([h, s, m]) => {
+        if (cancelled) return;
+        setHoldings(h);
+        setSavings(s);
+        setMev(m);
+        if (!h && !s) setErr(t('loadFailed'));
+      });
+    };
+
     setErr(null);
-    Promise.all([
-      fetchPortfolioHoldings(wallet).catch(() => null),
-      fetchPortfolioSavings(wallet).catch(() => null),
-      fetchPortfolioMevSavings(wallet).catch(() => null),
-    ]).then(([h, s, m]) => {
-      if (cancelled) return;
-      setHoldings(h);
-      setSavings(s);
-      setMev(m);
-      setLoading(false);
-      if (!h && !s) setErr(t('loadFailed'));
-    });
+    if (isSwapTrigger) {
+      // swap 完 · 不闪 loading · 显 sync banner · 5s/15s/30s 三次 polling
+      setSyncing(true);
+      timers.push(setTimeout(() => doFetch(), 5_000));
+      timers.push(setTimeout(() => doFetch(), 15_000));
+      timers.push(setTimeout(() => {
+        doFetch().finally(() => {
+          if (!cancelled) setSyncing(false);
+        });
+      }, 30_000));
+    } else {
+      // 首次 / wallet 切换 · 正常 loading
+      setLoading(true);
+      doFetch().finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    }
     return () => {
       cancelled = true;
+      timers.forEach(clearTimeout);
     };
-  }, [connected, wallet, t]);
+  }, [connected, wallet, swapVersion, t]);
 
   if (!connected || !wallet) {
     return (
@@ -235,6 +267,26 @@ export function PortfolioView() {
 
   return (
     <main>
+      {/* P3-FE-8 · swap 后链上 RPC + birdeye sync 5-30s · 横条提示数据在更新 · 不闪 loading */}
+      {syncing && (
+        <div
+          style={{
+            maxWidth: 1320,
+            margin: '0 auto',
+            padding: '12px 56px',
+            background: 'var(--brand-soft)',
+            borderBottom: '1px solid var(--border-brand)',
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 12,
+            color: 'var(--brand-up)',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          }}
+          className="v2-pf-syncing"
+        >
+          ↻ 刚 swap · 数据 sync 中…(链上 RPC 索引延迟 5-30 秒)
+        </div>
+      )}
       {/* hero · 大字总值 + 累计省下卡 */}
       <section
         style={{
