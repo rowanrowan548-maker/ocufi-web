@@ -2197,7 +2197,7 @@
         "cta": "Connect wallet"
       },
       "empty": {
-        "title": "You haven't traded on Ocufi yet",
+        "title": "Your wallet hasn't bought any token yet",
         "sub": "Go to / · paste a token address · one-click swap · 0.1% fee + MEV protection",
         "cta": "Trade now",
         "holdingsHint": "No SPL tokens · wallet holds only SOL / no data"
@@ -2211,7 +2211,9 @@
         "allocation": "Allocation",
         "holdings": "Holdings",
         "value": "Value",
-        "change": "24h"
+        "change": "24h",
+        "action": "Action",
+        "sell": "Sell"
       }
     }
   },

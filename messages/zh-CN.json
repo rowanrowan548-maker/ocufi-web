@@ -2212,7 +2212,7 @@
         "cta": "连接钱包"
       },
       "empty": {
-        "title": "你还没在 Ocufi 交易过",
+        "title": "你钱包里还没买过 token",
         "sub": "去 / 粘贴 token 地址 · 一键交易 · 0.1% 手续费 + MEV 防夹保护",
         "cta": "去交易",
         "holdingsHint": "暂无 SPL 代币 · 钱包里只有 SOL / 没数据"
@@ -2226,7 +2226,9 @@
         "allocation": "占比",
         "holdings": "持仓",
         "value": "价值",
-        "change": "24h"
+        "change": "24h",
+        "action": "操作",
+        "sell": "卖出"
       }
     }
   },

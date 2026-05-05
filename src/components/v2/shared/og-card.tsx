@@ -14,6 +14,7 @@
  *   - 内置 ::before 双 brand radial-gradient 光晕
  *   - 微浮动 keyframes(translateY 0 ↔ -6 / -8px)
  */
+import Link from 'next/link';
 import { LogoSvg } from './logo-svg';
 
 type Variant = 'home-hero' | 'home-mobile' | 'tx-hero';
@@ -28,6 +29,8 @@ type OgCardProps = {
   footRight?: string;      // "View report →" / "≈ $0.90 saved"
   /** 是否给 saveText 加 brand→cyan 渐变 + glow(tx-hero 用) */
   saveGradient?: boolean;
+  /** 加 href 后整张卡包 Next/Link · cursor pointer · hover 强化 brand glow */
+  href?: string;
 };
 
 const SIZES: Record<Variant, { padding: string; radius: number; lineSize: string; subSize: number; topSize: number; aspectRatio?: string; minHeight?: number; animation: string; maxWidth?: number; lineMaxWidth?: number; subMarginTop: number; }> = {
@@ -76,32 +79,41 @@ export function OgCard({
   footLeft,
   footRight,
   saveGradient = false,
+  href,
 }: OgCardProps) {
   const s = SIZES[variant];
 
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        maxWidth: s.maxWidth ?? '100%',
-        ...(s.aspectRatio ? { aspectRatio: s.aspectRatio } : {}),
-        ...(s.minHeight ? { minHeight: s.minHeight } : {}),
-        background:
-          'linear-gradient(135deg, rgba(14,17,23,0.95), rgba(11,13,18,0.85))',
-        border: '1px solid var(--border-brand-soft)',
-        borderRadius: s.radius,
-        padding: s.padding,
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        boxShadow: 'var(--shadow-glow-v2)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        animation: s.animation,
-      }}
-    >
+  const cardStyle: React.CSSProperties = {
+    position: 'relative',
+    width: '100%',
+    maxWidth: s.maxWidth ?? '100%',
+    ...(s.aspectRatio ? { aspectRatio: s.aspectRatio } : {}),
+    ...(s.minHeight ? { minHeight: s.minHeight } : {}),
+    background:
+      'linear-gradient(135deg, rgba(14,17,23,0.95), rgba(11,13,18,0.85))',
+    border: '1px solid var(--border-brand-soft)',
+    borderRadius: s.radius,
+    padding: s.padding,
+    backdropFilter: 'blur(24px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+    boxShadow: 'var(--shadow-glow-v2)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    animation: s.animation,
+    color: 'var(--ink-100)',
+    textDecoration: 'none',
+    ...(href
+      ? {
+          cursor: 'pointer',
+          transition: 'box-shadow 0.2s, border-color 0.2s, transform 0.2s',
+        }
+      : {}),
+  };
+
+  const inner = (
+    <>
       {/* 内置双 brand radial 光晕 · 跟 mockup 对齐 */}
       <div
         aria-hidden
@@ -201,6 +213,21 @@ export function OgCard({
           )}
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        prefetch={false}
+        className="v2-og-card-link"
+        style={cardStyle}
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return <div style={cardStyle}>{inner}</div>;
 }

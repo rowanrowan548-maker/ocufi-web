@@ -15,7 +15,12 @@ import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { HeaderSearchModal } from './header-search-modal';
 
-export function HeaderSearch() {
+interface Props {
+  /** V2 用 · 把 mint 映射成路径 · 默认 /trade?mint=<mint>(V1)· V2 传 (m) => `/v2/token/${m}` */
+  pathBuilder?: (mint: string) => string;
+}
+
+export function HeaderSearch({ pathBuilder }: Props = {}) {
   const t = useTranslations();
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -71,7 +76,7 @@ export function HeaderSearch() {
         <Search className="h-5 w-5" />
       </button>
 
-      <HeaderSearchModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <HeaderSearchModal open={modalOpen} onClose={() => setModalOpen(false)} pathBuilder={pathBuilder} />
     </>
   );
 }

@@ -355,12 +355,21 @@
   @media (max-width: 768px) {
     .v2-scroll-hint { display: block; }
 
+    /* P2-HOTFIX-2 #5 · mobile bottom tab bar 显示 · 顶部 nav 精简 */
+    .v2-bottom-tab-bar { display: block !important; }
+    /* mobile 给 main 留出 bottom-tab-bar 高度避免挡内容 · 64px tab + safe-area */
+    main { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important; }
+
     .v2-top-nav {
       padding: 0 16px !important;
       height: 64px !important;
+      gap: 8px !important;
     }
+    /* mobile 顶部 nav: logo(无文字) + 🔍 + wallet · 砍 4 link · 砍抽屉 */
+    .v2-nav-brand-text { display: none !important; }
     .v2-nav-links { display: none !important; }
-    .v2-nav-hamburger { display: inline-flex !important; align-items: center; justify-content: center; }
+    /* HeaderSearch 桌面分支 .hidden lg:block 默认 hide · mobile 显 search 🔍 图标 */
+    .v2-nav-search { flex: 0 0 auto !important; justify-content: flex-end !important; margin-left: auto !important; }
 
     .v2-home-hero-grid {
       grid-template-columns: 1fr !important;
@@ -457,8 +466,10 @@
       gap: 8px 12px !important;
       padding: 14px 0 !important;
     }
+    /* mobile 隐 allocation / holdings / Sell 按钮 · 整行 click 仍跳 ?action=sell */
     .v2-pf-list-row > div:nth-child(2),
-    .v2-pf-list-row > div:nth-child(3) { display: none !important; }
+    .v2-pf-list-row > div:nth-child(3),
+    .v2-pf-sell { display: none !important; }
 
     /* /v2/tx/[sig] mobile */
     .v2-tx-meta { padding: 16px 20px 12px !important; gap: 8px !important; }

@@ -1,19 +1,23 @@
 'use client';
 
 /**
- * V2 Token Trade Shell · V2 GlassCard 容器 · 内嵌 V1 BuyForm(全功能 swap)
+ * V2 Token Trade Shell · V2 GlassCard 容器 · 内嵌 V1 TradeTabs(Buy/Sell + 市价/限价)
  *
  * 复用 V1 swap 全套(swap-with-fee + helius-sender + mev-protection + execute-swap-plan + trade-tx)
- * 链上 lib 0 改 · 直接 import V1 BuyForm(已封装完整 buy/sell pipeline)
+ * 链上 lib 0 改 · 直接 import V1 TradeTabs(已封装完整 buy/sell pipeline + Tab 切换)
  *
- * V2 phase 2 ship · 视觉上 shell 是 V2 玻璃 + brand glow · 内 BuyForm 仍 V1 shadcn 样式
- * 后续 P3 起再考虑全 V2 重写 trade form(代价高 · 不在当前 budget 内)
+ * P2-HOTFIX:接 ?action=sell URL · defaultSide 传到 TradeTabs · 持仓页 click 行直跳卖出
+ *
+ * 视觉上 shell 是 V2 玻璃 + brand glow · 内 TradeTabs 仍 V1 shadcn 样式
+ * 底部留 "查看交易报告 demo" 链接(Phase 3 后改 swap 成功 callback 拿真 sig)
  */
-import { BuyForm } from '@/components/trade/buy-form';
+import Link from 'next/link';
+import { TradeTabs } from '@/components/trade/trade-tabs';
+import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 
-type Props = { mint: string };
+type Props = { mint: string; defaultSide?: 'buy' | 'sell' };
 
-export function TokenTradeShell({ mint }: Props) {
+export function TokenTradeShell({ mint, defaultSide }: Props) {
   return (
     <div
       className="v2-token-trade"
@@ -25,8 +29,33 @@ export function TokenTradeShell({ mint }: Props) {
         boxShadow: 'var(--shadow-card-v2)',
       }}
     >
-      {/* V1 BuyForm 直接嵌入 · compact 模式 · 自带 Buy/Sell tab + 滑点 + 优先费 + 防夹 + Phantom 签 */}
-      <BuyForm mint={mint} compact />
+      {/* V1 TradeTabs · compact 模式 · 自带 Buy/Sell + 市价/限价 + 滑点 + 优先费 + 防夹 + Phantom 签 */}
+      <TradeTabs mint={mint} compact defaultSide={defaultSide} />
+
+      {/* 查看 demo 报告 · Phase 3 后改 swap 成功 callback → 真 sig */}
+      <div
+        style={{
+          marginTop: 14,
+          paddingTop: 14,
+          borderTop: '1px solid var(--border-v2)',
+          textAlign: 'center',
+        }}
+      >
+        <Link
+          href={`/v2/tx/${MOCK_TX_SIG}`}
+          prefetch={false}
+          style={{
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 11,
+            color: 'var(--brand-up)',
+            textDecoration: 'none',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          }}
+        >
+          查看交易报告 demo →
+        </Link>
+      </div>
     </div>
   );
 }

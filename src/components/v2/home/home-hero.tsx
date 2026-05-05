@@ -14,6 +14,7 @@ import { getTranslations } from 'next-intl/server';
 import { EyebrowPill } from '@/components/v2/shared/eyebrow-pill';
 import { HeroDivider } from '@/components/v2/shared/hero-divider';
 import { OgCard } from '@/components/v2/shared/og-card';
+import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 import { HomeInput } from './home-input';
 import { HomeRecents } from './home-recents';
 
@@ -72,7 +73,7 @@ export async function HomeHero() {
 
         <HeroDivider />
 
-        {/* mobile-only OG 卡 · 桌面用右列 .v2-home-hero-og */}
+        {/* mobile-only OG 卡 · 桌面用右列 .v2-home-hero-og · click 跳 mock tx demo */}
         <div className="v2-home-og-mobile" style={{ display: 'none', marginBottom: 24 }}>
           <OgCard
             variant="home-mobile"
@@ -81,6 +82,7 @@ export async function HomeHero() {
             subText={t('ogCard.sub')}
             footLeft={t('ogCard.footLeft')}
             footRight={t('ogCard.viewLink')}
+            href={`/v2/tx/${MOCK_TX_SIG}`}
           />
         </div>
 
@@ -105,7 +107,7 @@ export async function HomeHero() {
         <HomeRecents />
       </div>
 
-      {/* 右列 · 桌面 OG 卡装饰 · mobile hide(走 .v2-home-og-mobile 在 left 内) */}
+      {/* 右列 · 桌面 OG 卡装饰 · mobile hide(走 .v2-home-og-mobile 在 left 内) · click 跳 mock tx demo */}
       <div className="v2-home-hero-og">
         <OgCard
           variant="home-hero"
@@ -114,6 +116,7 @@ export async function HomeHero() {
           subText={t('ogCard.sub')}
           footLeft={t('ogCard.footLeft')}
           footRight={t('ogCard.viewLink')}
+          href={`/v2/tx/${MOCK_TX_SIG}`}
         />
       </div>
     </div>

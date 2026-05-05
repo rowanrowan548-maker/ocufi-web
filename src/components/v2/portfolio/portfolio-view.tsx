@@ -16,6 +16,7 @@
  *   - ATA 1 行 banner + 一键清扫 CTA(暂 placeholder · 复用 V1 reclaim 留 P3)
  */
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -152,8 +153,9 @@ export function PortfolioView() {
   const feeSavedUsd = (savings?.totals?.fee_saved_sol ?? 0) * SOL_USD;
   const mevSavedUsd = (mev?.total_saved_sol ?? 0) * SOL_USD;
 
-  // empty state · 没交易过
-  if (tradeCount === 0 && items.length === 0) {
+  // empty state · 钱包没 SPL token(只有 SOL · 或全空)· P2-HOTFIX-2 #3 兜底
+  // 不论 tradeCount(可能链上交易过但全部卖光)· items.length === 0 都显友好空态
+  if (items.length === 0) {
     return (
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '80px 24px' }}>
         <div
@@ -163,16 +165,21 @@ export function PortfolioView() {
             border: '1px solid var(--border-v2)',
             borderRadius: 20,
             textAlign: 'center',
+            boxShadow: 'var(--shadow-card-v2)',
           }}
         >
           <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 28, color: 'var(--ink-100)', marginBottom: 16 }}>
             {t('empty.title')}
           </div>
+          <div style={{ fontSize: 15, color: 'var(--ink-60)', marginBottom: 8, fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
+            {shortAddr(wallet)} · {tradeCount} trades
+          </div>
           <div style={{ fontSize: 15, color: 'var(--ink-60)', marginBottom: 24 }}>
             {t('empty.sub')}
           </div>
-          <a
+          <Link
             href="/v2"
+            prefetch={false}
             style={{
               display: 'inline-block',
               background: 'var(--brand-up)',
@@ -185,7 +192,7 @@ export function PortfolioView() {
             }}
           >
             {t('empty.cta')}
-          </a>
+          </Link>
         </div>
       </main>
     );
@@ -311,114 +318,142 @@ export function PortfolioView() {
           padding: '0 56px 40px',
         }}
       >
-        {allocations.length === 0 ? (
-          <div style={{ padding: 40, color: 'var(--ink-60)', textAlign: 'center' }}>
-            {t('empty.holdingsHint')}
+        <>
+          <div
+            className="v2-pf-list-head"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '240px 1fr 120px 140px 100px 84px',
+              gap: 16,
+              alignItems: 'center',
+              padding: '10px 20px',
+              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: 'var(--ink-40)',
+              borderBottom: '1px solid var(--border-v2)',
+            }}
+          >
+            <span>{t('table.token')}</span>
+            <span>{t('table.allocation')}</span>
+            <span style={{ textAlign: 'right' }}>{t('table.holdings')}</span>
+            <span style={{ textAlign: 'right' }}>{t('table.value')}</span>
+            <span style={{ textAlign: 'right' }}>{t('table.change')}</span>
+            <span style={{ textAlign: 'right' }}>{t('table.action')}</span>
           </div>
-        ) : (
-          <>
-            <div
-              className="v2-pf-list-head"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '240px 1fr 120px 140px 100px',
-                gap: 16,
-                alignItems: 'center',
-                padding: '10px 20px',
-                fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-                fontSize: 11,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                color: 'var(--ink-40)',
-                borderBottom: '1px solid var(--border-v2)',
-              }}
-            >
-              <span>{t('table.token')}</span>
-              <span>{t('table.allocation')}</span>
-              <span style={{ textAlign: 'right' }}>{t('table.holdings')}</span>
-              <span style={{ textAlign: 'right' }}>{t('table.value')}</span>
-              <span style={{ textAlign: 'right' }}>{t('table.change')}</span>
-            </div>
-            {allocations.map((h) => {
-              const change = h.price_change_24h_pct;
-              const changeUp = change != null && change >= 0;
-              return (
-                <div
-                  key={h.mint}
-                  className="v2-pf-list-row"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '240px 1fr 120px 140px 100px',
-                    gap: 16,
-                    alignItems: 'center',
-                    padding: '16px 20px',
-                    borderBottom: '1px solid var(--border-v2)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {h.logo_uri ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={h.logo_uri} alt="" width={36} height={36} style={{ borderRadius: '50%' }} />
-                    ) : (
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
-                          display: 'grid',
-                          placeItems: 'center',
-                          color: '#fff',
-                          fontWeight: 700,
-                          fontSize: 14,
-                        }}
-                      >
-                        {(h.symbol || '?').charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{h.symbol}</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-                        {h.name || shortAddr(h.mint)}
-                      </div>
+          {allocations.map((h) => {
+            const change = h.price_change_24h_pct;
+            const changeUp = change != null && change >= 0;
+            const sellHref = `/v2/token/${h.mint}?action=sell`;
+            return (
+              <Link
+                key={h.mint}
+                href={sellHref}
+                prefetch={false}
+                className="v2-pf-list-row"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '240px 1fr 120px 140px 100px 84px',
+                  gap: 16,
+                  alignItems: 'center',
+                  padding: '16px 20px',
+                  borderBottom: '1px solid var(--border-v2)',
+                  textDecoration: 'none',
+                  color: 'var(--ink-100)',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  {h.logo_uri ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={h.logo_uri} alt="" width={36} height={36} style={{ borderRadius: '50%', flexShrink: 0 }} />
+                  ) : (
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {(h.symbol || '?').charAt(0).toUpperCase()}
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ flex: 1, height: 4, background: 'var(--bg-deep)', borderRadius: 2, overflow: 'hidden' }}>
-                      <div
-                        style={{
-                          height: '100%',
-                          width: `${Math.min(100, h.pct)}%`,
-                          background: h.pct > 50 ? 'var(--brand-up)' : 'var(--ink-40)',
-                          borderRadius: 2,
-                        }}
-                      />
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{h.symbol || '—'}</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {h.name || shortAddr(h.mint)}
                     </div>
-                    <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 11, color: 'var(--ink-60)' }}>
-                      {h.pct.toFixed(0)}%
-                    </span>
-                  </div>
-                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13 }}>
-                    {fmtAmount(h.amount, h.decimals)}
-                  </div>
-                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13, color: 'var(--ink-100)', fontWeight: 500 }}>
-                    {fmtUsd(h.value_usd ?? 0)}
-                  </div>
-                  <div
-                    style={{
-                      textAlign: 'right',
-                      fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-                      fontSize: 13,
-                      color: change == null ? 'var(--ink-40)' : changeUp ? 'var(--brand-up)' : 'var(--warn, #FF6B6B)',
-                    }}
-                  >
-                    {change == null ? '—' : `${changeUp ? '+' : ''}${change.toFixed(1)}%`}
                   </div>
                 </div>
-              );
-            })}
-          </>
-        )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ flex: 1, height: 4, background: 'var(--bg-deep)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${Math.min(100, h.pct)}%`,
+                        background: h.pct > 50 ? 'var(--brand-up)' : 'var(--ink-40)',
+                        borderRadius: 2,
+                      }}
+                    />
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 11, color: 'var(--ink-60)' }}>
+                    {h.pct.toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13 }}>
+                  {fmtAmount(h.amount, h.decimals)}
+                </div>
+                <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13, color: 'var(--ink-100)', fontWeight: 500 }}>
+                  {fmtUsd(h.value_usd ?? 0)}
+                </div>
+                <div
+                  style={{
+                    textAlign: 'right',
+                    fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+                    fontSize: 13,
+                    color: change == null ? 'var(--ink-40)' : changeUp ? 'var(--brand-up)' : 'var(--warn, #FF6B6B)',
+                  }}
+                >
+                  {change == null ? '—' : `${changeUp ? '+' : ''}${change.toFixed(1)}%`}
+                </div>
+                {/* Sell 按钮 · 桌面显 · mobile 整行 click 也跳同 URL · 用 .v2-pf-sell 媒查 hide */}
+                <div
+                  className="v2-pf-sell"
+                  style={{
+                    textAlign: 'right',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '6px 14px',
+                      borderRadius: 999,
+                      border: '1px solid var(--brand-up)',
+                      color: 'var(--brand-up)',
+                      fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+                      fontSize: 11,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      background: 'var(--bg-card-v2)',
+                      boxShadow: '0 0 12px rgba(25,251,155,0.12)',
+                    }}
+                  >
+                    {t('table.sell')}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </>
       </section>
     </main>
   );

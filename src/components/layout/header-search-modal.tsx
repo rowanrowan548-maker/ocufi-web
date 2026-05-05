@@ -27,6 +27,8 @@ import { prefetchTokenForTrade } from '@/lib/prefetch';
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** V2 用 · 把 mint 映射成路径 · 默认 /trade?mint=<mint>(V1)· V2 传 (m) => `/v2/token/${m}` */
+  pathBuilder?: (mint: string) => string;
 }
 
 interface RowItem {
@@ -86,7 +88,7 @@ function clearHistory() {
   }
 }
 
-export function HeaderSearchModal({ open, onClose }: Props) {
+export function HeaderSearchModal({ open, onClose, pathBuilder }: Props) {
   const t = useTranslations('nav.searchModal');
   const router = useRouter();
   const [tab, setTab] = useState<'tokens' | 'dapps'>('tokens');
@@ -105,14 +107,14 @@ export function HeaderSearchModal({ open, onClose }: Props) {
       // T-SEARCH-CLICK-FIX4 · router.refresh() 是元凶:在 push commit 完成前
       // 触发 RSC re-fetch 用旧 URL 拉 server payload · 把 push 的 client state 反向覆盖
       // 配合 trade-screen 改 URL 派生 mint(单源)· 删 refresh + push 即可生效
-      const path = `/trade?mint=${item.mint}`;
+      const path = pathBuilder ? pathBuilder(item.mint) : `/trade?mint=${item.mint}`;
       // eslint-disable-next-line no-console
       console.log('[search-modal] navigate v4', { mint: item.mint, path });
       saveHistory({ mint: item.mint, symbol: item.symbol, logo: item.logo });
       router.push(path);
       requestAnimationFrame(() => onClose());
     },
-    [router, onClose],
+    [router, onClose, pathBuilder],
   );
 
   // open 切 true 时 reset state + autofocus

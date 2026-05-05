@@ -29,10 +29,13 @@ export async function generateMetadata({
 
 export default async function V2TokenPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; address: string }>;
+  searchParams: Promise<{ action?: string }>;
 }) {
   const { locale, address } = await params;
+  const { action } = await searchParams;
   setRequestLocale(locale);
 
   if (!MINT_RE.test(address)) notFound();
@@ -43,6 +46,9 @@ export default async function V2TokenPage({
   } catch {
     notFound();
   }
+
+  // P2-HOTFIX · 持仓行 click → /v2/token/<mint>?action=sell · 默认 Sell tab
+  const defaultSide: 'buy' | 'sell' | undefined = action === 'sell' ? 'sell' : action === 'buy' ? 'buy' : undefined;
 
   return (
     <main>
@@ -60,7 +66,7 @@ export default async function V2TokenPage({
         <div className="v2-token-main" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <TokenHead detail={detail} />
           <TokenChart mint={detail.mint} symbol={detail.symbol || 'TOKEN'} />
-          <TokenTradeShell mint={detail.mint} />
+          <TokenTradeShell mint={detail.mint} defaultSide={defaultSide} />
         </div>
         <TokenSideShell mint={detail.mint} />
       </div>
