@@ -15,9 +15,9 @@
  *   - 工程师视角 ▶ 默认折叠
  *   - 3 分享按钮 column 列 + w-full + h-12 等宽等高
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { OgCard } from '@/components/v2/shared/og-card';
-import type { TxViewData } from '@/lib/transparency';
+import { getTransparencyReport, mapReportToView, type TxViewData } from '@/lib/transparency';
 
 // Phase 2 · mock 数据(BONK 0.5 SOL → 1.23M)· demo sig 用
 const MOCK: TxViewData = {
@@ -253,9 +253,46 @@ export function TxView({ sig, data, demo }: Props) {
 /**
  * 找不到 sig 报告时的 fallback · "报告生成中"
  * 链上 swap confirm → 后端写库可能 30s-2min 延迟 · 用户刷新页面 retry
+ *
+ * P3-FE-2 bug 4 · client 自动 retry 3 次 × 5s · 拿到数据自动渲染真报告
+ *   · server SSR 失败(env / network 偶失)client(NEXT_PUBLIC build-inline)能救场
+ *   · 拿到 setData → 切换渲染 TxView 真数据 · 不再死板"报告生成中"
  */
 export function TxViewFallback({ sig }: { sig: string }) {
   const sigShort = sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig;
+  const [data, setData] = useState<TxViewData | null>(null);
+  const triesRef = useRef(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    async function attempt() {
+      if (cancelled) return;
+      triesRef.current += 1;
+      const r = await getTransparencyReport(sig);
+      if (cancelled) return;
+      if (r) {
+        setData(mapReportToView(r));
+        return; // 拿到 · 不再 retry
+      }
+      if (triesRef.current < 3) {
+        timer = setTimeout(attempt, 5_000);
+      }
+    }
+    // 首次稍延 1s 防 SSR fetch 同时打 · 后续每 5s
+    timer = setTimeout(attempt, 1_000);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [sig]);
+
+  // retry 拿到数据 · 渲染真 TxView
+  if (data) {
+    return <TxView sig={sig} data={data} />;
+  }
+
   return (
     <main style={{ maxWidth: 920, margin: '0 auto' }}>
       <header

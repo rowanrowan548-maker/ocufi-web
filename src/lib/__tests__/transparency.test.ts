@@ -3,6 +3,8 @@
  * 测:rawToDecimal / lamportsToSol / mapReportToView 字段映射 · getTransparencyReport 错误吞掉
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { ApiError } from '../api-client';
+import * as apiClient from '../api-client';
 import {
   rawToDecimal,
   lamportsToSol,
@@ -141,30 +143,65 @@ describe('mapReportToView', () => {
 });
 
 describe('getTransparencyReport', () => {
+  // 直接 mock apiFetch · 不走 fetch + stubEnv(api-client.ts API_URL 是模块顶层 const · vi.stubEnv 来不及)
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('short sig → null', async () => {
+  const longSig = '5fXq8yAbcDEFghijklmn1234567890ABCdefghi';
+
+  it('short sig → null(不调 apiFetch)', async () => {
+    const spy = vi.spyOn(apiClient, 'apiFetch');
     const r = await getTransparencyReport('123');
     expect(r).toBeNull();
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it('404 → null (不抛)', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ error: 'not_found' }), { status: 404 })
-      )
+    vi.spyOn(apiClient, 'apiFetch').mockRejectedValue(
+      new ApiError({ status: 404, path: '/transparency/x', body: 'not_found', isNetwork: false })
     );
-    vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api.test.local');
-    const r = await getTransparencyReport('5fXq8yAbcDEFghijklmn1234567890ABCdefghi');
+    const r = await getTransparencyReport(longSig);
     expect(r).toBeNull();
   });
 
-  it('网络错(配置缺)→ null', async () => {
-    vi.stubEnv('NEXT_PUBLIC_API_URL', '');
-    const r = await getTransparencyReport('5fXq8yAbcDEFghijklmn1234567890ABCdefghi');
+  it('网络错(timeout / 配置缺)→ null', async () => {
+    vi.spyOn(apiClient, 'apiFetch').mockRejectedValue(
+      new ApiError({ status: 0, path: '/transparency/x', body: 'timeout', isNetwork: true })
+    );
+    const r = await getTransparencyReport(longSig);
+    expect(r).toBeNull();
+  });
+
+  it('解 wrapper · 200 + ok+data → 返 data 真 report', async () => {
+    vi.spyOn(apiClient, 'apiFetch').mockResolvedValue({
+      ok: true,
+      error: null,
+      data: baseReport,
+    });
+    const r = await getTransparencyReport(longSig);
+    expect(r).not.toBeNull();
+    expect(r?.sig).toBe(baseReport.sig);
+    expect(r?.token_out_symbol).toBe('BONK');
+  });
+
+  it('解 wrapper · 200 + ok=false → 返 null', async () => {
+    vi.spyOn(apiClient, 'apiFetch').mockResolvedValue({
+      ok: false,
+      error: 'not_found',
+      data: null,
+    });
+    const r = await getTransparencyReport(longSig);
+    expect(r).toBeNull();
+  });
+
+  it('解 wrapper · ok=true 但 data=null → 返 null(防御)', async () => {
+    vi.spyOn(apiClient, 'apiFetch').mockResolvedValue({
+      ok: true,
+      error: null,
+      data: null,
+    });
+    const r = await getTransparencyReport(longSig);
     expect(r).toBeNull();
   });
 });

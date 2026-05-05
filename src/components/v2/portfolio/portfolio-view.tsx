@@ -31,7 +31,9 @@ import {
 } from '@/lib/api-client';
 import { SweepAtaModal } from './sweep-ata-modal';
 
-const DUST_USD = 0.01; // < $0.01 折叠成"零碎币" 一行
+// P3-FE-2 bug 3 · 阈值 $0.01 太严 · 0.001 SOL 小测试单全被折叠
+// 降到 $0.0001(基本只过滤 0 余额)· 散户测试 token 也能在主列表看见
+const DUST_USD = 0.0001;
 
 function fmtUsd(n: number | null | undefined, max = 2): string {
   if (n == null || !Number.isFinite(n)) return '—';

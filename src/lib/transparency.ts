@@ -67,13 +67,24 @@ export type TransparencyReport = {
 };
 
 /**
- * GET /transparency/<sig> · 找到返 report · 404 / 网络错 / 配置缺 → null
+ * 后端 GET /transparency/<sig> 包 wrapper:`{ok, error, data}` · data = 真 report
+ * P3-FE-2 bug 1:之前直接 cast 返回值致字段全 undefined · 现在解 wrapper 取 data
+ */
+type TransparencyWrapper = {
+  ok: boolean;
+  error: string | null;
+  data: TransparencyReport | null;
+};
+
+/**
+ * GET /transparency/<sig> · 找到返 report · 404 / 网络错 / 配置缺 / wrapper.ok=false → null
  * 不抛错 · 上层根据 null 渲染 fallback "报告生成中"
  */
 export async function getTransparencyReport(sig: string): Promise<TransparencyReport | null> {
   if (!sig || sig.length < 8) return null;
   try {
-    return await apiFetch<TransparencyReport>(`/transparency/${encodeURIComponent(sig)}`);
+    const wrapper = await apiFetch<TransparencyWrapper>(`/transparency/${encodeURIComponent(sig)}`);
+    return wrapper.ok && wrapper.data ? wrapper.data : null;
   } catch (e) {
     if (e instanceof ApiError) {
       // 404 = 报告未生成 · 网络错 / 511 = 配置缺 / 5xx = 后端故障 · 都返 null 让 UI fallback

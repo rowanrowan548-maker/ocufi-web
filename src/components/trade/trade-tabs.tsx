@@ -45,6 +45,8 @@ interface Props {
    * 防双 chrome 嵌套致真手机 4 卡参差 · 默 false 保 V1 trade-screen / mobile-action-bar 视觉
    */
   chromeless?: boolean;
+  /** P3-FE-2 · swap confirm 后回调真 sig · 透传给 BuyForm/SellForm */
+  onSuccess?: (sig: string) => void;
 }
 
 type Side = 'buy' | 'sell';
@@ -54,7 +56,7 @@ type OrderType = 'market' | 'limit';
 // Tailwind v4 后缀 ! · 战胜 cn() merge 后的默类
 const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly, chromeless }: Props = {}) {
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly, chromeless, onSuccess }: Props = {}) {
   const t = useTranslations();
   const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
@@ -146,9 +148,9 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
           // V2 模式 · MUST NOT DO 第 5 条 · 不渲染限价单 + 不显市价/限价 tab
           // 直接挂 BuyForm / SellForm · 内层 tab 完全砍 · chromeless 透传 V2 .v2-card 接管
           side === 'buy' ? (
-            <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
+            <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
           ) : (
-            <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
+            <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
           )
         ) : (
           // V1 模式 · 完整 市价/限价
@@ -172,9 +174,9 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
 
             <TabsContent value="market" className={compact ? 'flex-1 flex flex-col' : undefined}>
               {side === 'buy' ? (
-                <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
+                <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
               ) : (
-                <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
+                <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
               )}
             </TabsContent>
             <TabsContent value="limit" className={compact ? 'flex-1 flex flex-col' : undefined}>

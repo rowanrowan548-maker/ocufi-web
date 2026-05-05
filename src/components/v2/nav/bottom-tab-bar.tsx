@@ -12,21 +12,24 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Home, Coins, Wallet, FileText } from 'lucide-react';
-import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
+import { useLastTxSig } from '@/lib/last-tx-sig';
 
 // P2-HOTFIX-3 #2 · 代币 tab 改 BONK 真示例(SOL 没 LP)
 const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 
-const TABS = [
-  { href: '/v2', key: 'home' as const, icon: Home, match: (p: string) => p === '/v2' || /^\/[a-z-]+\/v2$/.test(p) },
-  { href: `/v2/token/${BONK_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/v2/token') },
-  { href: '/v2/portfolio', key: 'portfolio' as const, icon: Wallet, match: (p: string) => p.includes('/v2/portfolio') },
-  { href: `/v2/tx/${MOCK_TX_SIG}`, key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/v2/tx') },
-];
-
 export function BottomTabBar() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname() ?? '';
+  // P3-FE-2 bug 2 · 报告 tab 跳真最近 sig · 没真 sig 就回 portfolio(不再永远 demo)
+  const lastSig = useLastTxSig();
+  const txHref = lastSig ? `/v2/tx/${lastSig}` : '/v2/portfolio';
+
+  const TABS = [
+    { href: '/v2', key: 'home' as const, icon: Home, match: (p: string) => p === '/v2' || /^\/[a-z-]+\/v2$/.test(p) },
+    { href: `/v2/token/${BONK_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/v2/token') },
+    { href: '/v2/portfolio', key: 'portfolio' as const, icon: Wallet, match: (p: string) => p.includes('/v2/portfolio') },
+    { href: txHref, key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/v2/tx') },
+  ];
 
   return (
     <nav

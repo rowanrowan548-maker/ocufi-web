@@ -96,12 +96,14 @@ interface BuyFormProps {
   reasons?: RiskReason[];
   /** P2-CARD-UNIFY · V2 wrapper 已套 .v2-card 外 chrome · 砍 V1 内 Card chrome 防双 chrome */
   chromeless?: boolean;
+  /** P3-FE-2 · swap 上链 confirm 后回调真 sig · V2 wrapper 缓存到 localStorage 给 nav / OG 用 */
+  onSuccess?: (sig: string) => void;
 }
 
 // P2-CARD-UNIFY · 砍 shadcn Card 默 chrome
 const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
 
-export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless }: BuyFormProps = {}) {
+export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, onSuccess }: BuyFormProps = {}) {
   const t = useTranslations();
   const locale = useLocale();
   const chain = getCurrentChain();
@@ -295,6 +297,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless }: 
 
       setResult({ signature: sig, actualTokens, feeSol, solSpent });
       setStage('done');
+
+      // P3-FE-2 bug 2 · V2 上层 wrapper 用 sig 缓存 + 显"查看真报告"链接
+      onSuccess?.(sig);
 
       // 累计手续费(本地)· Ocufi 0.1% × 输入 SOL,网络 Gas 来自实际 tx 解析,体量 = inputSol
       if (wallet.publicKey) {

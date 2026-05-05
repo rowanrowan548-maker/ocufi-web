@@ -17,22 +17,26 @@ import { useTranslations } from 'next-intl';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { LogoSvg } from '@/components/v2/shared/logo-svg';
 import { HeaderSearch } from '@/components/layout/header-search';
-import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
+import { useLastTxSig } from '@/lib/last-tx-sig';
 
 // P2-HOTFIX-3 #2 · 代币 tab 不再硬指 SOL(SOL 没 LP 池 · K 线空白)· 改 BONK(真 demo)
 const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 
 type TabDef = { href: string; key: 'home' | 'token' | 'portfolio' | 'tx'; demoLabel?: string };
-const TABS: TabDef[] = [
-  { href: '/v2', key: 'home' },
-  { href: `/v2/token/${BONK_MINT}`, key: 'token', demoLabel: '示例 BONK' },
-  { href: '/v2/portfolio', key: 'portfolio' },
-  { href: `/v2/tx/${MOCK_TX_SIG}`, key: 'tx', demoLabel: 'Demo' }, // Phase 3 后改最近一笔真 sig
-];
 
 export function TopNavV3() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname();
+  // P3-FE-2 bug 2 · 报告 tab 跳真最近 sig · 没就回 portfolio(不再永远 demo)
+  const lastSig = useLastTxSig();
+  const TABS: TabDef[] = [
+    { href: '/v2', key: 'home' },
+    { href: `/v2/token/${BONK_MINT}`, key: 'token', demoLabel: '示例 BONK' },
+    { href: '/v2/portfolio', key: 'portfolio' },
+    lastSig
+      ? { href: `/v2/tx/${lastSig}`, key: 'tx' }
+      : { href: '/v2/portfolio', key: 'tx', demoLabel: 'Demo' },
+  ];
 
   return (
     <nav

@@ -90,12 +90,14 @@ interface SellFormProps {
   reasons?: RiskReason[];
   /** P2-CARD-UNIFY · V2 wrapper 已套 .v2-card 外 chrome · 砍 V1 内 Card chrome */
   chromeless?: boolean;
+  /** P3-FE-2 · swap confirm 后回调真 sig · V2 wrapper 缓存 + 显"查看真报告" */
+  onSuccess?: (sig: string) => void;
 }
 
 // P2-CARD-UNIFY · 砍 shadcn Card 默 chrome
 const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
 
-export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless }: SellFormProps = {}) {
+export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, onSuccess }: SellFormProps = {}) {
   const t = useTranslations();
   const locale = useLocale();
   const chain = getCurrentChain();
@@ -234,6 +236,9 @@ export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless }:
 
       setResult({ signature: sig, actualSol, feeSol });
       setStage('done');
+
+      // P3-FE-2 bug 2 · V2 上层 wrapper 用 sig 缓存 + 显"查看真报告"链接
+      onSuccess?.(sig);
 
       // 卖出 V1 不收 Ocufi fee,只记网络 Gas;体量按 outputSol(收到的 SOL)
       if (wallet.publicKey) {
