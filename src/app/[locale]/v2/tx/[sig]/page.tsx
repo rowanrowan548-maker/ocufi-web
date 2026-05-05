@@ -1,6 +1,16 @@
+/**
+ * V2 /v2/tx/[sig] · P3-FE-1 · 真接 GET /transparency/<sig>
+ *
+ * - server fetch · 找到 → 渲染真报告
+ * - 找不到(404 / 网络错 / 配置缺)→ 渲染 fallback "报告生成中" + retry 按钮
+ * - demo sig(MOCK_TX_SIG)始终渲染 mock · 保 nav "Demo" tab 体验
+ * - generateMetadata 真数据填 OG title / description · 找不到 fallback 默认
+ */
 import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { TxView } from '@/components/v2/tx/tx-view';
+import { TxView, TxViewFallback } from '@/components/v2/tx/tx-view';
+import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
+import { getTransparencyReport, mapReportToView } from '@/lib/transparency';
 
 export async function generateMetadata({
   params,
@@ -9,12 +19,41 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { sig } = await params;
   const short = sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig;
+
+  // demo · 用 mockup 文案
+  if (sig === MOCK_TX_SIG) {
+    return {
+      title: `Trade #${short} · Ocufi V2 (Demo)`,
+      description: 'Transparency report demo · Ocufi · 0.1% fee · MEV protected.',
+      openGraph: {
+        title: `Saved 0.0045 SOL on BONK · Ocufi`,
+        description: `0.5 SOL → 1.23M BONK · vs BullX 0.5045 SOL · MEV protected`,
+      },
+    };
+  }
+
+  const report = await getTransparencyReport(sig);
+  if (!report) {
+    return {
+      title: `Trade #${short} · Ocufi`,
+      description: `Transparency report for Solana trade #${short}.`,
+    };
+  }
+  const v = mapReportToView(report);
+  const savedFmt = v.savedSol.toFixed(4);
+  const ogTitle = `Saved ${savedFmt} SOL on $${v.tokenSymbol} · Ocufi`;
+  const ogDesc = `${v.side === 'buy' ? 'Bought' : 'Sold'} ${v.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${v.tokenSymbol} · ${v.feePct.toFixed(2)}% fee · vs BullX ${v.competitorFeePct.toFixed(0)}%${v.mevProtected ? ' · MEV protected' : ''}`;
   return {
-    title: `Trade #${short} · Ocufi V2`,
-    description: `Transparency report for Solana trade #${short} on Ocufi · 0.1% fee · MEV protected.`,
+    title: `Trade #${short} · Ocufi`,
+    description: ogDesc,
     openGraph: {
-      title: `Saved 0.0045 SOL on BONK · Ocufi`,
-      description: `0.5 SOL → 1.23M BONK · vs BullX 0.5045 SOL · MEV protected`,
+      title: ogTitle,
+      description: ogDesc,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description: ogDesc,
     },
   };
 }
@@ -27,5 +66,14 @@ export default async function V2TxPage({
   const { locale, sig } = await params;
   setRequestLocale(locale);
 
-  return <TxView sig={sig} />;
+  // demo sig · 永走 mock(nav "Demo" tab 体验保留)
+  if (sig === MOCK_TX_SIG) {
+    return <TxView sig={sig} demo />;
+  }
+
+  const report = await getTransparencyReport(sig);
+  if (!report) {
+    return <TxViewFallback sig={sig} />;
+  }
+  return <TxView sig={sig} data={mapReportToView(report)} />;
 }
