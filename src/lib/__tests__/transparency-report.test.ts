@@ -284,3 +284,94 @@ describe('常量导出', () => {
     expect(TRANSPARENCY_COMPARABLE_FEE_PCT_DEFAULT).toBe(0.01);
   });
 });
+
+/**
+ * P3-CHAIN-2 · 0 amount guard(2026-05-05 用户暴怒 · 卖 100% 后回收 ATA 空 swap 污染)
+ *
+ * 链上侧先拦 · 后端 P3-BE-3 是第二层防御 · 双层守护 transparency_reports 表
+ */
+describe('reportTransparency · 0 amount guard(P3-CHAIN-2)', () => {
+  const VALID_PAYLOAD: TransparencyPayload = {
+    sig: '5sv1jdRjQSu4iqwn8VmpzAEqGfWX6jbVN8ahMrU4ASjyDhPpRyFMqHkVHnGzsm56NaHv7XjAxc1Y6Q',
+    wallet: 'AVmAj5Q7gZP3VXkCvY4nW8YpQ3JhFc6PqU3xRzKn2UCGB',
+    slot: 12345,
+    side: 'buy',
+    token_in_mint: SOL,
+    token_in_symbol: 'SOL',
+    token_in_amount: '1000000000',
+    token_in_decimals: 9,
+    token_out_mint: USDC,
+    token_out_symbol: 'EPjF',
+    token_out_amount: '999000',
+    token_out_decimals: 6,
+    ocufi_fee_lamports: '1000000',
+    ocufi_fee_pct: 0.001,
+    comparable_fee_pct: 0.01,
+    savings_lamports: '9000000',
+    savings_usd: null,
+    gas_lamports: '5000',
+    compute_units: 200_000,
+    slippage_tolerance_bps: 100,
+    slippage_actual_bps: 30,
+    mev_protected: true,
+    mev_bundle_id: null,
+    jupiter_route_dexes: ['Raydium'],
+    jupiter_route_steps: [],
+    price_impact_pct: 0.1,
+    price_usd_at_swap: null,
+  };
+
+  it('token_in_amount=0 → 返 false · console.warn skip · 不打 apiFetch', async () => {
+    mockState.response = 'ok'; // 即便后端能接也不该调
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const ok = await reportTransparency({ ...VALID_PAYLOAD, token_in_amount: '0' });
+    expect(ok).toBe(false);
+    expect(mockState.lastCall).toBeNull();
+    expect(warnSpy.mock.calls[0][0]).toMatch(/0 amount/i);
+  });
+
+  it('token_out_amount=0 → 返 false · console.warn skip', async () => {
+    mockState.response = 'ok';
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const ok = await reportTransparency({ ...VALID_PAYLOAD, token_out_amount: '0' });
+    expect(ok).toBe(false);
+    expect(mockState.lastCall).toBeNull();
+    expect(warnSpy.mock.calls[0][0]).toMatch(/0 amount/i);
+  });
+
+  it('两个 amount 都 0 → 返 false · skip', async () => {
+    mockState.response = 'ok';
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const ok = await reportTransparency({
+      ...VALID_PAYLOAD,
+      token_in_amount: '0',
+      token_out_amount: '0',
+    });
+    expect(ok).toBe(false);
+    expect(mockState.lastCall).toBeNull();
+  });
+
+  it('字段非数字字符串(error 解析)→ 返 false · console.warn invalid', async () => {
+    mockState.response = 'ok';
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const ok = await reportTransparency({
+      ...VALID_PAYLOAD,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      token_in_amount: 'not-a-number' as any,
+    });
+    expect(ok).toBe(false);
+    expect(mockState.lastCall).toBeNull();
+    expect(warnSpy.mock.calls[0][0]).toMatch(/invalid amount/i);
+  });
+
+  it('合法 amount(>0)→ 不被 guard 拦 · 真打 apiFetch', async () => {
+    mockState.response = 'ok';
+    const ok = await reportTransparency(VALID_PAYLOAD);
+    expect(ok).toBe(true);
+    expect(mockState.lastCall?.path).toBe('/transparency/report');
+  });
+});

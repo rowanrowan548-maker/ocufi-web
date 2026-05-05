@@ -111,9 +111,30 @@ export interface TransparencyReportResponse {
  *   - 网络 / 5xx → console.warn(status + body) · 不抛
  *   - NEXT_PUBLIC_API_URL 没配 → 立刻返 false · 不打 fetch
  *
- * @returns true 成功上报(后端 200 · 含幂等 duplicate)/ false 静默失败
+ * P3-CHAIN-2(2026-05-05 · 用户暴怒)· 防 0 amount 污染:
+ *   - token_in_amount === 0 或 token_out_amount === 0 → 立刻返 false · 不上报
+ *   - 场景:用户卖 100% 后回收 ATA 空 swap(无 token 转移)误触发 confirm 后上报路径
+ *   - 后端 P3-BE-3 也加了双层防御(SPEC §61 用户拍板)· 链上侧先拦更省一次 RPC + 网络
+ *
+ * @returns true 成功上报(后端 200 · 含幂等 duplicate)/ false 静默失败 / false 0-amount skip
  */
 export async function reportTransparency(payload: TransparencyPayload): Promise<boolean> {
+  // P3-CHAIN-2 · 0 amount guard(链上侧防御 · 后端 P3-BE-3 是第二层)
+  let inAmt: bigint;
+  let outAmt: bigint;
+  try {
+    inAmt = BigInt(payload.token_in_amount || '0');
+    outAmt = BigInt(payload.token_out_amount || '0');
+  } catch {
+    // 字段非数字字符串 · 当 0 处理 · skip
+    console.warn('[transparency] skip · invalid amount(non-numeric)');
+    return false;
+  }
+  if (inAmt === BigInt(0) || outAmt === BigInt(0)) {
+    console.warn('[transparency] skip · 0 amount');
+    return false;
+  }
+
   if (!isApiConfigured()) return false;
 
   try {
