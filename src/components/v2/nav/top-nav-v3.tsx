@@ -14,6 +14,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { LogoSvg } from '@/components/v2/shared/logo-svg';
 import { HeaderSearch } from '@/components/layout/header-search';
@@ -27,16 +28,18 @@ type TabDef = { href: string; key: 'home' | 'token' | 'portfolio' | 'tx'; demoLa
 export function TopNavV3() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname();
-  // P3-FE-2 bug 2 · 报告 tab 跳真最近 sig · 没就回 portfolio(不再永远 demo)
-  const lastSig = useLastTxSig();
+  // P3-FE-3 · 钱包 wallet 参数让 useLastTxSig 调 server fetch /transparency/recent 跨设备同步
+  const { publicKey } = useWallet();
+  const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
   const TABS: TabDef[] = [
     { href: '/v2', key: 'home' },
     // P3-FE-4 polish 3 · 砍 demoLabel "示例 BONK" · 用户嫌多余 · 只留"代币"二字
     { href: `/v2/token/${BONK_MINT}`, key: 'token' },
     { href: '/v2/portfolio', key: 'portfolio' },
+    // P3-FE-3 · 没 sig 时砍 demoLabel "Demo" · 直回 portfolio · 不暗示 broken
     lastSig
       ? { href: `/v2/tx/${lastSig}`, key: 'tx' }
-      : { href: '/v2/portfolio', key: 'tx', demoLabel: 'Demo' },
+      : { href: '/v2/portfolio', key: 'tx' },
   ];
 
   return (

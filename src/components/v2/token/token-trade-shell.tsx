@@ -16,6 +16,7 @@
  */
 import Link from 'next/link';
 import { useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { TradeTabs } from '@/components/trade/trade-tabs';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 import { useLastTxSig, setLastTxSig } from '@/lib/last-tx-sig';
@@ -23,9 +24,11 @@ import { useLastTxSig, setLastTxSig } from '@/lib/last-tx-sig';
 type Props = { mint: string; defaultSide?: 'buy' | 'sell' };
 
 export function TokenTradeShell({ mint, defaultSide }: Props) {
-  // 当前会话内 swap 完成的 sig(实时)· 没就 fallback 到 useLastTxSig(localStorage 历史)
+  // 当前会话内 swap 完成的 sig(实时)· 没就 fallback 到 useLastTxSig(localStorage + server)
   const [sessionSig, setSessionSig] = useState<string | null>(null);
-  const lastSig = useLastTxSig();
+  // P3-FE-3 · 传 wallet · 跨设备同步真 sig(localStorage + GET /transparency/recent)
+  const { publicKey } = useWallet();
+  const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
   const realSig = sessionSig ?? lastSig;
   const reportHref = realSig ? `/v2/tx/${realSig}` : `/v2/tx/${MOCK_TX_SIG}`;
   const reportLabel = realSig ? '查看你的交易报告 →' : '查看交易报告 demo →';

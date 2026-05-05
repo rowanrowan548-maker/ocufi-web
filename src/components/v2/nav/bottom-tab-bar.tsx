@@ -11,6 +11,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Home, Coins, Wallet, FileText } from 'lucide-react';
 import { useLastTxSig } from '@/lib/last-tx-sig';
 
@@ -20,8 +21,9 @@ const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 export function BottomTabBar() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname() ?? '';
-  // P3-FE-2 bug 2 · 报告 tab 跳真最近 sig · 没真 sig 就回 portfolio(不再永远 demo)
-  const lastSig = useLastTxSig();
+  // P3-FE-3 · 钱包 wallet 参数让 useLastTxSig 调 server fetch 跨设备同步
+  const { publicKey } = useWallet();
+  const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
   const txHref = lastSig ? `/v2/tx/${lastSig}` : '/v2/portfolio';
 
   const TABS = [
