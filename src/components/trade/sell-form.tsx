@@ -92,12 +92,14 @@ interface SellFormProps {
   chromeless?: boolean;
   /** P3-FE-2 · swap confirm 后回调真 sig · V2 wrapper 缓存 + 显"查看真报告" */
   onSuccess?: (sig: string) => void;
+  /** P3-FE-6 · 100% 卖空后 toast "去领取"点击回调 · 默认跳 V1 /rewards#reclaim · V2 wrapper 传开 in-page modal */
+  onReclaimClick?: () => void;
 }
 
 // P2-CARD-UNIFY · 砍 shadcn Card 默 chrome
 const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
 
-export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, onSuccess }: SellFormProps = {}) {
+export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, onSuccess, onReclaimClick }: SellFormProps = {}) {
   const t = useTranslations();
   const locale = useLocale();
   const chain = getCurrentChain();
@@ -292,7 +294,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, o
             description: t('trade.sellAll.reclaimToast.desc'),
             action: {
               label: t('trade.sellAll.reclaimToast.action'),
-              onClick: () => window.location.assign('/rewards#reclaim'),
+              onClick: onReclaimClick ?? (() => window.location.assign('/rewards#reclaim')),
             },
             duration: 12000,
           });

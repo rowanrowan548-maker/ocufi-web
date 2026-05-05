@@ -47,6 +47,8 @@ interface Props {
   chromeless?: boolean;
   /** P3-FE-2 · swap confirm 后回调真 sig · 透传给 BuyForm/SellForm */
   onSuccess?: (sig: string) => void;
+  /** P3-FE-6 · 100% 卖空 toast "去领取"回调 · 透传给 SellForm · V2 wrapper 接 in-page modal */
+  onReclaimClick?: () => void;
 }
 
 type Side = 'buy' | 'sell';
@@ -56,7 +58,7 @@ type OrderType = 'market' | 'limit';
 // Tailwind v4 后缀 ! · 战胜 cn() merge 后的默类
 const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly, chromeless, onSuccess }: Props = {}) {
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly, chromeless, onSuccess, onReclaimClick }: Props = {}) {
   const t = useTranslations();
   const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
@@ -150,7 +152,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
           side === 'buy' ? (
             <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
           ) : (
-            <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
+            <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} onReclaimClick={onReclaimClick} />
           )
         ) : (
           // V1 模式 · 完整 市价/限价
@@ -176,7 +178,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
               {side === 'buy' ? (
                 <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
               ) : (
-                <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} />
+                <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} onSuccess={onSuccess} onReclaimClick={onReclaimClick} />
               )}
             </TabsContent>
             <TabsContent value="limit" className={compact ? 'flex-1 flex flex-col' : undefined}>

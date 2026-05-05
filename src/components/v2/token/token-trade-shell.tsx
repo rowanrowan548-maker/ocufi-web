@@ -20,12 +20,15 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { TradeTabs } from '@/components/trade/trade-tabs';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 import { useLastTxSig, setLastTxSig } from '@/lib/last-tx-sig';
+import { SweepAtaModal } from '@/components/v2/portfolio/sweep-ata-modal';
 
 type Props = { mint: string; defaultSide?: 'buy' | 'sell' };
 
 export function TokenTradeShell({ mint, defaultSide }: Props) {
   // 当前会话内 swap 完成的 sig(实时)· 没就 fallback 到 useLastTxSig(localStorage + server)
   const [sessionSig, setSessionSig] = useState<string | null>(null);
+  // P3-FE-6 · 100% 卖空 toast "去领取" · V2 in-page modal · 不跳 V1 /rewards
+  const [sweepModalOpen, setSweepModalOpen] = useState(false);
   // P3-FE-3 · 传 wallet · 跨设备同步真 sig(localStorage + GET /transparency/recent)
   const { publicKey } = useWallet();
   const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
@@ -49,6 +52,7 @@ export function TokenTradeShell({ mint, defaultSide }: Props) {
           setSessionSig(sig);
           setLastTxSig(sig);
         }}
+        onReclaimClick={() => setSweepModalOpen(true)}
       />
 
       {/* 真 sig 优先 · 没就 demo · brand-up 强调真链接 */}
@@ -76,6 +80,9 @@ export function TokenTradeShell({ mint, defaultSide }: Props) {
           {reportLabel}
         </Link>
       </div>
+
+      {/* P3-FE-6 · V2 in-page sweep modal · 不跳 V1 /rewards */}
+      <SweepAtaModal open={sweepModalOpen} onClose={() => setSweepModalOpen(false)} />
     </div>
   );
 }
