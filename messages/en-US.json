@@ -2158,7 +2158,7 @@
       "titleEm": "in the open",
       "titleC": ".",
       "sub": "Paste a token address, swap in one tap. Each fill auto-generates a transparency report — route, slippage, gas, MEV protection — fully shareable.",
-      "inputPlaceholder": "Paste token address · or search symbol (BONK / WIF / POPCAT)",
+      "inputPlaceholder": "Paste token address · e.g. DezX...263 (BONK)",
       "inputNoResult": "No token found · try pasting the mint address",
       "inputError": "Search failed · try again",
       "recentsLabel": "Recent",

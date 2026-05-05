@@ -409,17 +409,25 @@
       gap: 12px !important;
     }
 
-    /* /v2/token/[address] mobile */
+    /* /v2/token/[address] mobile · P2-HOTFIX-3 #1 配套
+       桌面 grid (main 60% + trade 40% sticky) · mobile 单列 + 顺序:head → chart → trade → audit
+       用 display:contents 把两个 col 子元素展开到同 flex 层 · 再用 order 控顺序 */
     .v2-token-grid {
+      display: flex !important;
+      flex-direction: column !important;
       grid-template-columns: 1fr !important;
       padding: 16px 16px 80px !important;
       gap: 16px !important;
     }
-    .v2-token-head {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      padding: 18px !important;
+    .v2-token-main { display: contents !important; }
+    .v2-token-trade-col {
+      display: contents !important;
+      position: static !important;
     }
+    .v2-token-head { order: 1; flex-direction: column !important; align-items: stretch !important; padding: 18px !important; }
+    .v2-token-chart { order: 2; height: 220px !important; }
+    .v2-token-trade { order: 3; }
+    .v2-token-side { order: 4; }
     .v2-token-prices {
       text-align: left !important;
       align-self: stretch !important;
@@ -439,8 +447,6 @@
       flex-direction: column !important;
       gap: 2px !important;
     }
-    .v2-token-chart { height: 220px !important; }
-    .v2-token-side { order: 3; }
 
     /* /v2/portfolio mobile */
     .v2-portfolio-hero { padding: 32px 20px 24px !important; }
@@ -471,9 +477,17 @@
     .v2-pf-list-row > div:nth-child(3),
     .v2-pf-sell { display: none !important; }
 
-    /* /v2/tx/[sig] mobile */
+    /* /v2/tx/[sig] mobile · P2-HOTFIX-3 #5 · 大字 clamp 不被截 + 容器 padding 减半 */
     .v2-tx-meta { padding: 16px 20px 12px !important; gap: 8px !important; }
     .v2-tx-hero-wrap { padding: 0 16px !important; }
+    .v2-tx-hero-wrap > a,
+    .v2-tx-hero-wrap > div { padding: 28px 22px !important; aspect-ratio: auto !important; min-height: 0 !important; }
+    /* tx-hero saveText 大字 mobile 重写 clamp · 防 SOL 字被截 · max-width 撑满 */
+    .v2-tx-hero-wrap [data-og-saveline] {
+      font-size: clamp(34px, 9vw, 52px) !important;
+      line-height: 1.04 !important;
+      max-width: 100% !important;
+    }
     .v2-tx-cards {
       grid-template-columns: 1fr !important;
       padding: 24px 16px !important;
@@ -488,5 +502,17 @@
       width: 100% !important;
       justify-content: center !important;
     }
+
+    /* portfolio P2-HOTFIX-3 #5 mobile polish · 行视觉密度均 + 桌面 sweep CTA hide + sticky FAB 显 */
+    .v2-pf-saved {
+      animation: v2-float-home 4.5s ease-in-out infinite !important;
+    }
+    .v2-pf-list-row {
+      grid-template-columns: 36px 1fr auto !important;
+      gap: 6px 12px !important;
+      padding: 12px 6px !important;
+    }
+    .v2-pf-sweep-desk { display: none !important; }
+    .v2-pf-sweep-fab { display: inline-flex !important; }
   }
 }

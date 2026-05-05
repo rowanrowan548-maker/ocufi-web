@@ -19,13 +19,15 @@ import { LogoSvg } from '@/components/v2/shared/logo-svg';
 import { HeaderSearch } from '@/components/layout/header-search';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 
-const SOL_MINT = 'So11111111111111111111111111111111111111112';
+// P2-HOTFIX-3 #2 · 代币 tab 不再硬指 SOL(SOL 没 LP 池 · K 线空白)· 改 BONK(真 demo)
+const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 
-const TABS: { href: string; key: 'home' | 'token' | 'portfolio' | 'tx'; demo?: boolean }[] = [
+type TabDef = { href: string; key: 'home' | 'token' | 'portfolio' | 'tx'; demoLabel?: string };
+const TABS: TabDef[] = [
   { href: '/v2', key: 'home' },
-  { href: `/v2/token/${SOL_MINT}`, key: 'token' },
+  { href: `/v2/token/${BONK_MINT}`, key: 'token', demoLabel: '示例 BONK' },
   { href: '/v2/portfolio', key: 'portfolio' },
-  { href: `/v2/tx/${MOCK_TX_SIG}`, key: 'tx', demo: true }, // Phase 3 后改最近一笔真 sig
+  { href: `/v2/tx/${MOCK_TX_SIG}`, key: 'tx', demoLabel: 'Demo' }, // Phase 3 后改最近一笔真 sig
 ];
 
 export function TopNavV3() {
@@ -116,7 +118,7 @@ export function TopNavV3() {
               }}
             >
               {t(tab.key)}
-              {tab.demo && (
+              {tab.demoLabel && (
                 <span
                   style={{
                     marginLeft: 6,
@@ -126,7 +128,7 @@ export function TopNavV3() {
                     letterSpacing: '0.04em',
                   }}
                 >
-                  (Demo)
+                  ({tab.demoLabel})
                 </span>
               )}
             </Link>

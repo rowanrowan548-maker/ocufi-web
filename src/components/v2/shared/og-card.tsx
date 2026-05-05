@@ -150,6 +150,7 @@ export function OgCard({
       {/* mid · 大字 + 副标 */}
       <div style={{ position: 'relative' }}>
         <div
+          data-og-saveline
           style={{
             fontFamily: 'var(--font-display)',
             fontStyle: 'italic',

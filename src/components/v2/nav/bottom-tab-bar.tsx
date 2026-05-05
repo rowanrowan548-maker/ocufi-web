@@ -14,11 +14,12 @@ import { useTranslations } from 'next-intl';
 import { Home, Coins, Wallet, FileText } from 'lucide-react';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 
-const SOL_MINT = 'So11111111111111111111111111111111111111112';
+// P2-HOTFIX-3 #2 · 代币 tab 改 BONK 真示例(SOL 没 LP)
+const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 
 const TABS = [
   { href: '/v2', key: 'home' as const, icon: Home, match: (p: string) => p === '/v2' || /^\/[a-z-]+\/v2$/.test(p) },
-  { href: `/v2/token/${SOL_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/v2/token') },
+  { href: `/v2/token/${BONK_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/v2/token') },
   { href: '/v2/portfolio', key: 'portfolio' as const, icon: Wallet, match: (p: string) => p.includes('/v2/portfolio') },
   { href: `/v2/tx/${MOCK_TX_SIG}`, key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/v2/tx') },
 ];

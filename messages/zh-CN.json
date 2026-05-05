@@ -2173,7 +2173,7 @@
       "titleEm": "看得见",
       "titleC": "。",
       "sub": "粘贴 token 地址,一键交易。每笔成交后自动生成「透明度报告」—— 路由 / 滑点 / Gas / 防夹保护,全部可分享。",
-      "inputPlaceholder": "粘贴 token 地址 · 或搜索符号(BONK / WIF / POPCAT)",
+      "inputPlaceholder": "粘贴 token 地址 · 例如 DezX...263(BONK)",
       "inputNoResult": "没找到这个 token · 试试粘贴 mint 地址",
       "inputError": "搜索失败 · 重试",
       "recentsLabel": "最近",

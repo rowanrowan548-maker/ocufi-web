@@ -52,23 +52,36 @@ export default async function V2TokenPage({
 
   return (
     <main>
+      {/* P2-HOTFIX-3 #1 · jup.ag 模式 · 桌面左 60% (head + chart + audit) + 右 40% (trade card sticky)
+         mobile 单列堆叠靠 .v2-token-grid 媒查 · 顺序:head → chart → trade → audit */}
       <div
         className="v2-token-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 360px',
-          gap: 24,
+          gridTemplateColumns: 'minmax(0, 1fr) 380px',
+          gap: 28,
           maxWidth: 1320,
           margin: '0 auto',
           padding: '32px 56px 80px',
+          alignItems: 'start',
         }}
       >
-        <div className="v2-token-main" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="v2-token-main" style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
           <TokenHead detail={detail} />
           <TokenChart mint={detail.mint} symbol={detail.symbol || 'TOKEN'} />
+          <TokenSideShell mint={detail.mint} />
+        </div>
+        {/* 右栏 trade card · sticky · 桌面 jup.ag 模式 · mobile 媒查 unstick + order */}
+        <div
+          className="v2-token-trade-col"
+          style={{
+            position: 'sticky',
+            top: 92, // sticky nav 76 + 16 buffer
+            alignSelf: 'start',
+          }}
+        >
           <TokenTradeShell mint={detail.mint} defaultSide={defaultSide} />
         </div>
-        <TokenSideShell mint={detail.mint} />
       </div>
     </main>
   );
