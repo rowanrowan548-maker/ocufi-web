@@ -19,19 +19,11 @@ type Props = { mint: string; defaultSide?: 'buy' | 'sell' };
 
 export function TokenTradeShell({ mint, defaultSide }: Props) {
   return (
-    <div
-      className="v2-token-trade"
-      style={{
-        padding: 24,
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
-        borderRadius: 16,
-        boxShadow: 'var(--shadow-card-v2)',
-      }}
-    >
-      {/* V1 TradeTabs · compact 模式 · marketOnly 砍内层"市价/限价" tab(MUST NOT DO 第 5 条 · V2 不做 limit)
+    <div className="v2-card v2-token-trade">
+      {/* V1 TradeTabs · compact + chromeless · marketOnly 砍内层"市价/限价" tab(MUST NOT DO 第 5 条 · V2 不做 limit)
+          chromeless · V2 .v2-card 已提供外 chrome · V1 内 Card 必须砍干净 · 防双 chrome 错位
           自带 Buy/Sell + 滑点 + 优先费 + 防夹 + Phantom 签 */}
-      <TradeTabs mint={mint} compact defaultSide={defaultSide} marketOnly />
+      <TradeTabs mint={mint} compact chromeless defaultSide={defaultSide} marketOnly />
 
       {/* 查看 demo 报告 · Phase 3 后改 swap 成功 callback → 真 sig */}
       <div

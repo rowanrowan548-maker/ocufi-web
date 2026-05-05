@@ -16,6 +16,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { usePathname } from 'next/navigation';
 import { Smartphone, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
@@ -65,12 +66,18 @@ function recentlyDismissed(): boolean {
 export function MobileDeeplink() {
   const t = useTranslations();
   const { connected } = useWallet();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [phantomUrl, setPhantomUrl] = useState('');
   const [solflareUrl, setSolflareUrl] = useState('');
 
+  // P2-MOBILE-WALLET-CRASH · V2 用 Phantom Connect OAuth · 不需要 deeplink modal
+  // V2 路径完全早退(同 PWA install / Feedback button V2 早退模式)· 防 Android 自动弹 + CSP 拦 solflare
+  const isV2 = pathname?.includes('/v2/') || pathname?.endsWith('/v2');
+
   useEffect(() => {
     // 仅在客户端检测,且只在条件满足时弹一次
+    if (isV2) return;
     if (!isMobile()) return;
     if (isInWalletBrowser()) return;
     if (connected) return;
@@ -85,7 +92,9 @@ export function MobileDeeplink() {
       setOpen(true);
     }, 800);
     return () => clearTimeout(t);
-  }, [connected]);
+  }, [connected, isV2]);
+
+  if (isV2) return null;
 
   function dismiss() {
     setOpen(false);
@@ -96,6 +105,7 @@ export function MobileDeeplink() {
     }
   }
 
+  // base-ui Dialog · onOpenChange 已统一捕 ESC + 背景点击 + close 按钮 → 全 dismiss · 任意时刻可脱离
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) dismiss(); }}>
       <DialogContent>

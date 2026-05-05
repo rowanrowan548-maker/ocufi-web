@@ -43,15 +43,10 @@ export function TokenChart({ mint, symbol }: Props) {
 
   return (
     <div
-      className="v2-token-chart"
+      className="v2-card v2-card-flush v2-token-chart"
       style={{
         height: 360,
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
-        borderRadius: 16,
         position: 'relative',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-card-v2)',
       }}
     >
       {iframeSrc ? (

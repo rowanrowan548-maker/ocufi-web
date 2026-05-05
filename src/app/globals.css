@@ -246,6 +246,28 @@
     --border-v2-strong: rgba(255, 255, 255, 0.18);
   }
 
+  /* P2-CARD-UNIFY · V2 统一卡 chrome
+     真手机 4 卡参差 = 各 child 自带不同 padding/border/radius/bg/shadow · 视觉错位
+     治根 = 所有 V2 卡共用 .v2-card · 同 chrome · 不再各自 inline style
+     用 padding 16(mobile)/ 18(默)统一 · grid container content width 充满 · 4 卡 left/right edge 像素对齐
+     .v2-card-flush 用于 K 线等需 padding 0 的容器 · 仍共享 border/radius/bg/shadow */
+  .v2-card {
+    background: var(--bg-card-v2);
+    border: 1px solid var(--border-v2);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--shadow-card-v2);
+    box-sizing: border-box;
+    /* P2-CARD-UNIFY · 强制 100% 宽 + min-width 0 · 防 flex item min-content 撑爆
+       (display:contents 链下 chart iframe 480px 会把容器撑到 482 · 跟其他卡参差) */
+    width: 100%;
+    min-width: 0;
+  }
+  .v2-card-flush {
+    padding: 0;
+    overflow: hidden;
+  }
+
   /* T-V2-PHASE-2 · 微浮动 keyframes(给 og-card / tx-hero / chip hover 用) */
   @keyframes v2-float {
     0%, 100% { transform: translateY(0); }

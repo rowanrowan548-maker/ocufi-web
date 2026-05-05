@@ -40,12 +40,21 @@ interface Props {
    * 默认 false 保 V1 兼容 · V2 wrapper 必须传 true
    */
   marketOnly?: boolean;
+  /**
+   * P2-CARD-UNIFY · V2 wrapper 已套 .v2-card 外 chrome · 砍 V1 内 Card chrome
+   * 防双 chrome 嵌套致真手机 4 卡参差 · 默 false 保 V1 trade-screen / mobile-action-bar 视觉
+   */
+  chromeless?: boolean;
 }
 
 type Side = 'buy' | 'sell';
 type OrderType = 'market' | 'limit';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly }: Props = {}) {
+// P2-CARD-UNIFY · 砍 shadcn Card 默 chrome(bg-card / ring / rounded / py-4 / gap-4 / overflow-hidden)
+// Tailwind v4 后缀 ! · 战胜 cn() merge 后的默类
+const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
+
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly, chromeless }: Props = {}) {
   const t = useTranslations();
   const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
@@ -58,7 +67,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
   // mint===SOL:跳转用别的稳定币买 SOL(/trade?mint=USDC&side=sell)
   if (mint === SOL_MINT) {
     return (
-      <Card className={compact ? 'p-4' : 'p-6 w-full max-w-xl'}>
+      <Card className={chromeless ? CHROMELESS_CARD : compact ? 'p-4' : 'p-6 w-full max-w-xl'}>
         <div className="space-y-4">
           <div className="text-center">
             <div className="text-sm font-medium">{t('trade.buySol.title')}</div>
@@ -99,7 +108,7 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
   }
 
   return (
-    <Card className={compact ? 'p-2 flex flex-col h-full' : 'p-6 w-full max-w-xl'}>
+    <Card className={chromeless ? CHROMELESS_CARD : compact ? 'p-2 flex flex-col h-full' : 'p-6 w-full max-w-xl'}>
       {/* 外层 Buy/Sell · T-BRAND-COLOR-ROLLOUT · 用 --brand-up / --brand-down token
           双前缀 dark:data-active: + ! 后缀仍保留(战胜 ui/tabs.tsx 基类 dark variant specificity) */}
       <Tabs value={side} onValueChange={(v) => v && setSide(v as Side)}>
@@ -135,11 +144,11 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
       <div className={compact ? 'flex-1 flex flex-col' : ''}>
         {marketOnly ? (
           // V2 模式 · MUST NOT DO 第 5 条 · 不渲染限价单 + 不显市价/限价 tab
-          // 直接挂 BuyForm / SellForm · 内层 tab 完全砍
+          // 直接挂 BuyForm / SellForm · 内层 tab 完全砍 · chromeless 透传 V2 .v2-card 接管
           side === 'buy' ? (
-            <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
+            <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
           ) : (
-            <SellForm mint={mint} compact risk={risk} reasons={reasons} />
+            <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
           )
         ) : (
           // V1 模式 · 完整 市价/限价
@@ -163,9 +172,9 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
 
             <TabsContent value="market" className={compact ? 'flex-1 flex flex-col' : undefined}>
               {side === 'buy' ? (
-                <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
+                <BuyForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
               ) : (
-                <SellForm mint={mint} compact risk={risk} reasons={reasons} />
+                <SellForm mint={mint} compact risk={risk} reasons={reasons} chromeless={chromeless} />
               )}
             </TabsContent>
             <TabsContent value="limit" className={compact ? 'flex-1 flex flex-col' : undefined}>

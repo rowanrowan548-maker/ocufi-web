@@ -33,16 +33,11 @@ export function TokenHead({ detail }: { detail: TokenDetail }) {
 
   return (
     <div
-      className="v2-token-head"
+      className="v2-card v2-token-head"
       style={{
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'space-between',
-        padding: '24px 28px',
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
-        borderRadius: 16,
-        boxShadow: 'var(--shadow-card-v2)',
         gap: 24,
       }}
     >

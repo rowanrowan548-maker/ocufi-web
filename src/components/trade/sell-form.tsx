@@ -88,9 +88,14 @@ interface SellFormProps {
   risk?: OverallRisk;
   /** 具体风险原因列表(由上层 riskReasons() 算出),展示在确认弹窗里 */
   reasons?: RiskReason[];
+  /** P2-CARD-UNIFY · V2 wrapper 已套 .v2-card 外 chrome · 砍 V1 内 Card chrome */
+  chromeless?: boolean;
 }
 
-export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormProps = {}) {
+// P2-CARD-UNIFY · 砍 shadcn Card 默 chrome
+const CHROMELESS_CARD = 'w-full flex flex-col h-full bg-transparent! ring-0! rounded-none! py-0! gap-0! overflow-visible!';
+
+export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless }: SellFormProps = {}) {
   const t = useTranslations();
   const locale = useLocale();
   const chain = getCurrentChain();
@@ -346,7 +351,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
 
   return (
     <>
-      <Card className={compact ? 'w-full flex flex-col h-full' : 'w-full max-w-xl'}>
+      <Card className={chromeless ? CHROMELESS_CARD : compact ? 'w-full flex flex-col h-full' : 'w-full max-w-xl'}>
         {!compact && (
           <CardHeader>
             <CardTitle>{t('trade.sell.title')}</CardTitle>
@@ -354,7 +359,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           </CardHeader>
         )}
 
-        <CardContent className={compact ? 'space-y-2 p-2 flex-1' : 'space-y-4'}>
+        <CardContent className={chromeless ? 'space-y-2 p-0! flex-1' : compact ? 'space-y-2 p-2 flex-1' : 'space-y-4'}>
           {mintProp == null && (
             <div className="space-y-2">
               <Label htmlFor="sell-mint">{t('trade.fields.mint')}</Label>
@@ -519,7 +524,7 @@ export function SellForm({ mint: mintProp, compact, risk, reasons }: SellFormPro
           )}
         </CardContent>
 
-        <CardContent className={compact ? 'pt-0 px-2 pb-2 mt-auto flex-shrink-0' : 'pt-0'}>
+        <CardContent className={chromeless ? 'pt-0 p-0! mt-auto flex-shrink-0' : compact ? 'pt-0 px-2 pb-2 mt-auto flex-shrink-0' : 'pt-0'}>
           {/* T-977f · compact 模式合并:状态 · 滑点 · Gas inline 1 行 */}
           {compact ? (
             (validInput || wallet.connected) && (
