@@ -14,11 +14,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { LogoSvg } from '@/components/v2/shared/logo-svg';
 import { HeaderSearch } from '@/components/layout/header-search';
-import { useLastTxSig } from '@/lib/last-tx-sig';
 
 // P2-HOTFIX-3 #2 · 代币 tab 不再硬指 SOL(SOL 没 LP 池 · K 线空白)· 改 BONK(真 demo)
 const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
@@ -28,18 +26,13 @@ type TabDef = { href: string; key: 'home' | 'token' | 'portfolio' | 'tx'; demoLa
 export function TopNavV3() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname();
-  // P3-FE-3 · 钱包 wallet 参数让 useLastTxSig 调 server fetch /transparency/recent 跨设备同步
-  const { publicKey } = useWallet();
-  const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
   const TABS: TabDef[] = [
     { href: '/v2', key: 'home' },
     // P3-FE-4 polish 3 · 砍 demoLabel "示例 BONK" · 用户嫌多余 · 只留"代币"二字
     { href: `/v2/token/${BONK_MINT}`, key: 'token' },
     { href: '/v2/portfolio', key: 'portfolio' },
-    // P3-FE-3 · 没 sig 时砍 demoLabel "Demo" · 直回 portfolio · 不暗示 broken
-    lastSig
-      ? { href: `/v2/tx/${lastSig}`, key: 'tx' }
-      : { href: '/v2/portfolio', key: 'tx' },
+    // P3-FE-7 · "报告" tab 跳列表页 · 不再单 sig · 跨设备 + 历史
+    { href: '/v2/reports', key: 'tx' },
   ];
 
   return (
@@ -105,11 +98,12 @@ export function TopNavV3() {
       {/* 桌面 4 主 link · mobile hide */}
       <div className="v2-nav-links" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         {TABS.map((tab) => {
-          const matchPrefix = tab.key === 'home' ? '/v2' : `/v2/${tab.key === 'tx' ? 'tx' : tab.key}`;
           const active =
             tab.key === 'home'
               ? pathname?.endsWith('/v2') || pathname === '/v2'
-              : pathname?.includes(matchPrefix);
+              : tab.key === 'tx'
+                ? pathname?.includes('/v2/tx') || pathname?.includes('/v2/reports')
+                : pathname?.includes(`/v2/${tab.key}`);
           return (
             <Link
               key={tab.key}

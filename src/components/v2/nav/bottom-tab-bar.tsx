@@ -11,9 +11,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { Home, Coins, Wallet, FileText } from 'lucide-react';
-import { useLastTxSig } from '@/lib/last-tx-sig';
 
 // P2-HOTFIX-3 #2 · 代币 tab 改 BONK 真示例(SOL 没 LP)
 const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
@@ -21,16 +19,13 @@ const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 export function BottomTabBar() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname() ?? '';
-  // P3-FE-3 · 钱包 wallet 参数让 useLastTxSig 调 server fetch 跨设备同步
-  const { publicKey } = useWallet();
-  const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
-  const txHref = lastSig ? `/v2/tx/${lastSig}` : '/v2/portfolio';
 
   const TABS = [
     { href: '/v2', key: 'home' as const, icon: Home, match: (p: string) => p === '/v2' || /^\/[a-z-]+\/v2$/.test(p) },
     { href: `/v2/token/${BONK_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/v2/token') },
     { href: '/v2/portfolio', key: 'portfolio' as const, icon: Wallet, match: (p: string) => p.includes('/v2/portfolio') },
-    { href: txHref, key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/v2/tx') },
+    // P3-FE-7 · "报告" tab 跳列表页 · 不再单 sig
+    { href: '/v2/reports', key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/v2/tx') || p.includes('/v2/reports') },
   ];
 
   return (

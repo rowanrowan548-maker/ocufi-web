@@ -2166,6 +2166,71 @@
       "portfolio": "持仓",
       "tx": "报告"
     },
+    "tx": {
+      "back": "‹ 持仓",
+      "shareLabel": "↗ 分享",
+      "transparencyReport": "TRANSPARENCY REPORT · #{sigShort}",
+      "feePctTag": "{pct}% FEE",
+      "savedPrefix": "省了",
+      "savedSuffix": "SOL",
+      "noFeeBaseline": "按行业 1% 标准 · 你这笔基本无费",
+      "buyVerb": "买入",
+      "sellVerb": "卖出",
+      "spendVerb": "花费",
+      "receiveVerb": "换得",
+      "vsBullX": "vs BullX {amount} SOL",
+      "mevProtected": "防夹保护 ✓",
+      "mevPlain": "普通广播",
+      "mevPlainTooltip": "小额单笔不走防夹通道 · 节省 RPC 资源 · 大额自动启用 Sender",
+      "savedUsd": "≈ ${usd} saved",
+      "slot": "Solana · Slot {slot}",
+      "card": {
+        "slippage": "实际滑点",
+        "slippageOk": "✓ {pct}%",
+        "slippageTolerance": "容忍 {pct}%",
+        "gas": "Gas 消耗",
+        "gasUsd": "≈ ${usd}",
+        "fee": "手续费",
+        "feeVsCompetitor": "{pct}% · vs BullX {comp}%",
+        "route": "路由 · 终价"
+      },
+      "mevDetail": {
+        "bundle": "Helius bundle ✓",
+        "sender": "走 Sender · 已保护",
+        "plain": "普通广播"
+      },
+      "share": {
+        "title": "分享这笔交易",
+        "tweet": "↗ 发推",
+        "copy": "📋 复制链接",
+        "telegram": "✈ TG 分享",
+        "copied": "已复制链接",
+        "shareText": "我刚在 Ocufi 完成一笔链上交易 · 省了 {savedSol} SOL · 路由 / 滑点 / Gas 全公开"
+      },
+      "engineer": {
+        "label": "工程师视角",
+        "bundle": "· Sender bundle:{id}",
+        "route": "· Jupiter 路径:{route}",
+        "routeWithSteps": "· Jupiter 路径:{steps} 步 · {route}",
+        "empty": "—"
+      },
+      "fallback": {
+        "title": "报告生成中",
+        "desc1": "链上确认后 · 报告需 30 秒 - 2 分钟写入。",
+        "desc2": "请稍后刷新 · 或回到持仓查看其他交易。",
+        "refresh": "↻ 刷新",
+        "back": "回持仓"
+      }
+    },
+    "reports": {
+      "title": "我的交易报告",
+      "subtitle": "每一笔成交后自动生成 · 路由 / 滑点 / Gas / 防夹 全公开",
+      "empty": "还没有交易报告 · 完成第一笔 swap 后这里会出现",
+      "connectWallet": "连接钱包查看报告历史",
+      "loadError": "加载失败 · 请稍后再试",
+      "viewReport": "查看报告 →",
+      "back": "‹ 持仓"
+    },
     "home": {
       "eyebrow": "Solana · 非托管 · 0.1% 手续费",
       "titleA": "链上交易 ·",

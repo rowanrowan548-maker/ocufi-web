@@ -2151,6 +2151,71 @@
       "portfolio": "Portfolio",
       "tx": "Report"
     },
+    "tx": {
+      "back": "‹ Portfolio",
+      "shareLabel": "↗ Share",
+      "transparencyReport": "TRANSPARENCY REPORT · #{sigShort}",
+      "feePctTag": "{pct}% FEE",
+      "savedPrefix": "Saved",
+      "savedSuffix": "SOL",
+      "noFeeBaseline": "Industry standard 1% · this trade is basically fee-free",
+      "buyVerb": "Bought",
+      "sellVerb": "Sold",
+      "spendVerb": "spent",
+      "receiveVerb": "received",
+      "vsBullX": "vs BullX {amount} SOL",
+      "mevProtected": "MEV protected ✓",
+      "mevPlain": "Standard broadcast",
+      "mevPlainTooltip": "Small single trades skip the anti-MEV lane to save RPC · large trades auto-enable Sender",
+      "savedUsd": "≈ ${usd} saved",
+      "slot": "Solana · Slot {slot}",
+      "card": {
+        "slippage": "Slippage",
+        "slippageOk": "✓ {pct}%",
+        "slippageTolerance": "Tolerance {pct}%",
+        "gas": "Gas",
+        "gasUsd": "≈ ${usd}",
+        "fee": "Fee",
+        "feeVsCompetitor": "{pct}% · vs BullX {comp}%",
+        "route": "Route · Final price"
+      },
+      "mevDetail": {
+        "bundle": "Helius bundle ✓",
+        "sender": "Via Sender · protected",
+        "plain": "Standard broadcast"
+      },
+      "share": {
+        "title": "Share this trade",
+        "tweet": "↗ Tweet",
+        "copy": "📋 Copy link",
+        "telegram": "✈ Telegram",
+        "copied": "Link copied",
+        "shareText": "Just completed a trade on Ocufi · saved {savedSol} SOL · route / slippage / gas all public"
+      },
+      "engineer": {
+        "label": "Engineer view",
+        "bundle": "· Sender bundle: {id}",
+        "route": "· Jupiter route: {route}",
+        "routeWithSteps": "· Jupiter route: {steps} steps · {route}",
+        "empty": "—"
+      },
+      "fallback": {
+        "title": "Report generating",
+        "desc1": "After on-chain confirmation, reports take 30 seconds - 2 minutes to write.",
+        "desc2": "Please refresh later · or check other trades in your portfolio.",
+        "refresh": "↻ Refresh",
+        "back": "Back to portfolio"
+      }
+    },
+    "reports": {
+      "title": "My trade reports",
+      "subtitle": "Auto-generated after each fill · route / slippage / gas / MEV all public",
+      "empty": "No trade reports yet · they'll appear here after your first swap",
+      "connectWallet": "Connect wallet to view report history",
+      "loadError": "Load failed · please try again",
+      "viewReport": "View report →",
+      "back": "‹ Portfolio"
+    },
     "home": {
       "eyebrow": "Solana · Non-custodial · 0.1% fee",
       "titleA": "On-chain trading,",

@@ -4,9 +4,7 @@
  * V2 TX View · /v2/tx/[sig]
  *
  * P3-FE-1:接真数据(SPEC §4.2 字段映射)· demo sig 走 mock
- *   - data 传 → 渲染真透明度报告
- *   - demo=true → 渲染 mock(nav "Demo" tab 用)
- *   - 都没 → 兜底 mock(防意外路径)
+ * P3-FE-7:i18n 完整(zh-CN / en-US)+ 3 分享按钮真接 click
  *
  * P2-MOBILE-OVERHAUL polish 保留:
  *   - meta 拆 2 独立行(back/share / date · UTC / Solana · Slot)避 320 粘连
@@ -16,6 +14,8 @@
  *   - 3 分享按钮 column 列 + w-full + h-12 等宽等高
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { OgCard } from '@/components/v2/shared/og-card';
 import { getTransparencyReport, mapReportToView, type TxViewData } from '@/lib/transparency';
 
@@ -60,6 +60,7 @@ type Props = {
 };
 
 export function TxView({ sig, data, demo }: Props) {
+  const t = useTranslations('v2.tx');
   // 优先级:demo → MOCK + sigShort 替换 / data → 真 / fallback → MOCK
   const d: TxViewData = data
     ?? (demo
@@ -70,31 +71,61 @@ export function TxView({ sig, data, demo }: Props) {
   // P2-MOBILE-OVERHAUL #4 · subText 拆 2 行 · 第 2 行 brand-up 强调 ✓
   // P3-FE-4 polish 2 · solDp 跟 savedSol 量级匹配 · 防 toFixed(4) 把 0.000045 截成 0.0000 误导
   const tokenAmountStr = d.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 4 });
-  const sideVerb = d.side === 'buy' ? '买入' : '卖出';
-  const heroSubLine1 = `${sideVerb} ${tokenAmountStr} ${d.tokenSymbol} · ${d.side === 'buy' ? '花费' : '换得'} ${fmtNum(d.notionalSol, d.solDp)} SOL`;
+  const sideVerb = d.side === 'buy' ? t('buyVerb') : t('sellVerb');
+  const flowVerb = d.side === 'buy' ? t('spendVerb') : t('receiveVerb');
+  const heroSubLine1 = `${sideVerb} ${tokenAmountStr} ${d.tokenSymbol} · ${flowVerb} ${fmtNum(d.notionalSol, d.solDp)} SOL`;
   // P3-FE-4 polish 2b · 防夹保护友好显:true → ✓ brand 绿 / false → 普通广播 中性灰 / null → 不显
   const mevText = d.mevProtected
-    ? <span style={{ color: 'var(--brand-up)' }}>防夹保护 ✓</span>
-    : <span style={{ color: 'var(--ink-40)' }} title="小额单笔不走防夹通道 · 节省 RPC 资源 · 大额自动启用 Sender">普通广播</span>;
+    ? <span style={{ color: 'var(--brand-up)' }}>{t('mevProtected')}</span>
+    : <span style={{ color: 'var(--ink-40)' }} title={t('mevPlainTooltip')}>{t('mevPlain')}</span>;
   const heroSubLine2 = (
     <>
-      vs BullX {fmtNum(d.vsCompetitorSol, d.solDp)} SOL · {mevText}
+      {t('vsBullX', { amount: fmtNum(d.vsCompetitorSol, d.solDp) })} · {mevText}
     </>
   );
 
   // P3-FE-4 polish 2a · savedSol === 0 时替代大字 · 不显误导的 "0.0000"
   const heroSaveText = d.savedSol === 0
-    ? '按行业 1% 标准 · 你这笔基本无费'
-    : `省了 ${fmtNum(d.savedSol, d.solDp)} SOL`;
+    ? t('noFeeBaseline')
+    : `${t('savedPrefix')} ${fmtNum(d.savedSol, d.solDp)} ${t('savedSuffix')}`;
 
-  const slippageDisplay = d.slippagePct == null ? '—' : `✓ ${fmtNum(d.slippagePct, 2)}%`;
-  const slippageSub = `容忍 ${fmtNum(d.slippageTolerancePct, 0)}%`;
-  const gasUsdDisplay = d.gasUsd == null ? '—' : `≈ $${fmtNum(d.gasUsd, 3)}`;
+  const slippageDisplay = d.slippagePct == null ? '—' : t('card.slippageOk', { pct: fmtNum(d.slippagePct, 2) });
+  const slippageSub = t('card.slippageTolerance', { pct: fmtNum(d.slippageTolerancePct, 0) });
+  const gasUsdDisplay = d.gasUsd == null ? '—' : t('card.gasUsd', { usd: fmtNum(d.gasUsd, 3) });
   const finalPriceDisplay = d.finalPriceUsd == null ? '—' : `$${fmtNum(d.finalPriceUsd, 6)}`;
   // P3-FE-4 polish 2b · "无防夹"→"普通广播" 跟 hero subLine2 文案一致 · 不抢眼
   const mevDetail = d.mevProtected
-    ? (d.mevBundleId ? `Helius bundle ✓` : '走 Sender · 已保护')
-    : '普通广播';
+    ? (d.mevBundleId ? t('mevDetail.bundle') : t('mevDetail.sender'))
+    : t('mevDetail.plain');
+
+  // P3-FE-7 · 3 分享按钮真接 click
+  const reportUrl = typeof window !== 'undefined' ? window.location.href : `https://ocufi.io/v2/tx/${d.sig}`;
+  const shareText = t('share.shareText', { savedSol: fmtNum(d.savedSol, d.solDp) });
+  const handleTweet = () => {
+    if (typeof window === 'undefined') return;
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(reportUrl)}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
+  };
+  const handleCopy = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      await navigator.clipboard.writeText(reportUrl);
+      toast(t('share.copied'));
+    } catch {
+      toast(t('share.copied'));
+    }
+  };
+  const handleTelegram = () => {
+    if (typeof window === 'undefined') return;
+    window.open(
+      `https://t.me/share/url?url=${encodeURIComponent(reportUrl)}&text=${encodeURIComponent(shareText)}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
+  };
 
   return (
     <main style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -119,11 +150,25 @@ export function TxView({ sig, data, demo }: Props) {
           }}
         >
           <a href="/v2/portfolio" style={{ color: 'var(--ink-60)', textDecoration: 'none' }}>
-            ‹ 持仓
+            {t('back')}
           </a>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            ↗ 分享
-          </span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+              background: 'transparent',
+              border: 0,
+              padding: 0,
+              color: 'var(--ink-60)',
+              font: 'inherit',
+            }}
+          >
+            {t('shareLabel')}
+          </button>
         </div>
         <div
           className="v2-tx-meta-info"
@@ -138,7 +183,7 @@ export function TxView({ sig, data, demo }: Props) {
           }}
         >
           <span>{d.timestamp}</span>
-          <span>Solana · Slot {d.slot.toLocaleString('en-US')}</span>
+          <span>{t('slot', { slot: d.slot.toLocaleString('en-US') })}</span>
         </div>
       </header>
 
@@ -146,13 +191,13 @@ export function TxView({ sig, data, demo }: Props) {
       <div style={{ padding: '0 40px' }} className="v2-tx-hero-wrap">
         <OgCard
           variant="tx-hero"
-          topLabel={`TRANSPARENCY REPORT · #${d.sigShort}`}
-          topRight={`${fmtNum(d.feePct, 2)}% FEE`}
+          topLabel={t('transparencyReport', { sigShort: d.sigShort })}
+          topRight={t('feePctTag', { pct: fmtNum(d.feePct, 2) })}
           saveText={heroSaveText}
           subText={heroSubLine1}
           subTextLine2={heroSubLine2}
           footLeft={`ocufi.io/v2/tx/${d.sigShort}`}
-          footRight={d.savedUsd != null ? `≈ $${fmtNum(d.savedUsd, 2)} saved` : undefined}
+          footRight={d.savedUsd != null ? t('savedUsd', { usd: fmtNum(d.savedUsd, 2) }) : undefined}
           saveGradient
         />
       </div>
@@ -169,23 +214,23 @@ export function TxView({ sig, data, demo }: Props) {
         }}
       >
         <Card
-          k="实际滑点"
+          k={t('card.slippage')}
           v={slippageDisplay}
           sub={slippageSub}
           ok={d.slippagePct != null && d.slippagePct <= d.slippageTolerancePct}
         />
         <Card
-          k="Gas 消耗"
+          k={t('card.gas')}
           v={`${fmtNum(d.gasSol, 6)} SOL`}
           sub={gasUsdDisplay}
         />
         <Card
-          k="手续费"
+          k={t('card.fee')}
           v={`${fmtNum(d.feeSol, 6)} SOL`}
-          sub={`${fmtNum(d.feePct, 2)}% · vs BullX ${fmtNum(d.competitorFeePct, 0)}%`}
+          sub={t('card.feeVsCompetitor', { pct: fmtNum(d.feePct, 2), comp: fmtNum(d.competitorFeePct, 0) })}
         />
         <Card
-          k="路由 · 终价"
+          k={t('card.route')}
           v={d.routeStr}
           sub={`${finalPriceDisplay} · ${mevDetail}`}
         />
@@ -210,12 +255,12 @@ export function TxView({ sig, data, demo }: Props) {
             color: 'var(--ink-60)',
           }}
         >
-          分享这笔交易
+          {t('share.title')}
         </div>
         <div className="v2-tx-share-btns" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <ShareBtn primary>↗ 发推</ShareBtn>
-          <ShareBtn>📋 复制链接</ShareBtn>
-          <ShareBtn>✈ TG 分享</ShareBtn>
+          <ShareBtn primary onClick={handleTweet}>{t('share.tweet')}</ShareBtn>
+          <ShareBtn onClick={handleCopy}>{t('share.copy')}</ShareBtn>
+          <ShareBtn onClick={handleTelegram}>{t('share.telegram')}</ShareBtn>
         </div>
       </section>
 
@@ -244,15 +289,17 @@ export function TxView({ sig, data, demo }: Props) {
           }}
         >
           <span style={{ fontSize: 9, color: 'var(--ink-40)' }}>{engineerOpen ? '▼' : '▶'}</span>
-          工程师视角
+          {t('engineer.label')}
         </button>
         {engineerOpen && (
           <ul style={{ margin: '14px 0 0 22px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <li style={{ fontSize: 12, color: 'var(--ink-60)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-              · Sender bundle:{d.mevBundleId ? d.mevBundleId : '—'}
+              {t('engineer.bundle', { id: d.mevBundleId ?? t('engineer.empty') })}
             </li>
             <li style={{ fontSize: 12, color: 'var(--ink-60)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-              · Jupiter 路径:{d.jupiterRouteSteps ? `${d.jupiterRouteSteps.length} 步 · ${d.routeStr}` : d.routeStr}
+              {d.jupiterRouteSteps
+                ? t('engineer.routeWithSteps', { steps: d.jupiterRouteSteps.length, route: d.routeStr })
+                : t('engineer.route', { route: d.routeStr })}
             </li>
           </ul>
         )}
@@ -270,6 +317,7 @@ export function TxView({ sig, data, demo }: Props) {
  *   · 拿到 setData → 切换渲染 TxView 真数据 · 不再死板"报告生成中"
  */
 export function TxViewFallback({ sig }: { sig: string }) {
+  const t = useTranslations('v2.tx');
   const sigShort = sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig;
   const [data, setData] = useState<TxViewData | null>(null);
   const triesRef = useRef(0);
@@ -326,7 +374,7 @@ export function TxViewFallback({ sig }: { sig: string }) {
           }}
         >
           <a href="/v2/portfolio" style={{ color: 'var(--ink-60)', textDecoration: 'none' }}>
-            ‹ 持仓
+            {t('back')}
           </a>
         </div>
         <div
@@ -366,7 +414,7 @@ export function TxViewFallback({ sig }: { sig: string }) {
             lineHeight: 1.15,
           }}
         >
-          报告生成中
+          {t('fallback.title')}
         </div>
         <div
           style={{
@@ -377,12 +425,12 @@ export function TxViewFallback({ sig }: { sig: string }) {
             lineHeight: 1.6,
           }}
         >
-          链上确认后 · 报告需 30 秒 - 2 分钟写入。
+          {t('fallback.desc1')}
           <br />
-          请稍后刷新 · 或回到持仓查看其他交易。
+          {t('fallback.desc2')}
         </div>
         <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-          <RefreshLink />
+          <RefreshLink label={t('fallback.refresh')} />
           <a
             href="/v2/portfolio"
             style={{
@@ -396,7 +444,7 @@ export function TxViewFallback({ sig }: { sig: string }) {
               textDecoration: 'none',
             }}
           >
-            回持仓
+            {t('fallback.back')}
           </a>
         </div>
       </section>
@@ -404,7 +452,7 @@ export function TxViewFallback({ sig }: { sig: string }) {
   );
 }
 
-function RefreshLink() {
+function RefreshLink({ label }: { label: string }) {
   return (
     <button
       type="button"
@@ -423,7 +471,7 @@ function RefreshLink() {
         boxShadow: '0 0 30px rgba(25,251,155,0.18)',
       }}
     >
-      ↻ 刷新
+      {label}
     </button>
   );
 }
@@ -480,14 +528,17 @@ function Card({ k, v, sub, ok }: { k: string; v: string; sub: string; ok?: boole
 
 function ShareBtn({
   primary,
+  onClick,
   children,
 }: {
   primary?: boolean;
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       style={{
         width: '100%',
         height: 48,
