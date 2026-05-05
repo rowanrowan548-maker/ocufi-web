@@ -2202,6 +2202,32 @@
           "p": "路由、滑点、Gas、手续费、MEV 检测。一个 URL,一键分享。"
         }
       ]
+    },
+    "portfolio": {
+      "loading": "加载持仓中...",
+      "loadFailed": "加载失败 · 请重试",
+      "connect": {
+        "title": "连接钱包看持仓",
+        "sub": "Ocufi 永远摸不到你的私钥 · 数据走只读 RPC",
+        "cta": "连接钱包"
+      },
+      "empty": {
+        "title": "你还没在 Ocufi 交易过",
+        "sub": "去 / 粘贴 token 地址 · 一键交易 · 0.1% 手续费 + MEV 防夹保护",
+        "cta": "去交易",
+        "holdingsHint": "暂无 SPL 代币 · 钱包里只有 SOL / 没数据"
+      },
+      "hero": {
+        "totalLabel": "总持仓",
+        "savedLabel": "在 Ocufi 累计省下"
+      },
+      "table": {
+        "token": "代币",
+        "allocation": "占比",
+        "holdings": "持仓",
+        "value": "价值",
+        "change": "24h"
+      }
     }
   },
   "launch": {

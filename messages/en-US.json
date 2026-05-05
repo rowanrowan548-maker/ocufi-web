@@ -2187,6 +2187,32 @@
           "p": "Route, slippage, gas, fee, MEV detection. One URL, one click to share."
         }
       ]
+    },
+    "portfolio": {
+      "loading": "Loading holdings...",
+      "loadFailed": "Failed to load · please retry",
+      "connect": {
+        "title": "Connect wallet to view holdings",
+        "sub": "Ocufi never touches your private key · data via read-only RPC",
+        "cta": "Connect wallet"
+      },
+      "empty": {
+        "title": "You haven't traded on Ocufi yet",
+        "sub": "Go to / · paste a token address · one-click swap · 0.1% fee + MEV protection",
+        "cta": "Trade now",
+        "holdingsHint": "No SPL tokens · wallet holds only SOL / no data"
+      },
+      "hero": {
+        "totalLabel": "Total balance",
+        "savedLabel": "Saved on Ocufi"
+      },
+      "table": {
+        "token": "Token",
+        "allocation": "Allocation",
+        "holdings": "Holdings",
+        "value": "Value",
+        "change": "24h"
+      }
     }
   },
   "launch": {

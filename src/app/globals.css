@@ -431,5 +431,32 @@
     }
     .v2-token-chart { height: 220px !important; }
     .v2-token-side { order: 3; }
+
+    /* /v2/portfolio mobile */
+    .v2-portfolio-hero { padding: 32px 20px 24px !important; }
+    .v2-pf-eyebrow {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+      line-height: 1.4 !important;
+    }
+    .v2-pf-total { font-size: 56px !important; }
+    .v2-pf-saved {
+      padding: 16px 18px !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 10px !important;
+      max-width: 100% !important;
+    }
+    .v2-pf-list { padding: 0 16px 24px !important; }
+    .v2-pf-list-head { display: none !important; }
+    .v2-pf-list-row {
+      grid-template-columns: 36px 1fr auto !important;
+      grid-template-areas: "icon name change" "icon meta value" !important;
+      gap: 8px 12px !important;
+      padding: 14px 0 !important;
+    }
+    .v2-pf-list-row > div:nth-child(2),
+    .v2-pf-list-row > div:nth-child(3) { display: none !important; }
   }
 }

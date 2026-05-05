@@ -1,0 +1,425 @@
+'use client';
+
+/**
+ * V2 Portfolio · /v2/portfolio · 客户端 + wallet 连接后并发取 3 endpoint
+ *
+ * 数据源(全 V1 已 ship):
+ *   - fetchPortfolioHoldings(wallet)
+ *   - fetchPortfolioSavings(wallet)
+ *   - fetchPortfolioMevSavings(wallet)
+ *
+ * 视觉对齐 mockup `.coordination/V2/MOCKUPS/v2-overall.html` `/portfolio` 段:
+ *   - eyebrow(Total balance / 短钱包 拆 2 行 mobile)
+ *   - Geist 96px tnum 总值 + delta(brand-up 色)
+ *   - 累计省下卡(Newsreader italic 0.234 SOL)
+ *   - 6 列 token 表(桌面)/ 2 行布局(mobile)
+ *   - ATA 1 行 banner + 一键清扫 CTA(暂 placeholder · 复用 V1 reclaim 留 P3)
+ */
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import {
+  fetchPortfolioHoldings,
+  fetchPortfolioSavings,
+  fetchPortfolioMevSavings,
+  type HoldingsResponse,
+  type PortfolioSavingsResponse,
+  type PortfolioMevSavingsResponse,
+} from '@/lib/api-client';
+
+function fmtUsd(n: number | null | undefined, max = 2): string {
+  if (n == null || !Number.isFinite(n)) return '—';
+  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: max, minimumFractionDigits: max });
+}
+function fmtSol(n: number | null | undefined, dp = 4): string {
+  if (n == null || !Number.isFinite(n)) return '—';
+  return n.toFixed(dp);
+}
+function fmtAmount(n: number, decimals: number): string {
+  if (!Number.isFinite(n)) return '—';
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  if (n >= 1) return n.toFixed(decimals > 4 ? 4 : decimals);
+  return n.toFixed(6);
+}
+function shortAddr(a: string): string {
+  return a.length <= 8 ? a : `${a.slice(0, 4)}...${a.slice(-4)}`;
+}
+
+const SOL_USD = 200; // fallback price for SOL → USD when savings comes only in SOL
+
+export function PortfolioView() {
+  const t = useTranslations('v2.portfolio');
+  const { connected, publicKey } = useWallet();
+  const { setVisible: openWalletModal } = useWalletModal();
+
+  const [holdings, setHoldings] = useState<HoldingsResponse | null>(null);
+  const [savings, setSavings] = useState<PortfolioSavingsResponse | null>(null);
+  const [mev, setMev] = useState<PortfolioMevSavingsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const wallet = publicKey?.toBase58();
+
+  useEffect(() => {
+    if (!connected || !wallet) return;
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    Promise.all([
+      fetchPortfolioHoldings(wallet).catch(() => null),
+      fetchPortfolioSavings(wallet).catch(() => null),
+      fetchPortfolioMevSavings(wallet).catch(() => null),
+    ]).then(([h, s, m]) => {
+      if (cancelled) return;
+      setHoldings(h);
+      setSavings(s);
+      setMev(m);
+      setLoading(false);
+      if (!h && !s) setErr(t('loadFailed'));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, wallet, t]);
+
+  if (!connected || !wallet) {
+    return (
+      <main style={{ maxWidth: 720, margin: '0 auto', padding: '120px 24px' }}>
+        <div
+          style={{
+            padding: 56,
+            background: 'var(--bg-card-v2)',
+            border: '1px solid var(--border-brand-soft)',
+            borderRadius: 20,
+            boxShadow: 'var(--shadow-glow-v2)',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 32, color: 'var(--brand-up)', marginBottom: 16 }}>
+            {t('connect.title')}
+          </div>
+          <div style={{ fontSize: 15, color: 'var(--ink-80)', marginBottom: 32 }}>
+            {t('connect.sub')}
+          </div>
+          <button
+            type="button"
+            onClick={() => openWalletModal(true)}
+            style={{
+              background: 'var(--brand-up)',
+              color: 'var(--bg-base)',
+              padding: '14px 32px',
+              borderRadius: 12,
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: 'pointer',
+              border: 0,
+              fontFamily: 'inherit',
+              boxShadow: '0 0 30px rgba(25,251,155,0.18)',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {t('connect.cta')}
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (loading) {
+    return (
+      <main style={{ maxWidth: 1320, margin: '0 auto', padding: '80px 56px', textAlign: 'center', color: 'var(--ink-60)' }}>
+        {t('loading')}
+      </main>
+    );
+  }
+
+  if (err) {
+    return (
+      <main style={{ maxWidth: 1320, margin: '0 auto', padding: '80px 56px', textAlign: 'center', color: 'var(--warn, #FF6B6B)' }}>
+        {err}
+      </main>
+    );
+  }
+
+  const totalUsd = holdings?.total_usd ?? 0;
+  const items = holdings?.items ?? [];
+  const tradeCount = savings?.trade_count ?? 0;
+  const savedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
+  const savedUsd = savedSol * SOL_USD;
+  const feeSavedUsd = (savings?.totals?.fee_saved_sol ?? 0) * SOL_USD;
+  const mevSavedUsd = (mev?.total_saved_sol ?? 0) * SOL_USD;
+
+  // empty state · 没交易过
+  if (tradeCount === 0 && items.length === 0) {
+    return (
+      <main style={{ maxWidth: 720, margin: '0 auto', padding: '80px 24px' }}>
+        <div
+          style={{
+            padding: 48,
+            background: 'var(--bg-card-v2)',
+            border: '1px solid var(--border-v2)',
+            borderRadius: 20,
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 28, color: 'var(--ink-100)', marginBottom: 16 }}>
+            {t('empty.title')}
+          </div>
+          <div style={{ fontSize: 15, color: 'var(--ink-60)', marginBottom: 24 }}>
+            {t('empty.sub')}
+          </div>
+          <a
+            href="/v2"
+            style={{
+              display: 'inline-block',
+              background: 'var(--brand-up)',
+              color: 'var(--bg-base)',
+              padding: '12px 28px',
+              borderRadius: 999,
+              fontWeight: 500,
+              fontSize: 14,
+              textDecoration: 'none',
+            }}
+          >
+            {t('empty.cta')}
+          </a>
+        </div>
+      </main>
+    );
+  }
+
+  const allocations = items.map((h) => ({
+    ...h,
+    pct: totalUsd > 0 ? ((h.value_usd ?? 0) / totalUsd) * 100 : 0,
+  }));
+
+  return (
+    <main>
+      {/* hero · 大字总值 + 累计省下卡 */}
+      <section
+        style={{
+          maxWidth: 1320,
+          margin: '0 auto',
+          padding: '80px 56px 48px',
+        }}
+        className="v2-portfolio-hero"
+      >
+        <div
+          className="v2-pf-eyebrow"
+          style={{
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 12,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--ink-40)',
+            marginBottom: 14,
+          }}
+        >
+          {t('hero.totalLabel')} · {shortAddr(wallet)}
+        </div>
+        <div
+          className="v2-pf-total"
+          style={{
+            fontFamily: 'var(--font-geist), sans-serif',
+            fontSize: 'clamp(64px, 8vw, 96px)',
+            fontWeight: 500,
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
+            marginBottom: 16,
+            color: 'var(--ink-100)',
+            fontFeatureSettings: '"tnum" 1',
+          }}
+        >
+          {fmtUsd(totalUsd)}
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 16,
+            color: 'var(--ink-60)',
+          }}
+        >
+          {tradeCount} trades · holdings = {fmtUsd(totalUsd)}
+        </div>
+
+        {/* 累计省下卡 · brand 玻璃 */}
+        <div
+          className="v2-pf-saved"
+          style={{
+            marginTop: 36,
+            padding: '22px 24px',
+            background: 'var(--bg-card-v2)',
+            border: '1px solid var(--border-v2)',
+            borderRadius: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            maxWidth: 720,
+            boxShadow: 'var(--shadow-card-v2)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div
+              style={{
+                fontSize: 12,
+                color: 'var(--ink-40)',
+                fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {t('hero.savedLabel')}
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontSize: 32,
+                color: 'var(--brand-up)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {fmtSol(savedSol, 3)} SOL
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              color: 'var(--ink-60)',
+              textAlign: 'right',
+              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            }}
+          >
+            ≈ {fmtUsd(savedUsd)} · {tradeCount} trades
+            <br />
+            <span style={{ color: 'var(--brand-up)' }}>
+              fee {fmtUsd(feeSavedUsd)} · MEV {fmtUsd(mevSavedUsd)}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* token list · 桌面 6 列 / mobile 2 行 */}
+      <section
+        className="v2-pf-list"
+        style={{
+          maxWidth: 1320,
+          margin: '0 auto',
+          padding: '0 56px 40px',
+        }}
+      >
+        {allocations.length === 0 ? (
+          <div style={{ padding: 40, color: 'var(--ink-60)', textAlign: 'center' }}>
+            {t('empty.holdingsHint')}
+          </div>
+        ) : (
+          <>
+            <div
+              className="v2-pf-list-head"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '240px 1fr 120px 140px 100px',
+                gap: 16,
+                alignItems: 'center',
+                padding: '10px 20px',
+                fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: 'var(--ink-40)',
+                borderBottom: '1px solid var(--border-v2)',
+              }}
+            >
+              <span>{t('table.token')}</span>
+              <span>{t('table.allocation')}</span>
+              <span style={{ textAlign: 'right' }}>{t('table.holdings')}</span>
+              <span style={{ textAlign: 'right' }}>{t('table.value')}</span>
+              <span style={{ textAlign: 'right' }}>{t('table.change')}</span>
+            </div>
+            {allocations.map((h) => {
+              const change = h.price_change_24h_pct;
+              const changeUp = change != null && change >= 0;
+              return (
+                <div
+                  key={h.mint}
+                  className="v2-pf-list-row"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '240px 1fr 120px 140px 100px',
+                    gap: 16,
+                    alignItems: 'center',
+                    padding: '16px 20px',
+                    borderBottom: '1px solid var(--border-v2)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {h.logo_uri ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={h.logo_uri} alt="" width={36} height={36} style={{ borderRadius: '50%' }} />
+                    ) : (
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
+                          display: 'grid',
+                          placeItems: 'center',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: 14,
+                        }}
+                      >
+                        {(h.symbol || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{h.symbol}</div>
+                      <div style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
+                        {h.name || shortAddr(h.mint)}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, height: 4, background: 'var(--bg-deep)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${Math.min(100, h.pct)}%`,
+                          background: h.pct > 50 ? 'var(--brand-up)' : 'var(--ink-40)',
+                          borderRadius: 2,
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 11, color: 'var(--ink-60)' }}>
+                      {h.pct.toFixed(0)}%
+                    </span>
+                  </div>
+                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13 }}>
+                    {fmtAmount(h.amount, h.decimals)}
+                  </div>
+                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontSize: 13, color: 'var(--ink-100)', fontWeight: 500 }}>
+                    {fmtUsd(h.value_usd ?? 0)}
+                  </div>
+                  <div
+                    style={{
+                      textAlign: 'right',
+                      fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+                      fontSize: 13,
+                      color: change == null ? 'var(--ink-40)' : changeUp ? 'var(--brand-up)' : 'var(--warn, #FF6B6B)',
+                    }}
+                  >
+                    {change == null ? '—' : `${changeUp ? '+' : ''}${change.toFixed(1)}%`}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </section>
+    </main>
+  );
+}
