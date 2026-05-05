@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * V2 Token Trade Shell · V2 GlassCard 容器 · 内嵌 V1 TradeTabs(Buy/Sell + 市价/限价)
+ * V2 Token Trade Shell · V2 GlassCard 容器 · 内嵌 V1 TradeTabs(Buy/Sell · marketOnly 砍限价 MUST NOT DO 第 5 条)
  *
  * 复用 V1 swap 全套(swap-with-fee + helius-sender + mev-protection + execute-swap-plan + trade-tx)
  * 链上 lib 0 改 · 直接 import V1 TradeTabs(已封装完整 buy/sell pipeline + Tab 切换)
@@ -29,8 +29,9 @@ export function TokenTradeShell({ mint, defaultSide }: Props) {
         boxShadow: 'var(--shadow-card-v2)',
       }}
     >
-      {/* V1 TradeTabs · compact 模式 · 自带 Buy/Sell + 市价/限价 + 滑点 + 优先费 + 防夹 + Phantom 签 */}
-      <TradeTabs mint={mint} compact defaultSide={defaultSide} />
+      {/* V1 TradeTabs · compact 模式 · marketOnly 砍内层"市价/限价" tab(MUST NOT DO 第 5 条 · V2 不做 limit)
+          自带 Buy/Sell + 滑点 + 优先费 + 防夹 + Phantom 签 */}
+      <TradeTabs mint={mint} compact defaultSide={defaultSide} marketOnly />
 
       {/* 查看 demo 报告 · Phase 3 后改 swap 成功 callback → 真 sig */}
       <div

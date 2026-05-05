@@ -35,12 +35,17 @@ interface Props {
   defaultSide?: 'buy' | 'sell';
   /** 上层(trade-screen)切换 mint + side 的回调 — SOL 页"用 USDC 买 SOL"按钮调用 */
   onPickMint?: (mint: string, side: 'buy' | 'sell') => void;
+  /**
+   * V2 用 · 砍内层"市价/限价" tab · 完全不渲染 LimitForm · 满足 MUST NOT DO 第 5 条
+   * 默认 false 保 V1 兼容 · V2 wrapper 必须传 true
+   */
+  marketOnly?: boolean;
 }
 
 type Side = 'buy' | 'sell';
 type OrderType = 'market' | 'limit';
 
-export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint }: Props = {}) {
+export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, defaultSide, onPickMint, marketOnly }: Props = {}) {
   const t = useTranslations();
   const [side, setSide] = useState<Side>(defaultSide ?? 'buy');
   const [orderType, setOrderType] = useState<OrderType>('market');
@@ -128,41 +133,51 @@ export function TradeTabs({ mint, compact, onLimitOrderCreated, risk, reasons, d
 
       {/* T-977g · compact 模式让内层 Tabs 包成 flex-1 flex-col,确保按钮粘底 */}
       <div className={compact ? 'flex-1 flex flex-col' : ''}>
-        {/* 内层 市价/限价 */}
-        <Tabs value={orderType} onValueChange={(v) => v && setOrderType(v as OrderType)} className={compact ? 'flex-1 flex flex-col' : undefined}>
-          <TabsList className={compact
-            ? 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-3 px-0 mb-2 h-auto'
-            : 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto'}>
-            <TabsTrigger
-              value="market"
-              className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
-            >
-              {t('trade.orderType.market')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="limit"
-              className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
-            >
-              {t('trade.orderType.limit')}
-            </TabsTrigger>
-          </TabsList>
+        {marketOnly ? (
+          // V2 模式 · MUST NOT DO 第 5 条 · 不渲染限价单 + 不显市价/限价 tab
+          // 直接挂 BuyForm / SellForm · 内层 tab 完全砍
+          side === 'buy' ? (
+            <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
+          ) : (
+            <SellForm mint={mint} compact risk={risk} reasons={reasons} />
+          )
+        ) : (
+          // V1 模式 · 完整 市价/限价
+          <Tabs value={orderType} onValueChange={(v) => v && setOrderType(v as OrderType)} className={compact ? 'flex-1 flex flex-col' : undefined}>
+            <TabsList className={compact
+              ? 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-3 px-0 mb-2 h-auto'
+              : 'bg-transparent border-b border-border/40 rounded-none w-full justify-start gap-5 px-0 mb-4 h-auto'}>
+              <TabsTrigger
+                value="market"
+                className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
+              >
+                {t('trade.orderType.market')}
+              </TabsTrigger>
+              <TabsTrigger
+                value="limit"
+                className={`px-0 ${compact ? 'py-1 text-xs' : 'py-2'} rounded-none border-b-2 border-transparent data-[selected=true]:bg-transparent data-[selected=true]:text-foreground data-[selected=true]:border-primary`}
+              >
+                {t('trade.orderType.limit')}
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="market" className={compact ? 'flex-1 flex flex-col' : undefined}>
-            {side === 'buy' ? (
-              <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
-            ) : (
-              <SellForm mint={mint} compact risk={risk} reasons={reasons} />
-            )}
-          </TabsContent>
-          <TabsContent value="limit" className={compact ? 'flex-1 flex flex-col' : undefined}>
-            <LimitForm
-              mint={mint}
-              side={side}
-              compact
-              onCreated={onLimitOrderCreated}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="market" className={compact ? 'flex-1 flex flex-col' : undefined}>
+              {side === 'buy' ? (
+                <BuyForm mint={mint} compact risk={risk} reasons={reasons} />
+              ) : (
+                <SellForm mint={mint} compact risk={risk} reasons={reasons} />
+              )}
+            </TabsContent>
+            <TabsContent value="limit" className={compact ? 'flex-1 flex flex-col' : undefined}>
+              <LimitForm
+                mint={mint}
+                side={side}
+                compact
+                onCreated={onLimitOrderCreated}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </Card>
   );

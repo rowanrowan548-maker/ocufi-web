@@ -365,8 +365,9 @@
       height: 64px !important;
       gap: 8px !important;
     }
-    /* mobile 顶部 nav: logo(无文字) + 🔍 + wallet · 砍 4 link · 砍抽屉 */
-    .v2-nav-brand-text { display: none !important; }
+    /* P2-HOTFIX-4 #3 · mobile nav 加回 "OCUFI" 文字 · 不能孤 logo · 品牌弱
+       mobile 顶部 nav: logo + OCUFI + 🔍 + wallet · 砍 4 link · 砍抽屉 */
+    .v2-nav-brand-text { display: inline !important; font-size: 17px !important; }
     .v2-nav-links { display: none !important; }
     /* HeaderSearch 桌面分支 .hidden lg:block 默认 hide · mobile 显 search 🔍 图标 */
     .v2-nav-search { flex: 0 0 auto !important; justify-content: flex-end !important; margin-left: auto !important; }
@@ -425,7 +426,24 @@
       position: static !important;
     }
     .v2-token-head { order: 1; flex-direction: column !important; align-items: stretch !important; padding: 18px !important; }
-    .v2-token-chart { order: 2; height: 220px !important; }
+    /* P2-HOTFIX-4 #1 · mobile K 线 GT iframe 解决方案
+       - 砍我家 PRICE overlay(已 fix · 主因)
+       - 但 GT iframe 自家 toolbar 在 < 480px 仍会叠(Bonk/USD · 15 + Volume SMA 50 横排挤)
+       - 解法:让 iframe 渲染在固定 480px 宽 · 用 transform: scale 缩进容器
+       - 视觉效果:GT 拿到桌面 layout(干净)· 整体缩小适配窄屏 · 字体清晰
+    */
+    .v2-token-chart {
+      order: 2;
+      height: 280px !important;
+      overflow: hidden !important;
+      position: relative;
+    }
+    .v2-token-chart iframe {
+      width: 480px !important;
+      height: 380px !important;
+      transform: scale(calc((100vw - 32px) / 480));
+      transform-origin: top left;
+    }
     .v2-token-trade { order: 3; }
     .v2-token-side { order: 4; }
     .v2-token-prices {
@@ -484,9 +502,10 @@
     .v2-tx-hero-wrap > div { padding: 28px 22px !important; aspect-ratio: auto !important; min-height: 0 !important; }
     /* tx-hero saveText 大字 mobile 重写 clamp · 防 SOL 字被截 · max-width 撑满 */
     .v2-tx-hero-wrap [data-og-saveline] {
-      font-size: clamp(34px, 9vw, 52px) !important;
-      line-height: 1.04 !important;
+      font-size: clamp(28px, 8.5vw, 50px) !important;
+      line-height: 1.05 !important;
       max-width: 100% !important;
+      letter-spacing: -0.025em !important;
     }
     .v2-tx-cards {
       grid-template-columns: 1fr !important;
