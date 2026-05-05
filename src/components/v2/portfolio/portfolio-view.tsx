@@ -68,7 +68,7 @@ export function PortfolioView() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [sweepOpen, setSweepOpen] = useState(false);
-  const [dustExpanded, setDustExpanded] = useState(false);
+  const [dustExpandedRaw, setDustExpanded] = useState(false);
 
   const wallet = publicKey?.toBase58();
 
@@ -166,9 +166,13 @@ export function PortfolioView() {
   const dustItems: HoldingItem[] = items.filter((h) => (h.value_usd ?? 0) < DUST_USD);
   const dustTotalUsd = dustItems.reduce((s, h) => s + (h.value_usd ?? 0), 0);
 
-  // empty state · "0 个有价值 token"(items 全 dust 或全空)· P2-HOTFIX-3 #3 友好文案 + CTA
-  // 之前 items.length === 0 才显;现在 mainItems.length === 0 也显(因为只有 dust 时也算"没有价值 token")
-  if (mainItems.length === 0) {
+  // P3-FE-4 polish 1 · empty state 条件改成"全新钱包"(tradeCount === 0)
+  // 之前 mainItems.length === 0 也显空 → 用户做过 swap 但全 dust 也被当新人 · 死板
+  // 现在 tradeCount > 0 但 mainItems 空 → 走正常渲染 + 自动展开 dust + 友好文案
+  // 全自动展开 dust:有交易但 mainItems 全 dust 时 dust 默认展开
+  const allDust = tradeCount > 0 && mainItems.length === 0 && dustItems.length > 0;
+  const dustExpanded = dustExpandedRaw || allDust;
+  if (tradeCount === 0) {
     return (
       <>
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '80px 24px' }}>
@@ -496,6 +500,25 @@ export function PortfolioView() {
             );
           })}
 
+          {/* P3-FE-4 polish 1 · 用户做过 swap 但 mainItems 全 dust · 友好提示 + 自动展开 */}
+          {allDust && (
+            <div
+              style={{
+                padding: '20px 20px',
+                fontSize: 13,
+                color: 'var(--ink-60)',
+                lineHeight: 1.55,
+                borderBottom: '1px solid var(--border-v2)',
+                background: 'var(--bg-card-v2)',
+              }}
+            >
+              你的 {tradeCount} 笔 swap 都是小测试单 · 全部小于 $0.0001 · 总值 {fmtUsd(dustTotalUsd)} ·
+              <span style={{ color: 'var(--ink-40)', marginLeft: 6 }}>
+                这是正常的散户测试行为 · 下方完整列出
+              </span>
+            </div>
+          )}
+
           {/* P2-HOTFIX-3 #3 · dust 折叠行 · "零碎币 · 共 N · $X" · click 展开列表(同 Phantom) */}
           {dustItems.length > 0 && (
             <div className="v2-pf-dust-wrap" style={{ borderBottom: '1px solid var(--border-v2)' }}>
@@ -524,7 +547,7 @@ export function PortfolioView() {
                   </span>
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-                  &lt; $0.01 · click 展开
+                  &lt; $0.0001 · click 展开
                 </span>
               </button>
               {dustExpanded && (

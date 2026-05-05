@@ -133,6 +133,10 @@ export type TxViewData = {
   notionalSol: number; // 花费 / 卖得 SOL
   vsCompetitorSol: number; // notional + (comparable - ocufi) × notional 反向算
 
+  // P3-FE-4 polish 2 · SOL 显示精度 · 跟 savedSol 量级匹配 · 防 toFixed(4) 把 0.000045 截 0
+  // dp 4:savedSol >= 0.0001 / dp 6:0 < savedSol < 0.0001 / dp 4 默(savedSol === 0)
+  solDp: number;
+
   // cards
   slippagePct: number | null;
   slippageTolerancePct: number;
@@ -150,6 +154,15 @@ export type TxViewData = {
   // engineer
   jupiterRouteSteps: unknown[] | null;
 };
+
+/**
+ * P3-FE-4 polish 2a · 跟 savedSol 量级匹配的 dp · hero / subText 都共用 · 防 0.0050 跟 0.005045 显得一样
+ */
+export function pickSolDp(savedSol: number): number {
+  if (savedSol === 0) return 4;
+  if (savedSol >= 0.0001) return 4;
+  return 6;
+}
 
 export function mapReportToView(r: TransparencyReport): TxViewData {
   const sigShort = r.sig.length >= 12 ? `${r.sig.slice(0, 6)}...${r.sig.slice(-4)}` : r.sig;
@@ -180,6 +193,7 @@ export function mapReportToView(r: TransparencyReport): TxViewData {
     tokenSymbol: r.token_out_symbol,
     notionalSol: r.notional_sol,
     vsCompetitorSol,
+    solDp: pickSolDp(savedSol),
     slippagePct: r.slippage_actual_bps == null ? null : r.slippage_actual_bps / 100,
     slippageTolerancePct: r.slippage_tolerance_bps / 100,
     gasSol,

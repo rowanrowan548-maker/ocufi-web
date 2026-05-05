@@ -33,6 +33,7 @@ const MOCK: TxViewData = {
   tokenSymbol: 'BONK',
   notionalSol: 0.5,
   vsCompetitorSol: 0.5045,
+  solDp: 4, // savedSol 0.0045 >= 0.0001 → 4 dp
   slippagePct: 0.32,
   slippageTolerancePct: 1,
   gasSol: 0.000054,
@@ -67,23 +68,33 @@ export function TxView({ sig, data, demo }: Props) {
   const [engineerOpen, setEngineerOpen] = useState(false);
 
   // P2-MOBILE-OVERHAUL #4 · subText 拆 2 行 · 第 2 行 brand-up 强调 ✓
+  // P3-FE-4 polish 2 · solDp 跟 savedSol 量级匹配 · 防 toFixed(4) 把 0.000045 截成 0.0000 误导
   const tokenAmountStr = d.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 4 });
   const sideVerb = d.side === 'buy' ? '买入' : '卖出';
-  const heroSubLine1 = `${sideVerb} ${tokenAmountStr} ${d.tokenSymbol} · ${d.side === 'buy' ? '花费' : '换得'} ${fmtNum(d.notionalSol, 4)} SOL`;
+  const heroSubLine1 = `${sideVerb} ${tokenAmountStr} ${d.tokenSymbol} · ${d.side === 'buy' ? '花费' : '换得'} ${fmtNum(d.notionalSol, d.solDp)} SOL`;
+  // P3-FE-4 polish 2b · 防夹保护友好显:true → ✓ brand 绿 / false → 普通广播 中性灰 / null → 不显
+  const mevText = d.mevProtected
+    ? <span style={{ color: 'var(--brand-up)' }}>防夹保护 ✓</span>
+    : <span style={{ color: 'var(--ink-40)' }} title="小额单笔不走防夹通道 · 节省 RPC 资源 · 大额自动启用 Sender">普通广播</span>;
   const heroSubLine2 = (
     <>
-      vs BullX {fmtNum(d.vsCompetitorSol, 4)} SOL ·{' '}
-      <span style={{ color: 'var(--brand-up)' }}>防夹保护 {d.mevProtected ? '✓' : '—'}</span>
+      vs BullX {fmtNum(d.vsCompetitorSol, d.solDp)} SOL · {mevText}
     </>
   );
+
+  // P3-FE-4 polish 2a · savedSol === 0 时替代大字 · 不显误导的 "0.0000"
+  const heroSaveText = d.savedSol === 0
+    ? '按行业 1% 标准 · 你这笔基本无费'
+    : `省了 ${fmtNum(d.savedSol, d.solDp)} SOL`;
 
   const slippageDisplay = d.slippagePct == null ? '—' : `✓ ${fmtNum(d.slippagePct, 2)}%`;
   const slippageSub = `容忍 ${fmtNum(d.slippageTolerancePct, 0)}%`;
   const gasUsdDisplay = d.gasUsd == null ? '—' : `≈ $${fmtNum(d.gasUsd, 3)}`;
   const finalPriceDisplay = d.finalPriceUsd == null ? '—' : `$${fmtNum(d.finalPriceUsd, 6)}`;
+  // P3-FE-4 polish 2b · "无防夹"→"普通广播" 跟 hero subLine2 文案一致 · 不抢眼
   const mevDetail = d.mevProtected
     ? (d.mevBundleId ? `Helius bundle ✓` : '走 Sender · 已保护')
-    : '无防夹';
+    : '普通广播';
 
   return (
     <main style={{ maxWidth: 920, margin: '0 auto' }}>
@@ -137,7 +148,7 @@ export function TxView({ sig, data, demo }: Props) {
           variant="tx-hero"
           topLabel={`TRANSPARENCY REPORT · #${d.sigShort}`}
           topRight={`${fmtNum(d.feePct, 2)}% FEE`}
-          saveText={`省了 ${fmtNum(d.savedSol, 4)} SOL`}
+          saveText={heroSaveText}
           subText={heroSubLine1}
           subTextLine2={heroSubLine2}
           footLeft={`ocufi.io/v2/tx/${d.sigShort}`}

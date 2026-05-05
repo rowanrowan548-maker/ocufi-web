@@ -31,7 +31,8 @@ export function TopNavV3() {
   const lastSig = useLastTxSig();
   const TABS: TabDef[] = [
     { href: '/v2', key: 'home' },
-    { href: `/v2/token/${BONK_MINT}`, key: 'token', demoLabel: '示例 BONK' },
+    // P3-FE-4 polish 3 · 砍 demoLabel "示例 BONK" · 用户嫌多余 · 只留"代币"二字
+    { href: `/v2/token/${BONK_MINT}`, key: 'token' },
     { href: '/v2/portfolio', key: 'portfolio' },
     lastSig
       ? { href: `/v2/tx/${lastSig}`, key: 'tx' }

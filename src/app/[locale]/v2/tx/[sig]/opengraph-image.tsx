@@ -7,7 +7,7 @@
  *   - 下方副标:数量 + 防夹保护 + 路由
  */
 import { ImageResponse } from 'next/og';
-import { getTransparencyReport, mapReportToView } from '@/lib/transparency';
+import { getTransparencyReport, mapReportToView, pickSolDp } from '@/lib/transparency';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 
 export const runtime = 'edge';
@@ -37,6 +37,7 @@ export default async function Image({ params }: Props) {
   let mevProtected = true;
   let feePct = 0.1;
   let competitorFeePct = 1;
+  let solDp = 4; // P3-FE-4 polish 2 · 跟 savedSol 量级匹配
   let isPending = false;
 
   if (!isDemo) {
@@ -53,6 +54,7 @@ export default async function Image({ params }: Props) {
       mevProtected = v.mevProtected;
       feePct = v.feePct;
       competitorFeePct = v.competitorFeePct;
+      solDp = v.solDp;
     } else {
       // 找不到 sig · 不显 mock 误导 · 显"报告生成中"中性 OG
       isPending = true;
@@ -115,7 +117,7 @@ export default async function Image({ params }: Props) {
               color: 'transparent',
               maxWidth: '1080px',
             }}
-          >{isPending ? '报告生成中' : `Saved ${fmtNum(savedSol, 4)} SOL`}</div>
+          >{isPending ? '报告生成中' : (savedSol === 0 ? '0.1% fee · industry 1%' : `Saved ${fmtNum(savedSol, solDp)} SOL`)}</div>
           <div
             style={{
               fontSize: '30px',
@@ -128,8 +130,8 @@ export default async function Image({ params }: Props) {
             }}
           >
             {/* Satori 要 single text child · 多 expression 当 multi-children · 用 template literal 合并 */}
-            <div>{isPending ? '链上确认后 · 报告需 30 秒 - 2 分钟写入' : `${sideVerb} ${tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${tokenSymbol} · ${sideVerb === 'Bought' ? 'paid' : 'got'} ${fmtNum(notionalSol, 4)} SOL`}</div>
-            <div>{isPending ? '请稍后访问完整链接看真透明度报告' : `vs BullX ${fmtNum(competitorSol, 4)} SOL · ${fmtNum(feePct, 2)}% fee vs ${fmtNum(competitorFeePct, 0)}%${mevProtected ? ' · MEV protected' : ''}`}</div>
+            <div>{isPending ? '链上确认后 · 报告需 30 秒 - 2 分钟写入' : `${sideVerb} ${tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${tokenSymbol} · ${sideVerb === 'Bought' ? 'paid' : 'got'} ${fmtNum(notionalSol, solDp)} SOL`}</div>
+            <div>{isPending ? '请稍后访问完整链接看真透明度报告' : `vs BullX ${fmtNum(competitorSol, solDp)} SOL · ${fmtNum(feePct, 2)}% fee vs ${fmtNum(competitorFeePct, 0)}%${mevProtected ? ' · MEV protected' : ''}`}</div>
           </div>
         </div>
 

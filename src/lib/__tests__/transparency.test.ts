@@ -10,6 +10,7 @@ import {
   lamportsToSol,
   mapReportToView,
   getTransparencyReport,
+  pickSolDp,
   type TransparencyReport,
 } from '../transparency';
 
@@ -76,6 +77,20 @@ describe('lamportsToSol', () => {
   });
 });
 
+describe('pickSolDp', () => {
+  it('savedSol === 0 → 4 dp(默 · UI 替代文案不显数)', () => {
+    expect(pickSolDp(0)).toBe(4);
+  });
+  it('savedSol >= 0.0001 → 4 dp(普通量级)', () => {
+    expect(pickSolDp(0.0045)).toBe(4);
+    expect(pickSolDp(0.5)).toBe(4);
+  });
+  it('savedSol < 0.0001(0.000045 等小测试单)→ 6 dp', () => {
+    expect(pickSolDp(0.000045)).toBe(6);
+    expect(pickSolDp(0.00009)).toBe(6);
+  });
+});
+
 describe('mapReportToView', () => {
   it('saves are mapped correctly', () => {
     const v = mapReportToView(baseReport);
@@ -128,6 +143,15 @@ describe('mapReportToView', () => {
   it('timestamp formatted UTC', () => {
     const v = mapReportToView(baseReport);
     expect(v.timestamp).toBe('2026-05-08 · 14:23 UTC');
+  });
+
+  it('solDp 跟 savedSol 量级匹配', () => {
+    const v1 = mapReportToView(baseReport);
+    expect(v1.solDp).toBe(4); // 0.0045
+
+    const small = { ...baseReport, savings_lamports: '45000' }; // 0.000045 SOL
+    const v2 = mapReportToView(small);
+    expect(v2.solDp).toBe(6);
   });
 
   it('mev fields passthrough', () => {
