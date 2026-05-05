@@ -22,11 +22,12 @@ export default async function V2Layout({
   setRequestLocale(locale);
 
   return (
-    <>
+    <div className="v2-shell">
       <TopNavV3 />
       <ScrollHint />
-      {children}
+      {/* P2-MOBILE-OVERHAUL #2 · main 留 80px+ 给 mobile bottom tab bar(.v2-shell-children 媒查) */}
+      <div className="v2-shell-children">{children}</div>
       <BottomTabBar />
-    </>
+    </div>
   );
 }

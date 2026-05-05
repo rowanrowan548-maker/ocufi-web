@@ -7,8 +7,12 @@
  * iOS Safari:无 install API,展示「分享 → 添加到主屏」引导
  *
  * 30 天内被拒绝过就不再显示
+ *
+ * P2-MOBILE-OVERHAUL #1:V2 阶段(/v2/*)完全不显 · banner 在 mobile 12/12 截图盖内容
+ * 等 Phase 4 软发布前 V2 mv 顶层后再放开 · V1 路径仍会显
  */
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Download, X, Share } from 'lucide-react';
 
@@ -22,12 +26,17 @@ const DISMISS_DAYS = 30;
 
 export function InstallPrompt() {
   const t = useTranslations('pwa.install');
+  const pathname = usePathname();
   const [event, setEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
   const [hidden, setHidden] = useState(true);
 
+  // V2 路径完全早退 · banner 12/12 截图盖内容 · 等 Phase 4 mv 顶层后再放开
+  const isV2 = pathname?.includes('/v2/') || pathname?.endsWith('/v2');
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (isV2) return; // V2 不挂监听器
 
     // 已安装的 standalone 模式不显示
     const isStandalone =
@@ -62,7 +71,9 @@ export function InstallPrompt() {
     }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  }, [isV2]);
+
+  if (isV2) return null;
 
   function dismiss() {
     setHidden(true);

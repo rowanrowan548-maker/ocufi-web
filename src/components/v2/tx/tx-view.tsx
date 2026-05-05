@@ -1,16 +1,19 @@
+'use client';
+
 /**
  * V2 TX View · /v2/tx/[sig] · Phase 2 mock 数据 UI 第 1 稿
  *
  * 数据真接通等 Phase 3:后端 /transparency/<sig> + 链上 swap confirm 后上报
  * 当前 mock:写死一组合理数(参 mockup `.coordination/V2/MOCKUPS/v2-overall.html` `/tx`)
  *
- * 视觉对齐 P0-2-HOTFIX-2 钦定:
- *   - meta(back/share + 时间/slot)收紧
- *   - OG 卡升顶为 hero 玻璃容器(760×420 brand→cyan 渐变 72px Newsreader italic)
- *   - 4 数据卡 4×1 横排
- *   - 分享 3 大按钮 56px(主推 brand 描边 + glow)
- *   - 工程师视角 ▶ 折叠下移
+ * P2-MOBILE-OVERHAUL polish:
+ *   - meta 拆 2 独立行(back/share / date · UTC / Solana · Slot)避 320 粘连
+ *   - hero subText 拆 2 行(动作+数量 / 对比+安全)· 防夹保护 ✓ brand-up 强调
+ *   - OG card url + saved 拆 2 独立行(垂直排列)避 320 行尾错位
+ *   - 工程师视角 ▶ 默认折叠 · 单行 5 字 · 点开显 2 子项
+ *   - 3 分享按钮 column 列 + w-full + h-12 等宽等高(默 mobile 视图)
  */
+import { useState } from 'react';
 import { OgCard } from '@/components/v2/shared/og-card';
 
 type TxData = {
@@ -73,10 +76,20 @@ function fmtNum(n: number, dp = 2): string {
 export function TxView({ sig }: { sig: string }) {
   // Phase 2 · 任何 sig 都给 mock(待 P3 接 /transparency/<sig>)
   const d: TxData = { ...MOCK, sig: sig.length >= 8 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : MOCK.sig };
+  const [engineerOpen, setEngineerOpen] = useState(false);
+
+  // P2-MOBILE-OVERHAUL #4 · subText 拆 2 行 React node · 第 2 行 brand-up 强调 ✓
+  const heroSubLine1 = `买入 ${d.buyAmount.toLocaleString('en-US')} ${d.buySymbol} · 花费 ${d.paySol} SOL`;
+  const heroSubLine2 = (
+    <>
+      vs BullX {d.vsCompetitorSol} SOL ·{' '}
+      <span style={{ color: 'var(--brand-up)' }}>防夹保护 {d.mevProtected ? '✓' : '—'}</span>
+    </>
+  );
 
   return (
     <main style={{ maxWidth: 920, margin: '0 auto' }}>
-      {/* meta · back/share + 时间/slot */}
+      {/* meta · 2 独立行 · 第 1 行 back/share · 第 2 行 date+slot(各占行 · 320 不粘连) */}
       <header
         className="v2-tx-meta"
         style={{
@@ -103,14 +116,17 @@ export function TxView({ sig }: { sig: string }) {
             ↗ 分享
           </span>
         </div>
+        {/* P2-MOBILE-OVERHAUL #7 · meta 行拆 2 独立行 · 各占一行避 320 崩 */}
         <div
+          className="v2-tx-meta-info"
           style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            gap: 4,
             fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
             fontSize: 12,
             color: 'var(--ink-40)',
+            fontFeatureSettings: '"tnum" 1',
           }}
         >
           <span>{d.timestamp}</span>
@@ -118,14 +134,15 @@ export function TxView({ sig }: { sig: string }) {
         </div>
       </header>
 
-      {/* hero 玻璃容器(OgCard tx-hero variant) */}
+      {/* hero 玻璃容器(OgCard tx-hero variant)· subText 2 行 + footLeft/Right 2 行(mobile 媒查) */}
       <div style={{ padding: '0 40px' }} className="v2-tx-hero-wrap">
         <OgCard
           variant="tx-hero"
           topLabel={`TRANSPARENCY REPORT · #${d.sig}`}
           topRight={`${d.feePct}% FEE`}
           saveText={`省了 ${d.savedSol} SOL`}
-          subText={`买入 ${d.buyAmount.toLocaleString('en-US')} ${d.buySymbol} · 花费 ${d.paySol} SOL · vs BullX ${d.vsCompetitorSol} SOL · 防夹保护 ${d.mevProtected ? '✓' : '—'}`}
+          subText={heroSubLine1}
+          subTextLine2={heroSubLine2}
           footLeft={`ocufi.io/tx/${d.sig}`}
           footRight={`≈ $${fmtNum(d.savedUsd)} saved`}
           saveGradient
@@ -187,34 +204,51 @@ export function TxView({ sig }: { sig: string }) {
         >
           分享这笔交易
         </div>
-        <div className="v2-tx-share-btns" style={{ display: 'flex', gap: 10 }}>
-          <ShareBtn primary>↗  发推</ShareBtn>
-          <ShareBtn>📋  复制链接</ShareBtn>
-          <ShareBtn>✈  TG 分享</ShareBtn>
+        {/* P2-MOBILE-OVERHAUL #6 · 3 分享按钮 column 列 + w-full + h-12 等宽等高 */}
+        <div className="v2-tx-share-btns" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <ShareBtn primary>↗ 发推</ShareBtn>
+          <ShareBtn>📋 复制链接</ShareBtn>
+          <ShareBtn>✈ TG 分享</ShareBtn>
         </div>
       </section>
 
-      {/* 工程师视角 ▶ 折叠 · Phase 3 接桑基图 */}
+      {/* P2-MOBILE-OVERHAUL #5 · 工程师视角默认折叠 · 单行 5 字 · 点开显 2 子项 · Phase 3 接桑基图 */}
       <section
         style={{
           padding: '28px 40px',
           borderTop: '1px solid var(--border-v2)',
         }}
       >
-        <div
+        <button
+          type="button"
+          onClick={() => setEngineerOpen((v) => !v)}
+          aria-expanded={engineerOpen}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 8,
+            background: 'transparent',
+            border: 0,
+            padding: 0,
             fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
             fontSize: 13,
             color: 'var(--ink-60)',
             cursor: 'pointer',
           }}
         >
-          <span style={{ fontSize: 9, color: 'var(--ink-40)' }}>▶</span>
-          工程师视角(查看 Sender bundle 详情 + 桑基图路由)
-        </div>
+          <span style={{ fontSize: 9, color: 'var(--ink-40)' }}>{engineerOpen ? '▼' : '▶'}</span>
+          工程师视角
+        </button>
+        {engineerOpen && (
+          <ul style={{ margin: '14px 0 0 22px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <li style={{ fontSize: 12, color: 'var(--ink-60)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
+              · Sender bundle 详情(等 Phase 3 接通)
+            </li>
+            <li style={{ fontSize: 12, color: 'var(--ink-60)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
+              · 桑基图路由(等 Phase 3 接通)
+            </li>
+          </ul>
+        )}
       </section>
     </main>
   );
@@ -281,8 +315,9 @@ function ShareBtn({
     <button
       type="button"
       style={{
-        height: 56,
-        padding: '0 26px',
+        width: '100%',
+        height: 48,
+        padding: '0 20px',
         borderRadius: 14,
         background: primary ? 'var(--brand-soft)' : 'var(--bg-card-v2)',
         border: `1px solid ${primary ? 'var(--border-brand)' : 'var(--border-v2-strong)'}`,
@@ -291,8 +326,9 @@ function ShareBtn({
         fontFamily: 'inherit',
         fontWeight: primary ? 600 : 500,
         cursor: 'pointer',
-        display: 'inline-flex',
+        display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 10,
         boxShadow: primary ? '0 0 30px rgba(25,251,155,0.18)' : 'none',
       }}

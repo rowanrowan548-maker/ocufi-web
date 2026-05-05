@@ -327,6 +327,14 @@
   .more-menu-v2 {
     background: var(--bg-deep);
   }
+  /* P2-MOBILE-OVERHAUL · OG card foot 桌面默认 row · mobile 媒查 column(inline 不带 flex props · 给 CSS 留权) */
+  .v2-og-foot {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
   @media (min-width: 768px) {
     .more-menu-v2 {
       background: rgba(14, 17, 23, 0.95);
@@ -357,8 +365,9 @@
 
     /* P2-HOTFIX-2 #5 · mobile bottom tab bar 显示 · 顶部 nav 精简 */
     .v2-bottom-tab-bar { display: block !important; }
-    /* mobile 给 main 留出 bottom-tab-bar 高度避免挡内容 · 64px tab + safe-area */
-    main { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important; }
+    /* P2-MOBILE-OVERHAUL #2 · 多层兜底 · main 留 80px+(64 tab + 16 buffer)+ safe-area · 不被 tab bar 盖 */
+    main { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
+    .v2-shell-children { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
     .v2-top-nav {
       padding: 0 16px !important;
@@ -452,10 +461,11 @@
       padding-top: 12px !important;
       border-top: 1px solid var(--border-v2) !important;
     }
+    /* P2-MOBILE-OVERHAUL #8 · MC/LIQ/VOL 三栏 stack(label 上 11px / value 下 14px tnum)· 320 上 value 13px */
     .v2-token-stats {
       display: grid !important;
-      grid-template-columns: repeat(3, 1fr) !important;
-      gap: 0 !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 12px !important;
       padding-top: 14px !important;
       border-top: 1px solid var(--border-v2) !important;
       margin-top: 14px !important;
@@ -463,7 +473,21 @@
     .v2-token-stats > span {
       display: flex !important;
       flex-direction: column !important;
-      gap: 2px !important;
+      gap: 4px !important;
+      min-width: 0 !important;
+    }
+    .v2-token-stats .v2-stat-label {
+      margin-left: 0 !important;
+      font-size: 11px !important;
+      letter-spacing: 0.04em !important;
+    }
+    .v2-token-stats .v2-stat-value {
+      margin-left: 0 !important;
+      font-size: 14px !important;
+      font-feature-settings: "tnum" 1 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
     }
 
     /* /v2/portfolio mobile */
@@ -533,5 +557,56 @@
     }
     .v2-pf-sweep-desk { display: none !important; }
     .v2-pf-sweep-fab { display: inline-flex !important; }
+
+    /* P2-MOBILE-OVERHAUL #2 · bottom tab bar 顶 1px brand-up 微光分层 + 上影 · 跟 main 视觉断 */
+    .v2-bottom-tab-bar {
+      box-shadow: 0 -1px 0 rgba(25, 251, 155, 0.10), 0 -8px 24px -8px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    /* P2-MOBILE-OVERHAUL #11 · OG card foot mobile column · url + saved 各占一行 · 不重叠 */
+    .v2-tx-hero-wrap .v2-og-foot {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 4px !important;
+    }
+    .v2-tx-hero-wrap .v2-og-foot > span:nth-child(2) {
+      font-family: var(--font-display), serif !important;
+      font-style: italic !important;
+      font-size: 14px !important;
+      color: var(--brand-up) !important;
+    }
+
+    /* P2-MOBILE-OVERHAUL #4 配套 · tx 主标行字号 + 行高 mobile · 信息分层 */
+    .v2-tx-hero-wrap [data-og-subline],
+    .v2-tx-hero-wrap [data-og-subline2] {
+      font-size: 14px !important;
+      line-height: 1.6 !important;
+    }
+
+    /* P2-MOBILE-OVERHAUL #10 · token trade scroll-margin · ?action=sell scroll 在 nav 下 100px */
+    .v2-token-trade { scroll-margin-top: 100px; }
+
+    /* P2-MOBILE-OVERHAUL #12 · 320 卡间距统一 + section spacing · 留白呼吸 */
+    .v2-token-grid > * { margin-top: 0 !important; }
+    .v2-tx-cards { gap: 12px !important; }
+    .v2-home-pillars { gap: 16px !important; }
+  }
+
+  /* P2-MOBILE-OVERHAUL #9 · 320 极窄屏 · 首页 hero 压缩让搜索框第一屏可见 + OG 卡缩小 */
+  @media (max-width: 360px) {
+    .v2-home-hero-grid { padding: 16px 16px 24px !important; gap: 10px !important; }
+    .v2-home-eyebrow { display: none !important; } /* 让位 · 让搜索框上移 */
+    .v2-home-title { font-size: 30px !important; line-height: 1.1 !important; }
+    .v2-home-og-mobile {
+      transform: scale(0.85);
+      transform-origin: top left;
+      max-height: 170px;
+      overflow: hidden;
+      margin: 0 0 -30px 0 !important;
+    }
+    .v2-home-sub { display: none !important; } /* 推第二屏 · 320 第一屏不堆 */
+    .v2-token-stats .v2-stat-value { font-size: 13px !important; }
+    .v2-tx-meta { padding: 12px 16px 10px !important; }
+    .v2-tx-hero-wrap { padding: 0 12px !important; }
   }
 }

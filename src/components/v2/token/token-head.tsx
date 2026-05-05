@@ -124,6 +124,7 @@ export function TokenHead({ detail }: { detail: TokenDetail }) {
             </div>
           )}
         </div>
+        {/* P2-MOBILE-OVERHAUL #8 · 三栏 stats · 桌面 inline 横排 / mobile grid-3 stack(label 上 value 下) */}
         <div
           className="v2-token-stats"
           style={{
@@ -136,16 +137,16 @@ export function TokenHead({ detail }: { detail: TokenDetail }) {
           }}
         >
           <span>
-            <span style={{ color: 'var(--ink-40)' }}>MC</span>
-            <span style={{ color: 'var(--ink-80)', marginLeft: 6 }}>{fmtUsd(detail.marketCap)}</span>
+            <span className="v2-stat-label" style={{ color: 'var(--ink-40)', fontSize: 11 }}>MC</span>
+            <span className="v2-stat-value" style={{ color: 'var(--ink-80)', marginLeft: 6, fontSize: 14, fontFeatureSettings: '"tnum" 1' }}>{fmtUsd(detail.marketCap)}</span>
           </span>
           <span>
-            <span style={{ color: 'var(--ink-40)' }}>LIQ</span>
-            <span style={{ color: 'var(--ink-80)', marginLeft: 6 }}>{fmtUsd(detail.liquidityUsd)}</span>
+            <span className="v2-stat-label" style={{ color: 'var(--ink-40)', fontSize: 11 }}>LIQ</span>
+            <span className="v2-stat-value" style={{ color: 'var(--ink-80)', marginLeft: 6, fontSize: 14, fontFeatureSettings: '"tnum" 1' }}>{fmtUsd(detail.liquidityUsd)}</span>
           </span>
           <span>
-            <span style={{ color: 'var(--ink-40)' }}>VOL 24h</span>
-            <span style={{ color: 'var(--ink-80)', marginLeft: 6 }}>{fmtUsd(detail.volume24h ?? null)}</span>
+            <span className="v2-stat-label" style={{ color: 'var(--ink-40)', fontSize: 11 }}>VOL 24h</span>
+            <span className="v2-stat-value" style={{ color: 'var(--ink-80)', marginLeft: 6, fontSize: 14, fontFeatureSettings: '"tnum" 1' }}>{fmtUsd(detail.volume24h ?? null)}</span>
           </span>
         </div>
       </div>

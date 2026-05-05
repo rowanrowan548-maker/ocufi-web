@@ -94,14 +94,18 @@ function Cell({
     tone === 'warn' ? 'text-amber-500' :
     tone === 'bad' ? 'text-danger' :
     'text-muted-foreground/50';
+  // P2-MOBILE-OVERHAUL #3 · 6 格统一 min-h + 文本不溢出 · 320/375/414 完全对齐
   return (
-    <div className="rounded border border-border/40 bg-card/40 p-2" data-testid="audit-cell">
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
-        <span>{label}</span>
+    <div
+      className="rounded border border-border/40 bg-card/40 px-2.5 py-2 min-h-[64px] flex flex-col justify-between"
+      data-testid="audit-cell"
+    >
+      <div className="flex items-center gap-1 text-[11px] text-muted-foreground/70 leading-tight">
+        <span className="truncate">{label}</span>
       </div>
-      <div className={`flex items-center gap-1 mt-0.5 text-sm font-mono font-semibold tabular-nums ${toneCls}`}>
-        <span>{value}</span>
-        <Icon className="h-3.5 w-3.5" />
+      <div className={`flex items-center gap-1 mt-0.5 text-[14px] font-mono font-semibold tabular-nums ${toneCls}`}>
+        <span className="truncate">{value}</span>
+        <Icon className="h-3.5 w-3.5 flex-shrink-0" />
       </div>
     </div>
   );

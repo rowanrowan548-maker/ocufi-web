@@ -32,6 +32,11 @@ export function FeedbackButton() {
   if (/^\/[a-z]{2}-[A-Z]{2}\/trade(\/|$|\?)/.test(pathname ?? '')) {
     return null;
   }
+  // P2-MOBILE-OVERHAUL #1:V2 路径全 hide · FAB 跟 V2 bottom-tab-bar 多层叠 + 视觉断
+  // 等 Phase 4 V2 mv 顶层后再视觉融入
+  if (pathname?.includes('/v2/') || pathname?.endsWith('/v2')) {
+    return null;
+  }
 
   return (
     <>

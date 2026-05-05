@@ -24,7 +24,9 @@ type OgCardProps = {
   topLabel: string;        // "OCUFI · TX REPORT" / "TRANSPARENCY REPORT · #5fX..."
   topRight?: string;       // "OG · 1200×630" / "0.1% FEE"
   saveText: string;        // "SAVED 0.0045 SOL" / "省了 0.0045 SOL"
-  subText?: string;        // "on $BONK · vs BullX" / 长 mid 副标
+  subText?: React.ReactNode;        // "on $BONK · vs BullX" / 长 mid 副标
+  /** P2-MOBILE-OVERHAUL #4 · tx-hero 拆 2 行 · 第 2 行单独 mt-1.5 + 跟 line1 视觉分层 */
+  subTextLine2?: React.ReactNode;
   footLeft?: string;       // "5fX...abc" / "ocufi.io/tx/<sig>"
   footRight?: string;      // "View report →" / "≈ $0.90 saved"
   /** 是否给 saveText 加 brand→cyan 渐变 + glow(tx-hero 用) */
@@ -76,6 +78,7 @@ export function OgCard({
   topRight,
   saveText,
   subText,
+  subTextLine2,
   footLeft,
   footRight,
   saveGradient = false,
@@ -179,11 +182,12 @@ export function OgCard({
         </div>
         {subText && (
           <div
+            data-og-subline
             style={{
               marginTop: s.subMarginTop,
               fontFamily: variant === 'tx-hero' ? 'var(--font-geist), sans-serif' : 'var(--font-geist-mono), ui-monospace, monospace',
               fontSize: s.subSize,
-              lineHeight: 1.55,
+              lineHeight: 1.6,
               color: 'var(--ink-80)',
               maxWidth: variant === 'tx-hero' ? 580 : '100%',
             }}
@@ -191,16 +195,32 @@ export function OgCard({
             {subText}
           </div>
         )}
+        {/* P2-MOBILE-OVERHAUL #4 · 第 2 行 mt-1.5 视觉分层 · 防夹保护 ✓ brand-up 在子节点里 */}
+        {subTextLine2 && (
+          <div
+            data-og-subline2
+            style={{
+              marginTop: 6,
+              fontFamily: variant === 'tx-hero' ? 'var(--font-geist), sans-serif' : 'var(--font-geist-mono), ui-monospace, monospace',
+              fontSize: s.subSize,
+              lineHeight: 1.6,
+              color: 'var(--ink-80)',
+              maxWidth: variant === 'tx-hero' ? 580 : '100%',
+            }}
+          >
+            {subTextLine2}
+          </div>
+        )}
       </div>
 
-      {/* foot · URL / view link */}
+      {/* foot · URL / view link · P2-MOBILE-OVERHAUL #11 · mobile flex-col(.v2-og-foot 媒查)
+          flex props 移到 CSS class · 让 mobile 媒查能覆盖(inline alignItems 跟 !important 打架的问题) */}
       {(footLeft || footRight) && (
         <div
+          className="v2-og-foot"
           style={{
             position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 6,
             fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
             fontSize: 11,
             color: 'var(--ink-40)',
