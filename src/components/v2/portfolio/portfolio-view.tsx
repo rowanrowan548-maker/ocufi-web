@@ -24,6 +24,7 @@ import {
   fetchPortfolioHoldings,
   fetchPortfolioSavings,
   fetchPortfolioMevSavings,
+  fetchEmptyAccounts,
   type HoldingsResponse,
   type PortfolioSavingsResponse,
   type PortfolioMevSavingsResponse,
@@ -72,6 +73,8 @@ export function PortfolioView() {
   const [dustExpandedRaw, setDustExpanded] = useState(false);
   // P3-FE-8 · swap 后链上 RPC + birdeye sync 延迟 5-30s · banner 显数据在 sync
   const [syncing, setSyncing] = useState(false);
+  // P3-FE-9 · 替代 sell 100% reclaim toast · 持仓页主动显眼条
+  const [reclaimable, setReclaimable] = useState<{ sol: number; count: number } | null>(null);
   // P3-FE-8 · 订阅 swap 完成事件 · BuyForm/SellForm onSuccess → bumpSwap()
   const swapVersion = useSwapRefresh((s) => s.swapVersion);
   const prevSwapVersion = useRef(swapVersion);
@@ -125,6 +128,33 @@ export function PortfolioView() {
       timers.forEach(clearTimeout);
     };
   }, [connected, wallet, swapVersion, t]);
+
+  // P3-FE-9 · 单独检 reclaimable ATA · swap 后也重检
+  useEffect(() => {
+    if (!connected || !wallet) {
+      setReclaimable(null);
+      return;
+    }
+    let cancelled = false;
+    fetchEmptyAccounts(wallet)
+      .then((r) => {
+        if (cancelled) return;
+        const list = r.accounts ?? [];
+        if (list.length > 0) {
+          const sol = list.reduce((s, a) => s + (a.rent_lamports ?? 0), 0) / 1e9;
+          setReclaimable({ sol, count: list.length });
+        } else {
+          setReclaimable(null);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setReclaimable(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, wallet, swapVersion]);
 
   if (!connected || !wallet) {
     return (
@@ -285,6 +315,69 @@ export function PortfolioView() {
           className="v2-pf-syncing"
         >
           ↻ 刚 swap · 数据 sync 中…(链上 RPC 索引延迟 5-30 秒)
+        </div>
+      )}
+      {/* P3-FE-9 · 替代 sell 100% toast · 持仓页主动显眼条 · 真有可回收时弹 */}
+      {reclaimable && !syncing && (
+        <div
+          className="v2-pf-reclaim-banner"
+          style={{
+            maxWidth: 1320,
+            margin: '0 auto',
+            padding: '14px 56px',
+            background: 'linear-gradient(90deg, var(--brand-soft), transparent)',
+            borderBottom: '1px solid var(--border-brand)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontSize: 18,
+                color: 'var(--brand-up)',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              你有 {reclaimable.sol.toFixed(4)} SOL 可回收
+            </span>
+            <span
+              style={{
+                fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+                fontSize: 11,
+                color: 'var(--ink-60)',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {reclaimable.count} 个空 ATA · 一键回收
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSweepOpen(true)}
+            style={{
+              flexShrink: 0,
+              padding: '10px 20px',
+              borderRadius: 999,
+              background: 'var(--brand-up)',
+              color: 'var(--bg-base)',
+              border: 0,
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: '-0.01em',
+              cursor: 'pointer',
+              boxShadow: '0 0 24px rgba(25,251,155,0.28)',
+            }}
+          >
+            一键回收 →
+          </button>
         </div>
       )}
       {/* hero · 大字总值 + 累计省下卡 */}

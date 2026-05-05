@@ -54,12 +54,32 @@ function pathAllowedDuringPreview(pathname: string): boolean {
 /**
  * P2-V2-DEFAULT · 顶层裸 locale / 根访问默认进 V2
  * Phase 4 软发布前临时方案 · V1 老路径(/portfolio /trade /token/* 等)直接 URL 仍可访问 · 防回退
+ *
+ * P3-FE-9 · 加 i18n auto-detect:
+ *   优先级:URL 显式 locale > NEXT_LOCALE cookie > Accept-Language header > zh-CN 兜底
+ *   防 zh 用户被强 zh-CN(原行为)· en 用户没设 cookie 也强 zh-CN
  */
+function detectLocale(request: NextRequest): 'zh-CN' | 'en-US' {
+  // 1. URL 显式 locale
+  if (request.nextUrl.pathname.startsWith('/en-US')) return 'en-US';
+  if (request.nextUrl.pathname.startsWith('/zh-CN')) return 'zh-CN';
+  // 2. cookie 主动选过
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  if (cookieLocale === 'en-US' || cookieLocale === 'zh-CN') return cookieLocale;
+  // 3. Accept-Language header
+  const accept = request.headers.get('accept-language') ?? '';
+  // 浏览器 zh / zh-* 都给中文 · 其他默 en
+  if (/^zh\b/i.test(accept) || /[,\s]zh\b/i.test(accept)) return 'zh-CN';
+  if (/^en\b/i.test(accept) || /[,\s]en\b/i.test(accept)) return 'en-US';
+  // 4. 兜底 zh-CN(项目主语言)
+  return 'zh-CN';
+}
+
 function maybeV2DefaultRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
   const stripped = pathname.replace(/^\/(zh-CN|en-US)(?=\/|$)/, '') || '/';
   if (stripped !== '/') return null;
-  const locale = pathname.startsWith('/en-US') ? 'en-US' : 'zh-CN';
+  const locale = detectLocale(request);
   const url = request.nextUrl.clone();
   url.pathname = `/${locale}/v2`;
   return NextResponse.redirect(url);

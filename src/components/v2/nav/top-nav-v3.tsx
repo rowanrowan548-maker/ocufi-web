@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl';
 import { ConnectWalletButton } from '@/components/wallet/connect-wallet-button';
 import { LogoSvg } from '@/components/v2/shared/logo-svg';
 import { HeaderSearch } from '@/components/layout/header-search';
+import { LangSwitch } from './lang-switch';
 
 // P2-HOTFIX-3 #2 · 代币 tab 不再硬指 SOL(SOL 没 LP 池 · K 线空白)· 改 BONK(真 demo)
 const BONK_MINT = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
@@ -138,7 +139,8 @@ export function TopNavV3() {
         })}
       </div>
 
-      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+      <div style={{ marginLeft: 12, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <LangSwitch />
         <ConnectWalletButton />
       </div>
     </nav>
