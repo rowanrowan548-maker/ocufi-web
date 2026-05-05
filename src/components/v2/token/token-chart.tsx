@@ -43,7 +43,7 @@ export function TokenChart({ mint, symbol }: Props) {
 
   return (
     <div
-      className="v2-card v2-card-flush v2-token-chart"
+      className="v2-token-chart"
       style={{
         height: 360,
         position: 'relative',

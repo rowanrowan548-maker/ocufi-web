@@ -267,6 +267,22 @@
     padding: 0;
     overflow: hidden;
   }
+  /* P2-CHART-FIX · K 线专用 chrome · 不挂 .v2-card 那层 border
+     真因:.v2-card 的 1px border + box-sizing border-box → iframe transform: scale 公式
+     (100vw - 32) / 480 假设父 inner = vp - 32 · 实际 inner = vp - 32 - 2 → 视觉右溢
+     治根:K 线不需要 border(黑底自然分层 · 跟 head/trade/side 玻璃分层不同的视觉语言)·
+     给独立 .v2-token-chart class 仅控 bg + radius + overflow + width · transform 公式精准对齐 */
+  .v2-token-chart {
+    background: var(--bg-card-v2);
+    border-radius: 16px;
+    overflow: hidden;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    /* P2-CHART-FIX · container query · iframe transform: scale 用 100cqw 精确容器实宽 ·
+       不依赖 100vw(test env scrollbar / 安卓 chrome 偶有差)· 真 iOS / Android / 桌面 都对齐 */
+    container-type: inline-size;
+  }
 
   /* T-V2-PHASE-2 · 微浮动 keyframes(给 og-card / tx-hero / chip hover 用) */
   @keyframes v2-float {
@@ -472,7 +488,9 @@
     .v2-token-chart iframe {
       width: 480px !important;
       height: 380px !important;
-      transform: scale(calc((100vw - 32px) / 480));
+      /* P2-CHART-FIX · 100cqw / 480px = 容器实宽比例 · 不被 viewport scrollbar 偏差影响
+         scale 需 unitless · length/length 给 ratio · 之前 `/480`(无单位)被 Lightning CSS 当 length/number 拒 */
+      transform: scale(calc(100cqw / 480px));
       transform-origin: top left;
     }
     .v2-token-trade { order: 3; }
