@@ -360,6 +360,7 @@
       height: 64px !important;
     }
     .v2-nav-links { display: none !important; }
+    .v2-nav-hamburger { display: inline-flex !important; align-items: center; justify-content: center; }
 
     .v2-home-hero-grid {
       grid-template-columns: 1fr !important;

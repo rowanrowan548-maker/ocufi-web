@@ -6,8 +6,9 @@
  *
  * 视觉 frozen 自 mockup `.coordination/V2/MOCKUPS/v2-overall.html` `.nav` 段
  *
- * mobile 不挂 MoreMenu(V2 极简战略 · 直接 3 主 link 全显)
+ * mobile · hamburger 触发底部 sheet(沿 V1 5.4-HOTFIX pointerdown 修过 · 不卡死)
  */
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -23,6 +24,32 @@ const TABS: { href: string; key: 'home' | 'token' | 'portfolio' }[] = [
 export function TopNavV3() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  // pointerdown(iOS 触屏 mousedown 不发)+ Esc 关
+  useEffect(() => {
+    if (!drawerOpen) return;
+    function onPointer(e: PointerEvent) {
+      if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
+        setDrawerOpen(false);
+      }
+    }
+    function onEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    }
+    window.addEventListener('pointerdown', onPointer);
+    window.addEventListener('keydown', onEsc);
+    return () => {
+      window.removeEventListener('pointerdown', onPointer);
+      window.removeEventListener('keydown', onEsc);
+    };
+  }, [drawerOpen]);
+
+  // 路由变 自动关 drawer
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   return (
     <nav
@@ -105,6 +132,66 @@ export function TopNavV3() {
       <div style={{ marginLeft: 12 }}>
         <ConnectWalletButton />
       </div>
+
+      {/* mobile · hamburger trigger · 桌面 hide via .v2-nav-hamburger */}
+      <button
+        type="button"
+        className="v2-nav-hamburger"
+        aria-label="Menu"
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          setDrawerOpen((v) => !v);
+        }}
+        style={{
+          display: 'none',
+          marginLeft: 8,
+          padding: 8,
+          background: 'transparent',
+          border: '1px solid var(--border-v2)',
+          borderRadius: 10,
+          color: 'var(--ink-100)',
+          cursor: 'pointer',
+        }}
+      >
+        ☰
+      </button>
+
+      {/* mobile drawer · sticky nav 下方 sheet · 5.4-HOTFIX 模式(solid bg 不双层 blur 防 iOS 卡死) */}
+      {drawerOpen && (
+        <div
+          ref={drawerRef}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="v2-nav-drawer"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'var(--bg-deep)',
+            borderBottom: '1px solid var(--border-v2)',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '12px 0',
+          }}
+        >
+          {TABS.map((tab) => (
+            <Link
+              key={tab.key}
+              href={tab.href}
+              prefetch={false}
+              style={{
+                color: 'var(--ink-100)',
+                fontSize: 16,
+                padding: '14px 24px',
+                textDecoration: 'none',
+                borderBottom: '1px solid var(--border-v2)',
+              }}
+            >
+              {t(tab.key)}
+            </Link>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
