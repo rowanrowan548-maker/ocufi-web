@@ -30,6 +30,8 @@ const MOCK: TxViewData = {
   savedSol: 0.0045,
   savedUsd: 0.9,
   side: 'buy',
+  tokenIn: { mint: 'So11111111111111111111111111111111111111112', symbol: 'SOL', amount: 0.5, decimals: 9 },
+  tokenOut: { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', symbol: 'BONK', amount: 1_234_567, decimals: 5 },
   tokenAmount: 1_234_567,
   tokenSymbol: 'BONK',
   tokenMint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',

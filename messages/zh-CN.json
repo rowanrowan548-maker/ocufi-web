@@ -2347,10 +2347,27 @@
       "history": {
         "title": "近 {n} 笔交易",
         "loading": "拉历史中…",
-        "buy": "买",
-        "sell": "卖",
+        "buy": "买入",
+        "sell": "卖出",
         "saved": "省",
+        "spent": "花",
+        "received": "得",
         "view": "查看 →"
+      },
+      "legacy": {
+        "disclaimer": "ⓘ 老交易 sol_amount 字段还在补 · 新交易会真实累计 · 不糊弄"
+      },
+      "dust": {
+        "inlineNote": "· 钱包还有 {n} 个零碎币 · 总值 {usd} ·",
+        "allDustNote": "你的 {n} 笔 swap 都是小测试单 · 全部小于 $0.0001 · 总值 {usd} ·",
+        "allDustExpand": "这是正常的散户测试行为 · 下方完整列出",
+        "fold": "零碎币 · 共 {n} 个 · 总值 {usd}",
+        "expandHint": "< $0.0001 · click 展开"
+      },
+      "sweep": {
+        "fab": "✨ 清扫 ATA · 回收 SOL",
+        "deskCta": "✨ 清扫 ATA · 回收闲置 SOL",
+        "deskHint": "(in-page · 不跳页)"
       },
       "syncing": "↻ 刚 swap · 数据 sync 中…(链上 RPC 索引延迟 5-30 秒)",
       "reclaimBanner": {

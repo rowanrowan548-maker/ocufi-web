@@ -21,6 +21,7 @@ import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { apiFetch } from '@/lib/api-client';
 import { getTransparencyReport, mapReportToView, type TxViewData } from '@/lib/transparency';
+import { useTokenMeta } from '@/lib/token-display';
 
 type RecentItem = { sig: string; created_at: string };
 type RecentResponse = { ok: boolean; error: string | null; data: RecentItem[] };
@@ -206,8 +207,13 @@ function HeroCard({
   const sigShort = item.sig.length >= 12 ? `${item.sig.slice(0, 6)}...${item.sig.slice(-4)}` : item.sig;
   const dateStr = formatDate(item.created_at);
   const savedSol = detail?.savedSol ?? null;
-  const tokenSymbol = detail?.tokenSymbol ?? null;
   const solDp = detail?.solDp ?? 4;
+  // P3-FE-12 · 真 token meta · 主角 token = buy 看 out / sell 看 in
+  const focus = detail
+    ? (detail.side === 'buy' ? detail.tokenOut : detail.tokenIn)
+    : null;
+  const tokenMeta = useTokenMeta(focus?.mint ?? '', focus?.symbol ?? null);
+  const tokenSymbol = focus ? tokenMeta.symbol : null;
 
   // hero 大字:有 detail 显 "省了 X SOL on $TOKEN" / 没就 fallback "#sigShort · 查看详情"
   const heroBig =
@@ -216,7 +222,6 @@ function HeroCard({
       : savedSol === 0 && tokenSymbol
       ? labels.noFee
       : `#${sigShort}`;
-  const heroSub = tokenSymbol ? `${labels.onToken} $${tokenSymbol}` : null;
 
   return (
     <Link
@@ -258,16 +263,29 @@ function HeroCard({
       >
         {heroBig}
       </div>
-      {heroSub && (
+      {tokenSymbol && (
         <div
           style={{
             marginTop: 6,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
             fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
             fontSize: 14,
             color: 'var(--ink-80)',
           }}
         >
-          {heroSub}
+          {tokenMeta.logoURI && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={tokenMeta.logoURI}
+              alt={tokenSymbol}
+              width={20}
+              height={20}
+              style={{ borderRadius: '50%' }}
+            />
+          )}
+          <span>{labels.onToken} ${tokenSymbol}</span>
         </div>
       )}
       <div

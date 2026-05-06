@@ -12,7 +12,7 @@ import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 
 export const runtime = 'edge';
 
-export const alt = 'Ocufi · 透明度报告';
+export const alt = 'Ocufi · transparency report';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -117,7 +117,7 @@ export default async function Image({ params }: Props) {
               color: 'transparent',
               maxWidth: '1080px',
             }}
-          >{isPending ? '报告生成中' : (savedSol === 0 ? '0.1% fee · industry 1%' : `Saved ${fmtNum(savedSol, solDp)} SOL`)}</div>
+          >{isPending ? 'Report generating' : (savedSol === 0 ? '0.1% fee · industry 1%' : `Saved ${fmtNum(savedSol, solDp)} SOL`)}</div>
           <div
             style={{
               fontSize: '30px',
@@ -130,8 +130,8 @@ export default async function Image({ params }: Props) {
             }}
           >
             {/* Satori 要 single text child · 多 expression 当 multi-children · 用 template literal 合并 */}
-            <div>{isPending ? '链上确认后 · 报告需 30 秒 - 2 分钟写入' : `${sideVerb} ${tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${tokenSymbol} · ${sideVerb === 'Bought' ? 'paid' : 'got'} ${fmtNum(notionalSol, solDp)} SOL`}</div>
-            <div>{isPending ? '请稍后访问完整链接看真透明度报告' : `vs BullX ${fmtNum(competitorSol, solDp)} SOL · ${fmtNum(feePct, 2)}% fee vs ${fmtNum(competitorFeePct, 0)}%${mevProtected ? ' · MEV protected' : ''}`}</div>
+            <div>{isPending ? 'After on-chain confirmation · report writes in 30s - 2min' : `${sideVerb} ${tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${tokenSymbol} · ${sideVerb === 'Bought' ? 'paid' : 'got'} ${fmtNum(notionalSol, solDp)} SOL`}</div>
+            <div>{isPending ? 'Visit the full link for the live transparency report' : `vs BullX ${fmtNum(competitorSol, solDp)} SOL · ${fmtNum(feePct, 2)}% fee vs ${fmtNum(competitorFeePct, 0)}%${mevProtected ? ' · MEV protected' : ''}`}</div>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export default async function Image({ params }: Props) {
           }}
         >
           <span>{`ocufi.io/v2/tx/${sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig}`}</span>
-          {isPending ? <span>Solana · 透明度报告</span> : savedUsd != null ? <span>{`≈ $${fmtNum(savedUsd, 2)} saved`}</span> : <span>Solana · 0.1% fee</span>}
+          {isPending ? <span>Solana · transparency report</span> : savedUsd != null ? <span>{`≈ $${fmtNum(savedUsd, 2)} saved`}</span> : <span>Solana · 0.1% fee</span>}
         </div>
       </div>
     ),

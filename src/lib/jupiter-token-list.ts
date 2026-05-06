@@ -1,10 +1,13 @@
 /**
- * V2 P3-FE-10 · Jupiter strict token list 客户端缓存查询
+ * V2 P3-FE-10 / P3-FE-12 · Jupiter token list 客户端缓存查询
  *
  * 熵减 #4:报告里 "DezX..." / "DjuM..." 4 字符 mint 切片不是币名 · 让用户自己去 solscan 查
- *   → 客户端拉 Jupiter `https://token.jup.ag/strict`(curated · 几百 KB)· 拿真 symbol+logoURI
+ *   → 客户端拉 Jupiter token list · 拿真 symbol+logoURI
  *   → localStorage 24h 缓存 · 不每次拉
  *   → 合 KNOWN_TOKENS(L1 sync)做 2 层兜底:KNOWN > Jupiter > backend symbol > shortMint
+ *
+ * P3-FE-12 改:`/strict` → `/all`(覆盖 pump.fun · 用户实测 strict 不含 pump 币)
+ *   `/all` 几 MB · 只存 {address, symbol, name, logoURI} 子集 · localStorage 单页存 1-2MB OK
  *
  * 设计:
  *   - 单例 promise · 同进程并发只 fetch 1 次
@@ -14,8 +17,8 @@
  */
 'use client';
 
-const ENDPOINT = 'https://token.jup.ag/strict';
-const STORAGE_KEY = 'ocufi.jup-strict.v1';
+const ENDPOINT = 'https://token.jup.ag/all';
+const STORAGE_KEY = 'ocufi.jup-all.v1'; // 改 cache key 防 strict v1 旧缓存命中
 const TTL_MS = 24 * 3600 * 1000;
 
 export type JupToken = {
@@ -66,10 +69,18 @@ async function loadList(): Promise<Cache | null> {
     try {
       const r = await fetch(ENDPOINT);
       if (!r.ok) return null;
-      const arr = (await r.json()) as JupToken[];
+      const arr = (await r.json()) as Array<Partial<JupToken>>;
       const map: Record<string, JupToken> = {};
+      // 只存子集字段 · /all 几 MB · localStorage 配额 5-10MB · 子集减半
       for (const t of arr) {
-        if (t?.address) map[t.address] = t;
+        if (!t?.address || !t.symbol) continue;
+        map[t.address] = {
+          address: t.address,
+          symbol: t.symbol,
+          name: t.name ?? '',
+          logoURI: t.logoURI ?? '',
+          decimals: t.decimals ?? 0,
+        };
       }
       const c: Cache = { ts: Date.now(), map };
       memCache = c;

@@ -324,7 +324,7 @@ export function PortfolioView() {
           </Link>
           {dustItems.length > 0 && (
             <div style={{ marginTop: 22, fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-              · 钱包还有 {dustItems.length} 个零碎币 · 总值 {fmtUsd(dustTotalUsd)} ·
+              {t('dust.inlineNote', { n: dustItems.length, usd: fmtUsd(dustTotalUsd) })}
             </div>
           )}
         </div>
@@ -541,7 +541,7 @@ export function PortfolioView() {
               maxWidth: 720,
             }}
           >
-            ⓘ 老交易 sol_amount 字段还在补 · 新交易会真实累计 · 不糊弄
+            {t('legacy.disclaimer')}
           </div>
         )}
       </section>
@@ -703,9 +703,9 @@ export function PortfolioView() {
                 background: 'var(--bg-card-v2)',
               }}
             >
-              你的 {tradeCount} 笔 swap 都是小测试单 · 全部小于 $0.0001 · 总值 {fmtUsd(dustTotalUsd)} ·
+              {t('dust.allDustNote', { n: tradeCount, usd: fmtUsd(dustTotalUsd) })}
               <span style={{ color: 'var(--ink-40)', marginLeft: 6 }}>
-                这是正常的散户测试行为 · 下方完整列出
+                {t('dust.allDustExpand')}
               </span>
             </div>
           )}
@@ -734,11 +734,11 @@ export function PortfolioView() {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-40)' }}>{dustExpanded ? '▼' : '▶'}</span>
                   <span style={{ fontSize: 13 }}>
-                    零碎币 · 共 {dustItems.length} 个 · 总值 {fmtUsd(dustTotalUsd)}
+                    {t('dust.fold', { n: dustItems.length, usd: fmtUsd(dustTotalUsd) })}
                   </span>
                 </span>
                 <span style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-                  &lt; $0.0001 · click 展开
+                  {t('dust.expandHint')}
                 </span>
               </button>
               {dustExpanded && (
@@ -816,7 +816,13 @@ export function PortfolioView() {
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {history.map((h) => (
               <li key={h.sig}>
-                <HistoryRow item={h} viewLabel={t('history.view')} sideLabels={{ buy: t('history.buy'), sell: t('history.sell') }} savedLabel={t('history.saved')} />
+                <HistoryRow
+                  item={h}
+                  sideLabels={{ buy: t('history.buy'), sell: t('history.sell') }}
+                  savedLabel={t('history.saved')}
+                  spentLabel={t('history.spent')}
+                  receivedLabel={t('history.received')}
+                />
               </li>
             ))}
           </ul>
@@ -866,7 +872,7 @@ export function PortfolioView() {
           gap: 8,
         }}
       >
-        ✨ 清扫 ATA · 回收 SOL
+        {t('sweep.fab')}
       </button>
 
       {/* 桌面 sweep CTA · 在列表后挂一行(mobile 用 sticky FAB · 这里 hide via .v2-pf-sweep-desk) */}
@@ -897,9 +903,9 @@ export function PortfolioView() {
             gap: 10,
           }}
         >
-          ✨ 清扫 ATA · 回收闲置 SOL
+          {t('sweep.deskCta')}
           <span style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-            (in-page · 不跳页)
+            {t('sweep.deskHint')}
           </span>
         </button>
       </section>
@@ -909,46 +915,106 @@ export function PortfolioView() {
   );
 }
 
-// P3-FE-10 · 交易历史行 · 真 token logo + symbol(useTokenMeta 救场后端 fallback "DezX")
-// click 整行跳 /v2/tx/<sig> · 详情看完整报告
+// P3-FE-12 · 交易历史卡 · 熵减 #F · 单行干瘪 → 卡式 · token logo + side overlay
+// 数据映射:
+//   buy:  Bought tokenOut.symbol · tokenOut.amount  · 花费 = tokenIn.amount SOL
+//   sell: Sold   tokenIn.symbol  · tokenIn.amount   · 换得 = tokenOut.amount SOL
+// click 整行跳 /v2/tx/<sig>
 function HistoryRow({
   item,
-  viewLabel,
   sideLabels,
   savedLabel,
+  spentLabel,
+  receivedLabel,
 }: {
   item: TxViewData;
-  viewLabel: string;
   sideLabels: { buy: string; sell: string };
   savedLabel: string;
+  spentLabel: string;
+  receivedLabel: string;
 }) {
-  // tokenSymbol 在 mapReportToView 是 token_out_symbol · 拿 mint 也是 out 端
-  // 但 TxViewData 没暴露 token_out_mint · 用 sigShort 不能查 · 暂用 backendSymbol 兜底
-  // 改进:扩 TxViewData 加 tokenMint · 让 useTokenMeta 真生效
   const sideLabel = item.side === 'buy' ? sideLabels.buy : sideLabels.sell;
+  // 用户视角 · 看的是 swap 的"主角 token"(buy 是拿到的 / sell 是卖掉的)
+  const focus = item.side === 'buy' ? item.tokenOut : item.tokenIn;
+  // counter side(SOL/USDC 那侧)· 显花费 / 换得
+  const counter = item.side === 'buy' ? item.tokenIn : item.tokenOut;
+  const meta = useTokenMeta(focus.mint, focus.symbol);
   const dateShort = item.timestamp.replace(' UTC', '');
+  const sideIsBuy = item.side === 'buy';
   return (
     <Link
       href={`/v2/tx/${item.sig}`}
       prefetch={false}
       style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(0,1fr) auto',
+        gridTemplateColumns: 'auto minmax(0,1fr) auto',
         alignItems: 'center',
-        gap: 16,
+        gap: 14,
         padding: '14px 18px',
         background: 'var(--bg-card-v2)',
         border: '1px solid var(--border-v2)',
-        borderRadius: 12,
+        borderRadius: 14,
         textDecoration: 'none',
         color: 'inherit',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
+      {/* 左 · token logo + side 角标(↑买 / ↓卖) */}
+      <div style={{ position: 'relative', width: 36, height: 36, flexShrink: 0 }}>
+        {meta.logoURI ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={meta.logoURI}
+            alt={meta.symbol}
+            width={36}
+            height={36}
+            style={{ borderRadius: '50%', display: 'block' }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
+              display: 'grid',
+              placeItems: 'center',
+              color: '#0b0d12',
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
+            {(meta.symbol || '?').charAt(0).toUpperCase()}
+          </div>
+        )}
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            right: -2,
+            bottom: -2,
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            background: sideIsBuy ? 'var(--brand-up)' : 'var(--ink-40)',
+            color: '#0b0d12',
+            display: 'grid',
+            placeItems: 'center',
+            fontSize: 10,
+            fontWeight: 700,
+            border: '2px solid var(--bg-card-v2)',
+          }}
+        >
+          {sideIsBuy ? '↑' : '↓'}
+        </span>
+      </div>
+
+      {/* 中 · symbol + amount + date */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-        <span style={{ fontSize: 13, color: 'var(--ink-100)', fontWeight: 500 }}>
-          {sideLabel} {item.tokenSymbol} ·{' '}
-          <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-            {item.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 4 })}
+        <span style={{ fontSize: 14, color: 'var(--ink-100)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {sideLabel} {meta.symbol} ·{' '}
+          <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', fontWeight: 500, color: 'var(--ink-80)' }}>
+            {focus.amount.toLocaleString('en-US', { maximumFractionDigits: 4 })}
           </span>
         </span>
         <span
@@ -962,8 +1028,10 @@ function HistoryRow({
           {dateShort}
         </span>
       </div>
+
+      {/* 右 · saved + counter amount */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-        {item.savedSol > 0 ? (
+        {item.savedSol > 0 && (
           <span
             style={{
               fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
@@ -972,17 +1040,7 @@ function HistoryRow({
               fontWeight: 600,
             }}
           >
-            {savedLabel} {item.savedSol.toFixed(item.solDp)} SOL
-          </span>
-        ) : (
-          <span
-            style={{
-              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-              fontSize: 11,
-              color: 'var(--ink-40)',
-            }}
-          >
-            {viewLabel}
+            ↗ {savedLabel} {item.savedSol.toFixed(item.solDp)} SOL
           </span>
         )}
         <span
@@ -990,9 +1048,10 @@ function HistoryRow({
             fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
             fontSize: 11,
             color: 'var(--ink-40)',
+            fontFeatureSettings: '"tnum" 1',
           }}
         >
-          {item.notionalSol.toFixed(item.solDp)} SOL
+          {sideIsBuy ? spentLabel : receivedLabel} {counter.amount.toLocaleString('en-US', { maximumFractionDigits: 4 })} {counter.symbol}
         </span>
       </div>
     </Link>

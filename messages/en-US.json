@@ -2335,7 +2335,24 @@
         "buy": "Bought",
         "sell": "Sold",
         "saved": "Saved",
+        "spent": "Spent",
+        "received": "Got",
         "view": "View →"
+      },
+      "legacy": {
+        "disclaimer": "ⓘ Legacy trades missing sol_amount field · new trades will accumulate real savings · no funny business"
+      },
+      "dust": {
+        "inlineNote": "· {n} dust tokens worth {usd} ·",
+        "allDustNote": "All {n} swaps are small test trades · each under $0.0001 · total {usd} ·",
+        "allDustExpand": "Normal retail testing behavior · listed below",
+        "fold": "Dust · {n} tokens · {usd}",
+        "expandHint": "< $0.0001 · click to expand"
+      },
+      "sweep": {
+        "fab": "✨ Sweep ATAs · Reclaim SOL",
+        "deskCta": "✨ Sweep ATAs · Reclaim idle SOL",
+        "deskHint": "(in-page · no redirect)"
       },
       "syncing": "↻ Just swapped · syncing data… (on-chain RPC index delay 5-30s)",
       "reclaimBanner": {

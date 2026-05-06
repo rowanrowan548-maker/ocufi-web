@@ -128,9 +128,12 @@ export type TxViewData = {
   savedSol: number;
   savedUsd: number | null;
   side: 'buy' | 'sell';
-  tokenAmount: number; // out amount in display unit
+  /** P3-FE-12 · 完整暴露 token in/out · HistoryRow 卖出要 in 维度 · buy 要 out 维度 */
+  tokenIn: { mint: string; symbol: string; amount: number; decimals: number };
+  tokenOut: { mint: string; symbol: string; amount: number; decimals: number };
+  /** 兼容旧 tx-view 用法 · 始终指向 token_out(buy 是用户拿到的 / sell 是 SOL/USDC) */
+  tokenAmount: number;
   tokenSymbol: string;
-  // P3-FE-10 · token mint · view 层用 useTokenMeta 升级真 symbol+logo · 防链上 fallback "DezX"
   tokenMint: string;
   notionalSol: number; // 花费 / 卖得 SOL
   vsCompetitorSol: number; // notional + (comparable - ocufi) × notional 反向算
@@ -168,7 +171,8 @@ export function pickSolDp(savedSol: number): number {
 
 export function mapReportToView(r: TransparencyReport): TxViewData {
   const sigShort = r.sig.length >= 12 ? `${r.sig.slice(0, 6)}...${r.sig.slice(-4)}` : r.sig;
-  const tokenAmount = rawToDecimal(r.token_out_amount, r.token_out_decimals);
+  const tokenInAmount = rawToDecimal(r.token_in_amount, r.token_in_decimals);
+  const tokenOutAmount = rawToDecimal(r.token_out_amount, r.token_out_decimals);
   const savedSol = lamportsToSol(r.savings_lamports);
   const gasSol = lamportsToSol(r.gas_lamports);
   const feeSol = lamportsToSol(r.ocufi_fee_lamports);
@@ -191,7 +195,19 @@ export function mapReportToView(r: TransparencyReport): TxViewData {
     savedSol,
     savedUsd: r.savings_usd,
     side: r.side,
-    tokenAmount,
+    tokenIn: {
+      mint: r.token_in_mint,
+      symbol: r.token_in_symbol,
+      amount: tokenInAmount,
+      decimals: r.token_in_decimals,
+    },
+    tokenOut: {
+      mint: r.token_out_mint,
+      symbol: r.token_out_symbol,
+      amount: tokenOutAmount,
+      decimals: r.token_out_decimals,
+    },
+    tokenAmount: tokenOutAmount,
     tokenSymbol: r.token_out_symbol,
     tokenMint: r.token_out_mint,
     notionalSol: r.notional_sol,
