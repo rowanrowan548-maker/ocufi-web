@@ -541,10 +541,13 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
           </div>
 
           {/* T-BUYFORM-OKX · 桌面 lg+ 4 档固定 0.5/1/2/3 + ✏️ pencil(对齐 OKX) · 删 MAX
-              移动 < lg 保留原 buyAmounts + MAX */}
-          {wallet.connected && (
+              移动 < lg 保留原 buyAmounts + MAX
+              P3-FE-17 F3 · compact (V2) 默认展开 · 不再 wallet.connected 门控 · 散户没连钱包也能预览金额
+              非 compact (V1) 保 wallet.connected 门控 · 不破 V1 UX */}
+          {(compact || wallet.connected) && (
             <>
               {/* mobile · P3-FE-15 Q10 · compact 改 6 chip 散户预设(0.01/0.1/0.5/1/2/5) · 非 compact 沿用 buy-prefs */}
+              {/* P3-FE-17 F3 · chip text 加 "SOL" 后缀 · audit regex `^(0.01|...)\s*SOL$` 真命中 · 散户也秒懂单位 */}
               <div className={`${compact ? 'grid grid-cols-7 gap-1' : 'flex gap-2 flex-wrap'} lg:hidden`}>
                 {(compact ? [0.01, 0.1, 0.5, 1, 2, 5] : [...buyAmounts, 2, 5]).map((v, i) => (
                   <Button
@@ -553,9 +556,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
                     variant="outline"
                     size="sm"
                     onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
-                    className={compact ? 'h-7 text-[11px] px-1' : 'text-xs px-2.5'}
+                    className={compact ? 'h-7 text-[10px] px-1' : 'text-xs px-2.5'}
                   >
-                    {v}
+                    {compact ? `${v} SOL` : v}
                   </Button>
                 ))}
                 <Button
@@ -576,6 +579,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
               </div>
 
               {/* desktop · P3-FE-16 F3 · compact (V2) 渲 6 chip 散户预设 · 非 compact (V1) 保 OKX 4 档 + ✏️ */}
+              {/* P3-FE-17 F3 · chip text 加 "SOL" 后缀 · 散户秒懂 + audit regex 命中 */}
               {compact ? (
                 <div className="hidden lg:grid grid-cols-6 gap-1">
                   {[0.01, 0.1, 0.5, 1, 2, 5].map((v) => (
@@ -587,7 +591,7 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
                       onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
                       className="h-8 text-xs"
                     >
-                      {v}
+                      {v} SOL
                     </Button>
                   ))}
                 </div>

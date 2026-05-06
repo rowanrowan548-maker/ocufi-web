@@ -2299,7 +2299,7 @@
         {
           "num": "Transparent",
           "h": "A report for every fill",
-          "p": "Route, slippage, network fee, fee, MEV detection. One URL, one click to share."
+          "p": "Route, slippage, network fee, platform fee, MEV detection. One URL, one click to share."
         }
       ]
     },

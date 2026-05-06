@@ -390,8 +390,11 @@ export function SellForm({ mint: mintProp, compact, risk, reasons, chromeless, o
             )}
           </div>
 
-          {/* 快捷百分比 · T-977c · compact 收紧 */}
-          {balance.amount != null && balance.amount > 0 && (
+          {/* 快捷百分比 · T-977c · compact 收紧
+              P3-FE-17 F3 · compact (V2) 默认展开 4 chip(25/50/75/100)· 不再 balance 门控
+              · setPct 内部已 guard 余额 null · 没余额点了也不抛错 · 散户预览交互
+              · 非 compact (V1) 保 balance > 0 门控 · 不破 V1 UX */}
+          {(compact || (balance.amount != null && balance.amount > 0)) && (
             <div className={compact ? 'grid grid-cols-4 gap-1' : 'flex gap-2 flex-wrap'}>
               {PCT_BUTTONS.map((pct) => (
                 <Button
