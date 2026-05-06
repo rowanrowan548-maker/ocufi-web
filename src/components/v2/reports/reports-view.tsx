@@ -233,9 +233,10 @@ function HeroCard({
       : `#${sigShort}`;
 
   // P4-FE-4 · 改用 OgCard · 跟 tx-view 完整报告 hero 视觉一致(双 radial brand glow + saveGradient)
+  // P4-FE-8 · variant 改 tx-hero(maxWidth 760)· 治桌面卡变窄回归(home-hero 是 460 装饰小卡)
   return (
     <OgCard
-      variant="home-hero"
+      variant="tx-hero"
       href={`/v2/tx/${item.sig}`}
       topLabel={`${labels.heroEyebrow} · #${sigShort}`}
       saveText={heroBig}
