@@ -869,9 +869,8 @@ export function PortfolioView() {
         <button
           type="button"
           onClick={() => setSweepOpen(true)}
+          className="v2-card-glow"
           style={{
-            background: 'var(--bg-card-v2)',
-            border: '1px solid var(--border-brand-soft)',
             color: 'var(--brand-up)',
             padding: '14px 24px',
             borderRadius: 14,
@@ -879,7 +878,6 @@ export function PortfolioView() {
             fontSize: 14,
             fontWeight: 500,
             cursor: 'pointer',
-            boxShadow: 'var(--shadow-card-v2)',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 10,

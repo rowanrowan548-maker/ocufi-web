@@ -29,12 +29,10 @@ export async function HomePillars() {
       {pillars.map((p, i) => (
         <div
           key={i}
+          className="v2-card-glow"
           style={{
             padding: '32px 28px',
-            background: 'var(--bg-card-v2)',
-            border: '1px solid var(--border-v2)',
             borderRadius: 16,
-            boxShadow: 'var(--shadow-card-v2)',
           }}
         >
           <div
