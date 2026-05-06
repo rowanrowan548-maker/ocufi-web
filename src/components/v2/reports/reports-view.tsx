@@ -234,17 +234,21 @@ function HeroCard({
 
   // P4-FE-4 · 改用 OgCard · 跟 tx-view 完整报告 hero 视觉一致(双 radial brand glow + saveGradient)
   // P4-FE-8 · variant 改 tx-hero(maxWidth 760)· 治桌面卡变窄回归(home-hero 是 460 装饰小卡)
+  // P4-FE-10 · 加 .v2-tx-hero-wrap wrapper · mobile 媒查(globals.css L598-606)才 hit
+  //   · 治 mobile 大字 clamp(28px, 8.5vw, 50px) 不换行 · token 头像不被裁
   return (
-    <OgCard
-      variant="tx-hero"
-      href={`/v2/tx/${item.sig}`}
-      topLabel={`${labels.heroEyebrow} · #${sigShort}`}
-      saveText={heroBig}
-      tokenLogo={tokenMeta.logoURI ?? undefined}
-      tokenSymbol={tokenSymbol ?? undefined}
-      footLeft={dateStr}
-      footRight={`${labels.viewFull}`}
-    />
+    <div className="v2-tx-hero-wrap">
+      <OgCard
+        variant="tx-hero"
+        href={`/v2/tx/${item.sig}`}
+        topLabel={`${labels.heroEyebrow} · #${sigShort}`}
+        saveText={heroBig}
+        tokenLogo={tokenMeta.logoURI ?? undefined}
+        tokenSymbol={tokenSymbol ?? undefined}
+        footLeft={dateStr}
+        footRight={`${labels.viewFull}`}
+      />
+    </div>
   );
 }
 
