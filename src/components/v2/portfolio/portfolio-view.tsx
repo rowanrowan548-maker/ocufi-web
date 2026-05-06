@@ -26,11 +26,13 @@ import {
   fetchPortfolioSavings,
   fetchPortfolioMevSavings,
   fetchEmptyAccounts,
+  fetchPrice,
   type HoldingsResponse,
   type PortfolioSavingsResponse,
   type PortfolioMevSavingsResponse,
   type HoldingItem,
 } from '@/lib/api-client';
+import { SOL_MINT } from '@/lib/portfolio';
 import { useSwapRefresh } from '@/lib/swap-refresh-store';
 import { getTransparencyReport, mapReportToView, pickSolDp, type TxViewData } from '@/lib/transparency';
 import { useTokenMeta, usePreloadJupiterList } from '@/lib/token-display';
@@ -60,7 +62,9 @@ function shortAddr(a: string): string {
   return a.length <= 8 ? a : `${a.slice(0, 4)}...${a.slice(-4)}`;
 }
 
-const SOL_USD = 200; // fallback price for SOL → USD when savings comes only in SOL
+// P4-FE-1 · 砍 SOL_USD hardcode · 改实时拉
+// 任何价格写死都错(SOL 价分钟级波动)· 持仓 USD 必须用实时价
+// 优先 holdings.items 中 SOL 的 priceUsd · 没有就 fetchPrice(SOL_MINT) · 拉不到显 "—"
 
 export function PortfolioView() {
   const t = useTranslations('v2.portfolio');
@@ -81,6 +85,8 @@ export function PortfolioView() {
   // P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /v2/reports
   const [history, setHistory] = useState<TxViewData[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  // P4-FE-1 · SOL 实时美元价 · 拉不到就 null · 不糊弄
+  const [solUsdPrice, setSolUsdPrice] = useState<number | null>(null);
   // P3-FE-8 · 订阅 swap 完成事件 · BuyForm/SellForm onSuccess → bumpSwap()
   const swapVersion = useSwapRefresh((s) => s.swapVersion);
   const prevSwapVersion = useRef(swapVersion);
@@ -202,6 +208,32 @@ export function PortfolioView() {
     };
   }, [connected, wallet, swapVersion]);
 
+  // P4-FE-1 · 实时 SOL 价格 · 优先 holdings.items SOL · 没有就 fetchPrice(SOL_MINT)
+  // 任何 hardcode 数字都错 · SOL 分钟级波动 · 拉不到就 null · UI 显 "—"
+  useEffect(() => {
+    // 先看 holdings 里有没有 SOL 的 priceUsd
+    const solHolding = holdings?.items?.find((i) => i.mint === SOL_MINT);
+    if (solHolding?.priceUsd && solHolding.priceUsd > 0) {
+      setSolUsdPrice(solHolding.priceUsd);
+      return;
+    }
+    // 没 SOL 持仓 / priceUsd 缺 → 主动拉 /price/<SOL_MINT>(后端 birdeye proxy · 60s cache)
+    let cancelled = false;
+    fetchPrice(SOL_MINT)
+      .then((p) => {
+        if (cancelled) return;
+        if (p?.price_usd && p.price_usd > 0) setSolUsdPrice(p.price_usd);
+        else setSolUsdPrice(null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSolUsdPrice(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [holdings, swapVersion]);
+
   if (!connected || !wallet) {
     return (
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '120px 24px' }}>
@@ -271,9 +303,10 @@ export function PortfolioView() {
   const clientAccSavedSol = history.reduce((s, h) => s + (h.savedSol > 0 ? h.savedSol : 0), 0);
   const backendSavedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
   const savedSol = clientAccSavedSol > 0 ? clientAccSavedSol : backendSavedSol;
-  const savedUsd = savedSol * SOL_USD;
-  const feeSavedUsd = (savings?.totals?.fee_saved_sol ?? 0) * SOL_USD;
-  const mevSavedUsd = (mev?.total_saved_sol ?? 0) * SOL_USD;
+  // P4-FE-1 · solUsdPrice null 时 USD 全 null · UI 显 "—" · 永不糊弄
+  const savedUsd = solUsdPrice != null ? savedSol * solUsdPrice : null;
+  const feeSavedUsd = solUsdPrice != null ? (savings?.totals?.fee_saved_sol ?? 0) * solUsdPrice : null;
+  const mevSavedUsd = solUsdPrice != null ? (mev?.total_saved_sol ?? 0) * solUsdPrice : null;
 
   // 拆 dust(<$0.01)· P2-HOTFIX-3 #3 · Phantom-style folding · 主列表干净
   const mainItems: HoldingItem[] = items.filter((h) => (h.valueUsd ?? 0) >= DUST_USD);

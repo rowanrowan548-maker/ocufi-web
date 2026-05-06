@@ -1,22 +1,21 @@
 /**
- * V2 P3-FE-13 · Birdeye 二级 token meta lookup
+ * V2 P3-FE-13 / P4-FE-1 · 客户端 token meta lookup
  *
- * 真因:Jupiter `/all` 仍不含 pump.fun 新币(用户实测 Aw5S / 73ed 未命中)
- * 治根:Jupiter miss → birdeye `/v3/token/meta-multiple?list_address=<mint>`
+ * P4-FE-1 重写:**砍 birdeye direct call · 改 V1 后端 `/price/<mint>` proxy**
+ *   真因:NEXT_PUBLIC_BIRDEYE_API_KEY 没配 client · `public-api.birdeye.so` 直接 401
+ *   后端已有 birdeye 接通(server-side BIRDEYE_API_KEY)· 返 ApiTokenPrice 含 logo_uri/symbol
+ *   前端走 fetchPrice(mint)(60s cache + inflight dedup · api-client.ts L130 已 ship)
  *
- * 设计:
- *   - per-mint localStorage 缓存 24h(birdeye quota 贵 · 不重复打)
- *   - 单 mint 单飞:同进程并发请求合并
- *   - 失败 / 没 NEXT_PUBLIC_BIRDEYE_API_KEY → 返 null · 上层 fallback shortMint
- *   - 不抛错
+ * 模块 export 不变(lookupBirdeyeMeta / lookupBirdeyeMetaSync)· 调用方(token-display.ts)0 改
  */
 'use client';
 
-const ENDPOINT = 'https://public-api.birdeye.so/defi/v3/token/meta-data/multiple';
-const STORAGE_KEY_PREFIX = 'ocufi.birdeye-meta:';
-const NEG_STORAGE_KEY_PREFIX = 'ocufi.birdeye-miss:';
+import { fetchPrice } from './api-client';
+
+const STORAGE_KEY_PREFIX = 'ocufi.token-meta:';
+const NEG_STORAGE_KEY_PREFIX = 'ocufi.token-meta-miss:';
 const TTL_MS = 24 * 3600 * 1000;
-const NEG_TTL_MS = 6 * 3600 * 1000; // 拿不到的 mint · 缓存 6h 不反复打
+const NEG_TTL_MS = 6 * 3600 * 1000;
 
 export type BirdeyeTokenMeta = {
   address: string;
@@ -79,60 +78,26 @@ export async function lookupBirdeyeMeta(mint: string): Promise<BirdeyeTokenMeta 
   const existing = inflight.get(mint);
   if (existing) return existing;
 
-  const apiKey = process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
-  if (!apiKey) {
-    // P3-FE-14 · debug · 排查 pump 币 fallback 没生效
-    console.warn('[birdeye] skip · NEXT_PUBLIC_BIRDEYE_API_KEY 未配置 · pump 币无二级 fallback', { mint });
-    memCache.set(mint, null);
-    return null;
-  }
-
   const p = (async (): Promise<BirdeyeTokenMeta | null> => {
     try {
-      const url = `${ENDPOINT}?list_address=${encodeURIComponent(mint)}`;
-      const r = await fetch(url, {
-        headers: {
-          'x-api-key': apiKey,
-          accept: 'application/json',
-          'x-chain': 'solana',
-        },
-      });
-      if (!r.ok) {
-        console.warn('[birdeye] HTTP error', { mint, status: r.status, statusText: r.statusText });
-        memCache.set(mint, null);
-        writeLocal(mint, null);
-        return null;
-      }
-      const json = (await r.json()) as {
-        data?: Record<
-          string,
-          {
-            address?: string;
-            symbol?: string;
-            name?: string;
-            logo_uri?: string;
-            logoURI?: string;
-          }
-        >;
-      };
-      const entry = json?.data?.[mint];
-      if (!entry || !entry.symbol) {
-        console.warn('[birdeye] empty entry', { mint, hasData: !!json?.data, keys: json?.data ? Object.keys(json.data).slice(0, 3) : [] });
+      // P4-FE-1 · V1 后端 proxy · 已 birdeye 接通 + 60s cache + inflight dedup
+      const price = await fetchPrice(mint);
+      if (!price?.symbol) {
         memCache.set(mint, null);
         writeLocal(mint, null);
         return null;
       }
       const meta: BirdeyeTokenMeta = {
-        address: entry.address ?? mint,
-        symbol: entry.symbol,
-        name: entry.name ?? '',
-        logoURI: entry.logo_uri ?? entry.logoURI ?? '',
+        address: price.mint ?? mint,
+        symbol: price.symbol,
+        name: price.name ?? '',
+        logoURI: price.logo_uri ?? '',
       };
       memCache.set(mint, meta);
       writeLocal(mint, meta);
       return meta;
     } catch (e) {
-      console.warn('[birdeye] fetch threw', { mint, error: e instanceof Error ? e.message : String(e) });
+      console.warn('[token-meta] fetchPrice failed', { mint, error: e instanceof Error ? e.message : String(e) });
       memCache.set(mint, null);
       return null;
     } finally {
