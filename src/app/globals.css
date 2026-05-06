@@ -180,6 +180,9 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    /* P4-FE-5 · Android 厂商 webview(MIUI/ColorOS/OneUI · TG/微信内置)默认吃系统字号倍率 1.15-1.3x
+       会把 chip 撑爆 · home-recents 单列散乱 · 用 100% 锁定 · 仍允许用户主动 zoom */
+    text-size-adjust: 100%;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading), var(--font-sans), system-ui, sans-serif;

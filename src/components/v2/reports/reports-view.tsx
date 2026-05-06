@@ -254,14 +254,13 @@ function HistoryRow({ item, viewLabel }: { item: RecentItem; viewLabel: string }
     <Link
       href={`/v2/tx/${item.sig}`}
       prefetch={false}
+      className="v2-card-glow"
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 16,
         padding: '14px 18px',
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
         borderRadius: 12,
         textDecoration: 'none',
         color: 'inherit',

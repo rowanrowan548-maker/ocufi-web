@@ -510,20 +510,18 @@ export function PortfolioView() {
           {tradeCount} trades · holdings = {fmtUsd(totalUsd)}
         </div>
 
-        {/* 累计省下卡 · brand 玻璃 + 微浮动(P2-HOTFIX-3 #5 视觉锚跟 OG 卡公式齐) */}
+        {/* 累计省下卡 · brand 玻璃 + 微浮动(P2-HOTFIX-3 #5 视觉锚跟 OG 卡公式齐)
+            P4-FE-5 · 套 v2-card-glow class · 跟 hero 视觉同源 */}
         <div
-          className="v2-pf-saved"
+          className="v2-pf-saved v2-card-glow"
           style={{
             marginTop: 36,
             padding: '22px 24px',
-            background: 'var(--bg-card-v2)',
-            border: '1px solid var(--border-brand-soft)',
             borderRadius: 14,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             maxWidth: 720,
-            boxShadow: 'var(--shadow-glow-v2)',
             animation: 'v2-float 5s ease-in-out infinite',
           }}
         >
@@ -929,14 +927,13 @@ function HistoryRow({
     <Link
       href={`/v2/tx/${item.sig}`}
       prefetch={false}
+      className="v2-card-glow"
       style={{
         display: 'grid',
         gridTemplateColumns: 'auto minmax(0,1fr) auto',
         alignItems: 'center',
         gap: 14,
         padding: '14px 18px',
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
         borderRadius: 14,
         textDecoration: 'none',
         color: 'inherit',

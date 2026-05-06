@@ -39,7 +39,7 @@ export function TokenTradeShell({ mint, defaultSide }: Props) {
   const reportLabel = realSig ? t('reportReal') : t('reportDemo');
 
   return (
-    <div className="v2-card v2-token-trade">
+    <div className="v2-card v2-card-glow v2-token-trade">
       {/* V1 TradeTabs · compact + chromeless · marketOnly 砍内层"市价/限价" tab(MUST NOT DO 第 5 条 · V2 不做 limit)
           chromeless · V2 .v2-card 已提供外 chrome · V1 内 Card 必须砍干净 · 防双 chrome 错位
           onSuccess · swap 上链 confirm 后存 sig · 入口实时切真链接

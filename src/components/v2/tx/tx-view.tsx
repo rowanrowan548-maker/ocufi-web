@@ -436,13 +436,10 @@ export function TxViewFallback({ sig }: { sig: string }) {
       </header>
 
       <section
+        className="v2-card-glow"
         style={{
           margin: '0 40px',
           padding: '48px 32px',
-          background: 'var(--bg-card-v2)',
-          border: '1px solid var(--border-v2)',
-          borderRadius: 16,
-          boxShadow: 'var(--shadow-card-v2)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -523,15 +520,11 @@ function RefreshLink({ label }: { label: string }) {
 }
 
 function Card({ k, v, sub, ok }: { k: string; v: string; sub: string; ok?: boolean }) {
+  // P4-FE-5 · 4 数据卡(滑点 / 网络费 / 手续费 / 路由)用 v2-card-glow · 跟 hero 同视觉
   return (
     <div
-      style={{
-        padding: '22px 20px',
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
-        borderRadius: 14,
-        boxShadow: 'var(--shadow-card-v2)',
-      }}
+      className="v2-card-glow"
+      style={{ padding: '22px 20px', borderRadius: 14 }}
     >
       <div
         style={{

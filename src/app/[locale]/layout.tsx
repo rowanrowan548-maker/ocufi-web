@@ -113,6 +113,11 @@ export const metadata: Metadata = {
 export const viewport = {
   themeColor: '#19FB9B',
   colorScheme: 'dark',
+  // P4-FE-5 · 双保险锁系统字号倍率到 1.0 · Android 厂商 webview(MIUI/ColorOS/OneUI · TG 内置)
+  // 默认放大 1.15-1.3x → 散落卡爆宽 / chip 单列 · 配合 globals.css text-size-adjust: 100% 治根
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export function generateStaticParams() {

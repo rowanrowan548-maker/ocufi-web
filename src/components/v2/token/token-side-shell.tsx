@@ -16,7 +16,7 @@ type Props = { mint: string };
 export function TokenSideShell({ mint }: Props) {
   const t = useTranslations('v2.token.side');
   return (
-    <aside className="v2-card v2-token-side">
+    <aside className="v2-card v2-card-glow v2-token-side">
       <h3
         style={{
           fontSize: 13,
