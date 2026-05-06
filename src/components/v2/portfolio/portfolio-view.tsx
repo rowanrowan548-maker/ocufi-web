@@ -641,15 +641,12 @@ export function PortfolioView() {
                   transition: 'background 0.15s',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                  <TokenAvatar logoURI={h.logoURI ?? null} symbol={h.symbol ?? ''} size={36} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{h.symbol || '—'}</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {h.name || shortAddr(h.mint)}
-                    </div>
-                  </div>
-                </div>
+                <HoldingTokenCell
+                  mint={h.mint}
+                  symbol={h.symbol ?? ''}
+                  name={h.name ?? ''}
+                  fallbackLogo={h.logoURI ?? null}
+                />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1, height: 4, background: 'var(--bg-deep)', borderRadius: 2, overflow: 'hidden' }}>
                     <div
@@ -763,45 +760,15 @@ export function PortfolioView() {
               {dustExpanded && (
                 <ul style={{ listStyle: 'none', margin: 0, padding: '0 20px 12px' }}>
                   {dustItems.map((h) => (
-                    <li
+                    <HoldingDustRow
                       key={h.mint}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '8px 0',
-                        fontSize: 12,
-                        color: 'var(--ink-60)',
-                      }}
-                    >
-                      {h.logoURI ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={h.logoURI} alt="" width={20} height={20} style={{ borderRadius: '50%', flexShrink: 0 }} />
-                      ) : (
-                        <span
-                          style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
-                            display: 'inline-grid',
-                            placeItems: 'center',
-                            color: '#fff',
-                            fontWeight: 700,
-                            fontSize: 9,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {(h.symbol || '?').charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {h.symbol || '—'} · {fmtAmount(h.uiAmount, h.decimals)}
-                      </span>
-                      <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
-                        {fmtUsd(h.valueUsd ?? 0, 4)}
-                      </span>
-                    </li>
+                      mint={h.mint}
+                      symbol={h.symbol ?? ''}
+                      fallbackLogo={h.logoURI ?? null}
+                      uiAmount={h.uiAmount}
+                      decimals={h.decimals}
+                      valueUsd={h.valueUsd ?? 0}
+                    />
                   ))}
                 </ul>
               )}
@@ -1085,5 +1052,86 @@ function TokenAvatar({ logoURI, symbol, size }: { logoURI: string | null; symbol
     >
       {(symbol || '?').charAt(0).toUpperCase()}
     </div>
+  );
+}
+
+// P4-FE-3 · 持仓主行 token cell · 走 useTokenMeta · 解决 SOL 无头像 + 跨页头像不一致
+// 后端 holdings.logoURI 来自 birdeye /wallet/portfolio · SOL 经常 null · 跟 /v3/token/meta-multiple 也对不上
+// 改:统一走 useTokenMeta(KNOWN_TOKENS sync 静态 logo 兜底 + 后端 /price/<mint> 同步升级)
+function HoldingTokenCell({
+  mint,
+  symbol,
+  name,
+  fallbackLogo,
+}: {
+  mint: string;
+  symbol: string;
+  name: string;
+  fallbackLogo: string | null;
+}) {
+  const meta = useTokenMeta(mint, symbol);
+  const logo = meta.logoURI ?? fallbackLogo ?? null;
+  const displaySymbol = meta.symbol || symbol || '—';
+  const displayName = meta.name || name || shortAddr(mint);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <TokenAvatar logoURI={logo} symbol={displaySymbol} size={36} />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{displaySymbol}</div>
+        <div
+          style={{
+            fontSize: 11,
+            color: 'var(--ink-40)',
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {displayName}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// P4-FE-3 · dust 行 · 同源 useTokenMeta
+function HoldingDustRow({
+  mint,
+  symbol,
+  fallbackLogo,
+  uiAmount,
+  decimals,
+  valueUsd,
+}: {
+  mint: string;
+  symbol: string;
+  fallbackLogo: string | null;
+  uiAmount: number;
+  decimals: number;
+  valueUsd: number;
+}) {
+  const meta = useTokenMeta(mint, symbol);
+  const logo = meta.logoURI ?? fallbackLogo ?? null;
+  const displaySymbol = meta.symbol || symbol || '—';
+  return (
+    <li
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '8px 0',
+        fontSize: 12,
+        color: 'var(--ink-60)',
+      }}
+    >
+      <TokenAvatar logoURI={logo} symbol={displaySymbol} size={20} />
+      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {displaySymbol} · {fmtAmount(uiAmount, decimals)}
+      </span>
+      <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
+        {fmtUsd(valueUsd, 4)}
+      </span>
+    </li>
   );
 }
