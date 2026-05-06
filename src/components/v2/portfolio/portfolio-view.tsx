@@ -237,13 +237,12 @@ export function PortfolioView() {
   if (!connected || !wallet) {
     return (
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '120px 24px' }}>
+        {/* P4-FE-4 · 用 v2-card-glow 共享 class · 跟 OgCard hero 同视觉(双 radial brand glow + 渐变 bg) */}
         <div
+          className="v2-card-glow"
           style={{
             padding: 56,
-            background: 'var(--bg-card-v2)',
-            border: '1px solid var(--border-brand-soft)',
             borderRadius: 20,
-            boxShadow: 'var(--shadow-glow-v2)',
             textAlign: 'center',
           }}
         >
@@ -323,14 +322,13 @@ export function PortfolioView() {
     return (
       <>
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '80px 24px' }}>
+        {/* P4-FE-4 · 用 v2-card-glow 共享 class · 同视觉锚 */}
         <div
+          className="v2-card-glow"
           style={{
             padding: '40px 32px',
-            background: 'var(--bg-card-v2)',
-            border: '1px solid var(--border-brand-soft)',
             borderRadius: 20,
             textAlign: 'center',
-            boxShadow: 'var(--shadow-glow-v2)',
             animation: 'v2-float-home 4s ease-in-out infinite',
           }}
         >

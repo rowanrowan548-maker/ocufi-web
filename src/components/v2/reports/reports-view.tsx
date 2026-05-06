@@ -22,6 +22,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { apiFetch } from '@/lib/api-client';
 import { getTransparencyReport, mapReportToView, type TxViewData } from '@/lib/transparency';
 import { useTokenMeta } from '@/lib/token-display';
+import { OgCard } from '@/components/v2/shared/og-card';
 
 type RecentItem = { sig: string; created_at: string };
 type RecentResponse = { ok: boolean; error: string | null; data: RecentItem[] };
@@ -223,7 +224,7 @@ function HeroCard({
   const tokenMeta = useTokenMeta(focus?.mint ?? '', focus?.symbol ?? null);
   const tokenSymbol = focus ? tokenMeta.symbol : null;
 
-  // hero 大字:有 detail 显 "省了 X SOL on $TOKEN" / 没就 fallback "#sigShort · 查看详情"
+  // hero 大字:有 detail 显 "省了 X SOL" / 没就 fallback "#sigShort"
   const heroBig =
     savedSol != null && savedSol > 0 && tokenSymbol
       ? `${labels.savedPrefix} ${fmtNum(savedSol, solDp)} ${labels.savedSuffix}`
@@ -231,89 +232,18 @@ function HeroCard({
       ? labels.noFee
       : `#${sigShort}`;
 
+  // P4-FE-4 · 改用 OgCard · 跟 tx-view 完整报告 hero 视觉一致(双 radial brand glow + saveGradient)
   return (
-    <Link
+    <OgCard
+      variant="home-hero"
       href={`/v2/tx/${item.sig}`}
-      prefetch={false}
-      style={{
-        display: 'block',
-        padding: '32px 28px',
-        borderRadius: 20,
-        background: 'linear-gradient(135deg, rgba(25,251,155,0.08), rgba(11,13,18,0.92))',
-        border: '1px solid var(--border-brand-soft)',
-        boxShadow: 'var(--shadow-glow-v2)',
-        textDecoration: 'none',
-        color: 'inherit',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-      }}
-    >
-      <div
-        style={{
-          fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-          fontSize: 11,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          color: 'var(--brand-up)',
-          marginBottom: 16,
-        }}
-      >
-        {labels.heroEyebrow} · #{sigShort}
-      </div>
-      <div
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontStyle: 'italic',
-          fontSize: 'clamp(36px, 6vw, 56px)',
-          lineHeight: 1.05,
-          letterSpacing: '-0.02em',
-          color: 'var(--ink-100)',
-        }}
-      >
-        {heroBig}
-      </div>
-      {tokenSymbol && (
-        <div
-          style={{
-            marginTop: 6,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-            fontSize: 14,
-            color: 'var(--ink-80)',
-          }}
-        >
-          {tokenMeta.logoURI && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={tokenMeta.logoURI}
-              alt={tokenSymbol}
-              width={20}
-              height={20}
-              style={{ borderRadius: '50%' }}
-            />
-          )}
-          <span>{labels.onToken} ${tokenSymbol}</span>
-        </div>
-      )}
-      <div
-        style={{
-          marginTop: 24,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-          fontSize: 12,
-          color: 'var(--ink-60)',
-        }}
-      >
-        <span>{dateStr}</span>
-        <span style={{ color: 'var(--brand-up)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-          {labels.viewFull}
-        </span>
-      </div>
-    </Link>
+      topLabel={`${labels.heroEyebrow} · #${sigShort}`}
+      saveText={heroBig}
+      tokenLogo={tokenMeta.logoURI ?? undefined}
+      tokenSymbol={tokenSymbol ?? undefined}
+      footLeft={dateStr}
+      footRight={`${labels.viewFull}`}
+    />
   );
 }
 
@@ -377,6 +307,7 @@ function HistoryRow({ item, viewLabel }: { item: RecentItem; viewLabel: string }
 
 // P3-FE-15 Q7 · 静态 demo preview · 没连钱包用户能看到报告长啥样
 function DemoPreview({ viewLabel, previewLabel }: { viewLabel: string; previewLabel: string }) {
+  // P4-FE-4 · 改 OgCard · 跟主 hero / tx-view 完整报告同源视觉
   return (
     <div>
       <div
@@ -391,87 +322,30 @@ function DemoPreview({ viewLabel, previewLabel }: { viewLabel: string; previewLa
       >
         {previewLabel}
       </div>
-      <Link
+      <OgCard
+        variant="home-mobile"
         href="/v2/tx/demo"
-        prefetch={false}
-        style={{
-          display: 'block',
-          padding: '28px 24px',
-          borderRadius: 18,
-          background: 'linear-gradient(135deg, rgba(25,251,155,0.08), rgba(11,13,18,0.92))',
-          border: '1px solid var(--border-brand-soft)',
-          boxShadow: 'var(--shadow-glow-v2)',
-          textDecoration: 'none',
-          color: 'inherit',
-        }}
-      >
-        <div
-          style={{
-            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-            fontSize: 11,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--brand-up)',
-            marginBottom: 14,
-          }}
-        >
-          DEMO · 5fXq8y...defghi
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontStyle: 'italic',
-            fontSize: 'clamp(28px, 4.5vw, 44px)',
-            lineHeight: 1.05,
-            letterSpacing: '-0.02em',
-            color: 'var(--ink-100)',
-          }}
-        >
-          Saved 0.0045 SOL
-        </div>
-        <div
-          style={{
-            marginTop: 8,
-            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-            fontSize: 13,
-            color: 'var(--ink-80)',
-          }}
-        >
-          on $BONK · 0.5 SOL → 1.23M · vs BullX · MEV protected
-        </div>
-        <div
-          style={{
-            marginTop: 20,
-            display: 'flex',
-            justifyContent: 'space-between',
-            gap: 12,
-            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-            fontSize: 12,
-            color: 'var(--ink-60)',
-          }}
-        >
-          <span>2026-05-08 · 14:23 UTC</span>
-          <span style={{ color: 'var(--brand-up)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-            {viewLabel}
-          </span>
-        </div>
-      </Link>
+        topLabel="DEMO · 5fXq8y...defghi"
+        saveText="Saved 0.0045 SOL"
+        subText="on $BONK · 0.5 SOL → 1.23M · vs BullX · MEV protected"
+        footLeft="2026-05-08 · 14:23 UTC"
+        footRight={viewLabel}
+      />
     </div>
   );
 }
 
 function EmptyMsg({ text }: { text: string }) {
+  // P4-FE-4 · 用 v2-card-glow 共享 class · 跟 OgCard hero 同视觉(双 radial brand glow)
   return (
     <div
+      className="v2-card-glow"
       style={{
         padding: '40px 24px',
         textAlign: 'center',
         fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
         fontSize: 13,
         color: 'var(--ink-60)',
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-v2)',
-        borderRadius: 14,
       }}
     >
       {text}
@@ -480,15 +354,14 @@ function EmptyMsg({ text }: { text: string }) {
 }
 
 function EmptyState({ title, sub, ctaLabel, ctaHref }: { title: string; sub: string; ctaLabel: string; ctaHref: string }) {
+  // P4-FE-4 · v2-card-glow 共享 class · 同视觉锚
   return (
     <div
+      className="v2-card-glow"
       style={{
         padding: '56px 32px',
-        textAlign: 'center',
-        background: 'var(--bg-card-v2)',
-        border: '1px solid var(--border-brand-soft)',
         borderRadius: 20,
-        boxShadow: 'var(--shadow-glow-v2)',
+        textAlign: 'center',
       }}
     >
       <div

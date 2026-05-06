@@ -267,6 +267,33 @@
     padding: 0;
     overflow: hidden;
   }
+  /* P4-FE-4 · 共享 glow 卡 · 跟 OgCard 同视觉锚(双 radial brand glow + 渐变 bg)
+     用户拍板"未连钱包提示卡也要这种渐变质感" · 给 3 处空态卡用
+     OgCard 内置 glow 是 inline style · 这里抽 class 给非 OgCard 的卡复用 */
+  .v2-card-glow {
+    position: relative;
+    background: linear-gradient(135deg, rgba(14, 17, 23, 0.95), rgba(11, 13, 18, 0.85));
+    border: 1px solid var(--border-brand-soft);
+    border-radius: 16px;
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: var(--shadow-glow-v2);
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .v2-card-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 92% 8%, rgba(25, 251, 155, 0.16), transparent 60%),
+      radial-gradient(ellipse 40% 40% at 6% 95%, rgba(25, 251, 155, 0.10), transparent 60%);
+  }
+  .v2-card-glow > * {
+    position: relative;
+    z-index: 1;
+  }
   /* P2-CHART-FIX · K 线专用 chrome · 不挂 .v2-card 那层 border
      真因:.v2-card 的 1px border + box-sizing border-box → iframe transform: scale 公式
      (100vw - 32) / 480 假设父 inner = vp - 32 · 实际 inner = vp - 32 - 2 → 视觉右溢

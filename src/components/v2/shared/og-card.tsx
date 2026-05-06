@@ -85,7 +85,7 @@ export function OgCard({
   subTextLine2,
   footLeft,
   footRight,
-  saveGradient = false,
+  saveGradient = true,
   href,
   tokenLogo,
   tokenSymbol,
