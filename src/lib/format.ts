@@ -9,20 +9,34 @@
  */
 import type { Currency } from './currency-store';
 
-/** 价格显示 · 大数纯整数,小数零塌缩(0.0₄8575) */
+/**
+ * 价格显示 · P3-FE-16 F2 · 全站统一 4 有效数字 + 零塌缩(0.0₄8575)
+ *
+ * QA P3-QA-2 Q9 FAIL · audit 显示混搭 `$0.002714` 4 位 vs `$0.000347` 3 位 vs `$0.0484` 3 位
+ * 真因:旧 toFixed(2/4/6) 按区间切换 · 不是 sig digits · 各档位 sig 数不一致
+ *
+ * 新逻辑:
+ *   - n >= 1000 → 千分位整数(1,234 / 50,000)· 跟散户看大数习惯一致
+ *   - n in [0.0001, 1000) → 4 sig digits(1.234 / 12.34 / 0.5000 / 0.04840 / 0.0003470)
+ *   - n < 0.0001 → 零塌缩(0.0₄1234)· 4 位 mantissa
+ */
 export function formatPrice(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(n) || n === 0) return '—';
+  const SIG = 4;
   if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  if (n >= 1) return n.toFixed(2);
-  if (n >= 0.01) return n.toFixed(4);
-  if (n >= 0.0001) return n.toFixed(6);
+  if (n >= 0.0001) {
+    return n.toLocaleString('en-US', {
+      minimumSignificantDigits: SIG,
+      maximumSignificantDigits: SIG,
+      useGrouping: false,
+    });
+  }
   const fixed = n.toFixed(20);
   const m = fixed.match(/^0\.(0+)(\d+)/);
-  if (!m) return n.toPrecision(3);
+  if (!m) return n.toPrecision(SIG);
   const lead = m[1].length;
-  if (lead < 4) return `0.${m[1]}${m[2].slice(0, 4)}`;
   const subs = '₀₁₂₃₄₅₆₇₈₉';
-  return `0.0${String(lead).split('').map((d) => subs[+d]).join('')}${m[2].slice(0, 4)}`;
+  return `0.0${String(lead).split('').map((d) => subs[+d]).join('')}${m[2].slice(0, SIG)}`;
 }
 
 /** 数字简写: 1234 → 1.23K, 1234567 → 1.23M, 1.2e9 → 1.20B */

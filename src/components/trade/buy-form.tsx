@@ -575,33 +575,50 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
                 </Button>
               </div>
 
-              {/* desktop · OKX 4 档 + ✏️ */}
-              <div className="hidden lg:grid grid-cols-5 gap-1">
-                {[0.5, 1, 2, 3].map((v) => (
+              {/* desktop · P3-FE-16 F3 · compact (V2) 渲 6 chip 散户预设 · 非 compact (V1) 保 OKX 4 档 + ✏️ */}
+              {compact ? (
+                <div className="hidden lg:grid grid-cols-6 gap-1">
+                  {[0.01, 0.1, 0.5, 1, 2, 5].map((v) => (
+                    <Button
+                      key={`d-${v}`}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
+                      className="h-8 text-xs"
+                    >
+                      {v}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <div className="hidden lg:grid grid-cols-5 gap-1">
+                  {[0.5, 1, 2, 3].map((v) => (
+                    <Button
+                      key={`d-${v}`}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
+                      className="h-8 text-xs"
+                    >
+                      {v}
+                    </Button>
+                  ))}
                   <Button
-                    key={`d-${v}`}
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => { setSolAmount(String(v)); resetOnInput(); }}
-                    className="h-8 text-xs"
+                    onClick={() => {
+                      document.getElementById('buy-sol')?.focus();
+                    }}
+                    aria-label={t('trade.form.quantity')}
+                    className="h-8 px-0"
                   >
-                    {v}
+                    <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    document.getElementById('buy-sol')?.focus();
-                  }}
-                  aria-label={t('trade.form.quantity')}
-                  className="h-8 px-0"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+                </div>
+              )}
             </>
           )}
 

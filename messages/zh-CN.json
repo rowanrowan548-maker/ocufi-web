@@ -641,13 +641,13 @@
       "postTradeValue": "成交后估值",
       "platformFee": "Ocufi 手续费 0.1%",
       "platformFeeNone": "0(本笔不收)",
-      "networkFee": "网络 Gas(上限)",
+      "networkFee": "网络费(上限)",
       "slippageWarn": "滑点 {impact}% · {sol} SOL 约损失 ${loss} USD,建议改 {suggested}%",
       "slippageApply": "拉到 {bps}%",
       "currentSlipGasHint": "滑点 {slippage}% · 优先级 {gasLabel}",
       "minReceiveTooltip": "滑点 {pct}% 兜底",
       "platformFeeTooltip": "Ocufi 0.1%(仅买入,自组 tx 直接转入,链上可查)",
-      "networkFeeTooltip": "Solana 网络 Gas + 优先费上限,实际可能更低",
+      "networkFeeTooltip": "Solana 网络费 + 优先费上限,实际可能更低",
       "placeholderBuy": "💡 输入 SOL 数量或点击 0.1 / 0.5 / 1 快捷按钮查看实时报价",
       "detailsButton": "详情",
       "placeholderSell": "💡 输入卖出数量或点击 25% / 50% / 100% 快捷按钮查看实时报价",
@@ -713,7 +713,7 @@
       "success": "交易成功",
       "actualReceived": "实际到账",
       "solSpent": "实际花费",
-      "networkFee": "网络 Gas",
+      "networkFee": "网络费",
       "viewOnExplorer": "在 Solscan 查看"
     },
     "viewSafety": "📊 查看安全信息",
@@ -803,7 +803,7 @@
     "feesTotal": {
       "title": "累计手续费",
       "ocufi": "Ocufi 手续费",
-      "network": "Solana 网络 Gas",
+      "network": "Solana 网络费",
       "txCount": "成交笔数",
       "note": "本地统计 · 仅你这台设备的浏览器记录,不上送服务器。链上每一笔可在 Solscan 自行核对。"
     },
@@ -1621,7 +1621,7 @@
       "execPrice": "成交价",
       "slippage": "滑点",
       "priorityFee": "优先费",
-      "gasFee": "Gas",
+      "gasFee": "网络费",
       "signature": "Tx"
     },
     "status": {
@@ -1632,7 +1632,7 @@
       "loading": "优先费加载中"
     },
     "gas": {
-      "loading": "Gas 加载中"
+      "loading": "网络费加载中"
     },
     "fee": {
       "unknown": "链上数据不可用"
@@ -2219,7 +2219,7 @@
         "slippage": "实际滑点",
         "slippageOk": "✓ {pct}%",
         "slippageTolerance": "容忍 {pct}%",
-        "gas": "Gas 消耗",
+        "gas": "网络费",
         "gasUsd": "≈ ${usd}",
         "fee": "手续费",
         "feeVsCompetitor": "{pct}% · vs BullX {comp}%",
@@ -2236,7 +2236,7 @@
         "copy": "📋 复制链接",
         "telegram": "✈ TG 分享",
         "copied": "已复制链接",
-        "shareText": "我刚在 Ocufi 完成一笔链上交易 · 省了 {savedSol} SOL · 路由 / 滑点 / Gas 全公开"
+        "shareText": "我刚在 Ocufi 完成一笔链上交易 · 省了 {savedSol} SOL · 路由 / 滑点 / 网络费 全公开"
       },
       "engineer": {
         "label": "高级:技术细节(路由 / Sender bundle)",
@@ -2280,7 +2280,7 @@
       "titleB": "每一笔都",
       "titleEm": "看得见",
       "titleC": "。",
-      "sub": "粘贴 token 地址,一键交易。每笔成交后自动生成「透明度报告」—— 路由 / 滑点 / Gas / 防夹保护,全部可分享。",
+      "sub": "粘贴 token 地址,一键交易。每笔成交后自动生成「透明度报告」—— 路由 / 滑点 / 网络费 / 防夹保护,全部可分享。",
       "inputPlaceholder": "粘贴 token 地址 · 例如 DezX...263(BONK)",
       "inputNoResult": "没找到这个 token · 试试粘贴 mint 地址",
       "inputError": "搜索失败 · 重试",
@@ -2314,7 +2314,7 @@
         {
           "num": "透明",
           "h": "每笔成交一份报告",
-          "p": "路由、滑点、Gas、手续费、MEV 检测。一个 URL,一键分享。"
+          "p": "路由、滑点、网络费、手续费、MEV 检测。一个 URL,一键分享。"
         }
       ]
     },

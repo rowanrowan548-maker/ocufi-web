@@ -75,14 +75,23 @@ describe('formatPrice · 边界 + 零塌缩', () => {
   it('1234 → 1,234(千分位无小数)', () => {
     expect(formatPrice(1234)).toBe('1,234');
   });
-  it('1.5 → 1.50', () => {
-    expect(formatPrice(1.5)).toBe('1.50');
+  it('1.5 → 1.500(P3-FE-16 · 4 sig)', () => {
+    expect(formatPrice(1.5)).toBe('1.500');
+  });
+  it('12.34 → 12.34(P3-FE-16 · 4 sig)', () => {
+    expect(formatPrice(12.34)).toBe('12.34');
   });
   it('0.5 → 0.5000', () => {
     expect(formatPrice(0.5)).toBe('0.5000');
   });
+  it('0.0484 → 0.04840(P3-FE-16 · 4 sig)', () => {
+    expect(formatPrice(0.0484)).toBe('0.04840');
+  });
   it('0.001 → 0.001000', () => {
     expect(formatPrice(0.001)).toBe('0.001000');
+  });
+  it('0.000347 → 0.0003470(P3-FE-16 · 4 sig)', () => {
+    expect(formatPrice(0.000347)).toBe('0.0003470');
   });
   it('0.00001234(4 个零,触发 ₄ 塌缩)→ 0.0₄1234', () => {
     expect(formatPrice(0.00001234)).toBe('0.0₄1234');

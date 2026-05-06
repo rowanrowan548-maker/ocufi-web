@@ -641,13 +641,13 @@
       "postTradeValue": "Position value (post-trade)",
       "platformFee": "Ocufi fee 0.1%",
       "platformFeeNone": "0 (not charged)",
-      "networkFee": "Network gas (max)",
+      "networkFee": "Network fee (max)",
       "slippageWarn": "Slippage {impact}% · {sol} SOL ≈ ${loss} USD loss — try {suggested}%",
       "slippageApply": "Raise to {bps}%",
       "currentSlipGasHint": "Slippage {slippage}% · Priority {gasLabel}",
       "minReceiveTooltip": "Slippage floor at {pct}%",
       "platformFeeTooltip": "Ocufi 0.1% (buy only, direct on-chain transfer, verifiable)",
-      "networkFeeTooltip": "Solana network gas + priority fee ceiling — actual cost may be lower",
+      "networkFeeTooltip": "Solana network fee + priority fee ceiling — actual cost may be lower",
       "placeholderBuy": "💡 Enter SOL amount or click 0.1 / 0.5 / 1 to see live quote",
       "detailsButton": "Details",
       "placeholderSell": "💡 Enter sell amount or click 25% / 50% / 100% to see live quote",
@@ -713,7 +713,7 @@
       "success": "Trade successful",
       "actualReceived": "Actually received",
       "solSpent": "SOL spent",
-      "networkFee": "Network gas",
+      "networkFee": "Network fee",
       "viewOnExplorer": "View on Solscan"
     },
     "viewSafety": "📊 Safety check",
@@ -803,7 +803,7 @@
     "feesTotal": {
       "title": "Lifetime fees",
       "ocufi": "Ocufi fees",
-      "network": "Solana gas",
+      "network": "Solana network fee",
       "txCount": "Trades",
       "note": "Tracked locally on this device only — never uploaded. Verify each transaction on Solscan."
     },
@@ -1606,7 +1606,7 @@
       "execPrice": "Exec Price",
       "slippage": "Slippage",
       "priorityFee": "Priority",
-      "gasFee": "Gas",
+      "gasFee": "Network fee",
       "signature": "Tx"
     },
     "status": {
@@ -1617,7 +1617,7 @@
       "loading": "Loading priority fee"
     },
     "gas": {
-      "loading": "Loading gas"
+      "loading": "Loading network fee"
     },
     "fee": {
       "unknown": "On-chain data unavailable"
@@ -2204,7 +2204,7 @@
         "slippage": "Slippage",
         "slippageOk": "✓ {pct}%",
         "slippageTolerance": "Tolerance {pct}%",
-        "gas": "Gas",
+        "gas": "Network fee",
         "gasUsd": "≈ ${usd}",
         "fee": "Fee",
         "feeVsCompetitor": "{pct}% · vs BullX {comp}%",
@@ -2221,7 +2221,7 @@
         "copy": "📋 Copy link",
         "telegram": "✈ Telegram",
         "copied": "Link copied",
-        "shareText": "Just completed a trade on Ocufi · saved {savedSol} SOL · route / slippage / gas all public"
+        "shareText": "Just completed a trade on Ocufi · saved {savedSol} SOL · route / slippage / network fee all public"
       },
       "engineer": {
         "label": "Advanced: technical details (route / Sender bundle)",
@@ -2265,7 +2265,7 @@
       "titleB": "every trade",
       "titleEm": "in the open",
       "titleC": ".",
-      "sub": "Paste a token address, swap in one tap. Each fill auto-generates a transparency report — route, slippage, gas, MEV protection — fully shareable.",
+      "sub": "Paste a token address, swap in one tap. Each fill auto-generates a transparency report — route, slippage, network fee, MEV protection — fully shareable.",
       "inputPlaceholder": "Paste token address · e.g. DezX...263 (BONK)",
       "inputNoResult": "No token found · try pasting the mint address",
       "inputError": "Search failed · try again",
@@ -2299,7 +2299,7 @@
         {
           "num": "Transparent",
           "h": "A report for every fill",
-          "p": "Route, slippage, gas, fee, MEV detection. One URL, one click to share."
+          "p": "Route, slippage, network fee, fee, MEV detection. One URL, one click to share."
         }
       ]
     },
