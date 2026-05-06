@@ -79,21 +79,18 @@ export function shortMint(mint: string): string {
   return `${mint.slice(0, 4)}…${mint.slice(-4)}`;
 }
 
-// ─── P3-FE-10 / P3-FE-13 · React hook · 报告 / 持仓行真名 + logo 客户端兜底 ───
+// ─── P3-FE-15 · React hook · 报告 / 持仓行真名 + logo 客户端兜底 ───
 //
 // 熵减 #4:链上 fallbackSymbol 写 mint.slice(0,4)("DezX")· 用户看不出币
-// 三层 lookup · 异步升级触发 re-render:
-//   1. KNOWN_TOKENS sync(主流币 · 含 BONK/USDC 等)
-//   2. Jupiter `/all` · localStorage 24h cache · pump 币部分覆盖
-//   3. P3-FE-13 · Birdeye 二级 fallback · pump.fun 新币 · 24h 缓存
-// 任一拿到 logoURI 都立即 setState · re-render 显 logo
+//
+// P3-FE-15 Q1 · jupiter 域名 DNS 真死(`token.jup.ag` Could not resolve host)
+//   · 全切 birdeye 主源 · 砍 jupiter-token-list 调用
+//   两层 lookup · 异步升级触发 re-render:
+//     1. KNOWN_TOKENS sync(主流币 · 静态 logoURI 兜底 SSR 首帧)
+//     2. Birdeye `/v3/token/meta-multiple` · per-mint localStorage 24h
+//   任一拿到 logoURI 都立即 setState · re-render 显 logo
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  lookupJupiterToken,
-  lookupJupiterTokenSync,
-  preloadJupiterList,
-} from './jupiter-token-list';
 import {
   lookupBirdeyeMeta,
   lookupBirdeyeMetaSync,
@@ -107,10 +104,10 @@ export type TokenMeta = {
 
 /**
  * mint → {symbol, name, logoURI} · 异步升级
- * 1. KNOWN_TOKENS 命中 → 立即返(无 logo)
- * 2. Jupiter cache 同步命中 → 立即返完整
- * 3. Birdeye cache 同步命中 → 立即返完整
- * 4. 都没 → 返 backendSymbol fallback · useEffect 拉 Jupiter → 没拿到拉 Birdeye → setState 升级
+ * P3-FE-15 Q1 · 砍 jupiter(域名 DNS 死)· 主源 birdeye
+ * 1. KNOWN_TOKENS 命中 → 立即返完整(含静态 logoURI)
+ * 2. Birdeye cache 同步命中 → 立即返完整
+ * 3. 都没 → 返 backendSymbol / shortMint fallback · useEffect 异步打 birdeye · 拿到 setState
  */
 export function useTokenMeta(
   mint: string,
@@ -119,10 +116,7 @@ export function useTokenMeta(
   const initial = useMemo<TokenMeta>(() => {
     if (!mint) return { symbol: '', name: null, logoURI: null };
     const known = KNOWN_TOKENS[mint];
-    // P3-FE-14 · KNOWN 也吃 logoURI 字段 · 静态兜底 SSR 首帧 · 异步仍可升级
     if (known) return { symbol: known.symbol, name: known.name, logoURI: known.logoURI ?? null };
-    const jup = lookupJupiterTokenSync(mint);
-    if (jup) return { symbol: jup.symbol, name: jup.name, logoURI: jup.logoURI || null };
     const bird = lookupBirdeyeMetaSync(mint);
     if (bird) return { symbol: bird.symbol, name: bird.name || null, logoURI: bird.logoURI || null };
     // backend symbol 像 mint 切片(<5 字 · 跟 mint.slice(0,4) 重合)= 假 · 改 shortMint
@@ -142,33 +136,17 @@ export function useTokenMeta(
   useEffect(() => {
     setMeta(initial);
     if (!mint) return;
-    // P3-FE-14 · 砍 `if (KNOWN_TOKENS[mint]) return` · KNOWN 也跑异步链拿真 logoURI 升级
-    // 静态 logoURI 是 SSR 兜底 · 真 jupiter/birdeye 拿到的 logo 会覆盖(更新版本 / IPFS 更稳)
     let cancelled = false;
-    (async () => {
-      // 1. Jupiter 异步
-      const jup = await lookupJupiterToken(mint);
-      if (cancelled) return;
-      if (jup && (jup.logoURI || jup.symbol)) {
-        setMeta((prev) => ({
-          symbol: jup.symbol || prev.symbol,
-          name: jup.name || prev.name,
-          // jupiter 没 logo 时不覆盖已有 KNOWN logo
-          logoURI: jup.logoURI || prev.logoURI,
-        }));
-        if (jup.logoURI) return; // 拿到 logo 就停 · 不再打 birdeye(省 quota)
-      }
-      // 2. Birdeye 异步
-      const bird = await lookupBirdeyeMeta(mint);
-      if (cancelled) return;
-      if (bird) {
-        setMeta((prev) => ({
-          symbol: bird.symbol || prev.symbol,
-          name: bird.name || prev.name,
-          logoURI: bird.logoURI || prev.logoURI,
-        }));
-      }
-    })();
+    // P3-FE-15 · 直接打 birdeye · 砍 jupiter(DNS 死 · 反复打更慢)
+    lookupBirdeyeMeta(mint).then((bird) => {
+      if (cancelled || !bird) return;
+      setMeta((prev) => ({
+        symbol: bird.symbol || prev.symbol,
+        name: bird.name || prev.name,
+        // birdeye 没 logo 时不覆盖已有 KNOWN logo
+        logoURI: bird.logoURI || prev.logoURI,
+      }));
+    });
     return () => {
       cancelled = true;
     };
@@ -177,9 +155,7 @@ export function useTokenMeta(
   return meta;
 }
 
-/** 预热 Jupiter list · 持仓 / 首页 mount 调一次 · 后续 sync 查无延迟 */
+/** P3-FE-15 · jupiter 死 · 此 hook 留兼容空壳 · 调用方不动 */
 export function usePreloadJupiterList(): void {
-  useEffect(() => {
-    preloadJupiterList();
-  }, []);
+  // no-op · jupiter 域名 DNS 死 · 不再预热
 }

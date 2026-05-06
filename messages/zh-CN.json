@@ -33,7 +33,7 @@
     "comingSoon": "敬请期待",
     "backHome": "返回交易页",
     "search": {
-      "placeholder": "币种 / 地址 / DApp..."
+      "placeholder": "币种 / 名字 / 地址"
     },
     "searchModal": {
       "title": "搜索",
@@ -533,15 +533,15 @@
       "priorityHelp": "优先费档位说明 · 查看文档"
     },
     "priority": {
-      "pilot": "Pilot",
-      "p1": "P1",
-      "p2": "P2",
-      "p3": "P3",
+      "pilot": "标准",
+      "p1": "快速",
+      "p2": "优先",
+      "p3": "紧急",
       "tooltip": {
-        "pilot": "Pilot · {sol} SOL · 较慢",
-        "p1": "P1 · {sol} SOL · 标准",
-        "p2": "P2 · {sol} SOL · 快",
-        "p3": "P3 · {sol} SOL · 极速"
+        "pilot": "标准 · {sol} SOL · 慢但便宜",
+        "p1": "快速 · {sol} SOL · 多数情况够用",
+        "p2": "优先 · {sol} SOL · 拥堵时升档",
+        "p3": "紧急 · {sol} SOL · 抢热点用"
       }
     },
     "autoSell": {
@@ -2256,12 +2256,13 @@
     },
     "reports": {
       "title": "我的交易报告",
-      "subtitle": "每一笔成交后自动生成 · 路由 / 滑点 / Gas / 防夹 全公开",
+      "subtitle": "每一笔成交后自动生成 · 路由 / 滑点 / 网络费 / 防夹 全公开",
       "empty": "还没有交易报告 · 完成第一笔 swap 后这里会出现",
       "emptyTitle": "还没有交易报告",
       "emptySub": "完成第一笔 swap · 报告会自动出现在这里",
       "emptyCta": "去交易",
       "connectWallet": "连接钱包查看报告历史",
+      "demoLabel": "示例 · 报告长这样",
       "loadError": "加载失败 · 请稍后再试",
       "viewReport": "查看 →",
       "viewFull": "查看完整报告 →",
@@ -2322,7 +2323,7 @@
       "loadFailed": "加载失败 · 请重试",
       "connect": {
         "title": "连接钱包看持仓",
-        "sub": "Ocufi 永远摸不到你的私钥 · 数据走只读 RPC",
+        "sub": "Ocufi 永远摸不到你的私钥 · 我们只看链上公开记录 · 不存你的数据",
         "cta": "连接钱包"
       },
       "empty": {

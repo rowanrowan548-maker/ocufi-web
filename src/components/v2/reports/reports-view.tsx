@@ -125,7 +125,15 @@ export function ReportsView() {
       </header>
 
       <section style={{ padding: '8px 40px 80px' }}>
-        {state.kind === 'idle' && !wallet && <EmptyMsg text={t('connectWallet')} />}
+        {state.kind === 'idle' && !wallet && (
+          <>
+            <EmptyMsg text={t('connectWallet')} />
+            {/* P3-FE-15 Q7 · 没连钱包给 demo 预览卡 · 教学 + 填空 · 不留空白 */}
+            <div style={{ marginTop: 24 }}>
+              <DemoPreview viewLabel={t('viewFull')} previewLabel={t('demoLabel')} />
+            </div>
+          </>
+        )}
         {state.kind === 'loading' && <EmptyMsg text="…" />}
         {state.kind === 'error' && <EmptyMsg text={t('loadError')} />}
         {state.kind === 'ok' && state.items.length === 0 && (
@@ -364,6 +372,91 @@ function HistoryRow({ item, viewLabel }: { item: RecentItem; viewLabel: string }
         {viewLabel}
       </span>
     </Link>
+  );
+}
+
+// P3-FE-15 Q7 · 静态 demo preview · 没连钱包用户能看到报告长啥样
+function DemoPreview({ viewLabel, previewLabel }: { viewLabel: string; previewLabel: string }) {
+  return (
+    <div>
+      <div
+        style={{
+          fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+          fontSize: 11,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--ink-40)',
+          marginBottom: 14,
+        }}
+      >
+        {previewLabel}
+      </div>
+      <Link
+        href="/v2/tx/demo"
+        prefetch={false}
+        style={{
+          display: 'block',
+          padding: '28px 24px',
+          borderRadius: 18,
+          background: 'linear-gradient(135deg, rgba(25,251,155,0.08), rgba(11,13,18,0.92))',
+          border: '1px solid var(--border-brand-soft)',
+          boxShadow: 'var(--shadow-glow-v2)',
+          textDecoration: 'none',
+          color: 'inherit',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 11,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--brand-up)',
+            marginBottom: 14,
+          }}
+        >
+          DEMO · 5fXq8y...defghi
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontStyle: 'italic',
+            fontSize: 'clamp(28px, 4.5vw, 44px)',
+            lineHeight: 1.05,
+            letterSpacing: '-0.02em',
+            color: 'var(--ink-100)',
+          }}
+        >
+          Saved 0.0045 SOL
+        </div>
+        <div
+          style={{
+            marginTop: 8,
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 13,
+            color: 'var(--ink-80)',
+          }}
+        >
+          on $BONK · 0.5 SOL → 1.23M · vs BullX · MEV protected
+        </div>
+        <div
+          style={{
+            marginTop: 20,
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 12,
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 12,
+            color: 'var(--ink-60)',
+          }}
+        >
+          <span>2026-05-08 · 14:23 UTC</span>
+          <span style={{ color: 'var(--brand-up)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            {viewLabel}
+          </span>
+        </div>
+      </Link>
+    </div>
   );
 }
 

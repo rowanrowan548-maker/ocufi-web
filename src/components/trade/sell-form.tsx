@@ -65,7 +65,8 @@ const SLIPPAGE_OPTIONS = [
   { value: '1000', label: '10%' },
 ];
 
-const PCT_BUTTONS = [25, 50, 100];
+// P3-FE-15 Q10 · 加 75% · V1 复用 4 档(25/50/75/100)散户跨度更平滑
+const PCT_BUTTONS = [25, 50, 75, 100];
 
 interface QuoteData {
   quote: JupiterQuote;

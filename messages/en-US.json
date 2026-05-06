@@ -33,7 +33,7 @@
     "comingSoon": "Coming Soon",
     "backHome": "Back to Trade",
     "search": {
-      "placeholder": "Token / address / DApp..."
+      "placeholder": "Symbol / name / address"
     },
     "searchModal": {
       "title": "Search",
@@ -533,15 +533,15 @@
       "priorityHelp": "About priority fee tiers · view docs"
     },
     "priority": {
-      "pilot": "Pilot",
-      "p1": "P1",
-      "p2": "P2",
-      "p3": "P3",
+      "pilot": "Standard",
+      "p1": "Fast",
+      "p2": "Priority",
+      "p3": "Urgent",
       "tooltip": {
-        "pilot": "Pilot · {sol} SOL · slower",
-        "p1": "P1 · {sol} SOL · standard",
-        "p2": "P2 · {sol} SOL · fast",
-        "p3": "P3 · {sol} SOL · turbo"
+        "pilot": "Standard · {sol} SOL · slow but cheap",
+        "p1": "Fast · {sol} SOL · works for most cases",
+        "p2": "Priority · {sol} SOL · congested times",
+        "p3": "Urgent · {sol} SOL · sniping launches"
       }
     },
     "autoSell": {
@@ -2241,12 +2241,13 @@
     },
     "reports": {
       "title": "My trade reports",
-      "subtitle": "Auto-generated after each fill · route / slippage / gas / MEV all public",
+      "subtitle": "Auto-generated after each fill · route / slippage / network fee / MEV all public",
       "empty": "No trade reports yet · they'll appear here after your first swap",
       "emptyTitle": "No trade reports yet",
       "emptySub": "Complete your first swap · reports appear here automatically",
       "emptyCta": "Start trading",
       "connectWallet": "Connect wallet to view report history",
+      "demoLabel": "Preview · what reports look like",
       "loadError": "Load failed · please try again",
       "viewReport": "View →",
       "viewFull": "View full report →",
@@ -2307,7 +2308,7 @@
       "loadFailed": "Failed to load · please retry",
       "connect": {
         "title": "Connect wallet to view holdings",
-        "sub": "Ocufi never touches your private key · data via read-only RPC",
+        "sub": "Ocufi never touches your private key · we only read public on-chain records · don't store your data",
         "cta": "Connect wallet"
       },
       "empty": {

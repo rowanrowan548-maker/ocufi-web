@@ -7,15 +7,13 @@
 import { fetchMarketsTrending, type MarketItem } from '@/lib/api-client';
 import { ChipToken } from '@/components/v2/shared/chip-token';
 import { getTranslations } from 'next-intl/server';
+import { formatPrice } from '@/lib/format';
 
-function fmtPrice(p: number | null): string | undefined {
+// P3-FE-15 Q9 · 全站统一 formatPrice · 砍 home-recents 自家的 fmtPrice 重复
+function fmtPriceUsd(p: number | null): string | undefined {
   if (p == null || !Number.isFinite(p)) return undefined;
-  if (p === 0) return '$0';
-  if (p < 0.000001) return `$${p.toExponential(2)}`;
-  if (p < 0.01) return `$${p.toFixed(6)}`;
-  if (p < 1) return `$${p.toFixed(4)}`;
-  if (p < 1000) return `$${p.toFixed(2)}`;
-  return `$${(p / 1000).toFixed(1)}K`;
+  const v = formatPrice(p);
+  return v === '—' ? undefined : `$${v}`;
 }
 
 export async function HomeRecents() {
@@ -59,7 +57,7 @@ export async function HomeRecents() {
         <ChipToken
           key={m.mint}
           symbol={m.symbol || m.mint.slice(0, 4).toUpperCase()}
-          price={fmtPrice(m.priceUsd)}
+          price={fmtPriceUsd(m.priceUsd)}
           href={`/v2/token/${m.mint}`}
           iconImg={m.logo || undefined}
         />

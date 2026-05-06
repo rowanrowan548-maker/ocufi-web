@@ -544,9 +544,9 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
               移动 < lg 保留原 buyAmounts + MAX */}
           {wallet.connected && (
             <>
-              {/* mobile · 原版 */}
-              <div className={`${compact ? 'grid grid-cols-4 gap-1' : 'flex gap-2 flex-wrap'} lg:hidden`}>
-                {(compact ? buyAmounts : [...buyAmounts, 2, 5]).map((v, i) => (
+              {/* mobile · P3-FE-15 Q10 · compact 改 6 chip 散户预设(0.01/0.1/0.5/1/2/5) · 非 compact 沿用 buy-prefs */}
+              <div className={`${compact ? 'grid grid-cols-7 gap-1' : 'flex gap-2 flex-wrap'} lg:hidden`}>
+                {(compact ? [0.01, 0.1, 0.5, 1, 2, 5] : [...buyAmounts, 2, 5]).map((v, i) => (
                   <Button
                     key={`m-${v}-${i}`}
                     type="button"

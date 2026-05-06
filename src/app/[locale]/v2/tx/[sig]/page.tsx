@@ -12,6 +12,13 @@ import { TxView, TxViewFallback } from '@/components/v2/tx/tx-view';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 import { getTransparencyReport, mapReportToView } from '@/lib/transparency';
 
+// P3-FE-15 Q8 · 散户友好 alias · /v2/tx/demo · /v2/tx/example · /v2/tx/mock 全走 mock 报告
+// 让人们可以分享一个稳定的 demo 链路 · 不依赖某个真 sig · 不走 "生成中" polling
+const DEMO_ALIASES = new Set(['demo', 'example', 'mock']);
+function isDemoSig(sig: string): boolean {
+  return sig === MOCK_TX_SIG || DEMO_ALIASES.has(sig.toLowerCase());
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -20,8 +27,8 @@ export async function generateMetadata({
   const { sig } = await params;
   const short = sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig;
 
-  // demo · 用 mockup 文案
-  if (sig === MOCK_TX_SIG) {
+  // demo · 用 mockup 文案 · P3-FE-15 Q8 · 接 demo / example / mock alias
+  if (isDemoSig(sig)) {
     return {
       title: `Trade #${short} · Ocufi V2 (Demo)`,
       description: 'Transparency report demo · Ocufi · 0.1% fee · MEV protected.',
@@ -66,8 +73,8 @@ export default async function V2TxPage({
   const { locale, sig } = await params;
   setRequestLocale(locale);
 
-  // demo sig · 永走 mock(nav "Demo" tab 体验保留)
-  if (sig === MOCK_TX_SIG) {
+  // demo sig · 永走 mock(nav "Demo" tab 体验保留) · P3-FE-15 Q8 · demo / example / mock alias
+  if (isDemoSig(sig)) {
     return <TxView sig={sig} demo />;
   }
 

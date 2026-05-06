@@ -412,6 +412,9 @@
       height: 64px !important;
       gap: 8px !important;
     }
+    /* P3-FE-15 Q11 · mobile nav 整合 · 隐藏 lang switch · 防 nav 太挤 · 桌面仍显
+       · 用户在 mobile 想切语言 → 走 URL `/en-US/v2` 直接 · 或加 hamburger 见后续 task */
+    .v2-lang-switch { display: none !important; }
     /* P2-HOTFIX-4 #3 · mobile nav 加回 "OCUFI" 文字 · 不能孤 logo · 品牌弱
        mobile 顶部 nav: logo + OCUFI + 🔍 + wallet · 砍 4 link · 砍抽屉 */
     .v2-nav-brand-text { display: inline !important; font-size: 17px !important; }
