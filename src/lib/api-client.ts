@@ -830,6 +830,9 @@ export interface BIConversionFunnel {
   swap_count: number;
   /** 0-100 · 子段为 null 时也回 null */
   connect_to_swap_rate: number | null;
+  /** P5-BE-1 改 4 · 'analytics_event' 真埋点 / 'swap_floor' fallback 由 swap 数推 */
+  connect_count_source?: 'analytics_event' | 'swap_floor';
+  quote_request_count_source?: 'analytics_event' | 'swap_floor';
 }
 
 export interface BIMevRebate {
@@ -840,11 +843,21 @@ export interface BIMevRebate {
   mev_7d_sol: number;
 }
 
+export interface BIFailReason {
+  /** suspected_sybil / daily_cap_hit / unknown · 详 fail_reasons_note */
+  reason: string;
+  count: number;
+}
+
 export interface BISuccessRate {
   swap_success_count: number;
   swap_fail_count: number;
   /** 0-100 · 总数为 0 时回 null */
   success_rate_pct: number | null;
+  /** P5-BE-1 改 5 · awarded=false 拒因拆解 · 按 count desc · 无失败时 [] */
+  fail_reasons?: BIFailReason[];
+  /** P5-BE-1 改 5 · 语义边界:fail_count = 积分系统拒发 · 不是链上 swap 失败 */
+  fail_reasons_note?: string;
 }
 
 export interface BITradeSizeDist {
@@ -881,6 +894,90 @@ export async function fetchAdminBIMetrics(
   window: FeeRevenueWindow = '7d',
 ): Promise<BIMetricsResp> {
   return apiFetch<BIMetricsResp>(`/admin/bi-metrics?window=${window}`, {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
+// ─── P5-BE-1 改 1 · /admin/transparency-stats · V2 透明度报告统计 ───
+
+export interface TransparencyTopToken {
+  symbol: string | null;
+  mint: string | null;
+  count: number;
+  total_saved_sol: number;
+}
+
+export interface TransparencyStatsResp {
+  ok: boolean;
+  computed_at: string;
+  cached?: boolean;
+  total: number;
+  generated_24h: number;
+  generated_7d: number;
+  daily_30d: AdminTimeBucket[];
+  top_tokens: TransparencyTopToken[];
+  error?: string;
+}
+
+export async function fetchAdminTransparencyStats(
+  key: string,
+): Promise<TransparencyStatsResp> {
+  return apiFetch<TransparencyStatsResp>('/admin/transparency-stats', {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
+// ─── P5-BE-1 改 2 · /admin/v2-vs-v1-pv · 7d V2 vs V1 PV 对比 ───
+
+export interface V2V1TopPath {
+  path: string;
+  views: number;
+}
+
+export interface V2VsV1PvResp {
+  ok: boolean;
+  window: string;
+  computed_at: string;
+  cached?: boolean;
+  v2_pv: number;
+  v1_pv: number;
+  v2_share_pct: number;
+  v2_top_paths: V2V1TopPath[];
+  v1_top_paths: V2V1TopPath[];
+  error?: string;
+}
+
+export async function fetchAdminV2VsV1Pv(
+  key: string,
+): Promise<V2VsV1PvResp> {
+  return apiFetch<V2VsV1PvResp>('/admin/v2-vs-v1-pv', {
+    headers: { 'X-Admin-Key': key },
+  });
+}
+
+// ─── P5-BE-1 改 3 · /admin/og-share-stats · X/TG unfurl 抓取数 ───
+
+export interface OgShareTopPath {
+  path: string;
+  hits: number;
+}
+
+export interface OgShareStatsResp {
+  ok: boolean;
+  computed_at: string;
+  cached?: boolean;
+  total_og_hits: number;
+  hits_24h: number;
+  hits_7d: number;
+  daily_30d: AdminTimeBucket[];
+  top_paths: OgShareTopPath[];
+  error?: string;
+}
+
+export async function fetchAdminOgShareStats(
+  key: string,
+): Promise<OgShareStatsResp> {
+  return apiFetch<OgShareStatsResp>('/admin/og-share-stats', {
     headers: { 'X-Admin-Key': key },
   });
 }

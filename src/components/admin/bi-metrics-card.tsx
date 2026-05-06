@@ -409,6 +409,9 @@ function SuccessRateSection({ data }: { data: BIMetricsResp['tx_success'] }) {
   const successColor =
     successPct >= 95 ? '#19FB9B' : successPct >= 90 ? '#F59E0B' : '#FF6B6B';
 
+  const failReasons = data.fail_reasons ?? [];
+  const failTotal = failReasons.reduce((s, r) => s + r.count, 0);
+
   return (
     <section data-testid="bi-success-section">
       <SectionTitle Icon={CheckCircle2} label="Tx 成功率" />
@@ -440,6 +443,42 @@ function SuccessRateSection({ data }: { data: BIMetricsResp['tx_success'] }) {
           </div>
         </div>
       </div>
+
+      {/* P5-FE-12 改 4 · awarded=false 拒因拆解(P5-BE-1 改 5)*/}
+      {failReasons.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/30 space-y-2" data-testid="bi-fail-reasons">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            失败原因拆解
+          </div>
+          <ul className="space-y-1">
+            {failReasons.map((r) => {
+              const pct = failTotal > 0 ? (r.count / failTotal) * 100 : 0;
+              return (
+                <li key={r.reason} className="space-y-0.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono">{r.reason}</span>
+                    <span className="font-mono text-muted-foreground tabular-nums">
+                      {r.count.toLocaleString()}
+                      <span className="text-[10px] ml-1">({pct.toFixed(1)}%)</span>
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[var(--brand-down)]/50"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+      {data.fail_reasons_note && (
+        <div className="mt-2 text-[10px] text-muted-foreground/60 leading-relaxed">
+          注:{data.fail_reasons_note}
+        </div>
+      )}
     </section>
   );
 }

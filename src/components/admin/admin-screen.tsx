@@ -18,7 +18,11 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { fetchAdminStats, isApiConfigured, type AdminStats } from '@/lib/api-client';
+import {
+  fetchAdminStats, fetchAdminTransparencyStats, fetchAdminOgShareStats, fetchAdminV2VsV1Pv,
+  isApiConfigured,
+  type AdminStats, type TransparencyStatsResp, type OgShareStatsResp, type V2VsV1PvResp,
+} from '@/lib/api-client';
 import { DailyBarChart, HourlyHeatmap } from './admin-charts';
 import { FeeRevenueCard } from './fee-revenue-card';
 import { TradeVolumeCard } from './trade-volume-card';
@@ -29,6 +33,9 @@ const REFRESH_MS = 30_000;
 export function AdminScreen() {
   const [key, setKey] = useState<string>('');
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [transparency, setTransparency] = useState<TransparencyStatsResp | null>(null);
+  const [ogShare, setOgShare] = useState<OgShareStatsResp | null>(null);
+  const [v2v1, setV2V1] = useState<V2VsV1PvResp | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
@@ -49,8 +56,17 @@ export function AdminScreen() {
     setLoading(true);
     setError(null);
     try {
+      // 主 stats 是 hard requirement(401 → 整页错误)· 3 个 P5 endpoint 软依赖(单失败不阻塞)
       const data = await fetchAdminStats(key);
       setStats(data);
+      const [tRes, oRes, vRes] = await Promise.allSettled([
+        fetchAdminTransparencyStats(key),
+        fetchAdminOgShareStats(key),
+        fetchAdminV2VsV1Pv(key),
+      ]);
+      setTransparency(tRes.status === 'fulfilled' ? tRes.value : null);
+      setOgShare(oRes.status === 'fulfilled' ? oRes.value : null);
+      setV2V1(vRes.status === 'fulfilled' ? vRes.value : null);
       setLastRefresh(Date.now());
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -149,13 +165,18 @@ export function AdminScreen() {
                 value={stats.total_trades.toLocaleString()}
                 delta={stats.trades_24h > 0 ? `+${stats.trades_24h} (24h)` : `+${stats.trades_7d} (7d)`}
               />
-              {/* P5-FE-12 · 砍"积分发放" + "邀请激活率"(V2 拍板隐藏)· 加 transparency 报告 + OG 分享抓取
-                  P5-BE-1 改 1/3 endpoint 未 ship · 暂用 "—" placeholder · 后端 ship 后接 fetch */}
+              {/* P5-FE-12 · 砍 "积分发放" + "邀请激活率"(V2 拍板隐藏)· 加 transparency 报告 + OG 分享抓取(P5-BE-1 ship 后真值)*/}
               <BigNumberCard
                 Icon={FileText}
                 label="transparency 报告"
-                value="—"
-                delta="待接 /admin/transparency-stats"
+                value={transparency?.ok ? transparency.total.toLocaleString() : '—'}
+                delta={
+                  transparency?.ok
+                    ? (transparency.generated_24h > 0
+                        ? `+${transparency.generated_24h} (24h)`
+                        : `+${transparency.generated_7d} (7d)`)
+                    : (transparency ? 'DB 不可用' : '加载中…')
+                }
               />
               <BigNumberCard
                 Icon={TrendingUp}
@@ -166,8 +187,14 @@ export function AdminScreen() {
               <BigNumberCard
                 Icon={Share2}
                 label="OG 分享抓取"
-                value="—"
-                delta="待接 /admin/og-share-stats"
+                value={ogShare?.ok ? ogShare.total_og_hits.toLocaleString() : '—'}
+                delta={
+                  ogShare?.ok
+                    ? (ogShare.hits_24h > 0
+                        ? `+${ogShare.hits_24h} (24h)`
+                        : `+${ogShare.hits_7d} (7d)`)
+                    : (ogShare ? 'DB 不可用' : '加载中…')
+                }
               />
               <BigNumberCard
                 Icon={ExternalLink}
@@ -217,6 +244,9 @@ export function AdminScreen() {
                 accent="#5BC8FF"
               />
             </Card>
+
+            {/* P5-FE-12 改 3 · V2 vs V1 PV 对比卡(P5-BE-1 改 2)*/}
+            <V2VsV1Card data={v2v1} />
 
             {/* Top 页面 + Top 来源 + 设备 */}
             <div className="grid lg:grid-cols-3 gap-4">
@@ -389,6 +419,115 @@ export function AdminScreen() {
         )}
       </div>
     </main>
+  );
+}
+
+function V2VsV1Card({ data }: { data: V2VsV1PvResp | null }) {
+  if (!data) {
+    return (
+      <Card className="p-4 sm:p-5 text-center text-xs text-muted-foreground/60">
+        V2 vs V1 PV · 加载中…
+      </Card>
+    );
+  }
+  if (!data.ok) {
+    return (
+      <Card className="p-4 sm:p-5 text-center text-xs text-muted-foreground/60">
+        V2 vs V1 PV · DB 不可用
+      </Card>
+    );
+  }
+  const total = data.v2_pv + data.v1_pv;
+  const v2Pct = data.v2_share_pct;
+  const v1Pct = total > 0 ? Math.max(0, 100 - v2Pct) : 0;
+  return (
+    <Card>
+      <div className="px-5 py-3 border-b border-border/40 flex items-center justify-between flex-wrap gap-2">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground">
+          V2 vs V1 PV(7 天)
+        </div>
+        <div className="text-[11px] font-mono text-muted-foreground">
+          总 PV {total.toLocaleString()}
+        </div>
+      </div>
+      <div className="p-5 space-y-4">
+        {/* 横向对比柱 */}
+        <div className="space-y-2">
+          <PvBar
+            label="V2"
+            count={data.v2_pv}
+            pct={v2Pct}
+            color="bg-[#19FB9B]/70"
+            tone="text-[#19FB9B]"
+          />
+          <PvBar
+            label="V1"
+            count={data.v1_pv}
+            pct={v1Pct}
+            color="bg-[#5BC8FF]/60"
+            tone="text-[#5BC8FF]"
+          />
+        </div>
+
+        {/* Top paths · 双列 */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <PvTopList title="V2 Top 10 路径" rows={data.v2_top_paths} accent="text-[#19FB9B]" />
+          <PvTopList title="V1 Top 10 路径" rows={data.v1_top_paths} accent="text-[#5BC8FF]" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function PvBar({
+  label, count, pct, color, tone,
+}: {
+  label: string;
+  count: number;
+  pct: number;
+  color: string;
+  tone: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className={`font-mono font-semibold ${tone}`}>{label}</span>
+        <span className="font-mono text-muted-foreground tabular-nums">
+          {count.toLocaleString()} <span className="text-[10px]">({pct.toFixed(1)}%)</span>
+        </span>
+      </div>
+      <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${Math.min(100, pct)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function PvTopList({
+  title, rows, accent,
+}: {
+  title: string;
+  rows: { path: string; views: number }[];
+  accent: string;
+}) {
+  return (
+    <div>
+      <div className={`text-[10px] uppercase tracking-wider mb-1.5 ${accent}`}>{title}</div>
+      {rows.length === 0 ? (
+        <div className="text-xs text-muted-foreground/60 py-2">暂无</div>
+      ) : (
+        <ul className="space-y-1">
+          {rows.map((r, i) => (
+            <li key={i} className="flex items-center justify-between gap-2">
+              <span className="font-mono text-[11px] truncate">{r.path}</span>
+              <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                {r.views.toLocaleString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
