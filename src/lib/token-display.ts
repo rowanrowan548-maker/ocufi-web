@@ -115,6 +115,13 @@ export function useTokenMeta(
 ): TokenMeta {
   const initial = useMemo<TokenMeta>(() => {
     if (!mint) return { symbol: '', name: null, logoURI: null };
+    // P4-FE-7 · birdeye /wallet/portfolio 给 native SOL 返非标 placeholder mint
+    // (末位 1 · 全 1 占位 · 而非真 wrapped SOL 末位 2)· 强制识别 backendSymbol="SOL"
+    // 时用 wrapped SOL canonical 数据 · 防 displaySymbol 走 shortMint fallback("So11...1111")
+    if (backendSymbol && backendSymbol.toUpperCase() === 'SOL') {
+      const wsol = KNOWN_TOKENS['So11111111111111111111111111111111111111112'];
+      if (wsol) return { symbol: wsol.symbol, name: wsol.name, logoURI: wsol.logoURI ?? null };
+    }
     const known = KNOWN_TOKENS[mint];
     if (known) return { symbol: known.symbol, name: known.name, logoURI: known.logoURI ?? null };
     const bird = lookupBirdeyeMetaSync(mint);

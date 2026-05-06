@@ -587,9 +587,11 @@
       gap: 8px 12px !important;
       padding: 14px 0 !important;
     }
-    /* mobile 隐 allocation / holdings / Sell 按钮 · 整行 click 仍跳 ?action=sell */
+    /* mobile 隐 allocation / holdings / 24h change / Sell 按钮 · 整行 click 仍跳 ?action=sell
+       P4-FE-7 · :nth-child(5) 24h change null 时显 "—" · mobile 跟 value usd 撞同行视觉怪 · 隐 */
     .v2-pf-list-row > div:nth-child(2),
     .v2-pf-list-row > div:nth-child(3),
+    .v2-pf-list-row > div:nth-child(5),
     .v2-pf-sell { display: none !important; }
 
     /* /v2/tx/[sig] mobile · P2-HOTFIX-3 #5 · 大字 clamp 不被截 + 容器 padding 减半 */
