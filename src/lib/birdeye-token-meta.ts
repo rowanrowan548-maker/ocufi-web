@@ -81,6 +81,8 @@ export async function lookupBirdeyeMeta(mint: string): Promise<BirdeyeTokenMeta 
 
   const apiKey = process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
   if (!apiKey) {
+    // P3-FE-14 · debug · 排查 pump 币 fallback 没生效
+    console.warn('[birdeye] skip · NEXT_PUBLIC_BIRDEYE_API_KEY 未配置 · pump 币无二级 fallback', { mint });
     memCache.set(mint, null);
     return null;
   }
@@ -96,6 +98,7 @@ export async function lookupBirdeyeMeta(mint: string): Promise<BirdeyeTokenMeta 
         },
       });
       if (!r.ok) {
+        console.warn('[birdeye] HTTP error', { mint, status: r.status, statusText: r.statusText });
         memCache.set(mint, null);
         writeLocal(mint, null);
         return null;
@@ -114,6 +117,7 @@ export async function lookupBirdeyeMeta(mint: string): Promise<BirdeyeTokenMeta 
       };
       const entry = json?.data?.[mint];
       if (!entry || !entry.symbol) {
+        console.warn('[birdeye] empty entry', { mint, hasData: !!json?.data, keys: json?.data ? Object.keys(json.data).slice(0, 3) : [] });
         memCache.set(mint, null);
         writeLocal(mint, null);
         return null;
@@ -127,7 +131,8 @@ export async function lookupBirdeyeMeta(mint: string): Promise<BirdeyeTokenMeta 
       memCache.set(mint, meta);
       writeLocal(mint, meta);
       return meta;
-    } catch {
+    } catch (e) {
+      console.warn('[birdeye] fetch threw', { mint, error: e instanceof Error ? e.message : String(e) });
       memCache.set(mint, null);
       return null;
     } finally {

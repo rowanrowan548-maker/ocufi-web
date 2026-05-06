@@ -11,28 +11,35 @@
 interface TokenDisplay {
   symbol: string;
   name: string;
+  /** P3-FE-14 · 主流币静态 logoURI · SSR 就有头像 · 不等异步 · 异步仍可升级覆盖 */
+  logoURI?: string;
 }
+
+// P3-FE-14 · 静态 logo 兜底:用 solana-labs/token-list 主仓 raw URL · 永久公链托管
+// 异步 jupiter/birdeye 仍跑 · 拿到更新就 setState 覆盖 · 这里只保 SSR 首帧不空
+const SOLANA_LABS_LOGO = (mint: string) =>
+  `https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/${mint}/logo.png`;
 
 const KNOWN_TOKENS: Record<string, TokenDisplay> = {
   // 稳定币
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': { symbol: 'USDC', name: 'USD Coin' },
-  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': { symbol: 'USDT', name: 'Tether USD' },
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': { symbol: 'USDC', name: 'USD Coin', logoURI: SOLANA_LABS_LOGO('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v') },
+  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': { symbol: 'USDT', name: 'Tether USD', logoURI: SOLANA_LABS_LOGO('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB') },
   // 原生 + wrapped
-  'So11111111111111111111111111111111111111112':  { symbol: 'SOL',  name: 'Wrapped SOL' },
+  'So11111111111111111111111111111111111111112':  { symbol: 'SOL',  name: 'Wrapped SOL', logoURI: SOLANA_LABS_LOGO('So11111111111111111111111111111111111111112') },
   // 主流 LST
-  'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So':  { symbol: 'mSOL', name: 'Marinade Staked SOL' },
-  'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn': { symbol: 'JitoSOL', name: 'Jito Staked SOL' },
-  'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1':  { symbol: 'bSOL', name: 'BlazeStake Staked SOL' },
+  'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So':  { symbol: 'mSOL', name: 'Marinade Staked SOL', logoURI: SOLANA_LABS_LOGO('mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So') },
+  'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn': { symbol: 'JitoSOL', name: 'Jito Staked SOL', logoURI: SOLANA_LABS_LOGO('J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn') },
+  'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1':  { symbol: 'bSOL', name: 'BlazeStake Staked SOL', logoURI: SOLANA_LABS_LOGO('bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1') },
   // DeFi 治理 / 蓝筹
-  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN':  { symbol: 'JUP',  name: 'Jupiter' },
-  'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL':  { symbol: 'JTO',  name: 'Jito' },
-  'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3': { symbol: 'PYTH', name: 'Pyth Network' },
-  '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R': { symbol: 'RAY',  name: 'Raydium' },
-  'orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE':  { symbol: 'ORCA', name: 'Orca' },
+  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN':  { symbol: 'JUP',  name: 'Jupiter', logoURI: 'https://static.jup.ag/jup/icon.png' },
+  'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL':  { symbol: 'JTO',  name: 'Jito',    logoURI: SOLANA_LABS_LOGO('jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL') },
+  'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3': { symbol: 'PYTH', name: 'Pyth Network', logoURI: SOLANA_LABS_LOGO('HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3') },
+  '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R': { symbol: 'RAY',  name: 'Raydium', logoURI: SOLANA_LABS_LOGO('4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R') },
+  'orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE':  { symbol: 'ORCA', name: 'Orca',    logoURI: SOLANA_LABS_LOGO('orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE') },
   '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4': { symbol: 'JLP',  name: 'Jupiter Perps LP' },
-  // 主流 meme
-  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm': { symbol: 'WIF',  name: 'dogwifhat' },
-  'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': { symbol: 'BONK', name: 'Bonk' },
+  // 主流 meme · arweave 永久 + raw GH 兜底
+  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm': { symbol: 'WIF',  name: 'dogwifhat', logoURI: 'https://bafkreibk3covs5ltyqxa272uodhculbr6kea6betidfwy3ajsav2vjzyum.ipfs.nftstorage.link' },
+  'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263': { symbol: 'BONK', name: 'Bonk',      logoURI: 'https://arweave.net/hQiPZOsRZXGXBJd_82PhVdlM_hACsT_q6wqwf5cSY7I' },
   'MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5':  { symbol: 'MEW',  name: 'cat in a dogs world' },
   '7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr': { symbol: 'POPCAT', name: 'Popcat' },
   '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN': { symbol: 'TRUMP', name: 'Official Trump' },
@@ -112,7 +119,8 @@ export function useTokenMeta(
   const initial = useMemo<TokenMeta>(() => {
     if (!mint) return { symbol: '', name: null, logoURI: null };
     const known = KNOWN_TOKENS[mint];
-    if (known) return { symbol: known.symbol, name: known.name, logoURI: null };
+    // P3-FE-14 · KNOWN 也吃 logoURI 字段 · 静态兜底 SSR 首帧 · 异步仍可升级
+    if (known) return { symbol: known.symbol, name: known.name, logoURI: known.logoURI ?? null };
     const jup = lookupJupiterTokenSync(mint);
     if (jup) return { symbol: jup.symbol, name: jup.name, logoURI: jup.logoURI || null };
     const bird = lookupBirdeyeMetaSync(mint);
@@ -134,26 +142,31 @@ export function useTokenMeta(
   useEffect(() => {
     setMeta(initial);
     if (!mint) return;
-    if (KNOWN_TOKENS[mint]) return;
-    // 同步层都没命中 → 异步链 · jupiter → birdeye
+    // P3-FE-14 · 砍 `if (KNOWN_TOKENS[mint]) return` · KNOWN 也跑异步链拿真 logoURI 升级
+    // 静态 logoURI 是 SSR 兜底 · 真 jupiter/birdeye 拿到的 logo 会覆盖(更新版本 / IPFS 更稳)
     let cancelled = false;
     (async () => {
       // 1. Jupiter 异步
       const jup = await lookupJupiterToken(mint);
       if (cancelled) return;
       if (jup && (jup.logoURI || jup.symbol)) {
-        setMeta({ symbol: jup.symbol, name: jup.name || null, logoURI: jup.logoURI || null });
-        return; // 拿到就停 · 不再打 birdeye(省 quota)
+        setMeta((prev) => ({
+          symbol: jup.symbol || prev.symbol,
+          name: jup.name || prev.name,
+          // jupiter 没 logo 时不覆盖已有 KNOWN logo
+          logoURI: jup.logoURI || prev.logoURI,
+        }));
+        if (jup.logoURI) return; // 拿到 logo 就停 · 不再打 birdeye(省 quota)
       }
       // 2. Birdeye 异步
       const bird = await lookupBirdeyeMeta(mint);
       if (cancelled) return;
       if (bird) {
-        setMeta({
-          symbol: bird.symbol,
-          name: bird.name || null,
-          logoURI: bird.logoURI || null,
-        });
+        setMeta((prev) => ({
+          symbol: bird.symbol || prev.symbol,
+          name: bird.name || prev.name,
+          logoURI: bird.logoURI || prev.logoURI,
+        }));
       }
     })();
     return () => {
