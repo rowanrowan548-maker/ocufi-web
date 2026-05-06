@@ -210,21 +210,24 @@ export function fallbackSymbol(mint: string): string {
 // ─── P3-CHAIN-3 · jupiter token-list 真 symbol 解析 ─────────────────────────
 
 /**
- * Jupiter strict token list endpoint
+ * Jupiter token list endpoint
  *
- * - strict:严选 token(数千 · ~500KB)· 99% 主流 mint 命中
- * - all:数万 · 太大 · 不用
+ * P3-CHAIN-4(2026-05-06)· strict → all 替换:
+ *   - strict 不含 pump.fun 新币(用户暴怒 · token "DezX" 显丑根因之一)
+ *   - all 数万 token · ~几 MB · 含 pump.fun · cache 1h(SPEC 拍板 · 新币 1h 内可感知)
+ *   - 失败时 fallbackSymbol 仍兜底 mint.slice(0, 4)
+ *   - 二级 birdeye fallback 留 follow-up(前端 lib 没 wrapper · 单独 task)
  *
  * 文档:https://station.jup.ag/docs/token-list/token-list-api
  */
-const JUPITER_TOKEN_LIST_URL = 'https://token.jup.ag/strict';
+const JUPITER_TOKEN_LIST_URL = 'https://token.jup.ag/all';
 
-/** Token list 内存 cache TTL · 24h */
-const TOKEN_LIST_TTL_MS = 24 * 60 * 60 * 1000;
+/** Token list 内存 cache TTL · 1h(P3-CHAIN-4 · pump 新币 1h 内可感知) */
+const TOKEN_LIST_TTL_MS = 60 * 60 * 1000;
 /** Fetch 失败短缓存 TTL · 5min(防 spam) */
 const TOKEN_LIST_FAIL_TTL_MS = 5 * 60 * 1000;
-/** Fetch timeout · 5s · swap 后台跑不能拖太久 */
-const TOKEN_LIST_FETCH_TIMEOUT_MS = 5_000;
+/** Fetch timeout · 8s · all list 几 MB · 老挝网络保守 */
+const TOKEN_LIST_FETCH_TIMEOUT_MS = 8_000;
 
 interface TokenListEntry {
   symbol: string;
