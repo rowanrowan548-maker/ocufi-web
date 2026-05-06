@@ -802,7 +802,8 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
             </Button>
           ) : (
             <Button
-              onClick={openConfirm}
+              // P4-FE-11 · 'done' 时点 "再买一单" 复用 resetOnInput 重置 stage → idle · 不再死按钮
+              onClick={stage === 'done' ? resetOnInput : openConfirm}
               size="lg"
               disabled={
                 isBlocked ||
@@ -810,8 +811,8 @@ export function BuyForm({ mint: mintProp, compact, risk, reasons, chromeless, on
                 !quoteData ||
                 stage === 'signing' ||
                 stage === 'sending' ||
-                stage === 'confirming' ||
-                stage === 'done'
+                stage === 'confirming'
+                // P4-FE-11 · 砍 stage === 'done' · "再买一单" 必须可点
               }
               className="w-full h-14 sm:h-11 text-base sm:text-sm font-semibold"
             >
