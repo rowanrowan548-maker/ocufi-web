@@ -2184,7 +2184,7 @@
     },
     "tx": {
       "back": "‹ Portfolio",
-      "shareLabel": "↗ Share",
+      "shareLabel": "Share",
       "transparencyReport": "TRANSPARENCY REPORT · #{sigShort}",
       "feePctTag": "{pct}% FEE",
       "savedPrefix": "Saved",
@@ -2217,11 +2217,11 @@
       },
       "share": {
         "title": "Share this trade",
-        "tweet": "↗ Tweet",
-        "copy": "📋 Copy link",
-        "telegram": "✈ Telegram",
+        "tweet": "Post on X",
+        "copy": "Copy link",
+        "telegram": "Send on Telegram",
         "copied": "Link copied",
-        "shareText": "Just completed a trade on Ocufi · saved {savedSol} SOL · route / slippage / network fee all public"
+        "shareText": "Saved {savedSol} SOL on Ocufi · Solana trading terminal · Route / slippage / network fee / MEV all public · Permanent shareable URL"
       },
       "engineer": {
         "label": "Advanced: technical details (route / Sender bundle)",

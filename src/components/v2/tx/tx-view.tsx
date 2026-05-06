@@ -107,15 +107,47 @@ export function TxView({ sig, data, demo }: Props) {
     ? (d.mevBundleId ? t('mevDetail.bundle') : t('mevDetail.sender'))
     : t('mevDetail.plain');
 
-  // P3-FE-7 · 3 分享按钮真接 click
+  // P3-FE-7 / P4-FE-2 · 分享 · deeplink 优先 · app 装了直开 · 没装 fallback web
   const reportUrl = typeof window !== 'undefined' ? window.location.href : `https://ocufi.io/v2/tx/${d.sig}`;
   const shareText = t('share.shareText', { savedSol: fmtNum(d.savedSol, d.solDp) });
-  const handleTweet = () => {
+
+  // P4-FE-2 · 试 deeplink · setTimeout 后 fallback web
+  // mobile app 装了 deeplink 立即拦截 · iframe blur · timeout 不会 trigger fallback
+  // app 没装 · deeplink 失败 · timeout 触发 web URL · 用户仍能分享
+  const tryDeeplink = (deeplink: string, fallback: string) => {
     if (typeof window === 'undefined') return;
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(reportUrl)}`,
-      '_blank',
-      'noopener,noreferrer',
+    const ua = window.navigator.userAgent;
+    const isMobile = /iPhone|iPad|Android|Mobile/i.test(ua);
+    if (!isMobile) {
+      // 桌面没 app · 直接 web · 走 _blank 不影响当前页
+      window.open(fallback, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // mobile · 同 tab 试 deeplink · 1.2s 后 fallback web
+    let didFallback = false;
+    const fallbackTimer = window.setTimeout(() => {
+      didFallback = true;
+      window.location.href = fallback;
+    }, 1_200);
+    // 装了 app · pagehide / blur 触发 → 取消 fallback
+    const onHide = () => {
+      if (didFallback) return;
+      window.clearTimeout(fallbackTimer);
+      window.removeEventListener('pagehide', onHide);
+      window.removeEventListener('blur', onHide);
+    };
+    window.addEventListener('pagehide', onHide, { once: true });
+    window.addEventListener('blur', onHide, { once: true });
+    window.location.href = deeplink;
+  };
+
+  const handleTweet = () => {
+    // X(Twitter)deeplink: twitter://post?message=...
+    // web fallback: https://x.com/intent/post?text=...&url=...(Twitter 已改名 X)
+    const text = `${shareText} ${reportUrl}`;
+    tryDeeplink(
+      `twitter://post?message=${encodeURIComponent(text)}`,
+      `https://x.com/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(reportUrl)}`,
     );
   };
   const handleCopy = async () => {
@@ -128,11 +160,11 @@ export function TxView({ sig, data, demo }: Props) {
     }
   };
   const handleTelegram = () => {
-    if (typeof window === 'undefined') return;
-    window.open(
+    // Telegram deeplink: tg://msg_url?url=&text=
+    // web fallback: https://t.me/share/url?url=&text=
+    tryDeeplink(
+      `tg://msg_url?url=${encodeURIComponent(reportUrl)}&text=${encodeURIComponent(shareText)}`,
       `https://t.me/share/url?url=${encodeURIComponent(reportUrl)}&text=${encodeURIComponent(shareText)}`,
-      '_blank',
-      'noopener,noreferrer',
     );
   };
 

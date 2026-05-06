@@ -2199,7 +2199,7 @@
     },
     "tx": {
       "back": "‹ 持仓",
-      "shareLabel": "↗ 分享",
+      "shareLabel": "分享",
       "transparencyReport": "TRANSPARENCY REPORT · #{sigShort}",
       "feePctTag": "{pct}% FEE",
       "savedPrefix": "省了",
@@ -2232,11 +2232,11 @@
       },
       "share": {
         "title": "分享这笔交易",
-        "tweet": "↗ 发推",
-        "copy": "📋 复制链接",
-        "telegram": "✈ TG 分享",
+        "tweet": "发到 X",
+        "copy": "复制链接",
+        "telegram": "发到 Telegram",
         "copied": "已复制链接",
-        "shareText": "我刚在 Ocufi 完成一笔链上交易 · 省了 {savedSol} SOL · 路由 / 滑点 / 网络费 全公开"
+        "shareText": "在 Ocufi 省了 {savedSol} SOL · Solana 链上交易终端 · 路由 / 滑点 / 网络费 / 防夹全公开 · 永久 URL 可分享"
       },
       "engineer": {
         "label": "高级:技术细节(路由 / Sender bundle)",

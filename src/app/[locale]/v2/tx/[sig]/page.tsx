@@ -48,8 +48,12 @@ export async function generateMetadata({
   }
   const v = mapReportToView(report);
   const savedFmt = v.savedSol.toFixed(4);
-  const ogTitle = `Saved ${savedFmt} SOL on $${v.tokenSymbol} · Ocufi`;
-  const ogDesc = `${v.side === 'buy' ? 'Bought' : 'Sold'} ${v.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${v.tokenSymbol} · ${v.feePct.toFixed(2)}% fee · vs BullX ${v.competitorFeePct.toFixed(0)}%${v.mevProtected ? ' · MEV protected' : ''}`;
+  // P4-FE-2 · OG title + desc 加吸引文案 · 突出 0.1% / 防夹 / 透明度卖点
+  const sideLabel = v.side === 'buy' ? 'Bought' : 'Sold';
+  const ogTitle = v.savedSol > 0
+    ? `Saved ${savedFmt} SOL on $${v.tokenSymbol} · Ocufi`
+    : `${sideLabel} $${v.tokenSymbol} on Ocufi · 0.1% fee transparency report`;
+  const ogDesc = `${sideLabel} ${v.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${v.tokenSymbol} · ${v.feePct.toFixed(2)}% fee vs BullX ${v.competitorFeePct.toFixed(0)}% · route / slippage / network fee${v.mevProtected ? ' / MEV protection' : ''} all public · permanent shareable URL.`;
   return {
     title: `Trade #${short} · Ocufi`,
     description: ogDesc,
