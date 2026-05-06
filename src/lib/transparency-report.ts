@@ -194,16 +194,155 @@ export function parsePriceImpactPct(quote: JupiterQuote): number | null {
 }
 
 /**
- * 给 mint 一个最简 symbol fallback
+ * 给 mint 一个最简 symbol fallback(sync · 兜底用)
  *
  * - SOL_MINT → 'SOL'
  * - 其他 → mint.slice(0, 4)(占位 · 后端可重新查 jupiter token-list 补全)
  *
- * Phase 3 简化处理 · 不引 V1 portfolio token metadata 依赖(避免污染链上 lib)
+ * P3-CHAIN-3 起 · `recordTransparency` 优先用 async `resolveSymbol`(jupiter token-list 真名)·
+ * 此 sync helper 仍保留:resolveSymbol 失败 / 不在 list 时兜底 · 单测复用
  */
 export function fallbackSymbol(mint: string): string {
   if (mint === SOL_MINT) return 'SOL';
   return mint.slice(0, 4);
+}
+
+// ─── P3-CHAIN-3 · jupiter token-list 真 symbol 解析 ─────────────────────────
+
+/**
+ * Jupiter strict token list endpoint
+ *
+ * - strict:严选 token(数千 · ~500KB)· 99% 主流 mint 命中
+ * - all:数万 · 太大 · 不用
+ *
+ * 文档:https://station.jup.ag/docs/token-list/token-list-api
+ */
+const JUPITER_TOKEN_LIST_URL = 'https://token.jup.ag/strict';
+
+/** Token list 内存 cache TTL · 24h */
+const TOKEN_LIST_TTL_MS = 24 * 60 * 60 * 1000;
+/** Fetch 失败短缓存 TTL · 5min(防 spam) */
+const TOKEN_LIST_FAIL_TTL_MS = 5 * 60 * 1000;
+/** Fetch timeout · 5s · swap 后台跑不能拖太久 */
+const TOKEN_LIST_FETCH_TIMEOUT_MS = 5_000;
+
+interface TokenListEntry {
+  symbol: string;
+  logoURI?: string;
+}
+
+/**
+ * Module-level state · client + server(Next 16)跨请求/swap 共享
+ *
+ * - mapPromise:in-flight 或 cached promise · race-safe(同时多个 swap 触发只 fetch 一次)
+ * - cachedAt / cacheTTL:命中 / fail-soft 区分
+ */
+interface TokenListCache {
+  mapPromise: Promise<Map<string, TokenListEntry>>;
+  cachedAt: number;
+  cacheTTL: number;
+}
+let tokenListCache: TokenListCache | null = null;
+
+/**
+ * 仅供单测 reset module state
+ *
+ * 生产代码不调 · 单测 beforeEach 调以保证隔离
+ */
+export function _resetTokenListCacheForTests(): void {
+  tokenListCache = null;
+}
+
+/**
+ * 拉 jupiter strict list + 解析 Map<mint, { symbol, logoURI }>
+ *
+ * 失败:返空 Map(下游查不到 → fallbackSymbol)+ 短 cache 5min 防 spam
+ */
+async function fetchTokenListMap(): Promise<Map<string, TokenListEntry>> {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), TOKEN_LIST_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(JUPITER_TOKEN_LIST_URL, {
+      signal: ctl.signal,
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.warn(`[transparency] jupiter token-list fetch failed (${res.status})`);
+      return new Map();
+    }
+    const list = (await res.json()) as Array<{
+      address?: string;
+      symbol?: string;
+      logoURI?: string;
+    }>;
+    if (!Array.isArray(list)) {
+      console.warn('[transparency] jupiter token-list malformed (not array)');
+      return new Map();
+    }
+    const m = new Map<string, TokenListEntry>();
+    for (const t of list) {
+      if (typeof t.address === 'string' && typeof t.symbol === 'string' && t.symbol.length > 0) {
+        m.set(t.address, { symbol: t.symbol, logoURI: t.logoURI });
+      }
+    }
+    return m;
+  } catch (e) {
+    console.warn('[transparency] jupiter token-list fetch error:', e);
+    return new Map();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * 获取 token list cache(lazy + 24h TTL · 失败短 cache 5min)
+ *
+ * Race-safe:同时多个 swap 触发 → 共用同一 in-flight promise · 不重复 fetch
+ */
+function getTokenListPromise(): Promise<Map<string, TokenListEntry>> {
+  const now = Date.now();
+  if (tokenListCache && now - tokenListCache.cachedAt < tokenListCache.cacheTTL) {
+    return tokenListCache.mapPromise;
+  }
+  // 第一次或过期 · 重新拉
+  const promise = fetchTokenListMap();
+  // 乐观 cache 24h · 拉成功后保留;失败时 .then 内重写 cacheTTL = 5min
+  tokenListCache = {
+    mapPromise: promise,
+    cachedAt: now,
+    cacheTTL: TOKEN_LIST_TTL_MS,
+  };
+  // 失败短 cache 调降(避免 24h 都查不到)
+  promise.then((m) => {
+    if (m.size === 0 && tokenListCache && tokenListCache.mapPromise === promise) {
+      tokenListCache.cacheTTL = TOKEN_LIST_FAIL_TTL_MS;
+    }
+  });
+  return promise;
+}
+
+/**
+ * 解析 mint 真 symbol(jupiter token-list)· 拿不到 fallback mint slice
+ *
+ * - SOL_MINT 短路返 'SOL'(不打 fetch)
+ * - jupiter list 命中返真 symbol(BONK / USDC 等 · 主流 mint 99% 命中)
+ * - 列表查无该 mint(冷门新 token)/ fetch 失败 → `fallbackSymbol(mint)` mint.slice(0, 4)
+ *
+ * P3-CHAIN-3 治根 #4 熵减:transparency_reports 表里直接存真 symbol · UI 显 "Bonk" 不再 "DezX"
+ *
+ * @param mint base58 token mint
+ * @returns 真 symbol 或 4 字符兜底
+ */
+export async function resolveSymbol(mint: string): Promise<string> {
+  if (mint === SOL_MINT) return 'SOL';
+  try {
+    const map = await getTokenListPromise();
+    const entry = map.get(mint);
+    if (entry && entry.symbol) return entry.symbol;
+  } catch (e) {
+    console.warn('[transparency] resolveSymbol error:', e);
+  }
+  return fallbackSymbol(mint);
 }
 
 /**
@@ -328,6 +467,13 @@ export async function recordTransparency(args: {
 
     const receipt = await fetchSwapReceipt(connection, sig);
 
+    // P3-CHAIN-3 · 拿真 symbol(jupiter token-list · 24h cache)· 拿不到兜底 mint slice
+    //   并行解析 in + out · race-safe(共用同一 in-flight token list promise)
+    const [tokenInSymbol, tokenOutSymbol] = await Promise.all([
+      resolveSymbol(inputMint),
+      resolveSymbol(outputMint),
+    ]);
+
     const payload: TransparencyPayload = {
       sig,
       wallet: userPk.toBase58(),
@@ -335,11 +481,11 @@ export async function recordTransparency(args: {
       side,
 
       token_in_mint: inputMint,
-      token_in_symbol: fallbackSymbol(inputMint),
+      token_in_symbol: tokenInSymbol,
       token_in_amount: inAmountRaw.toString(),
       token_in_decimals: inDecimals,
       token_out_mint: outputMint,
-      token_out_symbol: fallbackSymbol(outputMint),
+      token_out_symbol: tokenOutSymbol,
       token_out_amount: actualOutRaw.toString(),
       token_out_decimals: outDecimals,
 

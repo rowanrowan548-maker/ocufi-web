@@ -7,6 +7,8 @@ import {
   fallbackSymbol,
   calcOcufiFeeLamports,
   calcSavingsLamports,
+  resolveSymbol,
+  _resetTokenListCacheForTests,
   TRANSPARENCY_COMPARABLE_FEE_PCT_DEFAULT,
   type TransparencyPayload,
 } from '@/lib/transparency-report';
@@ -290,6 +292,133 @@ describe('常量导出', () => {
  *
  * 链上侧先拦 · 后端 P3-BE-3 是第二层防御 · 双层守护 transparency_reports 表
  */
+/**
+ * P3-CHAIN-3 · resolveSymbol via jupiter token-list(熵减 #4)
+ *
+ * - SOL_MINT 短路 · 不打 fetch
+ * - jupiter list 命中 → 真 symbol
+ * - 不在 list / fetch 失败 → fallbackSymbol(slice)
+ * - 24h cache + race-safe(并行调只 fetch 一次)
+ */
+describe('resolveSymbol · jupiter token-list(P3-CHAIN-3)', () => {
+  const ORIGINAL_FETCH = globalThis.fetch;
+
+  beforeEach(() => {
+    _resetTokenListCacheForTests();
+  });
+  afterEach(() => {
+    globalThis.fetch = ORIGINAL_FETCH;
+  });
+
+  function stubFetch(impl: typeof fetch | ((url: string) => Promise<Response>)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.fetch = vi.fn(impl as any) as unknown as typeof fetch;
+  }
+
+  function makeListResponse(list: Array<{ address: string; symbol: string; logoURI?: string }>): Response {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => list,
+    } as Response;
+  }
+
+  it('SOL_MINT 短路 · 返 "SOL" · 不打 fetch', async () => {
+    const fetchSpy = vi.fn();
+    stubFetch(fetchSpy);
+    expect(await resolveSymbol(SOL)).toBe('SOL');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('mint 在 jupiter list · 返真 symbol', async () => {
+    stubFetch(async () =>
+      makeListResponse([
+        { address: BONK, symbol: 'Bonk', logoURI: 'https://logo' },
+        { address: USDC, symbol: 'USDC' },
+      ])
+    );
+    expect(await resolveSymbol(BONK)).toBe('Bonk');
+    expect(await resolveSymbol(USDC)).toBe('USDC');
+  });
+
+  it('mint 不在 list · fallback mint.slice(0, 4)', async () => {
+    stubFetch(async () => makeListResponse([{ address: BONK, symbol: 'Bonk' }]));
+    expect(await resolveSymbol(USDC)).toBe('EPjF');
+  });
+
+  it('fetch 5xx → 返 fallback · console.warn', async () => {
+    stubFetch(
+      async () =>
+        ({
+          ok: false,
+          status: 503,
+          json: async () => ({}),
+        }) as Response
+    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it('fetch network reject → 返 fallback · 不抛', async () => {
+    stubFetch(async () => {
+      throw new Error('TLS handshake failed');
+    });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it('返非数组 → 返 fallback · console.warn malformed', async () => {
+    stubFetch(
+      async () =>
+        ({
+          ok: true,
+          status: 200,
+          json: async () => ({ not: 'an array' }),
+        }) as Response
+    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+    expect(warnSpy.mock.calls[0][0]).toMatch(/malformed/i);
+  });
+
+  it('cache 复用 · 第二次调用不重复 fetch', async () => {
+    const fetchSpy = vi.fn(async () =>
+      makeListResponse([{ address: BONK, symbol: 'Bonk' }])
+    );
+    stubFetch(fetchSpy);
+    await resolveSymbol(BONK);
+    await resolveSymbol(BONK);
+    await resolveSymbol(USDC);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('race-safe · 并行 3 个调用 · 只 fetch 一次', async () => {
+    const fetchSpy = vi.fn(async () =>
+      makeListResponse([
+        { address: BONK, symbol: 'Bonk' },
+        { address: USDC, symbol: 'USDC' },
+      ])
+    );
+    stubFetch(fetchSpy);
+    const [a, b, c] = await Promise.all([
+      resolveSymbol(BONK),
+      resolveSymbol(USDC),
+      resolveSymbol(BONK),
+    ]);
+    expect(a).toBe('Bonk');
+    expect(b).toBe('USDC');
+    expect(c).toBe('Bonk');
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('list 含 entry 但 symbol 空字符串 → 跳过 · 用 fallback', async () => {
+    stubFetch(async () => makeListResponse([{ address: BONK, symbol: '' }]));
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+  });
+});
+
 describe('reportTransparency · 0 amount guard(P3-CHAIN-2)', () => {
   const VALID_PAYLOAD: TransparencyPayload = {
     sig: '5sv1jdRjQSu4iqwn8VmpzAEqGfWX6jbVN8ahMrU4ASjyDhPpRyFMqHkVHnGzsm56NaHv7XjAxc1Y6Q',
