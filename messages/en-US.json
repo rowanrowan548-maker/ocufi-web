@@ -2151,6 +2151,37 @@
       "portfolio": "Portfolio",
       "tx": "Report"
     },
+    "token": {
+      "trade": {
+        "reportReal": "View your trade report →",
+        "reportDemo": "View report demo →"
+      },
+      "side": {
+        "safety": "Safety info"
+      },
+      "chart": {
+        "loading": "{symbol} · Loading chart…",
+        "noPool": "{symbol} · No LP pool"
+      }
+    },
+    "sweep": {
+      "eyebrow": "Sweep · Empty ATAs",
+      "loading": "Loading…",
+      "retrying": "Scanning reclaimable ATAs…",
+      "empty": "Nothing to reclaim",
+      "loadingSub": "Scanning all empty ATAs · no signature needed",
+      "retryingSub": "On-chain indexing delay 5-15s · auto-retrying",
+      "haveSub": "{n} empty accounts · sign once to reclaim all",
+      "emptySub": "Please try again later · RPC index may still be syncing",
+      "close": "Close",
+      "loadingList": "Loading",
+      "retryingList": "Scanning reclaimable ATAs…",
+      "loadFailed": "Load failed · {msg}",
+      "moreOmitted": "+ {n} more · all reclaimed in one signature",
+      "cleanTitle": "No empty ATAs · clean",
+      "ctaBusy": "Reclaiming…",
+      "cta": "Reclaim all · 1 signature recovers all SOL"
+    },
     "tx": {
       "back": "‹ Portfolio",
       "shareLabel": "↗ Share",
@@ -2193,7 +2224,8 @@
         "shareText": "Just completed a trade on Ocufi · saved {savedSol} SOL · route / slippage / gas all public"
       },
       "engineer": {
-        "label": "Engineer view",
+        "label": "Advanced: technical details (route / Sender bundle)",
+        "hint": "99% of users don't need this",
         "bundle": "· Sender bundle: {id}",
         "route": "· Jupiter route: {route}",
         "routeWithSteps": "· Jupiter route: {steps} steps · {route}",
@@ -2243,7 +2275,14 @@
         "lineMobile": "SAVED 0.0045 SOL",
         "sub": "on $BONK · vs BullX · 0.1% fee · MEV protected",
         "footLeft": "5fX...abc",
-        "viewLink": "View report →"
+        "viewLink": "View report →",
+        "placeholder": {
+          "label": "OCUFI · TX REPORT",
+          "line": "Auto-generated each fill",
+          "sub": "On-chain · transparent · shareable URL",
+          "footLeft": "/v2/tx/<sig>",
+          "footRight": "Real report appears after your first swap"
+        }
       },
       "pillars": [
         {
@@ -2289,6 +2328,20 @@
         "change": "24h",
         "action": "Action",
         "sell": "Sell"
+      },
+      "history": {
+        "title": "Last {n} trades",
+        "loading": "Loading history…",
+        "buy": "Bought",
+        "sell": "Sold",
+        "saved": "Saved",
+        "view": "View →"
+      },
+      "syncing": "↻ Just swapped · syncing data… (on-chain RPC index delay 5-30s)",
+      "reclaimBanner": {
+        "headline": "You have {sol} SOL reclaimable",
+        "sub": "{count} empty ATAs · one-click reclaim",
+        "cta": "Reclaim now →"
       }
     }
   },

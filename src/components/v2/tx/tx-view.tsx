@@ -18,6 +18,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { OgCard } from '@/components/v2/shared/og-card';
 import { getTransparencyReport, mapReportToView, type TxViewData } from '@/lib/transparency';
+import { useTokenMeta, usePreloadJupiterList } from '@/lib/token-display';
 
 // Phase 2 · mock 数据(BONK 0.5 SOL → 1.23M)· demo sig 用
 const MOCK: TxViewData = {
@@ -31,6 +32,7 @@ const MOCK: TxViewData = {
   side: 'buy',
   tokenAmount: 1_234_567,
   tokenSymbol: 'BONK',
+  tokenMint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
   notionalSol: 0.5,
   vsCompetitorSol: 0.5045,
   solDp: 4, // savedSol 0.0045 >= 0.0001 → 4 dp
@@ -61,19 +63,38 @@ type Props = {
 
 export function TxView({ sig, data, demo }: Props) {
   const t = useTranslations('v2.tx');
+  usePreloadJupiterList();
   // 优先级:demo → MOCK + sigShort 替换 / data → 真 / fallback → MOCK
   const d: TxViewData = data
     ?? (demo
       ? { ...MOCK, sig, sigShort: sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : MOCK.sigShort }
       : MOCK);
   const [engineerOpen, setEngineerOpen] = useState(false);
+  // P3-FE-10 · token 真 symbol+logo · 救场链上 fallback "DezX"
+  const tokenMeta = useTokenMeta(d.tokenMint, d.tokenSymbol);
 
   // P2-MOBILE-OVERHAUL #4 · subText 拆 2 行 · 第 2 行 brand-up 强调 ✓
   // P3-FE-4 polish 2 · solDp 跟 savedSol 量级匹配 · 防 toFixed(4) 把 0.000045 截成 0.0000 误导
   const tokenAmountStr = d.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 4 });
   const sideVerb = d.side === 'buy' ? t('buyVerb') : t('sellVerb');
   const flowVerb = d.side === 'buy' ? t('spendVerb') : t('receiveVerb');
-  const heroSubLine1 = `${sideVerb} ${tokenAmountStr} ${d.tokenSymbol} · ${flowVerb} ${fmtNum(d.notionalSol, d.solDp)} SOL`;
+  // P3-FE-10 · 真 logo + 真 symbol · 不再 "DezX" mint 切片
+  const heroSubLine1 = (
+    <>
+      {sideVerb} {tokenAmountStr}{' '}
+      {tokenMeta.logoURI && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={tokenMeta.logoURI}
+          alt={tokenMeta.symbol}
+          width={18}
+          height={18}
+          style={{ verticalAlign: 'middle', borderRadius: '50%', marginRight: 4 }}
+        />
+      )}
+      {tokenMeta.symbol} · {flowVerb} {fmtNum(d.notionalSol, d.solDp)} SOL
+    </>
+  );
   // P3-FE-4 polish 2b · 防夹保护友好显:true → ✓ brand 绿 / false → 普通广播 中性灰 / null → 不显
   const mevText = d.mevProtected
     ? <span style={{ color: 'var(--brand-up)' }}>{t('mevProtected')}</span>
@@ -277,19 +298,22 @@ export function TxView({ sig, data, demo }: Props) {
           aria-expanded={engineerOpen}
           style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'baseline',
             gap: 8,
+            flexWrap: 'wrap',
             background: 'transparent',
             border: 0,
             padding: 0,
             fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
-            fontSize: 13,
-            color: 'var(--ink-60)',
+            fontSize: 12,
+            color: 'var(--ink-40)',
             cursor: 'pointer',
+            textAlign: 'left',
           }}
         >
           <span style={{ fontSize: 9, color: 'var(--ink-40)' }}>{engineerOpen ? '▼' : '▶'}</span>
-          {t('engineer.label')}
+          <span>{t('engineer.label')}</span>
+          <span style={{ fontSize: 11, color: 'var(--ink-40)', opacity: 0.7 }}>{t('engineer.hint')}</span>
         </button>
         {engineerOpen && (
           <ul style={{ margin: '14px 0 0 22px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>

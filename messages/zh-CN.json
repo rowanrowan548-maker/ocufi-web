@@ -2166,6 +2166,37 @@
       "portfolio": "持仓",
       "tx": "报告"
     },
+    "token": {
+      "trade": {
+        "reportReal": "查看你的交易报告 →",
+        "reportDemo": "查看交易报告 demo →"
+      },
+      "side": {
+        "safety": "安全信息"
+      },
+      "chart": {
+        "loading": "{symbol} · CHART 加载中…",
+        "noPool": "{symbol} · 暂无 LP 池"
+      }
+    },
+    "sweep": {
+      "eyebrow": "清扫 · 空 ATA",
+      "loading": "查询中…",
+      "retrying": "扫描可回收 ATA 中…",
+      "empty": "暂无可回收",
+      "loadingSub": "正在扫所有空 ATA · 不需签名",
+      "retryingSub": "链上索引延迟 5-15 秒 · 自动重试中",
+      "haveSub": "{n} 个空账户 · 一键签名全部回收",
+      "emptySub": "请稍后再试 · 链上 RPC 索引可能还在 sync",
+      "close": "关闭",
+      "loadingList": "加载中",
+      "retryingList": "扫描可回收 ATA 中…",
+      "loadFailed": "加载失败 · {msg}",
+      "moreOmitted": "+ 另 {n} 个 · 一键签名时全收",
+      "cleanTitle": "没空 ATA · 干净",
+      "ctaBusy": "一键回收中…",
+      "cta": "一键全收 · 签 1 次拿回所有 SOL"
+    },
     "tx": {
       "back": "‹ 持仓",
       "shareLabel": "↗ 分享",
@@ -2208,7 +2239,8 @@
         "shareText": "我刚在 Ocufi 完成一笔链上交易 · 省了 {savedSol} SOL · 路由 / 滑点 / Gas 全公开"
       },
       "engineer": {
-        "label": "工程师视角",
+        "label": "高级:技术细节(路由 / Sender bundle)",
+        "hint": "99% 散户不需要点开",
         "bundle": "· Sender bundle:{id}",
         "route": "· Jupiter 路径:{route}",
         "routeWithSteps": "· Jupiter 路径:{steps} 步 · {route}",
@@ -2258,7 +2290,14 @@
         "lineMobile": "SAVED 0.0045 SOL",
         "sub": "on $BONK · vs BullX · 0.1% fee · MEV protected",
         "footLeft": "5fX...abc",
-        "viewLink": "View report →"
+        "viewLink": "View report →",
+        "placeholder": {
+          "label": "OCUFI · TX REPORT",
+          "line": "每笔成交自动生成",
+          "sub": "链上交易 · 透明可分享 · 永久 URL",
+          "footLeft": "/v2/tx/<sig>",
+          "footRight": "完成首笔 swap 后 · 真报告自动出现"
+        }
       },
       "pillars": [
         {
@@ -2304,6 +2343,20 @@
         "change": "24h",
         "action": "操作",
         "sell": "卖出"
+      },
+      "history": {
+        "title": "近 {n} 笔交易",
+        "loading": "拉历史中…",
+        "buy": "买",
+        "sell": "卖",
+        "saved": "省",
+        "view": "查看 →"
+      },
+      "syncing": "↻ 刚 swap · 数据 sync 中…(链上 RPC 索引延迟 5-30 秒)",
+      "reclaimBanner": {
+        "headline": "你有 {sol} SOL 可回收",
+        "sub": "{count} 个空 ATA · 一键回收",
+        "cta": "一键回收 →"
       }
     }
   },

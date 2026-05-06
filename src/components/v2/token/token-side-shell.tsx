@@ -8,11 +8,13 @@
  * Phase 2 内 audit-cards 全字段已展示 · V2 玻璃容器把视觉气质拉过来
  * V1 RightInfoTabs 后续考虑加(持仓集中度 + 最近交易 · 但 audit-cards 已含部分)
  */
+import { useTranslations } from 'next-intl';
 import { AuditCards } from '@/components/trade/audit-cards';
 
 type Props = { mint: string };
 
 export function TokenSideShell({ mint }: Props) {
+  const t = useTranslations('v2.token.side');
   return (
     <aside className="v2-card v2-token-side">
       <h3
@@ -26,7 +28,7 @@ export function TokenSideShell({ mint }: Props) {
           fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
         }}
       >
-        安全信息
+        {t('safety')}
       </h3>
       <AuditCards mint={mint} />
     </aside>

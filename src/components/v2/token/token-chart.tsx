@@ -10,6 +10,7 @@
  * GeckoTerminal.com · O/H/L/C · Volume SMA)叠成乱字 · symbol 已在 TokenHead 显过 · 不重复
  */
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { fetchTokenInfo } from '@/lib/portfolio';
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
@@ -17,6 +18,7 @@ const SOL_MINT = 'So11111111111111111111111111111111111111112';
 type Props = { mint: string; symbol: string };
 
 export function TokenChart({ mint, symbol }: Props) {
+  const t = useTranslations('v2.token.chart');
   const [pool, setPool] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export function TokenChart({ mint, symbol }: Props) {
             textAlign: 'center',
           }}
         >
-          {pool === undefined ? `${symbol} · CHART 加载中…` : `${symbol} · 暂无 LP 池`}
+          {pool === undefined ? t('loading', { symbol }) : t('noPool', { symbol })}
         </div>
       )}
     </div>

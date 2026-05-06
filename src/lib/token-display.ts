@@ -71,3 +71,74 @@ export function shortMint(mint: string): string {
   if (mint.length <= 10) return mint;
   return `${mint.slice(0, 4)}…${mint.slice(-4)}`;
 }
+
+// ─── P3-FE-10 · React hook · 报告 / 持仓行真名 + logo 客户端兜底 ───
+//
+// 熵减 #4:链上 fallbackSymbol 写 mint.slice(0,4)("DezX")· 用户看不出币
+// → KNOWN_TOKENS sync 命中走静态 / 否则 hook 拉 Jupiter strict 异步升级
+// 不改 mapReportToView · 在 view 层用
+
+import { useEffect, useMemo, useState } from 'react';
+import {
+  lookupJupiterToken,
+  lookupJupiterTokenSync,
+  preloadJupiterList,
+} from './jupiter-token-list';
+
+export type TokenMeta = {
+  symbol: string;
+  name: string | null;
+  logoURI: string | null;
+};
+
+/**
+ * mint → {symbol, name, logoURI} · 异步升级
+ * 1. KNOWN_TOKENS 命中 → 立即返(无 logo)
+ * 2. Jupiter strict cache 同步命中 → 立即返完整
+ * 3. 都没 → 返 backendSymbol fallback · useEffect 拉 Jupiter · 拿到 setState
+ */
+export function useTokenMeta(
+  mint: string,
+  backendSymbol?: string | null,
+): TokenMeta {
+  const initial = useMemo<TokenMeta>(() => {
+    const known = KNOWN_TOKENS[mint];
+    if (known) return { symbol: known.symbol, name: known.name, logoURI: null };
+    const jup = lookupJupiterTokenSync(mint);
+    if (jup) return { symbol: jup.symbol, name: jup.name, logoURI: jup.logoURI };
+    // backend symbol 像 mint 切片(<5 字 · 跟 mint.slice(0,4) 重合)= 假 · 改 shortMint
+    const looksFake =
+      !backendSymbol ||
+      backendSymbol.length < 5 ||
+      mint.toLowerCase().startsWith(backendSymbol.toLowerCase());
+    return {
+      symbol: looksFake ? shortMint(mint) : (backendSymbol as string),
+      name: null,
+      logoURI: null,
+    };
+  }, [mint, backendSymbol]);
+
+  const [meta, setMeta] = useState<TokenMeta>(initial);
+
+  useEffect(() => {
+    setMeta(initial);
+    if (KNOWN_TOKENS[mint] || lookupJupiterTokenSync(mint)) return;
+    let cancelled = false;
+    lookupJupiterToken(mint).then((t) => {
+      if (cancelled || !t) return;
+      setMeta({ symbol: t.symbol, name: t.name, logoURI: t.logoURI });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mint, initial]);
+
+  return meta;
+}
+
+/** 预热 Jupiter list · 持仓 / 首页 mount 调一次 · 后续 sync 查无延迟 */
+export function usePreloadJupiterList(): void {
+  useEffect(() => {
+    preloadJupiterList();
+  }, []);
+}

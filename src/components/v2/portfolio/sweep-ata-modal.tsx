@@ -37,6 +37,7 @@ type Props = {
 
 export function SweepAtaModal({ open, onClose }: Props) {
   const t = useTranslations('rewards.reclaim');
+  const tv = useTranslations('v2.sweep');
   const wallet = useWallet();
   const { connection } = useConnection();
   const addr = wallet.publicKey?.toBase58();
@@ -244,7 +245,7 @@ export function SweepAtaModal({ open, onClose }: Props) {
                 marginBottom: 8,
               }}
             >
-              清扫 · 空 ATA
+              {tv('eyebrow')}
             </div>
             <div
               style={{
@@ -257,27 +258,27 @@ export function SweepAtaModal({ open, onClose }: Props) {
               }}
             >
               {loading
-                ? '查询中…'
+                ? tv('loading')
                 : retrying
-                ? '扫描可回收 ATA 中…'
+                ? tv('retrying')
                 : accounts && accounts.length > 0
                 ? `+${(totalLamports / 1e9).toFixed(4)} SOL`
-                : '暂无可回收'}
+                : tv('empty')}
             </div>
             <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-60)' }}>
               {loading
-                ? '正在扫所有空 ATA · 不需签名'
+                ? tv('loadingSub')
                 : retrying
-                ? '链上索引延迟 5-15 秒 · 自动重试中'
+                ? tv('retryingSub')
                 : accounts && accounts.length > 0
-                ? `${accounts.length} 个空账户 · 一键签名全部回收`
-                : '请稍后再试 · 链上 RPC 索引可能还在 sync'}
+                ? tv('haveSub', { n: accounts.length })
+                : tv('emptySub')}
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="关闭"
+            aria-label={tv('close')}
             style={{
               background: 'transparent',
               border: 0,
@@ -296,16 +297,16 @@ export function SweepAtaModal({ open, onClose }: Props) {
           {loading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'var(--ink-60)' }}>
               <Loader2 size={18} className="v2-spin" style={{ animation: 'spin 1s linear infinite', marginRight: 8 }} />
-              加载中
+              {tv('loadingList')}
             </div>
           ) : retrying ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'var(--ink-60)' }}>
               <Loader2 size={18} className="v2-spin" style={{ animation: 'spin 1s linear infinite', marginRight: 8 }} />
-              扫描可回收 ATA 中…
+              {tv('retryingList')}
             </div>
           ) : err ? (
             <div style={{ padding: 24, color: 'var(--warn, #FF6B6B)', fontSize: 13, textAlign: 'center' }}>
-              加载失败 · {err.slice(0, 80)}
+              {tv('loadFailed', { msg: err.slice(0, 80) })}
             </div>
           ) : accounts && accounts.length > 0 ? (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
@@ -368,14 +369,14 @@ export function SweepAtaModal({ open, onClose }: Props) {
               })}
               {accounts.length > 50 && (
                 <li style={{ padding: 12, fontSize: 11, color: 'var(--ink-40)', textAlign: 'center' }}>
-                  + 另 {accounts.length - 50} 个 · 一键签名时全收
+                  {tv('moreOmitted', { n: accounts.length - 50 })}
                 </li>
               )}
             </ul>
           ) : (
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--ink-60)' }}>
               <CheckCircle2 size={36} style={{ color: 'var(--brand-up)', opacity: 0.7, margin: '0 auto 8px' }} />
-              <div style={{ fontSize: 14 }}>没空 ATA · 干净</div>
+              <div style={{ fontSize: 14 }}>{tv('cleanTitle')}</div>
             </div>
           )}
         </div>
@@ -407,10 +408,10 @@ export function SweepAtaModal({ open, onClose }: Props) {
           {busy ? (
             <>
               <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-              一键回收中…
+              {tv('ctaBusy')}
             </>
           ) : (
-            <>一键全收 · 签 1 次拿回所有 SOL</>
+            <>{tv('cta')}</>
           )}
         </button>
       </div>

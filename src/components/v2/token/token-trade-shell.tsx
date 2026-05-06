@@ -16,6 +16,7 @@
  */
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { TradeTabs } from '@/components/trade/trade-tabs';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
@@ -25,6 +26,7 @@ import { SweepAtaModal } from '@/components/v2/portfolio/sweep-ata-modal';
 type Props = { mint: string; defaultSide?: 'buy' | 'sell' };
 
 export function TokenTradeShell({ mint, defaultSide }: Props) {
+  const t = useTranslations('v2.token.trade');
   // 当前会话内 swap 完成的 sig(实时)· 没就 fallback 到 useLastTxSig(localStorage + server)
   const [sessionSig, setSessionSig] = useState<string | null>(null);
   // P3-FE-6 · 100% 卖空 toast "去领取" · V2 in-page modal · 不跳 V1 /rewards
@@ -34,7 +36,7 @@ export function TokenTradeShell({ mint, defaultSide }: Props) {
   const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
   const realSig = sessionSig ?? lastSig;
   const reportHref = realSig ? `/v2/tx/${realSig}` : `/v2/tx/${MOCK_TX_SIG}`;
-  const reportLabel = realSig ? '查看你的交易报告 →' : '查看交易报告 demo →';
+  const reportLabel = realSig ? t('reportReal') : t('reportDemo');
 
   return (
     <div className="v2-card v2-token-trade">

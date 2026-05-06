@@ -21,6 +21,7 @@ import { useTranslations } from 'next-intl';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import {
+  apiFetch,
   fetchPortfolioHoldings,
   fetchPortfolioSavings,
   fetchPortfolioMevSavings,
@@ -31,6 +32,8 @@ import {
   type HoldingItem,
 } from '@/lib/api-client';
 import { useSwapRefresh } from '@/lib/swap-refresh-store';
+import { getTransparencyReport, mapReportToView, pickSolDp, type TxViewData } from '@/lib/transparency';
+import { useTokenMeta, usePreloadJupiterList } from '@/lib/token-display';
 import { SweepAtaModal } from './sweep-ata-modal';
 
 // P3-FE-2 bug 3 · 阈值 $0.01 太严 · 0.001 SOL 小测试单全被折叠
@@ -75,9 +78,15 @@ export function PortfolioView() {
   const [syncing, setSyncing] = useState(false);
   // P3-FE-9 · 替代 sell 100% reclaim toast · 持仓页主动显眼条
   const [reclaimable, setReclaimable] = useState<{ sol: number; count: number } | null>(null);
+  // P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /v2/reports
+  const [history, setHistory] = useState<TxViewData[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   // P3-FE-8 · 订阅 swap 完成事件 · BuyForm/SellForm onSuccess → bumpSwap()
   const swapVersion = useSwapRefresh((s) => s.swapVersion);
   const prevSwapVersion = useRef(swapVersion);
+
+  // P3-FE-10 · 预热 Jupiter strict list · 后续 useTokenMeta 同步命中
+  usePreloadJupiterList();
 
   const wallet = publicKey?.toBase58();
 
@@ -150,6 +159,43 @@ export function PortfolioView() {
       .catch(() => {
         if (cancelled) return;
         setReclaimable(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, wallet, swapVersion]);
+
+  // P3-FE-10 · 拉近 10 笔交易历史 · GET recent + 并发拉每笔 detail
+  useEffect(() => {
+    if (!connected || !wallet) {
+      setHistory([]);
+      return;
+    }
+    let cancelled = false;
+    setHistoryLoading(true);
+    type RecentResp = { ok: boolean; data: { sig: string; created_at: string }[]; error: string | null };
+    apiFetch<RecentResp>(`/transparency/recent?wallet=${encodeURIComponent(wallet)}&limit=10`)
+      .then(async (res) => {
+        if (cancelled) return;
+        if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) {
+          setHistory([]);
+          return;
+        }
+        const details = await Promise.all(
+          res.data.map((it) => getTransparencyReport(it.sig).catch(() => null)),
+        );
+        if (cancelled) return;
+        const views = details
+          .filter((r): r is NonNullable<typeof r> => r != null)
+          .map(mapReportToView);
+        setHistory(views);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setHistory([]);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
       });
     return () => {
       cancelled = true;
@@ -314,7 +360,7 @@ export function PortfolioView() {
           }}
           className="v2-pf-syncing"
         >
-          ↻ 刚 swap · 数据 sync 中…(链上 RPC 索引延迟 5-30 秒)
+          {t('syncing')}
         </div>
       )}
       {/* P3-FE-9 · 替代 sell 100% toast · 持仓页主动显眼条 · 真有可回收时弹 */}
@@ -344,7 +390,7 @@ export function PortfolioView() {
                 letterSpacing: '-0.01em',
               }}
             >
-              你有 {reclaimable.sol.toFixed(4)} SOL 可回收
+              {t('reclaimBanner.headline', { sol: reclaimable.sol.toFixed(4) })}
             </span>
             <span
               style={{
@@ -355,7 +401,7 @@ export function PortfolioView() {
                 textTransform: 'uppercase',
               }}
             >
-              {reclaimable.count} 个空 ATA · 一键回收
+              {t('reclaimBanner.sub', { count: reclaimable.count })}
             </span>
           </div>
           <button
@@ -376,7 +422,7 @@ export function PortfolioView() {
               boxShadow: '0 0 24px rgba(25,251,155,0.28)',
             }}
           >
-            一键回收 →
+            {t('reclaimBanner.cta')}
           </button>
         </div>
       )}
@@ -465,7 +511,7 @@ export function PortfolioView() {
                 letterSpacing: '-0.02em',
               }}
             >
-              {fmtSol(savedSol, 3)} SOL
+              {fmtSol(savedSol, pickSolDp(savedSol))} SOL
             </div>
           </div>
           <div
@@ -745,6 +791,53 @@ export function PortfolioView() {
         </>
       </section>
 
+      {/* P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /v2/reports */}
+      {history.length > 0 && (
+        <section
+          className="v2-pf-history"
+          style={{
+            maxWidth: 1320,
+            margin: '0 auto',
+            padding: '12px 56px 40px',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+              fontSize: 12,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--ink-40)',
+              marginBottom: 14,
+            }}
+          >
+            {t('history.title', { n: history.length })}
+          </div>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {history.map((h) => (
+              <li key={h.sig}>
+                <HistoryRow item={h} viewLabel={t('history.view')} sideLabels={{ buy: t('history.buy'), sell: t('history.sell') }} savedLabel={t('history.saved')} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {historyLoading && history.length === 0 && (
+        <section
+          className="v2-pf-history"
+          style={{
+            maxWidth: 1320,
+            margin: '0 auto',
+            padding: '0 56px 24px',
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 12,
+            color: 'var(--ink-40)',
+          }}
+        >
+          {t('history.loading')}
+        </section>
+      )}
+
       {/* sticky 清扫 ATA 按钮 · mobile only · bottom-tab-bar 之上 · 用户随时可点(P2-HOTFIX-3 #5) */}
       <button
         type="button"
@@ -813,5 +906,95 @@ export function PortfolioView() {
 
       <SweepAtaModal open={sweepOpen} onClose={() => setSweepOpen(false)} />
     </main>
+  );
+}
+
+// P3-FE-10 · 交易历史行 · 真 token logo + symbol(useTokenMeta 救场后端 fallback "DezX")
+// click 整行跳 /v2/tx/<sig> · 详情看完整报告
+function HistoryRow({
+  item,
+  viewLabel,
+  sideLabels,
+  savedLabel,
+}: {
+  item: TxViewData;
+  viewLabel: string;
+  sideLabels: { buy: string; sell: string };
+  savedLabel: string;
+}) {
+  // tokenSymbol 在 mapReportToView 是 token_out_symbol · 拿 mint 也是 out 端
+  // 但 TxViewData 没暴露 token_out_mint · 用 sigShort 不能查 · 暂用 backendSymbol 兜底
+  // 改进:扩 TxViewData 加 tokenMint · 让 useTokenMeta 真生效
+  const sideLabel = item.side === 'buy' ? sideLabels.buy : sideLabels.sell;
+  const dateShort = item.timestamp.replace(' UTC', '');
+  return (
+    <Link
+      href={`/v2/tx/${item.sig}`}
+      prefetch={false}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0,1fr) auto',
+        alignItems: 'center',
+        gap: 16,
+        padding: '14px 18px',
+        background: 'var(--bg-card-v2)',
+        border: '1px solid var(--border-v2)',
+        borderRadius: 12,
+        textDecoration: 'none',
+        color: 'inherit',
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+        <span style={{ fontSize: 13, color: 'var(--ink-100)', fontWeight: 500 }}>
+          {sideLabel} {item.tokenSymbol} ·{' '}
+          <span style={{ fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' }}>
+            {item.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 4 })}
+          </span>
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 11,
+            color: 'var(--ink-40)',
+            fontFeatureSettings: '"tnum" 1',
+          }}
+        >
+          {dateShort}
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+        {item.savedSol > 0 ? (
+          <span
+            style={{
+              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+              fontSize: 13,
+              color: 'var(--brand-up)',
+              fontWeight: 600,
+            }}
+          >
+            {savedLabel} {item.savedSol.toFixed(item.solDp)} SOL
+          </span>
+        ) : (
+          <span
+            style={{
+              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+              fontSize: 11,
+              color: 'var(--ink-40)',
+            }}
+          >
+            {viewLabel}
+          </span>
+        )}
+        <span
+          style={{
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            fontSize: 11,
+            color: 'var(--ink-40)',
+          }}
+        >
+          {item.notionalSol.toFixed(item.solDp)} SOL
+        </span>
+      </div>
+    </Link>
   );
 }

@@ -130,6 +130,8 @@ export type TxViewData = {
   side: 'buy' | 'sell';
   tokenAmount: number; // out amount in display unit
   tokenSymbol: string;
+  // P3-FE-10 · token mint · view 层用 useTokenMeta 升级真 symbol+logo · 防链上 fallback "DezX"
+  tokenMint: string;
   notionalSol: number; // 花费 / 卖得 SOL
   vsCompetitorSol: number; // notional + (comparable - ocufi) × notional 反向算
 
@@ -191,6 +193,7 @@ export function mapReportToView(r: TransparencyReport): TxViewData {
     side: r.side,
     tokenAmount,
     tokenSymbol: r.token_out_symbol,
+    tokenMint: r.token_out_mint,
     notionalSol: r.notional_sol,
     vsCompetitorSol,
     solDp: pickSolDp(savedSol),
