@@ -66,11 +66,12 @@ export const metadata: Metadata = {
     default: 'Ocufi · Solana Trading Terminal',
     template: '%s · Ocufi',
   },
+  // P4-FE-9 · V2 软发布后 root OG 升级英文为主 · 突出卖点 · 透明度报告 + 防夹 + 永久 URL
   description:
-    '非托管 · 低费 · 透明 · 开源的 Solana 链上交易终端。0.1% 手续费,免费安全审查,代码开源可审计。',
+    'Solana trading terminal · 0.1% fee (10x cheaper than 1% industry) · MEV protected · Permanent transparency report URL.',
   keywords: [
-    'Solana', 'DEX', '交易', 'meme', 'Jupiter', '非托管',
-    'on-chain', 'crypto', 'wallet', 'open-source',
+    'Solana', 'DEX', 'meme', 'Jupiter', 'non-custodial',
+    'on-chain', 'crypto', 'wallet', 'open-source', 'MEV protected', 'transparency',
   ],
   applicationName: 'Ocufi',
   // T-800:Phantom 客服 Rory 回信 + docs.phantom.com 文档明确,
@@ -81,7 +82,7 @@ export const metadata: Metadata = {
     siteName: 'Ocufi',
     title: 'Ocufi · Solana Trading Terminal',
     description:
-      '非托管 · 0.1% 手续费 · 免费安全审查 · 代码开源。Solana 链上交易终端。',
+      'Lower fees · Transparent pricing · MEV protected · Permanent shareable transparency report. Solana on-chain.',
     url: 'https://www.ocufi.io',
     locale: 'zh_CN',
     images: [
@@ -98,7 +99,8 @@ export const metadata: Metadata = {
     site: '@Ocufi_io',
     creator: '@Ocufi_io',
     title: 'Ocufi · Solana Trading Terminal',
-    description: 'Lower fees · Transparent pricing · No middleman tax. Solana on-chain.',
+    description:
+      'Lower fees · Transparent pricing · MEV protected · Permanent shareable transparency report. Solana on-chain.',
     images: ['/opengraph-image'],
   },
   icons: {
