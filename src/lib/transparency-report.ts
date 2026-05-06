@@ -324,27 +324,151 @@ function getTokenListPromise(): Promise<Map<string, TokenListEntry>> {
   return promise;
 }
 
+// ─── P3-CHAIN-5 · birdeye 二级 fallback ─────────────────────────────────────
+
 /**
- * 解析 mint 真 symbol(jupiter token-list)· 拿不到 fallback mint slice
+ * Birdeye token meta multiple endpoint
  *
- * - SOL_MINT 短路返 'SOL'(不打 fetch)
- * - jupiter list 命中返真 symbol(BONK / USDC 等 · 主流 mint 99% 命中)
- * - 列表查无该 mint(冷门新 token)/ fetch 失败 → `fallbackSymbol(mint)` mint.slice(0, 4)
+ * P3-CHAIN-5(2026-05-06)· jupiter /all 仍不含 pump.fun 新币 · birdeye 兜底:
+ *   - URL: https://public-api.birdeye.so/defi/v3/token/meta-data/multiple?list_address=<mint>
+ *   - header: X-API-KEY + x-chain: solana + accept: application/json
+ *   - response: { success, data: { <mint>: { symbol, name, decimals, logoURI, ... } } }
+ *   - per-mint cache 1h(success)/ 5min(fail · 防 spam birdeye quota)
+ *   - env NEXT_PUBLIC_BIRDEYE_API_KEY(跟前端 P3-FE-13 共用 · 避免重复配置)
+ */
+const BIRDEYE_META_URL = 'https://public-api.birdeye.so/defi/v3/token/meta-data/multiple';
+const BIRDEYE_TTL_MS = 60 * 60 * 1000; // 1h success
+const BIRDEYE_FAIL_TTL_MS = 5 * 60 * 1000; // 5min fail
+const BIRDEYE_FETCH_TIMEOUT_MS = 5_000;
+
+interface BirdeyeCacheEntry {
+  symbol: string | null; // null = 查过但没拿到 · 区别于 cache miss
+  expires: number;
+}
+const birdeyeCache = new Map<string, BirdeyeCacheEntry>();
+/** in-flight 锁:同 mint 并发查只发一次 birdeye */
+const birdeyeInFlight = new Map<string, Promise<string | null>>();
+
+/** 仅供单测 reset module state */
+export function _resetBirdeyeCacheForTests(): void {
+  birdeyeCache.clear();
+  birdeyeInFlight.clear();
+}
+
+/** 读 birdeye api key · 返空字符串说明没配 · 上层跳过 birdeye fallback */
+function getBirdeyeApiKey(): string {
+  return process.env.NEXT_PUBLIC_BIRDEYE_API_KEY ?? '';
+}
+
+/**
+ * 单 mint 查 birdeye · 失败 / 没拿到返 null · 上层兜底 mint slice
  *
- * P3-CHAIN-3 治根 #4 熵减:transparency_reports 表里直接存真 symbol · UI 显 "Bonk" 不再 "DezX"
+ * - env 没配 → 立刻返 null · 不打 fetch
+ * - cache 命中 → 返 cached(可能 null)
+ * - in-flight 锁 → 复用 promise(防同 mint 并发打多次)
+ */
+async function fetchSymbolFromBirdeye(mint: string): Promise<string | null> {
+  const apiKey = getBirdeyeApiKey();
+  if (!apiKey) return null;
+
+  const now = Date.now();
+  const cached = birdeyeCache.get(mint);
+  if (cached && now < cached.expires) return cached.symbol;
+
+  const inflight = birdeyeInFlight.get(mint);
+  if (inflight) return inflight;
+
+  const promise = (async (): Promise<string | null> => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), BIRDEYE_FETCH_TIMEOUT_MS);
+    try {
+      const url = `${BIRDEYE_META_URL}?list_address=${encodeURIComponent(mint)}`;
+      const res = await fetch(url, {
+        signal: ctl.signal,
+        cache: 'no-store',
+        headers: {
+          'X-API-KEY': apiKey,
+          'x-chain': 'solana',
+          accept: 'application/json',
+        },
+      });
+      if (!res.ok) {
+        console.warn(`[transparency] birdeye meta fetch failed (${res.status})`);
+        birdeyeCache.set(mint, { symbol: null, expires: now + BIRDEYE_FAIL_TTL_MS });
+        return null;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const body = (await res.json()) as any;
+      // 解析:支持两种 shape · birdeye API 偶尔返 dict / data 数组
+      //   { success, data: { <mint>: { symbol, ... } } }
+      //   { success, data: [ { address, symbol, ... } ] }
+      let symbol: string | null = null;
+      const data = body?.data;
+      if (data && typeof data === 'object') {
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (item?.address === mint && typeof item?.symbol === 'string' && item.symbol) {
+              symbol = item.symbol;
+              break;
+            }
+          }
+        } else {
+          const item = data[mint];
+          if (item && typeof item.symbol === 'string' && item.symbol) {
+            symbol = item.symbol;
+          }
+        }
+      }
+      birdeyeCache.set(mint, {
+        symbol,
+        expires: now + (symbol ? BIRDEYE_TTL_MS : BIRDEYE_FAIL_TTL_MS),
+      });
+      return symbol;
+    } catch (e) {
+      console.warn('[transparency] birdeye meta error:', e);
+      birdeyeCache.set(mint, { symbol: null, expires: now + BIRDEYE_FAIL_TTL_MS });
+      return null;
+    } finally {
+      clearTimeout(t);
+      birdeyeInFlight.delete(mint);
+    }
+  })();
+  birdeyeInFlight.set(mint, promise);
+  return promise;
+}
+
+/**
+ * 解析 mint 真 symbol · 三层 fallback 链
+ *
+ * 1. SOL_MINT 短路返 'SOL'(不打 fetch)
+ * 2. **jupiter all list**(P3-CHAIN-3+4 · 数万 token · 含主流 + pump 大部分)
+ * 3. **birdeye meta-data/multiple**(P3-CHAIN-5 · jupiter 没有的新 pump 币 · 需 env)
+ * 4. fallback `mint.slice(0, 4)`(env 没配 + 全失败 · 极少触发)
+ *
+ * P3-CHAIN-3 起治根熵减 #4:transparency_reports 直接存真 symbol · UI 显 "Bonk" 不再 "DezX"
+ * P3-CHAIN-5 起兜底 pump.fun 新币(jupiter list 还没收录的)
  *
  * @param mint base58 token mint
  * @returns 真 symbol 或 4 字符兜底
  */
 export async function resolveSymbol(mint: string): Promise<string> {
   if (mint === SOL_MINT) return 'SOL';
+  // 第 1 层 · jupiter all
   try {
     const map = await getTokenListPromise();
     const entry = map.get(mint);
     if (entry && entry.symbol) return entry.symbol;
   } catch (e) {
-    console.warn('[transparency] resolveSymbol error:', e);
+    console.warn('[transparency] resolveSymbol jupiter error:', e);
   }
+  // 第 2 层 · birdeye meta(env 没配 / 失败 / 没拿到 → null · 走兜底)
+  try {
+    const sym = await fetchSymbolFromBirdeye(mint);
+    if (sym) return sym;
+  } catch (e) {
+    console.warn('[transparency] resolveSymbol birdeye error:', e);
+  }
+  // 第 3 层 · 最后兜底
   return fallbackSymbol(mint);
 }
 

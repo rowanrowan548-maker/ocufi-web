@@ -9,6 +9,7 @@ import {
   calcSavingsLamports,
   resolveSymbol,
   _resetTokenListCacheForTests,
+  _resetBirdeyeCacheForTests,
   TRANSPARENCY_COMPARABLE_FEE_PCT_DEFAULT,
   type TransparencyPayload,
 } from '@/lib/transparency-report';
@@ -416,6 +417,196 @@ describe('resolveSymbol · jupiter token-list(P3-CHAIN-3)', () => {
   it('list 含 entry 但 symbol 空字符串 → 跳过 · 用 fallback', async () => {
     stubFetch(async () => makeListResponse([{ address: BONK, symbol: '' }]));
     expect(await resolveSymbol(BONK)).toBe('DezX');
+  });
+});
+
+/**
+ * P3-CHAIN-5 · birdeye 二级 fallback(熵减 #4 治根新 pump 币)
+ *
+ * resolveSymbol 三层 fallback 链:
+ *   1. SOL 短路
+ *   2. jupiter all list(P3-CHAIN-3+4)
+ *   3. birdeye meta-data/multiple(本)
+ *   4. mint.slice(0, 4)
+ */
+describe('resolveSymbol · birdeye 二级 fallback(P3-CHAIN-5)', () => {
+  const ORIGINAL_FETCH = globalThis.fetch;
+  const ORIGINAL_BIRDEYE_KEY = process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
+
+  beforeEach(() => {
+    _resetTokenListCacheForTests();
+    _resetBirdeyeCacheForTests();
+    delete process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
+  });
+  afterEach(() => {
+    globalThis.fetch = ORIGINAL_FETCH;
+    if (ORIGINAL_BIRDEYE_KEY !== undefined) process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = ORIGINAL_BIRDEYE_KEY;
+    else delete process.env.NEXT_PUBLIC_BIRDEYE_API_KEY;
+  });
+
+  /**
+   * Mock fetch · 区分 jupiter 和 birdeye URL · 各自返指定 response
+   *
+   * @param jupList jupiter all list payload(空数组 = 不命中)
+   * @param birdeyeMap birdeye 单 mint 返回 map · null 值 = 200 但无 data · undefined = 不期望被调
+   */
+  function stubFetchTwoSources(opts: {
+    jupList: Array<{ address: string; symbol: string }>;
+    birdeyeShape?: 'object' | 'array' | 'empty' | 'malformed';
+    birdeyeStatus?: number;
+    birdeyeReject?: Error;
+    birdeyeMint?: string;
+    birdeyeSymbol?: string;
+  }) {
+    const fetchSpy = vi.fn(async (url: string, init?: RequestInit) => {
+      void init;
+      if (url.includes('token.jup.ag')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => opts.jupList,
+        } as Response;
+      }
+      if (url.includes('birdeye.so')) {
+        if (opts.birdeyeReject) throw opts.birdeyeReject;
+        const status = opts.birdeyeStatus ?? 200;
+        if (status !== 200) {
+          return { ok: false, status, json: async () => ({}) } as Response;
+        }
+        const symbol = opts.birdeyeSymbol ?? 'PUMP';
+        const mint = opts.birdeyeMint ?? '';
+        let body: unknown;
+        switch (opts.birdeyeShape) {
+          case 'array':
+            body = { success: true, data: [{ address: mint, symbol }] };
+            break;
+          case 'empty':
+            body = { success: true, data: {} };
+            break;
+          case 'malformed':
+            body = { success: false };
+            break;
+          case 'object':
+          default:
+            body = { success: true, data: { [mint]: { symbol } } };
+        }
+        return { ok: true, status: 200, json: async () => body } as Response;
+      }
+      throw new Error('unexpected fetch URL: ' + url);
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.fetch = fetchSpy as any;
+    return fetchSpy;
+  }
+
+  it('env 未配 BIRDEYE_API_KEY · jupiter 不命中 → 直接 fallback slice · 不打 birdeye', async () => {
+    const fetchSpy = stubFetchTwoSources({ jupList: [] });
+    const out = await resolveSymbol(BONK);
+    expect(out).toBe('DezX');
+    // 只打了 jupiter · birdeye 0 调用(env 未配)
+    const birdeyeCalls = fetchSpy.mock.calls.filter(([u]) => String(u).includes('birdeye.so'));
+    expect(birdeyeCalls.length).toBe(0);
+  });
+
+  it('env 配 + jupiter 不命中 + birdeye 命中(object shape)→ 返真 symbol', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    stubFetchTwoSources({
+      jupList: [],
+      birdeyeShape: 'object',
+      birdeyeMint: BONK,
+      birdeyeSymbol: 'BONK',
+    });
+    expect(await resolveSymbol(BONK)).toBe('BONK');
+  });
+
+  it('birdeye 返 array shape · 也能解析', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    stubFetchTwoSources({
+      jupList: [],
+      birdeyeShape: 'array',
+      birdeyeMint: BONK,
+      birdeyeSymbol: 'BONK',
+    });
+    expect(await resolveSymbol(BONK)).toBe('BONK');
+  });
+
+  it('birdeye 200 但 data 空 → fallback slice', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    stubFetchTwoSources({ jupList: [], birdeyeShape: 'empty', birdeyeMint: BONK });
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+  });
+
+  it('birdeye 200 但 malformed(success: false)→ fallback slice', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    stubFetchTwoSources({ jupList: [], birdeyeShape: 'malformed', birdeyeMint: BONK });
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+  });
+
+  it('birdeye 5xx → fallback slice · console.warn', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    stubFetchTwoSources({ jupList: [], birdeyeStatus: 503, birdeyeMint: BONK });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it('birdeye network reject → fallback slice · 不抛', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    stubFetchTwoSources({
+      jupList: [],
+      birdeyeReject: new Error('TLS handshake failed'),
+      birdeyeMint: BONK,
+    });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await resolveSymbol(BONK)).toBe('DezX');
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it('birdeye cache 复用 · 第二次 resolveSymbol 同 mint 不重打 birdeye', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    const fetchSpy = stubFetchTwoSources({
+      jupList: [],
+      birdeyeShape: 'object',
+      birdeyeMint: BONK,
+      birdeyeSymbol: 'BONK',
+    });
+    await resolveSymbol(BONK);
+    await resolveSymbol(BONK);
+    const birdeyeCalls = fetchSpy.mock.calls.filter(([u]) => String(u).includes('birdeye.so'));
+    expect(birdeyeCalls.length).toBe(1);
+  });
+
+  it('birdeye in-flight 锁 · 并发同 mint 只发一次', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    const fetchSpy = stubFetchTwoSources({
+      jupList: [],
+      birdeyeShape: 'object',
+      birdeyeMint: BONK,
+      birdeyeSymbol: 'BONK',
+    });
+    const [a, b, c] = await Promise.all([
+      resolveSymbol(BONK),
+      resolveSymbol(BONK),
+      resolveSymbol(BONK),
+    ]);
+    expect(a).toBe('BONK');
+    expect(b).toBe('BONK');
+    expect(c).toBe('BONK');
+    const birdeyeCalls = fetchSpy.mock.calls.filter(([u]) => String(u).includes('birdeye.so'));
+    expect(birdeyeCalls.length).toBe(1);
+  });
+
+  it('jupiter 命中时不调 birdeye(短路)', async () => {
+    process.env.NEXT_PUBLIC_BIRDEYE_API_KEY = 'test-key';
+    const fetchSpy = stubFetchTwoSources({
+      jupList: [{ address: BONK, symbol: 'Bonk' }],
+      birdeyeShape: 'object',
+      birdeyeMint: BONK,
+      birdeyeSymbol: 'BONK',
+    });
+    expect(await resolveSymbol(BONK)).toBe('Bonk');
+    const birdeyeCalls = fetchSpy.mock.calls.filter(([u]) => String(u).includes('birdeye.so'));
+    expect(birdeyeCalls.length).toBe(0);
   });
 });
 
