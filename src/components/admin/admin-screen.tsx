@@ -10,8 +10,8 @@
  */
 import { useEffect, useState } from 'react';
 import {
-  RefreshCw, Users, ShoppingCart, Coins, Sparkles, AlertCircle, Loader2, Lock,
-  TrendingUp, ExternalLink,
+  RefreshCw, Users, ShoppingCart, AlertCircle, Loader2, Lock,
+  TrendingUp, ExternalLink, FileText, Share2,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -149,11 +149,13 @@ export function AdminScreen() {
                 value={stats.total_trades.toLocaleString()}
                 delta={stats.trades_24h > 0 ? `+${stats.trades_24h} (24h)` : `+${stats.trades_7d} (7d)`}
               />
+              {/* P5-FE-12 · 砍"积分发放" + "邀请激活率"(V2 拍板隐藏)· 加 transparency 报告 + OG 分享抓取
+                  P5-BE-1 改 1/3 endpoint 未 ship · 暂用 "—" placeholder · 后端 ship 后接 fetch */}
               <BigNumberCard
-                Icon={Coins}
-                label="积分发放"
-                value={stats.total_points_awarded.toLocaleString()}
-                delta={stats.points_24h > 0 ? `+${stats.points_24h} (24h)` : ''}
+                Icon={FileText}
+                label="transparency 报告"
+                value="—"
+                delta="待接 /admin/transparency-stats"
               />
               <BigNumberCard
                 Icon={TrendingUp}
@@ -162,10 +164,10 @@ export function AdminScreen() {
                 delta={`${stats.repeat_wallet_count}/${stats.total_wallets} 多次成交`}
               />
               <BigNumberCard
-                Icon={Sparkles}
-                label="邀请激活率"
-                value={`${stats.activation_rate_pct.toFixed(1)}%`}
-                delta={`${stats.invite_activated}/${stats.invite_bound}`}
+                Icon={Share2}
+                label="OG 分享抓取"
+                value="—"
+                delta="待接 /admin/og-share-stats"
               />
               <BigNumberCard
                 Icon={ExternalLink}
@@ -308,38 +310,8 @@ export function AdminScreen() {
               </Card>
             </div>
 
-            {/* Top 邀请人 + Top 积分钱包 */}
-            <div className="grid lg:grid-cols-2 gap-4">
-              <Card>
-                <div className="px-5 py-3 border-b border-border/40">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Top 10 邀请人</div>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>钱包</TableHead>
-                        <TableHead className="text-right">已邀</TableHead>
-                        <TableHead className="text-right">已激活</TableHead>
-                        <TableHead className="text-right">分成积分</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stats.top_inviters.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground/60 py-8">暂无</TableCell></TableRow>
-                      ) : stats.top_inviters.map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-mono text-xs">{r.wallet_short}</TableCell>
-                          <TableCell className="text-right font-mono text-xs">{r.invited}</TableCell>
-                          <TableCell className="text-right font-mono text-xs text-success">{r.activated}</TableCell>
-                          <TableCell className="text-right font-mono text-xs">{r.earned.toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
-
+            {/* P5-FE-12 · 砍 "Top 10 邀请人"(V2 隐藏邀请 · 永远空表)· 仅留 Top 10 积分钱包 */}
+            <div className="grid gap-4">
               <Card>
                 <div className="px-5 py-3 border-b border-border/40">
                   <div className="text-xs uppercase tracking-wider text-muted-foreground">Top 10 积分钱包</div>
