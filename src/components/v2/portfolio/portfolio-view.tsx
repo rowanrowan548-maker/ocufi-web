@@ -264,7 +264,13 @@ export function PortfolioView() {
   const totalUsd = holdings?.totalValueUsd ?? 0;
   const items = holdings?.items ?? [];
   const tradeCount = savings?.trade_count ?? 0;
-  const savedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
+  // P3-FE-13 · 累计省下 · 优先 client-side 真累加(transparency/recent 真数据)
+  // 真因:/portfolio/savings 老 mev_protection_log 表 sol_amount 字段空 · 真值在 transparency_reports
+  // history(P3-FE-10 已 fetch detail)累加 savedSol 是真 6 笔 × 各自 savings · 不再 0.0000
+  // 后端 endpoint 累计当 fallback(老 V1 时代 swap 没 transparency 报告 · 但有 mev log)
+  const clientAccSavedSol = history.reduce((s, h) => s + (h.savedSol > 0 ? h.savedSol : 0), 0);
+  const backendSavedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
+  const savedSol = clientAccSavedSol > 0 ? clientAccSavedSol : backendSavedSol;
   const savedUsd = savedSol * SOL_USD;
   const feeSavedUsd = (savings?.totals?.fee_saved_sol ?? 0) * SOL_USD;
   const mevSavedUsd = (mev?.total_saved_sol ?? 0) * SOL_USD;
@@ -603,27 +609,7 @@ export function PortfolioView() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                  {h.logoURI ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={h.logoURI} alt="" width={36} height={36} style={{ borderRadius: '50%', flexShrink: 0 }} />
-                  ) : (
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
-                        display: 'grid',
-                        placeItems: 'center',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: 14,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {(h.symbol || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <TokenAvatar logoURI={h.logoURI ?? null} symbol={h.symbol ?? ''} size={36} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{h.symbol || '—'}</div>
                     <div style={{ fontSize: 11, color: 'var(--ink-40)', fontFamily: 'var(--font-geist-mono), ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -959,34 +945,9 @@ function HistoryRow({
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
-      {/* 左 · token logo + side 角标(↑买 / ↓卖) */}
+      {/* 左 · token logo + side 角标(↑买 / ↓卖) · P3-FE-13 · img onError 字母圆 fallback */}
       <div style={{ position: 'relative', width: 36, height: 36, flexShrink: 0 }}>
-        {meta.logoURI ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={meta.logoURI}
-            alt={meta.symbol}
-            width={36}
-            height={36}
-            style={{ borderRadius: '50%', display: 'block' }}
-          />
-        ) : (
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
-              display: 'grid',
-              placeItems: 'center',
-              color: '#0b0d12',
-              fontWeight: 700,
-              fontSize: 13,
-            }}
-          >
-            {(meta.symbol || '?').charAt(0).toUpperCase()}
-          </div>
-        )}
+        <TokenAvatar logoURI={meta.logoURI} symbol={meta.symbol} size={36} />
         <span
           aria-hidden
           style={{
@@ -1055,5 +1016,41 @@ function HistoryRow({
         </span>
       </div>
     </Link>
+  );
+}
+
+// P3-FE-13 · token 头像 · logoURI 有显 img · 没/404 时显字母圆 fallback
+function TokenAvatar({ logoURI, symbol, size }: { logoURI: string | null; symbol: string; size: number }) {
+  const [errored, setErrored] = useState(false);
+  const showImg = !!logoURI && !errored;
+  if (showImg) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logoURI as string}
+        alt={symbol}
+        width={size}
+        height={size}
+        style={{ borderRadius: '50%', display: 'block' }}
+        onError={() => setErrored(true)}
+      />
+    );
+  }
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #00ffa3, #03e1ff)',
+        display: 'grid',
+        placeItems: 'center',
+        color: '#0b0d12',
+        fontWeight: 700,
+        fontSize: Math.round(size * 0.36),
+      }}
+    >
+      {(symbol || '?').charAt(0).toUpperCase()}
+    </div>
   );
 }

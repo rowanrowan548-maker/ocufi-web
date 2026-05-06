@@ -33,6 +33,10 @@ type OgCardProps = {
   saveGradient?: boolean;
   /** 加 href 后整张卡包 Next/Link · cursor pointer · hover 强化 brand glow */
   href?: string;
+  /** P3-FE-13 · token logo URL · hero 大字下方渲染 · 跟 symbol 一起显 · 用户一眼看出 token */
+  tokenLogo?: string;
+  /** P3-FE-13 · token symbol · 配合 tokenLogo 一起显 · 没 logo 时单独显 */
+  tokenSymbol?: string;
 };
 
 const SIZES: Record<Variant, { padding: string; radius: number; lineSize: string; subSize: number; topSize: number; aspectRatio?: string; minHeight?: number; animation: string; maxWidth?: number; lineMaxWidth?: number; subMarginTop: number; }> = {
@@ -83,6 +87,8 @@ export function OgCard({
   footRight,
   saveGradient = false,
   href,
+  tokenLogo,
+  tokenSymbol,
 }: OgCardProps) {
   const s = SIZES[variant];
 
@@ -180,6 +186,36 @@ export function OgCard({
         >
           {saveText}
         </div>
+        {(tokenLogo || tokenSymbol) && (
+          <div
+            data-og-token
+            style={{
+              marginTop: variant === 'tx-hero' ? 12 : 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+              fontSize: variant === 'tx-hero' ? 16 : 13,
+              color: 'var(--ink-80)',
+              fontWeight: 500,
+            }}
+          >
+            {tokenLogo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tokenLogo}
+                alt={tokenSymbol ?? ''}
+                width={variant === 'tx-hero' ? 28 : 22}
+                height={variant === 'tx-hero' ? 28 : 22}
+                style={{ borderRadius: '50%', display: 'block' }}
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            )}
+            {tokenSymbol && <span>${tokenSymbol}</span>}
+          </div>
+        )}
         {subText && (
           <div
             data-og-subline

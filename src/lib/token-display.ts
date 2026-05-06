@@ -72,11 +72,14 @@ export function shortMint(mint: string): string {
   return `${mint.slice(0, 4)}…${mint.slice(-4)}`;
 }
 
-// ─── P3-FE-10 · React hook · 报告 / 持仓行真名 + logo 客户端兜底 ───
+// ─── P3-FE-10 / P3-FE-13 · React hook · 报告 / 持仓行真名 + logo 客户端兜底 ───
 //
 // 熵减 #4:链上 fallbackSymbol 写 mint.slice(0,4)("DezX")· 用户看不出币
-// → KNOWN_TOKENS sync 命中走静态 / 否则 hook 拉 Jupiter strict 异步升级
-// 不改 mapReportToView · 在 view 层用
+// 三层 lookup · 异步升级触发 re-render:
+//   1. KNOWN_TOKENS sync(主流币 · 含 BONK/USDC 等)
+//   2. Jupiter `/all` · localStorage 24h cache · pump 币部分覆盖
+//   3. P3-FE-13 · Birdeye 二级 fallback · pump.fun 新币 · 24h 缓存
+// 任一拿到 logoURI 都立即 setState · re-render 显 logo
 
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -84,6 +87,10 @@ import {
   lookupJupiterTokenSync,
   preloadJupiterList,
 } from './jupiter-token-list';
+import {
+  lookupBirdeyeMeta,
+  lookupBirdeyeMetaSync,
+} from './birdeye-token-meta';
 
 export type TokenMeta = {
   symbol: string;
@@ -94,18 +101,22 @@ export type TokenMeta = {
 /**
  * mint → {symbol, name, logoURI} · 异步升级
  * 1. KNOWN_TOKENS 命中 → 立即返(无 logo)
- * 2. Jupiter strict cache 同步命中 → 立即返完整
- * 3. 都没 → 返 backendSymbol fallback · useEffect 拉 Jupiter · 拿到 setState
+ * 2. Jupiter cache 同步命中 → 立即返完整
+ * 3. Birdeye cache 同步命中 → 立即返完整
+ * 4. 都没 → 返 backendSymbol fallback · useEffect 拉 Jupiter → 没拿到拉 Birdeye → setState 升级
  */
 export function useTokenMeta(
   mint: string,
   backendSymbol?: string | null,
 ): TokenMeta {
   const initial = useMemo<TokenMeta>(() => {
+    if (!mint) return { symbol: '', name: null, logoURI: null };
     const known = KNOWN_TOKENS[mint];
     if (known) return { symbol: known.symbol, name: known.name, logoURI: null };
     const jup = lookupJupiterTokenSync(mint);
-    if (jup) return { symbol: jup.symbol, name: jup.name, logoURI: jup.logoURI };
+    if (jup) return { symbol: jup.symbol, name: jup.name, logoURI: jup.logoURI || null };
+    const bird = lookupBirdeyeMetaSync(mint);
+    if (bird) return { symbol: bird.symbol, name: bird.name || null, logoURI: bird.logoURI || null };
     // backend symbol 像 mint 切片(<5 字 · 跟 mint.slice(0,4) 重合)= 假 · 改 shortMint
     const looksFake =
       !backendSymbol ||
@@ -122,12 +133,29 @@ export function useTokenMeta(
 
   useEffect(() => {
     setMeta(initial);
-    if (KNOWN_TOKENS[mint] || lookupJupiterTokenSync(mint)) return;
+    if (!mint) return;
+    if (KNOWN_TOKENS[mint]) return;
+    // 同步层都没命中 → 异步链 · jupiter → birdeye
     let cancelled = false;
-    lookupJupiterToken(mint).then((t) => {
-      if (cancelled || !t) return;
-      setMeta({ symbol: t.symbol, name: t.name, logoURI: t.logoURI });
-    });
+    (async () => {
+      // 1. Jupiter 异步
+      const jup = await lookupJupiterToken(mint);
+      if (cancelled) return;
+      if (jup && (jup.logoURI || jup.symbol)) {
+        setMeta({ symbol: jup.symbol, name: jup.name || null, logoURI: jup.logoURI || null });
+        return; // 拿到就停 · 不再打 birdeye(省 quota)
+      }
+      // 2. Birdeye 异步
+      const bird = await lookupBirdeyeMeta(mint);
+      if (cancelled) return;
+      if (bird) {
+        setMeta({
+          symbol: bird.symbol,
+          name: bird.name || null,
+          logoURI: bird.logoURI || null,
+        });
+      }
+    })();
     return () => {
       cancelled = true;
     };

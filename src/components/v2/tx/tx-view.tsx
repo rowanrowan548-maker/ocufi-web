@@ -80,23 +80,9 @@ export function TxView({ sig, data, demo }: Props) {
   const tokenAmountStr = d.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 4 });
   const sideVerb = d.side === 'buy' ? t('buyVerb') : t('sellVerb');
   const flowVerb = d.side === 'buy' ? t('spendVerb') : t('receiveVerb');
-  // P3-FE-10 · 真 logo + 真 symbol · 不再 "DezX" mint 切片
-  const heroSubLine1 = (
-    <>
-      {sideVerb} {tokenAmountStr}{' '}
-      {tokenMeta.logoURI && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={tokenMeta.logoURI}
-          alt={tokenMeta.symbol}
-          width={18}
-          height={18}
-          style={{ verticalAlign: 'middle', borderRadius: '50%', marginRight: 4 }}
-        />
-      )}
-      {tokenMeta.symbol} · {flowVerb} {fmtNum(d.notionalSol, d.solDp)} SOL
-    </>
-  );
+  // P3-FE-13 · token logo+symbol 走 OgCard tokenLogo/tokenSymbol prop · 不再 inline 在 subText
+  // subLine1 只显数量+方向(symbol 在 OgCard 单独 row 渲染)
+  const heroSubLine1 = `${sideVerb} ${tokenAmountStr} · ${flowVerb} ${fmtNum(d.notionalSol, d.solDp)} SOL`;
   // P3-FE-4 polish 2b · 防夹保护友好显:true → ✓ brand 绿 / false → 普通广播 中性灰 / null → 不显
   const mevText = d.mevProtected
     ? <span style={{ color: 'var(--brand-up)' }}>{t('mevProtected')}</span>
@@ -222,6 +208,8 @@ export function TxView({ sig, data, demo }: Props) {
           footLeft={`ocufi.io/v2/tx/${d.sigShort}`}
           footRight={d.savedUsd != null ? t('savedUsd', { usd: fmtNum(d.savedUsd, 2) }) : undefined}
           saveGradient
+          tokenLogo={tokenMeta.logoURI ?? undefined}
+          tokenSymbol={tokenMeta.symbol}
         />
       </div>
 

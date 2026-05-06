@@ -112,7 +112,6 @@ function RealOgCard({
     ? `${tTx('savedPrefix').toUpperCase()} ${detail.savedSol.toFixed(dp)} ${tTx('savedSuffix')}`
     : tTx('noFeeBaseline');
   const subParts = [
-    `on $${meta.symbol}`,
     `vs BullX`,
     `${detail.feePct.toFixed(2)}% fee`,
     detail.mevProtected ? 'MEV protected' : 'standard',
@@ -126,6 +125,8 @@ function RealOgCard({
       subText={subParts.join(' · ')}
       footLeft={detail.sigShort}
       footRight={detail.savedUsd != null ? `≈ $${detail.savedUsd.toFixed(2)} saved` : undefined}
+      tokenLogo={meta.logoURI ?? undefined}
+      tokenSymbol={meta.symbol}
     />
   );
 }
