@@ -27,10 +27,11 @@ function fmtNum(n: number, dp = 2): string {
 }
 
 // P5-FE-15 改 2 · 真记 OG 抓取 · fire-and-forget · 不阻塞图返回 · 失败静默
+// P5-FE-16 修:后端真路径是 /og-hit(无 admin 前缀)· P5-FE-15 SPEC 写错
 function trackOgHit(path: string): void {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!apiUrl) return;
-  fetch(`${apiUrl.replace(/\/$/, '')}/admin/og-hit`, {
+  fetch(`${apiUrl.replace(/\/$/, '')}/og-hit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path }),
