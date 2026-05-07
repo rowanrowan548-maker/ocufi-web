@@ -1,12 +1,12 @@
 /**
  * 轻量埋点
  *
- * V1 只做两件事:
+ * 三件事:
  * 1. 所有事件打到 console(本地开发/排查用)
- * 2. 如果浏览器里有 window.plausible(Plausible 脚本,后续接)— 透传一份
+ * 2. 如果浏览器里有 window.plausible(Plausible 脚本)— 透传一份
+ * 3. P5-FE-15 改 3 · fire-and-forget POST 后端 /track · 写 events 表 · funnel 真有数
  *
- * 不做:GA、不收集任何 PII(钱包地址会做短截)
- * 未来要接后端自有统计:在这里加 fetch('/api/track', ...)
+ * 不做:GA、不收集任何 PII(钱包地址会做短截 · scrub 复用)
  */
 
 export type AnalyticsEvent =
@@ -47,6 +47,22 @@ export function track(event: AnalyticsEvent, props: TrackProps = {}): void {
     if (typeof w.plausible === 'function') {
       try {
         w.plausible(event, { props: scrub(props) });
+      } catch {
+        /* noop */
+      }
+    }
+
+    // P5-FE-15 改 3 · 真打后端 events 表 · 不阻塞调用方 · 失败静默
+    // 后端 /track P5-BE-2 改 3 已 ship · 接 {event, props} 写 AnalyticsEvent + PageView
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (apiUrl) {
+      try {
+        fetch(`${apiUrl.replace(/\/$/, '')}/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event, props: scrub(props) }),
+          keepalive: true, // 页面关闭时仍发送
+        }).catch(() => {});
       } catch {
         /* noop */
       }

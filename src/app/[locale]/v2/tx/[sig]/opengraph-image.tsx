@@ -26,6 +26,17 @@ function fmtNum(n: number, dp = 2): string {
   return n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 
+// P5-FE-15 改 2 · 真记 OG 抓取 · fire-and-forget · 不阻塞图返回 · 失败静默
+function trackOgHit(path: string): void {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) return;
+  fetch(`${apiUrl.replace(/\/$/, '')}/admin/og-hit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path }),
+  }).catch(() => {});
+}
+
 // P4-FE-2 · server side fetch · edge runtime · 标准 fetch · 不依赖 api-client cache
 async function fetchTokenMeta(mint: string): Promise<{ symbol: string | null; logoURI: string | null }> {
   if (!mint) return { symbol: null, logoURI: null };
@@ -46,6 +57,7 @@ async function fetchTokenMeta(mint: string): Promise<{ symbol: string | null; lo
 
 export default async function Image({ params }: Props) {
   const { sig } = await params;
+  trackOgHit(`/v2/tx/${sig}/opengraph-image`);
   const isDemo = sig === MOCK_TX_SIG;
 
   // demo · 用 mockup 文案

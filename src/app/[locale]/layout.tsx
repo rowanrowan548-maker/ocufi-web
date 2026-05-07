@@ -74,9 +74,10 @@ export const metadata: Metadata = {
     'on-chain', 'crypto', 'wallet', 'open-source', 'MEV protected', 'transparency',
   ],
   applicationName: 'Ocufi',
-  // P5-FE-13 · 不显式写 images · Next 自动从 src/app/opengraph-image.tsx 注入 og:image
-  // + hash query(每次文件改 hash 变 · X/TG 爬虫强制重抓 · 治根 X 卡缓存老中文 V1 图)
-  // alt / size / contentType 由 opengraph-image.tsx 自身 export 提供
+  // P5-FE-15 改 1 · 显式写回 og:image · 加 ?v= 版本号 query
+  // P5-FE-13 删 images 期望 Next 自动注入 · 但 [locale] segment 不传播根 opengraph-image.tsx
+  // → root html 0 条 og:image meta(curl 实证比改前更糟)· 改回显式写 · 用版本号 query 治 X 缓存
+  // 守则:OG 视觉大改时 · v=YYYYMMDD 递增(对齐当前 OG 图最后修改日 2026-05-06 P4-FE-9 V2 化)
   openGraph: {
     type: 'website',
     siteName: 'Ocufi',
@@ -85,6 +86,14 @@ export const metadata: Metadata = {
       'Lower fees · Transparent pricing · MEV protected · Permanent shareable transparency report. Solana on-chain.',
     url: 'https://www.ocufi.io',
     locale: 'zh_CN',
+    images: [
+      {
+        url: '/opengraph-image?v=20260506',
+        width: 1200,
+        height: 630,
+        alt: 'Ocufi · Solana Trading Terminal',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -93,6 +102,7 @@ export const metadata: Metadata = {
     title: 'Ocufi · Solana Trading Terminal',
     description:
       'Lower fees · Transparent pricing · MEV protected · Permanent shareable transparency report. Solana on-chain.',
+    images: ['/opengraph-image?v=20260506'],
   },
   icons: {
     icon: '/icon.svg',

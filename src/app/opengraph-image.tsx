@@ -16,7 +16,20 @@ export const alt = 'Ocufi · Solana Trading Terminal · 0.1% fee · MEV protecte
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+// P5-FE-15 改 2 · 真记 OG 抓取 · fire-and-forget · 不阻塞图返回 · 失败静默
+// 后端 /admin/og-hit (P5-BE-2 ship · 写 og_hits 表) → /admin/og-share-stats 读取
+function trackOgHit(path: string): void {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) return;
+  fetch(`${apiUrl.replace(/\/$/, '')}/admin/og-hit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path }),
+  }).catch(() => {});
+}
+
 export default async function Image() {
+  trackOgHit('/opengraph-image');
   return new ImageResponse(
     (
       <div
