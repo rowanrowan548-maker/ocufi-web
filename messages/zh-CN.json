@@ -2174,6 +2174,17 @@
       "audit": "审计",
       "followUs": "关注"
     },
+    "saved": {
+      "title": "{wallet} · 在 Ocufi 累计省下",
+      "subTitle": "Solana 交易透明度 · 钱包公开账本",
+      "savedLabel": "在 Ocufi 累计省下",
+      "tradeCountLabel": "{n} 笔交易",
+      "usdLabel": "≈ {usd}",
+      "footnote": "基准:行业主流交易终端 1% 手续费 · 0.10% fee 真省 90%",
+      "cta": "去 Ocufi 一键交易",
+      "loadFailed": "加载失败 · 请重试",
+      "noTrades": "{wallet} 在 Ocufi 还没产生交易"
+    },
     "token": {
       "trade": {
         "reportReal": "查看你的交易报告 →",
@@ -2344,6 +2355,16 @@
         "totalLabel": "总持仓",
         "savedLabel": "在 Ocufi 累计省下",
         "savedFootnote": "基准:行业主流交易终端 1% 手续费"
+      },
+      "savings": {
+        "share": {
+          "label": "分享",
+          "tweet": "发 X",
+          "copy": "复制链接",
+          "telegram": "TG",
+          "copied": "链接已复制",
+          "shareText": "在 @Ocufi_io 省了 {savedSol} SOL · 0.10% fee · {trades} 笔交易 · 看看你的省钱总账"
+        }
       },
       "table": {
         "token": "代币",

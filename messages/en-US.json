@@ -2159,6 +2159,17 @@
       "audit": "Audit",
       "followUs": "Follow"
     },
+    "saved": {
+      "title": "{wallet} · saved on Ocufi",
+      "subTitle": "Solana trade transparency · public wallet ledger",
+      "savedLabel": "Saved on Ocufi",
+      "tradeCountLabel": "{n} trades",
+      "usdLabel": "≈ {usd}",
+      "footnote": "Benchmark: industry standard 1% fee · 0.10% fee really saves 90%",
+      "cta": "Trade on Ocufi",
+      "loadFailed": "Load failed · please retry",
+      "noTrades": "{wallet} hasn't made trades on Ocufi yet"
+    },
     "token": {
       "trade": {
         "reportReal": "View your trade report →",
@@ -2329,6 +2340,16 @@
         "totalLabel": "Total balance",
         "savedLabel": "Saved on Ocufi",
         "savedFootnote": "Benchmark: industry standard 1% fee"
+      },
+      "savings": {
+        "share": {
+          "label": "Share",
+          "tweet": "Post on X",
+          "copy": "Copy link",
+          "telegram": "Telegram",
+          "copied": "Link copied",
+          "shareText": "Saved {savedSol} SOL on @Ocufi_io · 0.10% fee vs 1% industry · {trades} trades · See your savings"
+        }
       },
       "table": {
         "token": "Token",

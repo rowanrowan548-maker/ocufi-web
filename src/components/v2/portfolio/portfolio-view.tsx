@@ -37,6 +37,7 @@ import { useSwapRefresh } from '@/lib/swap-refresh-store';
 import { getTransparencyReport, mapReportToView, pickSolDp, type TxViewData } from '@/lib/transparency';
 import { useTokenMeta, usePreloadJupiterList } from '@/lib/token-display';
 import { SweepAtaModal } from './sweep-ata-modal';
+import { ShareSavingsButton } from './share-savings-button';
 
 // P3-FE-2 bug 3 · 阈值 $0.01 太严 · 0.001 SOL 小测试单全被折叠
 // 降到 $0.0001(基本只过滤 0 余额)· 散户测试 token 也能在主列表看见
@@ -559,6 +560,25 @@ export function PortfolioView() {
             </span>
           </div>
         </div>
+
+        {/* P5-FE-26 · 累计省下分享按钮 · 钱包必有 · savedSol > 0 才显(0 没好分享的) */}
+        {wallet && savedSol > 0 && (
+          <div
+            style={{
+              marginTop: 14,
+              maxWidth: 720,
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <ShareSavingsButton
+              wallet={wallet}
+              savedSol={savedSol}
+              tradeCount={tradeCount}
+              solDp={pickSolDp(savedSol)}
+            />
+          </div>
+        )}
 
         {/* P5-FE-19 · 诚信脚注 · saved 算法基准说明 · 不点名竞品 */}
         <div
