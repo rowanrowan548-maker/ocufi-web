@@ -2229,7 +2229,7 @@
         "copy": "Copy link",
         "telegram": "Send on Telegram",
         "copied": "Link copied",
-        "shareText": "Saved {savedSol} SOL on Ocufi · Solana trading terminal · Route / slippage / network fee / MEV all public · Permanent shareable URL"
+        "shareText": "Saved {savedSol} SOL · 0.10% fee vs 1%\nRoute, slippage, fees, MEV — all public"
       },
       "engineer": {
         "label": "Advanced: technical details (route / Sender bundle)",

@@ -2244,7 +2244,7 @@
         "copy": "复制链接",
         "telegram": "发到 Telegram",
         "copied": "已复制链接",
-        "shareText": "在 Ocufi 省了 {savedSol} SOL · Solana 链上交易终端 · 路由 / 滑点 / 网络费 / 防夹全公开 · 永久 URL 可分享"
+        "shareText": "省了 {savedSol} SOL · 0.10% fee vs 1%\n路由 / 滑点 / 费用 / MEV 全公开"
       },
       "engineer": {
         "label": "高级:技术细节(路由 / Sender bundle)",
