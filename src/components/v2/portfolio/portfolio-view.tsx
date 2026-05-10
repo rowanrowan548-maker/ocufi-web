@@ -295,13 +295,8 @@ export function PortfolioView() {
   const totalUsd = holdings?.totalValueUsd ?? 0;
   const items = holdings?.items ?? [];
   const tradeCount = savings?.trade_count ?? 0;
-  // P3-FE-13 · 累计省下 · 优先 client-side 真累加(transparency/recent 真数据)
-  // 真因:/portfolio/savings 老 mev_protection_log 表 sol_amount 字段空 · 真值在 transparency_reports
-  // history(P3-FE-10 已 fetch detail)累加 savedSol 是真 6 笔 × 各自 savings · 不再 0.0000
-  // 后端 endpoint 累计当 fallback(老 V1 时代 swap 没 transparency 报告 · 但有 mev log)
-  const clientAccSavedSol = history.reduce((s, h) => s + (h.savedSol > 0 ? h.savedSol : 0), 0);
-  const backendSavedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
-  const savedSol = clientAccSavedSol > 0 ? clientAccSavedSol : backendSavedSol;
+  // P5-FE-18 · 后端 P5-BE-4 已切 transparency_reports 主源 · 直接信单一真源
+  const savedSol = (savings?.totals?.saved_sol ?? 0) + (mev?.total_saved_sol ?? 0);
   // P4-FE-1 · solUsdPrice null 时 USD 全 null · UI 显 "—" · 永不糊弄
   const savedUsd = solUsdPrice != null ? savedSol * solUsdPrice : null;
   const feeSavedUsd = solUsdPrice != null ? (savings?.totals?.fee_saved_sol ?? 0) * solUsdPrice : null;
@@ -565,8 +560,8 @@ export function PortfolioView() {
           </div>
         </div>
 
-        {/* P2-HOTFIX-3 #3 · 累计省下=0 SOL 时加诚实注解 · 老数据 sol_amount 字段不全 */}
-        {savedSol === 0 && tradeCount > 0 && (
+        {/* P5-FE-18 · 后端返 source=legacy_no_savings_data 时显诚实注解 · V1 时代交易不计入 V2 累计省钱 */}
+        {savings?.source === 'legacy_no_savings_data' && tradeCount > 0 && (
           <div
             style={{
               marginTop: 12,

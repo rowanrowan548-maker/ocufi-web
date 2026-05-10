@@ -1027,6 +1027,7 @@ export interface PortfolioSavingsResponse {
   first_trade_at: string | null;
   totals: PortfolioSavingsTotals;
   per_trade: PortfolioSavingsTradeRow[];
+  source?: 'transparency' | 'legacy_no_savings_data' | null;
   cached?: boolean;
   fetched_at?: number | null;
   error?: string | null;

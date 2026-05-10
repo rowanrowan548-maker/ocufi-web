@@ -2341,7 +2341,7 @@
         "view": "View →"
       },
       "legacy": {
-        "disclaimer": "ⓘ Legacy trades missing sol_amount field · new trades will accumulate real savings · no funny business"
+        "disclaimer": "ⓘ V1-era trades aren't counted toward V2 cumulative savings · trades after V2 launch accumulate real savings · no funny business"
       },
       "dust": {
         "inlineNote": "· {n} dust tokens worth {usd} ·",

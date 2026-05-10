@@ -2356,7 +2356,7 @@
         "view": "查看 →"
       },
       "legacy": {
-        "disclaimer": "ⓘ 老交易 sol_amount 字段还在补 · 新交易会真实累计 · 不糊弄"
+        "disclaimer": "ⓘ V1 时代交易不计入 V2 累计省钱 · V2 上线后的新交易会真实累计 · 不糊弄"
       },
       "dust": {
         "inlineNote": "· 钱包还有 {n} 个零碎币 · 总值 {usd} ·",
