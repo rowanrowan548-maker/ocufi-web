@@ -51,48 +51,15 @@ function pathAllowedDuringPreview(pathname: string): boolean {
   return ALLOW_PREFIX.some((p) => stripped.startsWith(p));
 }
 
-/**
- * P2-V2-DEFAULT · 顶层裸 locale / 根访问默认进 V2
- * Phase 4 软发布前临时方案 · V1 老路径(/portfolio /trade /token/* 等)直接 URL 仍可访问 · 防回退
- *
- * P3-FE-9 · 加 i18n auto-detect:
- *   优先级:URL 显式 locale > NEXT_LOCALE cookie > Accept-Language header > zh-CN 兜底
- *   防 zh 用户被强 zh-CN(原行为)· en 用户没设 cookie 也强 zh-CN
- */
-function detectLocale(request: NextRequest): 'zh-CN' | 'en-US' {
-  // 1. URL 显式 locale
-  if (request.nextUrl.pathname.startsWith('/en-US')) return 'en-US';
-  if (request.nextUrl.pathname.startsWith('/zh-CN')) return 'zh-CN';
-  // 2. cookie 主动选过
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
-  if (cookieLocale === 'en-US' || cookieLocale === 'zh-CN') return cookieLocale;
-  // 3. Accept-Language header
-  const accept = request.headers.get('accept-language') ?? '';
-  // 浏览器 zh / zh-* 都给中文 · 其他默 en
-  if (/^zh\b/i.test(accept) || /[,\s]zh\b/i.test(accept)) return 'zh-CN';
-  if (/^en\b/i.test(accept) || /[,\s]en\b/i.test(accept)) return 'en-US';
-  // 4. 兜底 zh-CN(项目主语言)
-  return 'zh-CN';
-}
-
-function maybeV2DefaultRedirect(request: NextRequest): NextResponse | null {
-  const { pathname } = request.nextUrl;
-  const stripped = pathname.replace(/^\/(zh-CN|en-US)(?=\/|$)/, '') || '/';
-  if (stripped !== '/') return null;
-  const locale = detectLocale(request);
-  const url = request.nextUrl.clone();
-  url.pathname = `/${locale}/v2`;
-  return NextResponse.redirect(url);
-}
+// P5-FE-25-retry C0 · 删 maybeV2DefaultRedirect + detectLocale(P2-V2-DEFAULT 临时方案 · V2 上位后退役)
+// 真因:V2 上位后 / → /zh-CN/v2 redirect · 又被 catch-all /v2 → / 308 · 死循环
 
 export default function middleware(request: NextRequest) {
   const launchMode = process.env.LAUNCH_MODE;
   const launchKey = process.env.LAUNCH_KEY;
 
-  // 不在预发布模式 → 先看是否要 V2 默认跳转 · 否则走 i18n
+  // 不在预发布模式 → 直接走 i18n
   if (launchMode !== 'preview') {
-    const v2 = maybeV2DefaultRedirect(request);
-    if (v2) return v2;
     return intlMiddleware(request);
   }
 
@@ -116,10 +83,8 @@ export default function middleware(request: NextRequest) {
     return res;
   }
 
-  // 已有解锁 cookie → 先看是否要 V2 默认跳转 · 否则走 i18n
+  // 已有解锁 cookie → 走 i18n
   if (request.cookies.get(COOKIE_NAME)?.value) {
-    const v2 = maybeV2DefaultRedirect(request);
-    if (v2) return v2;
     return intlMiddleware(request);
   }
 
