@@ -204,7 +204,7 @@ export default async function Image({ params }: Props) {
           >
             {/* Satori 要 single text child · 多 expression 当 multi-children · 用 template literal 合并 */}
             <div>{isPending ? 'After on-chain confirmation · report writes in 30s - 2min' : `${sideVerb} ${tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${tokenSymbol} · ${sideVerb === 'Bought' ? 'paid' : 'got'} ${fmtNum(notionalSol, solDp)} SOL`}</div>
-            <div>{isPending ? 'Visit the full link for the live transparency report' : `vs BullX ${fmtNum(competitorSol, solDp)} SOL · ${fmtNum(feePct, 2)}% fee vs ${fmtNum(competitorFeePct, 0)}%${mevProtected ? ' · MEV protected' : ''}`}</div>
+            <div>{isPending ? 'Visit the full link for the live transparency report' : `vs industry standard ${fmtNum(competitorSol, solDp)} SOL · ${fmtNum(feePct, 2)}% fee vs ${fmtNum(competitorFeePct, 0)}%${mevProtected ? ' · MEV protected' : ''}`}</div>
           </div>
         </div>
 

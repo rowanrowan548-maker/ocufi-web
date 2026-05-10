@@ -1003,7 +1003,7 @@
       {
         "group": "交易",
         "q": "手续费怎么收?",
-        "a": "买入时从你付的 SOL 里扣 0.1% 自动打到 Ocufi 金库。\n\n卖出暂时不收(V1 阶段,避免收到一堆 meme 币垃圾)。单笔实际收 = 买入 0.1% · 卖出 0%。\n\n竞品(GMGN / Photon / BullX)普遍 0.8-1% · 我们便宜约 10 倍。"
+        "a": "买入时从你付的 SOL 里扣 0.1% 自动打到 Ocufi 金库。\n\n卖出暂时不收(V1 阶段,避免收到一堆 meme 币垃圾)。单笔实际收 = 买入 0.1% · 卖出 0%。\n\n行业主流交易终端普遍 0.8-1% · 我们便宜约 10 倍。"
       },
       {
         "group": "交易",
@@ -2072,7 +2072,7 @@
       },
       "s7": {
         "h": "7. 0.1% 透明费率",
-        "b": "Ocufi 收 0.1% 买入 + 0% 卖出(V1)· 直接打到金库地址,链上可查。\n\n竞品(GMGN / Photon / BullX)普遍 0.8-1%,我们便宜约 10 倍 · 赚的不是手续费而是用户长期信任。"
+        "b": "Ocufi 收 0.1% 买入 + 0% 卖出(V1)· 直接打到金库地址,链上可查。\n\n行业主流交易终端普遍 0.8-1%,我们便宜约 10 倍 · 赚的不是手续费而是用户长期信任。"
       }
     },
     "privacy": {
@@ -2210,7 +2210,7 @@
       "sellVerb": "卖出",
       "spendVerb": "花费",
       "receiveVerb": "换得",
-      "vsBullX": "vs BullX {amount} SOL",
+      "vsIndustry": "vs 行业基准 {amount} SOL",
       "mevProtected": "防夹保护 ✓",
       "mevPlain": "普通广播",
       "mevPlainTooltip": "小额单笔不走防夹通道 · 节省 RPC 资源 · 大额自动启用 Sender",
@@ -2223,7 +2223,7 @@
         "gas": "网络费",
         "gasUsd": "≈ ${usd}",
         "fee": "手续费",
-        "feeVsCompetitor": "{pct}% · vs BullX {comp}%",
+        "feeVsCompetitor": "{pct}% · vs 行业基准 {comp}%",
         "route": "路由 · 终价"
       },
       "mevDetail": {
@@ -2290,7 +2290,7 @@
         "label": "OCUFI · TX REPORT",
         "line": "SAVED 0.0045 SOL",
         "lineMobile": "SAVED 0.0045 SOL",
-        "sub": "on $BONK · vs BullX · 0.1% fee · MEV protected",
+        "sub": "on $BONK · vs industry standard · 0.1% fee · MEV protected",
         "footLeft": "5fX...abc",
         "viewLink": "View report →",
         "placeholder": {

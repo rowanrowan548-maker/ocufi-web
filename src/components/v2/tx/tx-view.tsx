@@ -89,7 +89,7 @@ export function TxView({ sig, data, demo }: Props) {
     : <span style={{ color: 'var(--ink-40)' }} title={t('mevPlainTooltip')}>{t('mevPlain')}</span>;
   const heroSubLine2 = (
     <>
-      {t('vsBullX', { amount: fmtNum(d.vsCompetitorSol, d.solDp) })} · {mevText}
+      {t('vsIndustry', { amount: fmtNum(d.vsCompetitorSol, d.solDp) })} · {mevText}
     </>
   );
 

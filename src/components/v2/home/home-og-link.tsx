@@ -112,7 +112,7 @@ function RealOgCard({
     ? `${tTx('savedPrefix').toUpperCase()} ${detail.savedSol.toFixed(dp)} ${tTx('savedSuffix')}`
     : tTx('noFeeBaseline');
   const subParts = [
-    `vs BullX`,
+    `vs industry standard`,
     `${detail.feePct.toFixed(2)}% fee`,
     detail.mevProtected ? 'MEV protected' : 'standard',
   ];

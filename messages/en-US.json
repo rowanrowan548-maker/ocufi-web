@@ -1073,7 +1073,7 @@
       {
         "group": "Other",
         "q": "What is Ocufi?",
-        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.1% (buy 0.1% · sell free in V1) · ~10x cheaper than gmgn/bullx\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
+        "a": "A Solana on-chain trading terminal.\n\n· Non-custodial — your keys never leave your wallet\n· Low fees — 0.1% (buy 0.1% · sell free in V1) · ~10x cheaper than industry standard\n· Safety review — every token pre-checked via RugCheck + allowlist\n· Open-source — frontend auditable on GitHub"
       }
     ]
   },
@@ -2057,7 +2057,7 @@
       },
       "s7": {
         "h": "7. 0.1% transparent fee",
-        "b": "Ocufi charges 0.1% on buys + 0% on sells (V1) · paid directly to a public treasury address, fully verifiable on-chain.\n\nCompetitors (GMGN / Photon / BullX) typically charge 0.8-1% — we're ~10x cheaper. Long-term user trust > short-term revenue."
+        "b": "Ocufi charges 0.1% on buys + 0% on sells (V1) · paid directly to a public treasury address, fully verifiable on-chain.\n\nIndustry standard trading terminals typically charge 0.8-1% — we're ~10x cheaper. Long-term user trust > short-term revenue."
       }
     },
     "privacy": {
@@ -2195,7 +2195,7 @@
       "sellVerb": "Sold",
       "spendVerb": "spent",
       "receiveVerb": "received",
-      "vsBullX": "vs BullX {amount} SOL",
+      "vsIndustry": "vs industry standard {amount} SOL",
       "mevProtected": "MEV protected ✓",
       "mevPlain": "Standard broadcast",
       "mevPlainTooltip": "Small single trades skip the anti-MEV lane to save RPC · large trades auto-enable Sender",
@@ -2208,7 +2208,7 @@
         "gas": "Network fee",
         "gasUsd": "≈ ${usd}",
         "fee": "Fee",
-        "feeVsCompetitor": "{pct}% · vs BullX {comp}%",
+        "feeVsCompetitor": "{pct}% · vs industry standard {comp}%",
         "route": "Route · Final price"
       },
       "mevDetail": {
@@ -2275,7 +2275,7 @@
         "label": "OCUFI · TX REPORT",
         "line": "SAVED 0.0045 SOL",
         "lineMobile": "SAVED 0.0045 SOL",
-        "sub": "on $BONK · vs BullX · 0.1% fee · MEV protected",
+        "sub": "on $BONK · vs industry standard · 0.1% fee · MEV protected",
         "footLeft": "5fX...abc",
         "viewLink": "View report →",
         "placeholder": {

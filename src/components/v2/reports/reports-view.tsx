@@ -331,7 +331,7 @@ function DemoPreview({ viewLabel, previewLabel }: { viewLabel: string; previewLa
         href="/v2/tx/demo"
         topLabel="DEMO · 5fXq8y...defghi"
         saveText="Saved 0.0045 SOL"
-        subText="on $BONK · 0.5 SOL → 1.23M · vs BullX · MEV protected"
+        subText="on $BONK · 0.5 SOL → 1.23M · vs industry standard · MEV protected"
         footLeft="2026-05-08 · 14:23 UTC"
         footRight={viewLabel}
       />

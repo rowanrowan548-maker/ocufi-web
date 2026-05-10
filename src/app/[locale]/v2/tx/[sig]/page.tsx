@@ -34,7 +34,7 @@ export async function generateMetadata({
       description: 'Transparency report demo · Ocufi · 0.1% fee · MEV protected.',
       openGraph: {
         title: `Saved 0.0045 SOL on BONK · Ocufi`,
-        description: `0.5 SOL → 1.23M BONK · vs BullX 0.5045 SOL · MEV protected`,
+        description: `0.5 SOL → 1.23M BONK · vs industry standard 0.5045 SOL · MEV protected`,
       },
     };
   }
@@ -53,7 +53,7 @@ export async function generateMetadata({
   const ogTitle = v.savedSol > 0
     ? `Saved ${savedFmt} SOL on $${v.tokenSymbol} · Ocufi`
     : `${sideLabel} $${v.tokenSymbol} on Ocufi · 0.1% fee transparency report`;
-  const ogDesc = `${sideLabel} ${v.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${v.tokenSymbol} · ${v.feePct.toFixed(2)}% fee vs BullX ${v.competitorFeePct.toFixed(0)}% · route / slippage / network fee${v.mevProtected ? ' / MEV protection' : ''} all public · permanent shareable URL.`;
+  const ogDesc = `${sideLabel} ${v.tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} $${v.tokenSymbol} · ${v.feePct.toFixed(2)}% fee vs industry standard ${v.competitorFeePct.toFixed(0)}% · route / slippage / network fee${v.mevProtected ? ' / MEV protection' : ''} all public · permanent shareable URL.`;
   return {
     title: `Trade #${short} · Ocufi`,
     description: ogDesc,
