@@ -2167,6 +2167,13 @@
       "portfolio": "持仓",
       "tx": "报告"
     },
+    "footer": {
+      "privacy": "隐私",
+      "terms": "条款",
+      "disclaimer": "免责",
+      "audit": "审计",
+      "followUs": "关注"
+    },
     "token": {
       "trade": {
         "reportReal": "查看你的交易报告 →",

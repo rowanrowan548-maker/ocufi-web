@@ -297,6 +297,10 @@
     position: relative;
     z-index: 1;
   }
+  /* P5-FE-21 · V2 footer · 法律链接 + 社交按钮 + version · hover ink-100 · mobile 折 2 行 + 80px 安全区 */
+  .v2-footer-link:hover {
+    color: var(--ink-100) !important;
+  }
   /* P2-CHART-FIX · K 线专用 chrome · 不挂 .v2-card 那层 border
      真因:.v2-card 的 1px border + box-sizing border-box → iframe transform: scale 公式
      (100vw - 32) / 480 假设父 inner = vp - 32 · 实际 inner = vp - 32 - 2 → 视觉右溢
@@ -436,6 +440,10 @@
     /* P2-MOBILE-OVERHAUL #2 · 多层兜底 · main 留 80px+(64 tab + 16 buffer)+ safe-area · 不被 tab bar 盖 */
     main { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
     .v2-shell-children { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+
+    /* P5-FE-21 · V2 footer · mobile 收紧 padding · margin-bottom 给 fixed BottomTabBar 让位 · 折 2 行 */
+    .v2-footer { padding: 20px 20px !important; margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
+    .v2-footer-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
 
     .v2-top-nav {
       padding: 0 16px !important;

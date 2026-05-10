@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { TopNavV3 } from '@/components/v2/nav/top-nav-v3';
 import { BottomTabBar } from '@/components/v2/nav/bottom-tab-bar';
 import { ScrollHint } from '@/components/v2/shared/scroll-hint';
+import { FooterV2 } from '@/components/v2/shared/footer-v2';
 
 /**
  * V2 layout · 套 V2 top nav + mobile bottom tab bar · 复用 root [locale]/layout 的 Wallet/Theme/i18n
@@ -27,6 +28,7 @@ export default async function V2Layout({
       <ScrollHint />
       {/* P2-MOBILE-OVERHAUL #2 · main 留 80px+ 给 mobile bottom tab bar(.v2-shell-children 媒查) */}
       <div className="v2-shell-children">{children}</div>
+      <FooterV2 />
       <BottomTabBar />
     </div>
   );

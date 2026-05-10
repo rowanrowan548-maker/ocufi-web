@@ -2152,6 +2152,13 @@
       "portfolio": "Portfolio",
       "tx": "Report"
     },
+    "footer": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "disclaimer": "Disclaimer",
+      "audit": "Audit",
+      "followUs": "Follow"
+    },
     "token": {
       "trade": {
         "reportReal": "View your trade report →",
