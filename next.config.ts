@@ -68,10 +68,11 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // P5-FE-25 · V2 全面上位 · /v2/* 旧链接兜底 308 → 根路径
-      // /v2/tx/:sig 在用户收藏 / 推文里 · 必须 redirect · /v2/* 兜底其余
-      { source: '/v2/tx/:sig', destination: '/tx/:sig', permanent: true },
-      { source: '/v2/:path*', destination: '/:path*', permanent: true },
+      {
+        source: '/:locale(zh-CN|en-US)/token/:mint',
+        destination: '/:locale/trade?mint=:mint',
+        permanent: true,
+      },
     ];
   },
 };

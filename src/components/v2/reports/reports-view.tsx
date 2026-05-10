@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * V2 Reports List · /reports
+ * V2 Reports List · /v2/reports
  *
  * P3-FE-7 第一版 · flat list · 用户原话"直接显示一堆 · 太不美观"
  * P3-FE-9 redesign 方向 A:
@@ -88,7 +88,7 @@ export function ReportsView() {
         }}
       >
         <a
-          href="/portfolio"
+          href="/v2/portfolio"
           style={{
             color: 'var(--ink-60)',
             textDecoration: 'none',
@@ -138,7 +138,7 @@ export function ReportsView() {
         {state.kind === 'loading' && <EmptyMsg text="…" />}
         {state.kind === 'error' && <EmptyMsg text={t('loadError')} />}
         {state.kind === 'ok' && state.items.length === 0 && (
-          <EmptyState title={t('emptyTitle')} sub={t('emptySub')} ctaLabel={t('emptyCta')} ctaHref="/" />
+          <EmptyState title={t('emptyTitle')} sub={t('emptySub')} ctaLabel={t('emptyCta')} ctaHref="/v2" />
         )}
         {state.kind === 'ok' && state.items.length > 0 && (
           <>
@@ -240,7 +240,7 @@ function HeroCard({
     <div className="v2-tx-hero-wrap">
       <OgCard
         variant="tx-hero"
-        href={`/tx/${item.sig}`}
+        href={`/v2/tx/${item.sig}`}
         topLabel={`${labels.heroEyebrow} · #${sigShort}`}
         saveText={heroBig}
         tokenLogo={tokenMeta.logoURI ?? undefined}
@@ -257,7 +257,7 @@ function HistoryRow({ item, viewLabel }: { item: RecentItem; viewLabel: string }
   const dateStr = formatDate(item.created_at);
   return (
     <Link
-      href={`/tx/${item.sig}`}
+      href={`/v2/tx/${item.sig}`}
       prefetch={false}
       className="v2-card-glow"
       style={{
@@ -328,7 +328,7 @@ function DemoPreview({ viewLabel, previewLabel }: { viewLabel: string; previewLa
       </div>
       <OgCard
         variant="home-mobile"
-        href="/tx/demo"
+        href="/v2/tx/demo"
         topLabel="DEMO · 5fXq8y...defghi"
         saveText="Saved 0.0045 SOL"
         subText="on $BONK · 0.5 SOL → 1.23M · vs industry standard · MEV protected"

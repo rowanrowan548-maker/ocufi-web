@@ -1,5 +1,5 @@
 /**
- * V2 /tx/[sig] · P3-FE-1 · 真接 GET /transparency/<sig>(P5-FE-25 砍 /v2/ prefix)
+ * V2 /v2/tx/[sig] · P3-FE-1 · 真接 GET /transparency/<sig>
  *
  * - server fetch · 找到 → 渲染真报告
  * - 找不到(404 / 网络错 / 配置缺)→ 渲染 fallback "报告生成中" + retry 按钮
@@ -12,7 +12,7 @@ import { TxView, TxViewFallback } from '@/components/v2/tx/tx-view';
 import { MOCK_TX_SIG } from '@/components/v2/shared/mock-sig';
 import { getTransparencyReport, mapReportToView } from '@/lib/transparency';
 
-// P3-FE-15 Q8 · 散户友好 alias · /tx/demo · /tx/example · /tx/mock 全走 mock 报告
+// P3-FE-15 Q8 · 散户友好 alias · /v2/tx/demo · /v2/tx/example · /v2/tx/mock 全走 mock 报告
 // 让人们可以分享一个稳定的 demo 链路 · 不依赖某个真 sig · 不走 "生成中" polling
 const DEMO_ALIASES = new Set(['demo', 'example', 'mock']);
 function isDemoSig(sig: string): boolean {
@@ -30,7 +30,7 @@ export async function generateMetadata({
   // P5-FE-22 · OG image 显式 absolute URL · 不带 locale prefix · 治 X 抓 /zh-CN/.../opengraph-image 触发
   // next-intl localePrefix=as-needed 去 prefix 307 redirect · X 不 follow → 卡片不显图
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.ocufi.io';
-  const ogImageUrl = `${baseUrl}/tx/${sig}/opengraph-image`;
+  const ogImageUrl = `${baseUrl}/v2/tx/${sig}/opengraph-image`;
 
   // demo · 用 mockup 文案 · P3-FE-15 Q8 · 接 demo / example / mock alias
   if (isDemoSig(sig)) {

@@ -2304,7 +2304,7 @@
           "label": "OCUFI · TX REPORT",
           "line": "每笔成交自动生成",
           "sub": "链上交易 · 透明可分享 · 永久 URL",
-          "footLeft": "/tx/<sig>",
+          "footLeft": "/v2/tx/<sig>",
           "footRight": "完成首笔 swap 后 · 真报告自动出现"
         }
       },

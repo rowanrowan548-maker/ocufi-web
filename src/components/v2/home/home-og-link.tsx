@@ -10,7 +10,7 @@
  *
  * 三态:
  *   1. lastSig=null              → placeholder("每笔成交自动生成 · 永久 URL")· 不 click
- *   2. lastSig 有 + detail loading → placeholder · click 跳 /tx/<sig>(用户已知有 swap · loading 短)
+ *   2. lastSig 有 + detail loading → placeholder · click 跳 /v2/tx/<sig>(用户已知有 swap · loading 短)
  *   3. lastSig 有 + detail ok    → 真数字 + 真 token symbol · click 跳真报告
  *
  * SSR 阶段 lastSig=null · 渲染 placeholder · client hydrate 后 useEffect 链路启动
@@ -71,7 +71,7 @@ export function HomeOgLink(props: Props) {
     return (
       <OgCard
         variant={props.variant}
-        href={`/tx/${lastSig}`}
+        href={`/v2/tx/${lastSig}`}
         topLabel={tPlaceholder('label')}
         saveText={tPlaceholder('line')}
         subText={tPlaceholder('sub')}
@@ -119,7 +119,7 @@ function RealOgCard({
   return (
     <OgCard
       variant={variant}
-      href={`/tx/${sig}`}
+      href={`/v2/tx/${sig}`}
       topLabel={`OCUFI · TX REPORT`}
       saveText={savedStr}
       subText={subParts.join(' · ')}

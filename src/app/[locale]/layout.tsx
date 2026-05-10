@@ -9,11 +9,9 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { PageTracker } from '@/components/analytics/page-tracker';
 import { SolanaWalletProvider } from '@/components/providers/solana-wallet-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
-// P5-FE-25 · V2 全面上位 · TopNavV3 替 TopNavV2 · v2-shell 嵌入 root layout
-import { TopNavV3 } from '@/components/v2/nav/top-nav-v3';
-import { BottomTabBar } from '@/components/v2/nav/bottom-tab-bar';
-import { ScrollHint } from '@/components/v2/shared/scroll-hint';
-import { FooterV2 } from '@/components/v2/shared/footer-v2';
+// T-UI-OVERHAUL Stage 5.4 · 用 TopNavV2(luxury 3 主 tab + ⋯ MoreMenu)替代旧 SiteHeader
+// 旧 SiteHeader 文件保留(精简战略"砍 UI 不砍代码")· 不引用就不渲染
+import { TopNavV2 } from '@/components/layout-v2/top-nav-v2';
 import { FeedbackButton } from '@/components/feedback/feedback-button';
 import { SwRegister } from '@/components/pwa/sw-register';
 import { InstallPrompt } from '@/components/pwa/install-prompt';
@@ -42,7 +40,8 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-// V2 luxury dark glass · 范围:全站(P5-FE-25 V2 全面上位)
+// T-UI-OVERHAUL v2 · luxury dark glass · 范围:首页 / 持仓 / 奖励
+// v1 字体(Space_Grotesk/Inter/JetBrains_Mono)保留 · 老页面继续用 · 不动
 const geist = Geist({
   variable: '--font-geist',
   subsets: ['latin'],
@@ -155,13 +154,8 @@ export default async function LocaleLayout({
             <RefCapture />
             <WalletBind />
             <PageTracker />
-            <div className="v2-shell">
-              <TopNavV3 />
-              <ScrollHint />
-              <div className="v2-shell-children">{children}</div>
-              <FooterV2 />
-              <BottomTabBar />
-            </div>
+            <TopNavV2 />
+            {children}
             <FeedbackButton />
             <InstallPrompt />
             <MobileDeeplink />

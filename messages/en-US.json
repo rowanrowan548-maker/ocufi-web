@@ -2289,7 +2289,7 @@
           "label": "OCUFI · TX REPORT",
           "line": "Auto-generated each fill",
           "sub": "On-chain · transparent · shareable URL",
-          "footLeft": "/tx/<sig>",
+          "footLeft": "/v2/tx/<sig>",
           "footRight": "Real report appears after your first swap"
         }
       },

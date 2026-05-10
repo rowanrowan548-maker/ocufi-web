@@ -2,7 +2,7 @@
  * V2 Home Recents · "最近"标签 + N 个 token chip
  * RSC · server fetch /markets/trending('24h', 6) · 失败 graceful empty(不阻塞首页)
  *
- * V2 路径全跳 /token/<mint>
+ * V2 路径全跳 /v2/token/<mint>
  */
 import { fetchMarketsTrending, type MarketItem } from '@/lib/api-client';
 import { ChipToken } from '@/components/v2/shared/chip-token';
@@ -58,7 +58,7 @@ export async function HomeRecents() {
           key={m.mint}
           symbol={m.symbol || m.mint.slice(0, 4).toUpperCase()}
           price={fmtPriceUsd(m.priceUsd)}
-          href={`/token/${m.mint}`}
+          href={`/v2/token/${m.mint}`}
           iconImg={m.logo || undefined}
         />
       ))}

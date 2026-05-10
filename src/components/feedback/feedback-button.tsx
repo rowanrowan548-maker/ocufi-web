@@ -28,7 +28,16 @@ export function FeedbackButton() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // P5-FE-25 · V2 上位 · 反馈 FAB 全站显示(原 /v2/ 早退判定删 · V2 也需要反馈入口)
+  // T-926 #44:trade 页隐藏(FAB 遮挡 buy 按钮)
+  if (/^\/[a-z]{2}-[A-Z]{2}\/trade(\/|$|\?)/.test(pathname ?? '')) {
+    return null;
+  }
+  // P2-MOBILE-OVERHAUL #1:V2 路径全 hide · FAB 跟 V2 bottom-tab-bar 多层叠 + 视觉断
+  // 等 Phase 4 V2 mv 顶层后再视觉融入
+  if (pathname?.includes('/v2/') || pathname?.endsWith('/v2')) {
+    return null;
+  }
+
   return (
     <>
       {/* 浮动按钮 · 右下角 */}

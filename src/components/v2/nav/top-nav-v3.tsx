@@ -28,12 +28,12 @@ export function TopNavV3() {
   const t = useTranslations('v2.nav');
   const pathname = usePathname();
   const TABS: TabDef[] = [
-    { href: '/', key: 'home' },
+    { href: '/v2', key: 'home' },
     // P3-FE-4 polish 3 · 砍 demoLabel "示例 BONK" · 用户嫌多余 · 只留"代币"二字
-    { href: `/token/${BONK_MINT}`, key: 'token' },
-    { href: '/portfolio', key: 'portfolio' },
+    { href: `/v2/token/${BONK_MINT}`, key: 'token' },
+    { href: '/v2/portfolio', key: 'portfolio' },
     // P3-FE-7 · "报告" tab 跳列表页 · 不再单 sig · 跨设备 + 历史
-    { href: '/reports', key: 'tx' },
+    { href: '/v2/reports', key: 'tx' },
   ];
 
   return (
@@ -71,7 +71,7 @@ export function TopNavV3() {
       />
 
       <Link
-        href="/"
+        href="/v2"
         prefetch={false}
         style={{
           display: 'flex',
@@ -93,7 +93,7 @@ export function TopNavV3() {
       {/* 中间 search · V1 HeaderSearch 桌面 inline + mobile 🔍 · / 和 ⌘K 全局快捷键
           pathBuilder 把搜索结果路由到 V2 token 详情而非 V1 /trade · 留 V2 闭环 */}
       <div className="v2-nav-search" style={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
-        <HeaderSearch pathBuilder={(mint) => `/token/${mint}`} />
+        <HeaderSearch pathBuilder={(mint) => `/v2/token/${mint}`} />
       </div>
 
       {/* 桌面 4 主 link · mobile hide */}
@@ -101,10 +101,10 @@ export function TopNavV3() {
         {TABS.map((tab) => {
           const active =
             tab.key === 'home'
-              ? pathname === '/' || /^\/[a-z-]+\/?$/.test(pathname ?? '')
+              ? pathname?.endsWith('/v2') || pathname === '/v2'
               : tab.key === 'tx'
-                ? pathname?.includes('/tx') || pathname?.includes('/reports')
-                : pathname?.includes(`/${tab.key}`);
+                ? pathname?.includes('/v2/tx') || pathname?.includes('/v2/reports')
+                : pathname?.includes(`/v2/${tab.key}`);
           return (
             <Link
               key={tab.key}

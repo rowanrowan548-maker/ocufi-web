@@ -1,10 +1,16 @@
 import { setRequestLocale } from 'next-intl/server';
-import { HomeHero } from '@/components/v2/home/home-hero';
-import { HomePillars } from '@/components/v2/home/home-pillars';
+import { LandingV2View } from '@/components/landing-v2/landing-v2-view';
+import { fetchPublicStats, type PublicStats } from '@/lib/api-client';
 
-export const revalidate = 60; // ISR · /public/stats / trending 60s 刷新
+// T-UI-OVERHAUL Stage 5.3a · luxury dark glass 首页
+//   - 服务端拉 /public_stats(Social section 用)· 失败兜底 null
+//   - 客户端 LandingV2View · 钱包已连 → router.replace('/portfolio')
+//   - 没连 → 5 屏 cold-start landing
 
-export default async function V2Home({
+// T-PERF · 24h 缓存 public stats(增长慢 · 24h 一次足够)
+export const revalidate = 86400;
+
+export default async function Landing({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -12,10 +18,13 @@ export default async function V2Home({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return (
-    <main>
-      <HomeHero />
-      <HomePillars />
-    </main>
-  );
+  let publicStats: PublicStats | null = null;
+  try {
+    publicStats = await fetchPublicStats();
+  } catch {
+    // 后端挂 / 无 NEXT_PUBLIC_API_URL · 兜底 null · LandingV2View 显 0
+    publicStats = null;
+  }
+
+  return <LandingV2View publicStats={publicStats} />;
 }

@@ -35,7 +35,7 @@ export function TokenTradeShell({ mint, defaultSide }: Props) {
   const { publicKey } = useWallet();
   const lastSig = useLastTxSig(publicKey?.toBase58() ?? null);
   const realSig = sessionSig ?? lastSig;
-  const reportHref = realSig ? `/tx/${realSig}` : `/tx/${MOCK_TX_SIG}`;
+  const reportHref = realSig ? `/v2/tx/${realSig}` : `/v2/tx/${MOCK_TX_SIG}`;
   const reportLabel = realSig ? t('reportReal') : t('reportDemo');
 
   return (
