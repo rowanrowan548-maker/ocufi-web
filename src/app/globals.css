@@ -441,8 +441,14 @@
     main { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
     .v2-shell-children { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 
-    /* P5-FE-21 · V2 footer · mobile 收紧 padding · margin-bottom 给 fixed BottomTabBar 让位 · 折 2 行 */
-    .v2-footer { padding: 20px 20px !important; margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
+    /* P5-FE-21 · V2 footer · mobile 收紧 padding · 折 2 行
+       P5-FE-21-hotfix · padding-bottom 替 margin-bottom · 把 footer 内容推到 fixed BottomTabBar 上方
+       (margin-bottom 80px 不够 · fixed bar 含 safe-area 约 98px · footer 末端会落到 bar 之下被遮) */
+    .v2-footer {
+      padding: 20px 20px !important;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+      margin-bottom: 0 !important;
+    }
     .v2-footer-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
 
     .v2-top-nav {
