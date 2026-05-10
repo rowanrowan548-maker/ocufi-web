@@ -368,6 +368,19 @@ function SocialSection({
             <HeroNumber value={savedUsd} size={56} color="var(--ink-100)" unit="USD" decimals={2} />
           </SocialStat>
         </div>
+        {/* P5-FE-19 · 诚信脚注 · saved 算法基准说明 · 不点名竞品 */}
+        <div
+          style={{
+            marginTop: '16px',
+            fontSize: '11px',
+            color: 'var(--ink-40)',
+            fontFamily: 'var(--font-geist-mono), Menlo, monospace',
+            letterSpacing: '0.04em',
+            textAlign: 'center',
+          }}
+        >
+          {t('social.footnote')}
+        </div>
       </div>
     </section>
   );

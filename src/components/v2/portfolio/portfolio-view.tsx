@@ -560,6 +560,19 @@ export function PortfolioView() {
           </div>
         </div>
 
+        {/* P5-FE-19 · 诚信脚注 · saved 算法基准说明 · 不点名竞品 */}
+        <div
+          style={{
+            marginTop: 8,
+            fontSize: 11,
+            color: 'var(--ink-40)',
+            fontFamily: 'var(--font-geist-mono), ui-monospace, monospace',
+            maxWidth: 720,
+          }}
+        >
+          {t('hero.savedFootnote')}
+        </div>
+
         {/* P5-FE-18 · 后端返 source=legacy_no_savings_data 时显诚实注解 · V1 时代交易不计入 V2 累计省钱 */}
         {savings?.source === 'legacy_no_savings_data' && tradeCount > 0 && (
           <div

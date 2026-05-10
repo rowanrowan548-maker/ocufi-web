@@ -1235,7 +1235,8 @@
     "social": {
       "trader": "交易者 · 在 Ocufi",
       "saved": "累计已为用户节省",
-      "savedUsd": "≈ 折合 USD"
+      "savedUsd": "≈ 折合 USD",
+      "footnote": "基准:行业主流交易终端 1% 手续费"
     },
     "finalCta": {
       "titlePrefix": "别再为 ",
@@ -2334,7 +2335,8 @@
       },
       "hero": {
         "totalLabel": "总持仓",
-        "savedLabel": "在 Ocufi 累计省下"
+        "savedLabel": "在 Ocufi 累计省下",
+        "savedFootnote": "基准:行业主流交易终端 1% 手续费"
       },
       "table": {
         "token": "代币",

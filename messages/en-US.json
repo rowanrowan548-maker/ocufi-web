@@ -1220,7 +1220,8 @@
     "social": {
       "trader": "traders on Ocufi",
       "saved": "SOL saved cumulatively",
-      "savedUsd": "≈ USD saved"
+      "savedUsd": "≈ USD saved",
+      "footnote": "Benchmark: industry standard 1% fee"
     },
     "finalCta": {
       "titlePrefix": "Stop paying for ",
@@ -2319,7 +2320,8 @@
       },
       "hero": {
         "totalLabel": "Total balance",
-        "savedLabel": "Saved on Ocufi"
+        "savedLabel": "Saved on Ocufi",
+        "savedFootnote": "Benchmark: industry standard 1% fee"
       },
       "table": {
         "token": "Token",
