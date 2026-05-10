@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * V2 Portfolio · /v2/portfolio · 客户端 + wallet 连接后并发取 3 endpoint
+ * V2 Portfolio · /portfolio · 客户端 + wallet 连接后并发取 3 endpoint
  *
  * 数据源(全 V1 已 ship):
  *   - fetchPortfolioHoldings(wallet)
@@ -82,7 +82,7 @@ export function PortfolioView() {
   const [syncing, setSyncing] = useState(false);
   // P3-FE-9 · 替代 sell 100% reclaim toast · 持仓页主动显眼条
   const [reclaimable, setReclaimable] = useState<{ sol: number; count: number } | null>(null);
-  // P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /v2/reports
+  // P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /reports
   const [history, setHistory] = useState<TxViewData[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   // P4-FE-1 · SOL 实时美元价 · 拉不到就 null · 不糊弄
@@ -337,7 +337,7 @@ export function PortfolioView() {
             {t('empty.sub')}
           </div>
           <Link
-            href="/v2"
+            href="/"
             prefetch={false}
             style={{
               display: 'inline-block',
@@ -625,7 +625,7 @@ export function PortfolioView() {
           {allocations.map((h) => {
             const change = h.priceChange24hPct;
             const changeUp = change != null && change >= 0;
-            const sellHref = `/v2/token/${h.mint}?action=sell`;
+            const sellHref = `/token/${h.mint}?action=sell`;
             return (
               <Link
                 key={h.mint}
@@ -781,7 +781,7 @@ export function PortfolioView() {
         </>
       </section>
 
-      {/* P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /v2/reports */}
+      {/* P3-FE-10 · 交易历史 · 持仓页直接显近 10 笔 · 不让用户跳到 /reports */}
       {history.length > 0 && (
         <section
           className="v2-pf-history"
@@ -907,7 +907,7 @@ export function PortfolioView() {
 // 数据映射:
 //   buy:  Bought tokenOut.symbol · tokenOut.amount  · 花费 = tokenIn.amount SOL
 //   sell: Sold   tokenIn.symbol  · tokenIn.amount   · 换得 = tokenOut.amount SOL
-// click 整行跳 /v2/tx/<sig>
+// click 整行跳 /tx/<sig>
 function HistoryRow({
   item,
   sideLabels,
@@ -931,7 +931,7 @@ function HistoryRow({
   const sideIsBuy = item.side === 'buy';
   return (
     <Link
-      href={`/v2/tx/${item.sig}`}
+      href={`/tx/${item.sig}`}
       prefetch={false}
       className="v2-card-glow"
       style={{

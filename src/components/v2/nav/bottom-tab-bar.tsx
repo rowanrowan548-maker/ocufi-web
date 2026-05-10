@@ -21,11 +21,11 @@ export function BottomTabBar() {
   const pathname = usePathname() ?? '';
 
   const TABS = [
-    { href: '/v2', key: 'home' as const, icon: Home, match: (p: string) => p === '/v2' || /^\/[a-z-]+\/v2$/.test(p) },
-    { href: `/v2/token/${BONK_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/v2/token') },
-    { href: '/v2/portfolio', key: 'portfolio' as const, icon: Wallet, match: (p: string) => p.includes('/v2/portfolio') },
+    { href: '/', key: 'home' as const, icon: Home, match: (p: string) => p === '/' || /^\/[a-z-]+\/?$/.test(p) },
+    { href: `/token/${BONK_MINT}`, key: 'token' as const, icon: Coins, match: (p: string) => p.includes('/token') },
+    { href: '/portfolio', key: 'portfolio' as const, icon: Wallet, match: (p: string) => p.includes('/portfolio') },
     // P3-FE-7 · "报告" tab 跳列表页 · 不再单 sig
-    { href: '/v2/reports', key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/v2/tx') || p.includes('/v2/reports') },
+    { href: '/reports', key: 'tx' as const, icon: FileText, match: (p: string) => p.includes('/tx') || p.includes('/reports') },
   ];
 
   return (
