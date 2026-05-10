@@ -2,7 +2,7 @@
 
 /**
  * V2 Home Input · 中央单输入
- * - 粘贴 Solana base58 mint 地址(32-44 字符)→ 跳 /v2/token/<mint>
+ * - 粘贴 Solana base58 mint 地址(32-44 字符)→ 跳 /token/<mint>
  * - 否则当 symbol 搜 → 走 /search/tokens(debounce 250ms)· 第一条结果跳转
  *
  * 视觉对齐 mockup `.home-input` · 玻璃 border-strong · brand glow on focus
@@ -28,7 +28,7 @@ export function HomeInput() {
     setErr(null);
 
     if (MINT_RE.test(q)) {
-      start(() => router.push(`/v2/token/${q}`));
+      start(() => router.push(`/token/${q}`));
       return;
     }
 
@@ -37,7 +37,7 @@ export function HomeInput() {
         const items = await fetchSearchTokens(q, 1);
         const first = items?.[0];
         if (first?.mint) {
-          router.push(`/v2/token/${first.mint}`);
+          router.push(`/token/${first.mint}`);
         } else {
           setErr(t('inputNoResult'));
         }
