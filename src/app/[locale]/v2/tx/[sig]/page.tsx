@@ -27,6 +27,11 @@ export async function generateMetadata({
   const { sig } = await params;
   const short = sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig;
 
+  // P5-FE-22 · OG image 显式 absolute URL · 不带 locale prefix · 治 X 抓 /zh-CN/.../opengraph-image 触发
+  // next-intl localePrefix=as-needed 去 prefix 307 redirect · X 不 follow → 卡片不显图
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.ocufi.io';
+  const ogImageUrl = `${baseUrl}/v2/tx/${sig}/opengraph-image`;
+
   // demo · 用 mockup 文案 · P3-FE-15 Q8 · 接 demo / example / mock alias
   if (isDemoSig(sig)) {
     return {
@@ -35,6 +40,11 @@ export async function generateMetadata({
       openGraph: {
         title: `Saved 0.0045 SOL on BONK · Ocufi`,
         description: `0.5 SOL → 1.23M BONK · vs industry standard 0.5045 SOL · MEV protected`,
+        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        images: [ogImageUrl],
       },
     };
   }
@@ -44,6 +54,13 @@ export async function generateMetadata({
     return {
       title: `Trade #${short} · Ocufi`,
       description: `Transparency report for Solana trade #${short}.`,
+      openGraph: {
+        images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        images: [ogImageUrl],
+      },
     };
   }
   const v = mapReportToView(report);
@@ -60,11 +77,13 @@ export async function generateMetadata({
     openGraph: {
       title: ogTitle,
       description: ogDesc,
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
       title: ogTitle,
       description: ogDesc,
+      images: [ogImageUrl],
     },
   };
 }
