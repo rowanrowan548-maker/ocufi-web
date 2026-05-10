@@ -108,7 +108,11 @@ export function TxView({ sig, data, demo }: Props) {
     : t('mevDetail.plain');
 
   // P3-FE-7 / P4-FE-2 · 分享 · deeplink 优先 · app 装了直开 · 没装 fallback web
-  const reportUrl = typeof window !== 'undefined' ? window.location.href : `https://ocufi.io/tx/${d.sig}`;
+  // P5-FE-26-hotfix · ?v=YYYYMMDD cache-buster · 防 X / TG / Slack OG 缓存(deploy 期"无图"被永久缓存坑)
+  // 不再用 window.location.href · 避免带其他 query 污染分享 URL · 始终用干净的 /tx/<sig>?v=<today>
+  const reportBaseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.ocufi.io';
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const reportUrl = `${reportBaseUrl}/tx/${d.sig}?v=${today}`;
   const shareText = t('share.shareText', { savedSol: fmtNum(d.savedSol, d.solDp) });
 
   // P4-FE-2 · 试 deeplink · setTimeout 后 fallback web

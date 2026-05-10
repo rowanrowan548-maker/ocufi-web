@@ -25,7 +25,9 @@ export function ShareSavingsButton({ wallet, savedSol, tradeCount, solDp = 4 }: 
   const t = useTranslations('v2.portfolio.savings.share');
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.ocufi.io';
-  const shareUrl = `${baseUrl}/saved/${wallet}`;
+  // P5-FE-26-hotfix · ?v=YYYYMMDD cache-buster · X / TG / Slack 当新链接重抓 OG · 防 deploy 期"无图"被永久缓存
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const shareUrl = `${baseUrl}/saved/${wallet}?v=${today}`;
   const shareText = t('shareText', {
     savedSol: fmtNum(savedSol, solDp),
     trades: String(tradeCount),
