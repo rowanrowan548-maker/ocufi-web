@@ -1,5 +1,5 @@
 /**
- * V2 /v2/tx/[sig] · 动态 OG 图(P3-FE-1 / P4-FE-2)
+ * V2 /tx/[sig] · 动态 OG 图(P3-FE-1 / P4-FE-2 · P5-FE-25 砍 /v2/ prefix)
  * 真数据填 · 找不到 sig fallback · demo sig 用 mock 文案
  *
  * Twitter / TG / Slack 分享时显示这张 1200×630 卡 · 文案:
@@ -63,7 +63,7 @@ async function fetchTokenMeta(mint: string): Promise<{ symbol: string | null; lo
 
 export default async function Image({ params }: Props) {
   const { sig } = await params;
-  await trackOgHit(`/v2/tx/${sig}/opengraph-image`);
+  await trackOgHit(`/tx/${sig}/opengraph-image`);
   const isDemo = sig === MOCK_TX_SIG;
 
   // demo · 用 mockup 文案
@@ -221,7 +221,7 @@ export default async function Image({ params }: Props) {
             fontFamily: 'ui-monospace, monospace',
           }}
         >
-          <span>{`ocufi.io/v2/tx/${sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig}`}</span>
+          <span>{`ocufi.io/tx/${sig.length >= 12 ? `${sig.slice(0, 6)}...${sig.slice(-4)}` : sig}`}</span>
           {isPending ? <span>Solana · transparency report</span> : savedUsd != null ? <span>{`≈ $${fmtNum(savedUsd, 2)} saved`}</span> : <span>Solana · 0.1% fee</span>}
         </div>
       </div>

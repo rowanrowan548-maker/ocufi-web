@@ -47,7 +47,7 @@ export default async function V2TokenPage({
     notFound();
   }
 
-  // P2-HOTFIX · 持仓行 click → /v2/token/<mint>?action=sell · 默认 Sell tab
+  // P2-HOTFIX · 持仓行 click → /token/<mint>?action=sell · 默认 Sell tab
   const defaultSide: 'buy' | 'sell' | undefined = action === 'sell' ? 'sell' : action === 'buy' ? 'buy' : undefined;
 
   return (
