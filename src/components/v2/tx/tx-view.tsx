@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * V2 TX View · /v2/tx/[sig]
+ * V2 TX View · /tx/[sig]
  *
  * P3-FE-1:接真数据(SPEC §4.2 字段映射)· demo sig 走 mock
  * P3-FE-7:i18n 完整(zh-CN / en-US)+ 3 分享按钮真接 click
@@ -108,7 +108,7 @@ export function TxView({ sig, data, demo }: Props) {
     : t('mevDetail.plain');
 
   // P3-FE-7 / P4-FE-2 · 分享 · deeplink 优先 · app 装了直开 · 没装 fallback web
-  const reportUrl = typeof window !== 'undefined' ? window.location.href : `https://ocufi.io/v2/tx/${d.sig}`;
+  const reportUrl = typeof window !== 'undefined' ? window.location.href : `https://ocufi.io/tx/${d.sig}`;
   const shareText = t('share.shareText', { savedSol: fmtNum(d.savedSol, d.solDp) });
 
   // P4-FE-2 · 试 deeplink · setTimeout 后 fallback web
@@ -190,7 +190,7 @@ export function TxView({ sig, data, demo }: Props) {
             color: 'var(--ink-60)',
           }}
         >
-          <a href="/v2/portfolio" style={{ color: 'var(--ink-60)', textDecoration: 'none' }}>
+          <a href="/portfolio" style={{ color: 'var(--ink-60)', textDecoration: 'none' }}>
             {t('back')}
           </a>
           <button
@@ -237,7 +237,7 @@ export function TxView({ sig, data, demo }: Props) {
           saveText={heroSaveText}
           subText={heroSubLine1}
           subTextLine2={heroSubLine2}
-          footLeft={`ocufi.io/v2/tx/${d.sigShort}`}
+          footLeft={`ocufi.io/tx/${d.sigShort}`}
           footRight={d.savedUsd != null ? t('savedUsd', { usd: fmtNum(d.savedUsd, 2) }) : undefined}
           saveGradient
           tokenLogo={tokenMeta.logoURI ?? undefined}
@@ -419,7 +419,7 @@ export function TxViewFallback({ sig }: { sig: string }) {
             color: 'var(--ink-60)',
           }}
         >
-          <a href="/v2/portfolio" style={{ color: 'var(--ink-60)', textDecoration: 'none' }}>
+          <a href="/portfolio" style={{ color: 'var(--ink-60)', textDecoration: 'none' }}>
             {t('back')}
           </a>
         </div>
@@ -475,7 +475,7 @@ export function TxViewFallback({ sig }: { sig: string }) {
         <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
           <RefreshLink label={t('fallback.refresh')} />
           <a
-            href="/v2/portfolio"
+            href="/portfolio"
             style={{
               padding: '12px 20px',
               borderRadius: 14,
